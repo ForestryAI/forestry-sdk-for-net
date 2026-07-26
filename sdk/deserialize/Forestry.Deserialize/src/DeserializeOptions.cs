@@ -65,6 +65,39 @@ namespace Forestry.Deserialize
         #endregion
 
         #region Policies
+        /// <summary>
+        /// Naming policy enforced on collection element names (e.g. <see cref="TypeDefinition.ElementCollection"/>)
+        /// </summary>
+        public virtual NamingPolicy CollectionNamingPolicy { get; set; } = NamingPolicy.Default;
+
+        /// <summary>
+        /// Naming policy applied to reflected property/field names; null leaves member names as-is
+        /// </summary>
+        public virtual NamingPolicy? ElementNamingPolicy { get; set; }
+
+        /// <summary>
+        /// Policy asserting when a reflected property is excluded. Defaults to including everything
+        /// </summary>
+        public virtual IIgnorePropertyPolicy IgnorePropertyPolicy { get; set; } = NeverIgnorePropertyPolicy.Instance;
+
+        /// <summary>
+        /// Policy asserting when a reflected field is included. Defaults to excluding all fields
+        /// </summary>
+        public virtual IIncludeFieldPolicy IncludeFieldPolicy { get; set; } = NeverIncludeFieldPolicy.Instance;
+
+        private sealed class NeverIgnorePropertyPolicy : IIgnorePropertyPolicy
+        {
+            public static readonly NeverIgnorePropertyPolicy Instance = new();
+
+            public bool TryEnforce(System.Reflection.PropertyInfo property) => false;
+        }
+
+        private sealed class NeverIncludeFieldPolicy : IIncludeFieldPolicy
+        {
+            public static readonly NeverIncludeFieldPolicy Instance = new();
+
+            public bool TryEnforce(System.Reflection.FieldInfo field) => false;
+        }
         #endregion
 
         #region Customization

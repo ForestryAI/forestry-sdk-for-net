@@ -12,6 +12,16 @@ namespace Forestry.Deserialize
             public static string RawValueType => "Raw-Value-Type";
 
             public static string RawValueLength => "Raw-Value-Length";
+
+            /// <summary>
+            /// Nesting depth of the value within the source media (e.g. XML element depth)
+            /// </summary>
+            public static string Depth => "Depth";
+
+            /// <summary>
+            /// Namespace the value was read under, when the media has one (e.g. XML namespace URI)
+            /// </summary>
+            public static string Namespace => "Namespace";
         }
     }
 }

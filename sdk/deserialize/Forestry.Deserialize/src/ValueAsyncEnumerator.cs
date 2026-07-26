@@ -1,58 +1,71 @@
 namespace Forestry.Deserialize
 {
     /// <summary>
-    /// <see cref="Value"/> enumerator 
+    /// Pulls <see cref="Value"/> instances one at a time from an <see cref="IReader"/>,
+    /// applying a <see cref="ReadErrorHandling"/> policy when reading fails.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public class ValueAsyncEnumerator<Value>: IAsyncEnumerator<Value>
+    public sealed class ValueAsyncEnumerator: IAsyncEnumerator<Value>
     {
         internal ValueAsyncEnumerator(
-            TypeDefinition typeDefinition,
+            IReader reader,
+            ReadErrorHandling errorHandling = ReadErrorHandling.ShortCircuit,
             CancellationToken cancellationToken = default
         )
         {
-            _readStack = default!;
+            ArgumentNullException.ThrowIfNull(reader);
+
+            _reader = reader;
+            _errorHandling = errorHandling;
             _cancellationToken = cancellationToken;
         }
 
-        private IReadStack _readStack { get; }
+        private readonly IReader _reader;
 
-        private CancellationToken _cancellationToken { get; }
+        private readonly ReadErrorHandling _errorHandling;
 
-        /// <summary>
-        /// Current <see cref="Value"/>
-        /// </summary>
-        /// <value></value>
-        public required Value Current { get; set; }
+        private readonly CancellationToken _cancellationToken;
 
         /// <summary>
-        /// Move next with the stack and reader targeting the 
-        /// passed type getting help from options
+        /// Value produced by the most recent successful <see cref="MoveNextAsync"/>
         /// </summary>
-        /// <param name="readStack"></param>
-        /// <param name="reader"></param>
-        /// <param name="type"></param>
-        /// <param name="options"></param>
-        /// <returns></returns>
+        public Value Current { get; private set; } = null!;
+
+        /// <summary>
+        /// Advance to the next value. Under <see cref="ReadErrorHandling.ShuntAside"/> a failing
+        /// read is skipped in favor of the next one; under <see cref="ReadErrorHandling.ShortCircuit"/>
+        /// (the default) the first failure propagates and enumeration stops.
+        /// </summary>
         public ValueTask<bool> MoveNextAsync()
         {
-            if (_cancellationToken.IsCancellationRequested)
+            while (true)
             {
-                // TODO: Dispose resources
-                return ValueTask.FromResult(false);
+                _cancellationToken.ThrowIfCancellationRequested();
+
+                bool hasNext;
+                try
+                {
+                    hasNext = _reader.Read();
+                }
+                catch when (_errorHandling == ReadErrorHandling.ShuntAside)
+                {
+                    continue;
+                }
+
+                if (!hasNext)
+                {
+                    Current = null!;
+                    return ValueTask.FromResult(false);
+                }
+
+                Current = _reader.Current;
+                return ValueTask.FromResult(true);
             }
-            
-            return ValueTask.FromResult(true);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
         public ValueTask DisposeAsync()
         {
-            throw new NotImplementedException();
+            Current?.Dispose();
+            return ValueTask.CompletedTask;
         }
     }
 }

@@ -7,7 +7,7 @@ namespace Forestry.Deserialize
     {
         public override bool HasValue => true;
 
-        public override T Deserialized => Deserialized;
+        public abstract override T Deserialized { get; }
 
         public static implicit operator T(Value<T> value)
         {

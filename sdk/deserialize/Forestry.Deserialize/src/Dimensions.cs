@@ -43,6 +43,28 @@ namespace Forestry.Deserialize
         }  
 
 
+        public int? Depth
+        {
+            get
+            {
+                if (!TryGetValue(Dimension.Names.Depth, out string? value))
+                {
+                    return null;
+                }
+
+                if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int number))
+                {
+                    throw new OverflowException($"'{Dimension.Names.Depth}' header: '{value}' exceeds {int.MaxValue}");
+                }
+
+                return number;
+            }
+        }
+
+        public string? Namespace => TryGetValue(Dimension.Names.Namespace, out var value) ?
+            value :
+            null;
+
         public bool TryGetValue(string name, [NotNullWhen(true)] out string? value)
         {
             return _value.TryGetDimension(name, out value);

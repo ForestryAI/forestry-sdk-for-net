@@ -1,39 +1,26 @@
 namespace Forestry.Deserialize
 {
     /// <summary>
-    /// Reader implementations are driven by concrete deserializers 
-    /// using the stack and stack frames to parse a particular media
+    /// Reader implementations walk forward through a specific media (e.g. XML) one
+    /// <see cref="Value"/> at a time, without loading the whole source into memory.
     /// </summary>
     public interface IReader
     {
         /// <summary>
-        /// Read only when yielding true
+        /// Value produced by the most recent successful <see cref="Read"/>
         /// </summary>
-        public bool Read();
+        Value Current { get; }
 
         /// <summary>
-        /// Skip
+        /// Advance to the next value, making it available as <see cref="Current"/>.
+        /// Returns false once the media is exhausted.
         /// </summary>
-        public void Skip();
-
-        /// <summary> 
-        /// Try skip
-        /// </summary>
-        public bool TrySkip();
-
-        /// <summary>
-        /// Get <see cref="Value"/>
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public T GetValue<T>() where T: Value<T>;
-
-        /// <summary>
-        /// Try get <see cref="Value"/>
-        /// </summary>
-        /// <param name="value"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public bool TryGetValue<T>(out T value) where T : Value<T>;
+        /// <remarks>
+        /// When a value is malformed a reader may throw instead of returning. To support the
+        /// shunt-aside <see cref="ReadErrorHandling"/> policy, a reader that throws must leave
+        /// itself positioned so that the next call to <see cref="Read"/> continues with whatever
+        /// comes after the offending value, rather than reproducing the same failure forever.
+        /// </remarks>
+        bool Read();
     }
 }

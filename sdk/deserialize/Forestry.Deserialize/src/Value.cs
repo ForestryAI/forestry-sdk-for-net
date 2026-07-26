@@ -25,7 +25,7 @@ namespace Forestry.Deserialize
             get => _name;
             set
             {
-                ArgumentException.ThrowIfNullOrEmpty(nameof(Name), value);
+                ArgumentException.ThrowIfNullOrEmpty(value, nameof(Name));
                 _name = value;
             }
         }
