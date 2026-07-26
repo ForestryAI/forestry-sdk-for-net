@@ -1,4 +1,4 @@
-namespace Biometria.Deserialize.Xml.Deserializers
+namespace Forestry.Deserialize.Xml.Deserializers
 {
     public class ObjectDeserializer : Deserializer
     {

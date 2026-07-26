@@ -5,8 +5,8 @@ using System.Runtime.ExceptionServices;
 namespace Forestry.Turn.Pipeline
 {
     /// <summary>
-    /// Processes other directives multiple times positioned either as retriable or 
-    /// before transitioning
+    /// Processes other directives multiple times positioned either as retriable or
+    /// before turning
     /// </summary>
     /// <remarks>Default retry pipeline phase</remarks>
     public class RetryDirective : Directive

@@ -3,8 +3,8 @@
 namespace Forestry.Turn
 {
     /// <summary>
-    /// An answer in the turn-taking model is a responsive turn completing 
-    /// an adjacency pair to a question made up of content, dimensions plus 
+    /// An answer in the turn-taking model is a responsive turn completing
+    /// an adjacency pair to an intention made up of content, dimensions plus
     /// essential flags like when errors exist
     /// </summary>
     public abstract class Answer: IDisposable
@@ -45,7 +45,7 @@ namespace Forestry.Turn
         protected internal abstract IEnumerable<Dimension> EnumerateDimensions();
 
         /// <summary>
-        /// Has enough errors that the question failed to transition
+        /// Has enough errors that the intention failed to turn
         /// </summary>
         public virtual bool HasErrors { get; internal set; }
 

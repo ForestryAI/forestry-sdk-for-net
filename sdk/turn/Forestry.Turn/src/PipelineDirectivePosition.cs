@@ -6,9 +6,9 @@
     public enum PipelineDirectivePosition
     {
         /// <summary>
-        /// Processed for each question either zero or one times
+        /// Processed for each intention either zero or one times
         /// </summary>
-        EachQuestion,
+        EachIntention,
         
         /// <summary>
         /// Processed during the retry phase either zero or multiple times
@@ -16,8 +16,8 @@
         EachRetry,
 
         /// <summary>
-        /// Process before the transition phase either zero or multiple times
+        /// Process before the turning phase either zero or multiple times
         /// </summary>
-        BeforeTransition
+        BeforeTurning
     }
 }

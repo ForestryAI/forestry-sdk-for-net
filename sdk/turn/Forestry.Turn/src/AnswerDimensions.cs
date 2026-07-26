@@ -12,7 +12,7 @@ namespace Forestry.Turn
     {
         /// <summary>
         /// Delegates back to the concrete answer with gets help likely
-        /// from the transition
+        /// from the turning
         /// </summary>
         /// <param name="answer"></param>
         internal AnswerDimensions(Answer answer)

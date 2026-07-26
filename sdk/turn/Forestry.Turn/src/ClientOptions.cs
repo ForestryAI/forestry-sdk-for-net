@@ -1,19 +1,19 @@
-﻿using Forestry.Turn.Pipeline;
+using Forestry.Turn.Pipeline;
 
 namespace Forestry.Turn
 {
     /// <summary>
-    /// Client options for phases of the turn pipeline, the transition and 
+    /// Client options for phases of the turn pipeline, the turning and
     /// an answer analyser i.e. the basics
     /// </summary>
     public abstract class ClientOptions
     {
-        public ClientOptions(Transition transition) : this(null, transition) {}
+        public ClientOptions(Turning turning) : this(null, turning) {}
 
-        internal ClientOptions(ClientOptions? options, Transition transition)
+        internal ClientOptions(ClientOptions? options, Turning turning)
         {
-            ArgumentNullException.ThrowIfNull(transition, nameof(transition));
-            _transition = transition;
+            ArgumentNullException.ThrowIfNull(turning, nameof(turning));
+            _turning = turning;
 
             if (options is not null) {
                 RetryOptions = new RetryOptions(options.RetryOptions);
@@ -24,13 +24,13 @@ namespace Forestry.Turn
         }
 
         /// <summary>
-        /// Transition that turns a question to an answer
+        /// Turning that turns an intention to an answer
         /// </summary>
-        public Transition Transition {
-            get => _transition;
+        public Turning Turning {
+            get => _turning;
         }
 
-        private Transition _transition;
+        private Turning _turning;
 
         /// <summary>
         /// Answer analyzer falling back on a default (very simple) when not set
@@ -70,9 +70,9 @@ namespace Forestry.Turn
             PipelineDirectivePosition position
         ) {
             if (
-                position != PipelineDirectivePosition.EachQuestion &&
+                position != PipelineDirectivePosition.EachIntention &&
                 position != PipelineDirectivePosition.EachRetry &&
-                position != PipelineDirectivePosition.BeforeTransition
+                position != PipelineDirectivePosition.BeforeTurning
             )
             {
                 throw new ArgumentOutOfRangeException(nameof(position), position, null);

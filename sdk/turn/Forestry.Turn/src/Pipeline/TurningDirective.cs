@@ -1,19 +1,19 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 
 namespace Forestry.Turn.Pipeline
 {
     /// <summary>
-    /// Last directive in the pipeline that delegates immediately to the turn pipeline transition
+    /// Last directive in the pipeline that delegates immediately to the turn pipeline's turning
     /// </summary>
-    internal class TransitionDirective : Directive
+    internal class TurningDirective : Directive
     {
-        public TransitionDirective(
-            Transition transition
+        public TurningDirective(
+            Turning turning
         ) {
-            _transition = transition;
+            _turning = turning;
         }
 
-        private readonly Transition _transition;
+        private readonly Turning _turning;
 
         /// <summary>
         /// Process by delegation where the directives are expected to be empty
@@ -25,7 +25,7 @@ namespace Forestry.Turn.Pipeline
         {
             Debug.Assert(directives.IsEmpty);
 
-            await _transition.ProcessAsync(adjacencyPair).ConfigureAwait(false);
+            await _turning.ProcessAsync(adjacencyPair).ConfigureAwait(false);
 
             adjacencyPair.Answer.HasErrors = adjacencyPair.AnswerAnalyzer.AssertHasErrors(adjacencyPair);
         }
@@ -39,7 +39,7 @@ namespace Forestry.Turn.Pipeline
         {
             Debug.Assert(directives.IsEmpty);
 
-            _transition.Process(adjacencyPair);
+            _turning.Process(adjacencyPair);
 
             adjacencyPair.Answer.HasErrors = adjacencyPair.AnswerAnalyzer.AssertHasErrors(adjacencyPair);
         }

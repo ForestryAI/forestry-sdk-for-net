@@ -41,6 +41,7 @@ namespace Forestry.Deserialize
                 // TODO: Dispose resources
                 return ValueTask.FromResult(false);
             }
+            
             return ValueTask.FromResult(true);
         }
 

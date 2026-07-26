@@ -1,4 +1,4 @@
-namespace Biometria.Deserialize.Xml
+namespace Forestry.Deserialize.Xml
 {
     /// <summary>
     /// Deserialize XML options

@@ -2,13 +2,13 @@
 
 namespace Forestry.Turn.Tests
 {
-    public class QuestionContentTests
+    public class IntentionContentTests
     {
         [Fact]
         public async void When_AsyncCopyingString_ItShould_CreateByteArray()
         {
             // Arrange
-            QuestionContent value = QuestionContent.Create("value");
+            IntentionContent value = IntentionContent.Create("value");
             MemoryStream stream = new();
 
             // Act
@@ -25,7 +25,7 @@ namespace Forestry.Turn.Tests
         public void When_CopyingString_ItShould_CreateByteArray()
         {
             // Arrange
-            QuestionContent value = QuestionContent.Create("value");
+            IntentionContent value = IntentionContent.Create("value");
             MemoryStream stream = new();
 
             // Act
@@ -42,7 +42,7 @@ namespace Forestry.Turn.Tests
         public void When_HasStringContent_ItShould_HaveLength()
         {
             // Arrange + Act
-            QuestionContent value = QuestionContent.Create("value");
+            IntentionContent value = IntentionContent.Create("value");
 
             // Assert
             Assert.True(value.TryGetLength(out long _));

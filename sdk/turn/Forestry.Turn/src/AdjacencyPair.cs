@@ -3,29 +3,29 @@
 namespace Forestry.Turn
 {
     /// <summary>
-    /// Paired discourses starting with a question and ending with an answer
+    /// Paired discourses starting with an intention and ending with an answer
     /// </summary>
     public sealed class AdjacencyPair: IDisposable
     {
         /// <summary>
         /// Creates a new instanceof <see cref="AdjacencyPair"/>
         /// </summary>
-        /// <param name="question"></param>
+        /// <param name="intention"></param>
         /// <param name="answerAnalyser"></param>
         public AdjacencyPair(
-            Question question,
+            Intention intention,
             AnswerAnalyzer answerAnalyser
         ) {
-            ArgumentNullException.ThrowIfNull(question, nameof(question));
+            ArgumentNullException.ThrowIfNull(intention, nameof(intention));
 
-            Question = question;
+            Intention = intention;
             AnswerAnalyzer = answerAnalyser;
         }
 
         /// <summary>
-        /// Get <see cref="Question"/> turn
+        /// Get <see cref="Intention"/> turn
         /// </summary>
-        public Question Question { get; }
+        public Intention Intention { get; }
 
         /// <summary>
         /// Answer analyzer used by the turn pipeline
@@ -40,7 +40,7 @@ namespace Forestry.Turn
             {
                 if (_answer is null)
                 {
-                    throw new InvalidOperationException("Transition never set answer");   
+                    throw new InvalidOperationException("Turning never set answer");
                 }
 
                 return _answer;
@@ -75,16 +75,16 @@ namespace Forestry.Turn
         #endregion
 
         /// <summary>
-        /// Positioned directives derived from question context (TODO: explain cooralation=
+        /// Positioned directives derived from intention context (TODO: explain cooralation=
         /// </summary>
         internal List<(PipelineDirectivePosition Position, Directive Directive)>? PositionedDirectives { get; set; }
 
         /// <summary>
-        /// Disposes the question and answer turns
+        /// Disposes the intention and answer turns
         /// </summary>
         public void Dispose()
         {
-            Question.Dispose();
+            Intention.Dispose();
 
             var answer = Interlocked.Exchange(ref _answer, null);  // avoids multiple threads disposing at the same time with a local reference
             answer?.Dispose();

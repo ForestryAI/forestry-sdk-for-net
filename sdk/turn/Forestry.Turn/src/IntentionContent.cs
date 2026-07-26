@@ -4,32 +4,32 @@ using System.Text;
 namespace Forestry.Turn
 {
     /// <summary>
-    /// Question content that maybe be copied 
+    /// Intention content that maybe be copied
     /// </summary>
-    public abstract class QuestionContent : IDisposable
+    public abstract class IntentionContent : IDisposable
     {
         /// <summary>
-        /// Create question content from a stream
+        /// Create intention content from a stream
         /// </summary>
         /// <param name="stream"></param>
         /// <returns></returns>
-        public static QuestionContent Create(Stream stream, int copyBufferLength = 81920) => new StreamContent(stream, copyBufferLength);
+        public static IntentionContent Create(Stream stream, int copyBufferLength = 81920) => new StreamContent(stream, copyBufferLength);
 
         /// <summary>
-        /// Create question content from a byte array
+        /// Create intention content from a byte array
         /// </summary>
         /// <param name="bytes"></param>
         /// <param name="startingPosition"></param>
         /// <param name="length"></param>
         /// <returns></returns>
-        public static QuestionContent Create(byte[] bytes) => new ArrayContent(bytes, 0, bytes.Length);
+        public static IntentionContent Create(byte[] bytes) => new ArrayContent(bytes, 0, bytes.Length);
 
         /// <summary>
-        /// Create question content from a string
+        /// Create intention content from a string
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
-        public static QuestionContent Create(string text) => Create(_defaultStringEncoding.GetBytes(text));
+        public static IntentionContent Create(string text) => Create(_defaultStringEncoding.GetBytes(text));
 
         /// <summary>
         /// Default UTF8 string encoding
@@ -66,7 +66,7 @@ namespace Forestry.Turn
         /// <summary>
         /// Stream content
         /// </summary>
-        private sealed class StreamContent: QuestionContent
+        private sealed class StreamContent: IntentionContent
         {
             /// <summary>
             /// Passed stream must be seekable
@@ -162,7 +162,7 @@ namespace Forestry.Turn
         /// <summary>
         /// Byte array content
         /// </summary>
-        private sealed class ArrayContent : QuestionContent
+        private sealed class ArrayContent : IntentionContent
         {
             public ArrayContent(
                 byte[] bytes, 

@@ -1,34 +1,34 @@
-﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Forestry.Turn
 {
     /// <summary>
-    /// A question in the turn-talking model is an expectation of an answer making 
-    /// up the first half of an adjacency pair.  A transition is responsible for 
-    /// creating concrete questions along side handling context and headers in a 
+    /// An intention in the turn-taking model is an expectation of an answer making
+    /// up the first half of an adjacency pair.  A turning is responsible for
+    /// creating concrete intentions along side handling context and headers in a
     /// suitable format.
     /// </summary>
-    public abstract class Question: IDisposable
+    public abstract class Intention: IDisposable
     {
         /// <summary>
-        /// Question type confers conversational expectations when transitioning
+        /// Intention type confers conversational expectations when turning
         /// </summary>
-        public virtual QuestionType QuestionType { get; set; }
+        public virtual IntentionType IntentionType { get; set; }
 
         /// <summary>
-        /// Question content
+        /// Intention content
         /// </summary>
-        public virtual QuestionContent? Content { get; set; } 
+        public virtual IntentionContent? Content { get; set; }
 
         /// <summary>
-        /// Mutable dimensions used when transitioning to an answer
+        /// Mutable dimensions used when turning into an answer
         /// </summary>
-        public QuestionDimensions Dimensions => new(this);
+        public IntentionDimensions Dimensions => new(this);
 
         /// <summary>
         /// Try get dimension
         /// </summary>
-        /// <remarks>Dimensions with the same name are concatenated with a delimeter</remarks> 
+        /// <remarks>Dimensions with the same name are concatenated with a delimeter</remarks>
         /// <param name="name"></param>
         /// <param name="value"></param>
         /// <returns></returns>
@@ -81,7 +81,7 @@ namespace Forestry.Turn
         protected internal abstract IEnumerable<Dimension> EnumerateDimensions();
 
         /// <summary>
-        /// Dispose primarily dimensions and content 
+        /// Dispose primarily dimensions and content
         /// </summary
         public abstract void Dispose();
     }

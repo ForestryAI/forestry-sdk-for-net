@@ -1,10 +1,10 @@
-﻿
+
 namespace Forestry.Turn.Tests
 {
     /// <summary>
-    /// Simple question for testing
+    /// Simple intention for testing
     /// </summary>
-    public class TestingQuestion : Question
+    public class TestingIntention : Intention
     {
         private readonly Dimensions _dimensions = new();
 
@@ -16,13 +16,13 @@ namespace Forestry.Turn.Tests
         /// <summary>
         /// Contenet stream
         /// </summary>
-        public override QuestionContent? Content { 
-            get => base.Content; 
-            set => base.Content = value; 
+        public override IntentionContent? Content {
+            get => base.Content;
+            set => base.Content = value;
         }
 
         #region dimensions
-        protected override void AddDimension(string name, string value) => _dimensions.Add(name, value); 
+        protected override void AddDimension(string name, string value) => _dimensions.Add(name, value);
 
         protected override bool ContainsDimension(string name) => _dimensions.Contains(name);
 

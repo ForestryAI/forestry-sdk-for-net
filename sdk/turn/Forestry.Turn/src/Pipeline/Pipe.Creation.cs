@@ -21,14 +21,14 @@
             internal AnswerAnalyzer AnswerAnalyzer;
 
             /// <summary>
-            /// Adjacency pair transition
+            /// Adjacency pair turning
             /// </summary>
-            internal Transition Transition;
+            internal Turning Turning;
 
             /// <summary>
-            /// Index of last directive for each question
+            /// Index of last directive for each intention
             /// </summary>
-            internal int LastQuestionDirectiveIndex;
+            internal int LastIntentionDirectiveIndex;
 
             /// <summary>
             /// Index of last directive for each retry
@@ -69,7 +69,7 @@
             Options options;
 
             options.AnswerAnalyzer = answerAnalyzer ?? clientOptions.AnswerAnalyzer;
-            options.Transition = clientOptions.Transition;
+            options.Turning = clientOptions.Turning;
 
             List<Directive> directives = new(_defaultDirectivesCount + (clientOptions.PositionedDirectives?.Count ?? 0));
 
@@ -88,10 +88,10 @@
                 }
             }
 
-            // Each Question
-            Add(PipelineDirectivePosition.EachQuestion);
+            // Each Intention
+            Add(PipelineDirectivePosition.EachIntention);
 
-            options.LastQuestionDirectiveIndex = directives.Count;
+            options.LastIntentionDirectiveIndex = directives.Count;
 
             // Each Retry
             // TODO: Retry defaults
@@ -100,11 +100,11 @@
 
             options.LastRetryDirectiveIndex = directives.Count;
 
-            // Before transition
-            Add(PipelineDirectivePosition.BeforeTransition);
+            // Before turning
+            Add(PipelineDirectivePosition.BeforeTurning);
 
-            // Transition
-            directives.Add(new TransitionDirective(options.Transition));
+            // Turning
+            directives.Add(new TurningDirective(options.Turning));
 
             options.Directives = [.. directives];
 

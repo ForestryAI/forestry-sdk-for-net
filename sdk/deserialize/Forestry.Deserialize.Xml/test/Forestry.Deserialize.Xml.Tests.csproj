@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <AssemblyName>Biometria.Deserialize.Tests</AssemblyName>
+    <AssemblyName>Forestry.Deserialize.Xml.Tests</AssemblyName>
   </PropertyGroup>
 
   <!-- Test package references -->
@@ -28,6 +28,6 @@
 
   <!-- Source package references -->
   <ItemGroup>
-    <ProjectReference Include="..\src\Biometria.Deserialize.Xml.csproj" />
+    <ProjectReference Include="..\src\Forestry.Deserialize.Xml.csproj" />
   </ItemGroup>
 </Project>

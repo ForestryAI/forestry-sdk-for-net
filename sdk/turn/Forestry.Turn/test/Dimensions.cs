@@ -3,7 +3,7 @@
 namespace Forestry.Turn.Tests
 {
     /// <summary>
-    /// Answer || question dimensions
+    /// Answer || intention dimensions
     /// </summary>
     internal class Dimensions
     {
@@ -70,13 +70,8 @@ namespace Forestry.Turn.Tests
         {
             if (_dimensions.TryGetValue(name, out object value))
             {
-                if (value is List<string> collection)
-                {
-                    values = collection;
-                } else
-                {
-                    values = [value as string];
-                }
+                values = value is List<string> collection ? collection : [value as string];
+                return true;
             }
 
             values = null;

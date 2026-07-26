@@ -3,11 +3,11 @@
 namespace Forestry.Turn
 {
     /// <summary>
-    /// Question type confers conversational expectations when transitioning
+    /// Intention type confers conversational expectations when turning
     /// </summary>
-    public readonly partial struct QuestionType : IEquatable<QuestionType>
+    public readonly partial struct IntentionType : IEquatable<IntentionType>
     {
-        public QuestionType(
+        public IntentionType(
             string type
         ) {
             Type = type;
@@ -20,27 +20,27 @@ namespace Forestry.Turn
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
-        public bool Equals(QuestionType other)
+        public bool Equals(IntentionType other)
         {
             return string.Equals(Type, other.Type, StringComparison.Ordinal);
         }
 
         /// <summary>
-        /// Object is an equivalent <see cref="QuestionType"/>
+        /// Object is an equivalent <see cref="IntentionType"/>
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
         public override bool Equals([NotNullWhen(true)] object? other)
         {
-            return other is QuestionType type && Equals(type);
+            return other is IntentionType type && Equals(type);
         }
 
-        public static bool operator ==(QuestionType left, QuestionType right)
+        public static bool operator ==(IntentionType left, IntentionType right)
         {
             return left.Equals(right);
         }
 
-        public static bool operator !=(QuestionType left, QuestionType right)
+        public static bool operator !=(IntentionType left, IntentionType right)
         {
             return !left.Equals(right);
         }

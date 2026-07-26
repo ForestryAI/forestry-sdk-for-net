@@ -1,9 +1,9 @@
-﻿
+
 namespace Forestry.Turn.Tests
 {
-    public class TestingTransition : Transition
+    public class TestingTurning : Turning
     {
-        private readonly Func<AdjacencyPair, TestingAnswer> _transition;
+        private readonly Func<AdjacencyPair, TestingAnswer> _turning;
 
         private readonly object _answering = new();
 
@@ -11,10 +11,10 @@ namespace Forestry.Turn.Tests
         /// Turn each answer blindly
         /// </summary>
         /// <param name="answers"></param>
-        public TestingTransition(params TestingAnswer[] answers)
+        public TestingTurning(params TestingAnswer[] answers)
         {
             int index = 0;
-            _transition = _ =>
+            _turning = _ =>
             {
                 lock (_answering)
                 {
@@ -24,18 +24,18 @@ namespace Forestry.Turn.Tests
         }
 
         /// <summary>
-        /// Turn question into an answer
+        /// Turn intention into an answer
         /// </summary>
-        /// <param name="transition"></param>
-        public TestingTransition(Func<TestingQuestion, TestingAnswer> transition): this(turn => transition((TestingQuestion)turn.Question)) { }
+        /// <param name="turning"></param>
+        public TestingTurning(Func<TestingIntention, TestingAnswer> turning): this(turn => turning((TestingIntention)turn.Intention)) { }
 
         /// <summary>
         /// Turn adjacency pair into an answer
         /// </summary>
-        /// <param name="transition"></param>
-        private TestingTransition(Func<AdjacencyPair, TestingAnswer> transition)
+        /// <param name="turning"></param>
+        private TestingTurning(Func<AdjacencyPair, TestingAnswer> turning)
         {
-            _transition = transition;
+            _turning = turning;
         }
 
         /// <summary>
@@ -63,14 +63,15 @@ namespace Forestry.Turn.Tests
             await InternalProccessAsync(adjacencyPair);
         }
 
-        protected override Question CreateQuestion()
+        protected override Intention CreateIntention()
         {
-            return new TestingQuestion();
+            return new TestingIntention();
         }
 
         private Task InternalProccessAsync(AdjacencyPair adjacencyPair)
         {
-            return ValueTask.CompletedTask.AsTask();
+            adjacencyPair.Answer = _turning(adjacencyPair);
+            return Task.CompletedTask;
         }
     }
 }

@@ -1,13 +1,13 @@
 ﻿namespace Forestry.Turn.Pipeline
 {
     /// <summary>
-    /// Directive in the turn pipline helps the pipeline voluntarily adhere timing, overlap and culture to the 
-    /// question then react to the answer 
+    /// Directive in the turn pipline helps the pipeline voluntarily adhere timing, overlap and culture to the
+    /// intention then react to the answer
     /// </summary>
     public abstract class Directive
     {
         /// <summary>
-        /// Processes the adjacency pair only altering the question before the next directive
+        /// Processes the adjacency pair only altering the intention before the next directive
         /// </summary>
         /// <param name="adjacencyPair"></param>
         /// <param name="directives"></param>
@@ -15,7 +15,7 @@
         public abstract ValueTask ProcessAsync(AdjacencyPair adjacencyPair, ReadOnlyMemory<Directive> directives);
 
         /// <summary>
-        /// Processes the adjacency pair only altering the question before the next directive
+        /// Processes the adjacency pair only altering the intention before the next directive
         /// </summary>
         /// <param name="adjacencyPair"></param>
         /// <param name="directives"></param>
