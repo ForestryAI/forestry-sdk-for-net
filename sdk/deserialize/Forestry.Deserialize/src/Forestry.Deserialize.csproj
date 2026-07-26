@@ -13,5 +13,8 @@
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>Forestry.Deserialize.Xml</_Parameter1>
     </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Forestry.Deserialize.Tests</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 </Project>

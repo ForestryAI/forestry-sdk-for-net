@@ -13,15 +13,20 @@ The package is split by concern:
 - **Forestry.Deserialize.Xml** — the first concrete media provider, reading StanForD XML.
   JSON or another custom format would be a sibling provider built the same way.
 
-Within the core there are two mostly-separate tracks; don't assume one is a layer on top of the
-other yet:
+Within the core there are two tracks that are meant to connect, even though nothing wires them
+together automatically yet:
 
 1. **Streaming `Value` iteration** — `IReader` → `ValueAsyncEnumerable`/`ValueAsyncEnumerator` →
-   `Value`. This is the working, tested path described below.
-2. **Reflection-driven POCO mapping** — `TypeDefinition`/`PropertyDefinition`/
-   `TypeDefinitionProvider`/naming & inclusion policies, aimed at eventually mapping a stream onto
-   arbitrary C# types. It compiles but is not behaviorally complete or exercised by tests — see
-   Status.
+   `Value`. Working and tested.
+2. **Schema reflection** — `TypeDefinition`/`PropertyDefinition`, driven by `[Element]`/
+   `[Collection]` attributes on a plain C# class that describes a document's shape (element/
+   attribute names — not tied to XML, or to any particular media). Working and tested against a
+   fake schema class; see Status for what's still missing.
+
+The idea: a schema class reflected into a `TypeDefinition` tells a reader what to expect —
+which elements/attributes, and eventually in what order — so mismatches can be caught while
+streaming rather than after the fact. `SchemaGuidedReadingTests` shows the shape of that
+without a real reader yet.
 
 ## Concepts (streaming path)
 
@@ -51,6 +56,37 @@ await foreach (Value value in reader.AsAsyncEnumerable(ReadErrorHandling.ShuntAs
 (order, metadata, both error-handling policies, cancellation) against a fake `IReader`, and is
 the reference for how a concrete reader is meant to plug in.
 
+## Concepts (schema path)
+
+- **`[Collection("Machine")]`** on a class names it for when it appears as an item in a list
+  (`TypeDefinition.ElementCollection`).
+- **`[Element("MachineId", "Machine")]`** on a property names it explicitly — independent of the
+  C# member name.
+- **`TypeDefinition`** / **`PropertyDefinition`** — the reflected shape of a schema class,
+  computed once per `DeserializeOptions` and reused across reads (`GetTypeDefinition` caches by
+  type).
+
+```csharp
+[Collection("Machine")]
+public sealed class Machine
+{
+    [Element("MachineId", "Machine")]
+    public string MachineId { get; set; } = string.Empty;
+}
+
+TypeDefinition machine = options.GetTypeDefinition(typeof(Machine));
+// machine.ElementCollection == "Machine"
+// machine.Properties[0].Name == "MachineId"
+```
+
+There's no real `DeserializeOptions`/`Deserializer` implementation shipped yet — a consumer
+provides one (see `TestingDeserializeOptions` in tests for the minimal shape: a
+`TypeDefinitionReflectiveInstantiator`, `PropertyDefinitionReflectiveInstantiator`, and an
+`IDeserializerProvider` mapping types to `Deserializer`s). [`TypeDefinitionReflectionTests`](test/TypeDefinitionReflectionTests.cs)
+and [`SchemaGuidedReadingTests`](test/SchemaGuidedReadingTests.cs) exercise this against
+`TestingMachine`, a fake StanForD-shaped fixture standing in until a real `Forestry.StanForD`
+project exists.
+
 ## One `Value` at a time — being reconsidered
 
 Reading currently yields a single `Value` per step. That's a reasonable default for "don't load
@@ -69,14 +105,25 @@ pending test in `ValueAsyncEnumerableTests`.
 - **Streaming path** (`IReader`, `ValueAsyncEnumerable`/`ValueAsyncEnumerator`, `Value`
   `Depth`/`Namespace` dimensions): working and tested against a fake reader. No concrete
   `IReader` ships yet — `Forestry.Deserialize.Xml` is where a real StanForD XML reader belongs.
-- **Reflection/POCO path** (`TypeDefinition`, `PropertyDefinition`, `TypeDefinitionProvider`,
-  naming/ignore/include-field policies, the `DeserializeOptions` type-definition cache): compiles,
-  but is unfinished and untested — notably, the cache's options-equality comparer currently
-  treats every `DeserializeOptions` instance as equal, and `Deserialization.Deserialize<T>(string,
-  DeserializeOptions)` is an explicit not-yet-implemented stub. Treat this path as a separate,
-  larger effort from the streaming path above, not something to build the XML reader against yet.
+- **Schema path** (`TypeDefinition`, `PropertyDefinition`, `TypeDefinitionProvider`, `[Element]`/
+  `[Collection]`): reflecting a schema class now works and is tested. Fixed to get there: `[Element]`
+  was defined but never actually consulted (names came from the raw C# member name instead);
+  the reflective-instantiator fallback for a not-yet-cached member type passed the wrong `Type`
+  (the declaring type instead of the member's own type); and a type's self-referential property
+  definition (`TypeDefinition.PropertyDefinition`) tripped an assertion in its own
+  `ElementTypeDefinition` getter when configuring itself. Still open: the naming/ignore/
+  include-field *policies* are inert defaults (nothing ignores properties or includes fields
+  yet), the `DeserializeOptions` type-definition cache's options-equality comparer treats every
+  options instance as equal, `Deserialization.Deserialize<T>(string, DeserializeOptions)` is an
+  explicit not-yet-implemented stub, and element/attribute **position** within the document isn't
+  modeled anywhere (`[Element]` only carries a name) — flagged by a pending test in
+  `TypeDefinitionReflectionTests`. No actual value-construction step exists yet either (there's
+  no `Deserializer.Deserialize(...)` that turns read `Value`s into a real `Machine` instance) —
+  `SchemaGuidedReadingTests` only shows names being cross-checked, not object construction.
 - `Forestry.Deserialize.Xml`: `ObjectDeserializer` predates the current `Deserializer` base shape
-  in core and doesn't compile. Worth rebuilding against `IReader` (the streaming path) rather than
-  the reflection path, given the direction above.
+  in core and doesn't compile. Next real step here: a `Forestry.StanForD` project with C# types
+  for the harvesting/forwarding/quality documents (no public .NET StanForD representation exists
+  to build on), pulled into this project's tests to build a concrete `IReader` and
+  `DeserializeOptions` against real schema types instead of `TestingMachine`.
 - StanForD 2010 and StanForD Classic: no format-specific mapping yet — this section will
   document field/dimension mappings once a real XML `IReader` exists.

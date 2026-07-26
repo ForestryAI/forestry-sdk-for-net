@@ -62,7 +62,11 @@ namespace Forestry.Deserialize
                 propertyDefinition = typeDefinition.CreatePropertyDefinition(declaringTypeDefinition: this, memberDeclaringType, Options);
             } else
             {
-                propertyDefinition = Options.PropertyDefinitionReflectiveInstantiator(memberDeclaringType ?? Type, this, Options);
+                // NOTE: memberDeclaringType (e.g. a base class for an inherited member) is not
+                // threaded through here - PropertyDefinitionReflectiveInstantiator only carries
+                // (memberType, declaringTypeDefinition). Fine for members declared directly on
+                // this type; inherited members fall back to declaringTypeDefinition.Type instead.
+                propertyDefinition = Options.PropertyDefinitionReflectiveInstantiator(memberType, this, Options);
             }
 
             return propertyDefinition;

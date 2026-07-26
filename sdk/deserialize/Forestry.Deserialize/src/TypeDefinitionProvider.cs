@@ -120,14 +120,15 @@ namespace Forestry.Deserialize
 
         private static void SetPropertyName(PropertyDefinition propertyDefinition, MemberInfo memberInfo)
         {
-            string? name;
+            // An explicit [Element] name always wins - it's how a StanForD schema class states
+            // its own element/attribute name when that differs from the C# member name.
+            string? name = memberInfo.GetSinglarAttribute<ElementAttribute>(inherited: false)?.Name;
 
-            if (propertyDefinition.Options.ElementNamingPolicy is not null)
+            if (name is null)
             {
-                name = propertyDefinition.Options.ElementNamingPolicy.Process(memberInfo.Name);
-            } else
-            {
-                name = memberInfo.Name;
+                name = propertyDefinition.Options.ElementNamingPolicy is not null ?
+                    propertyDefinition.Options.ElementNamingPolicy.Process(memberInfo.Name) :
+                    memberInfo.Name;
             }
 
             if (name is null)

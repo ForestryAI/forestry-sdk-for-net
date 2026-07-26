@@ -101,17 +101,25 @@ namespace Forestry.Deserialize
             _typeDefinition ??= Options.GetTypeDefinition(Type);
             _typeDefinition.SetConfiguration();
 
-            if (TypeDefinition.Deserializer.CanReadValues)
+            // A type definition's own self-referential property (TypeDefinition.PropertyDefinition,
+            // set via AsPropertyDefinition()) isn't a member that can be pruned for being empty -
+            // it's the root descriptor. Evaluating the checks below for it would also read
+            // _typeDefinition.ElementTypeDefinition while _typeDefinition (== this type,
+            // reentrantly) is still mid-Configure(), tripping that getter's IsConfigured assert.
+            if (_typeDefinition.PropertyDefinition != this)
             {
-                // TODO:
-            }
-            else if (_typeDefinition.Kind == TypeDefinitionKind.Object && _typeDefinition.Properties.Count == 0)
-            {
-                DeclaringTypeDefinition.Properties.Remove(this);
-            }
-            else if (_typeDefinition.ElementTypeDefinition?.Kind == TypeDefinitionKind.Object && _typeDefinition.ElementTypeDefinition.Properties.Count == 0)
-            {
-                DeclaringTypeDefinition.Properties.Remove(this);
+                if (TypeDefinition.Deserializer.CanReadValues)
+                {
+                    // TODO:
+                }
+                else if (_typeDefinition.Kind == TypeDefinitionKind.Object && _typeDefinition.Properties.Count == 0)
+                {
+                    DeclaringTypeDefinition.Properties.Remove(this);
+                }
+                else if (_typeDefinition.ElementTypeDefinition?.Kind == TypeDefinitionKind.Object && _typeDefinition.ElementTypeDefinition.Properties.Count == 0)
+                {
+                    DeclaringTypeDefinition.Properties.Remove(this);
+                }
             }
 
             IsConfigured = true;
