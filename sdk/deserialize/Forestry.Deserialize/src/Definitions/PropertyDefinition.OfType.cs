@@ -1,4 +1,4 @@
-namespace Forestry.Deserialize
+namespace Forestry.Deserialize.Definitions
 {
     internal sealed class PropertyDefinition<T>: PropertyDefinition
     {

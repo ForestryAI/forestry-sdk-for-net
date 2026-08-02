@@ -1,3 +1,6 @@
+using Forestry.Deserialize.Definitions;
+using Forestry.Deserialize.Deserializers;
+using Forestry.Deserialize.Reading;
 
 namespace Forestry.Deserialize
 {
@@ -153,6 +156,10 @@ namespace Forestry.Deserialize
                 _options.ThrowingAssertReadOnly();
             }
         }
+        #endregion
+
+        #region Reading
+        public abstract TState CreateReaderState<TState>(ReadOnlySpan<byte> buffer) where TState : struct, IReaderState<TState>;
         #endregion
     }
 }

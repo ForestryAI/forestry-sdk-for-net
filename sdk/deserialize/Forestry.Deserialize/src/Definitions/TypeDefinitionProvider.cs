@@ -1,8 +1,9 @@
 using System.Diagnostics;
 using System.Reflection;
 using Forestry.Deserialize.Attributes;
+using Forestry.Deserialize.Deserializers;
 
-namespace Forestry.Deserialize
+namespace Forestry.Deserialize.Definitions
 {
     /// <summary>
     /// Default <see cref="TypeDefinition"/> provider

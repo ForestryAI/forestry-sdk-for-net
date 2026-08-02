@@ -1,4 +1,4 @@
-namespace Forestry.Deserialize
+namespace Forestry.Deserialize.Deserializers
 {
     /// <summary>
     /// A deserializer factory enables generics e.g. generic lists

@@ -1,4 +1,7 @@
-namespace Forestry.Deserialize
+using Forestry.Deserialize.Definitions;
+using Forestry.Deserialize.Reading;
+
+namespace Forestry.Deserialize.Deserializers
 {
     /// <summary>
     /// 
@@ -59,7 +62,7 @@ namespace Forestry.Deserialize
         public abstract bool CanDeserialize(Type type);
 
         /// <summary>
-        /// Can this deserializer read <see cref="Value"/> || <see cref="IEnumerable{Value}"/>
+        /// Can this deserializer read <see cref="Value"/> || <see cref="IEnumerable{Value}" || <see cref="IDictionary{Type, Value}"/> />
         /// </summary>
         /// <value></value>
         public virtual bool CanReadValues { get => false; }
@@ -78,5 +81,13 @@ namespace Forestry.Deserialize
         /// </summary>
         internal virtual void AfterTypeDefinitionInitialization(TypeDefinition typeDefinition, DeserializeOptions options) { }
         #endregion Configuration
+
+        #region Value
+        /// <summary>
+        /// Try read value
+        /// </summary>
+        /// <returns></returns>
+        internal abstract bool TryReadValue<TBuffering, TStream>(ref TBuffering buffering, scoped ref ReaderPath readerPath, out Value? value, DeserializeOptions options, CancellationToken cancellationToken = default) where TBuffering : struct, IBuffering<TBuffering, TStream>;
+        #endregion
     }
 }

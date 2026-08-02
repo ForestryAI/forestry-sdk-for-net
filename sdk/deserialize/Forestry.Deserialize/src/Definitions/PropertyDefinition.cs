@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace Forestry.Deserialize
+namespace Forestry.Deserialize.Definitions
 {
     public abstract class PropertyDefinition(
         Type type,

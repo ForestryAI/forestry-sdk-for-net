@@ -1,7 +1,8 @@
 using System.Diagnostics;
 using System.Runtime.ExceptionServices;
+using Forestry.Deserialize.Deserializers;
 
-namespace Forestry.Deserialize
+namespace Forestry.Deserialize.Definitions
 {
     public abstract partial class TypeDefinition
     {

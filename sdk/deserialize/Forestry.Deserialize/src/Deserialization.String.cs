@@ -1,3 +1,5 @@
+using Forestry.Deserialize.Definitions;
+
 namespace Forestry.Deserialize
 {
     public static partial class Deserialization

@@ -3,6 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
+using Forestry.Deserialize.Definitions;
+
 namespace Forestry.Deserialize
 {
     internal static partial class Throwing

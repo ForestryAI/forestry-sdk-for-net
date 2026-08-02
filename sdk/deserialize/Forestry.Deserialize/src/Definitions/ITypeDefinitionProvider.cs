@@ -1,4 +1,4 @@
-namespace Forestry.Deserialize
+namespace Forestry.Deserialize.Definitions
 {
     public interface ITypeDefinitionProvider
     {

@@ -1,4 +1,7 @@
-namespace Forestry.Deserialize
+using Forestry.Deserialize.Deserializers;
+using Forestry.Deserialize.Reading;
+
+namespace Forestry.Deserialize.Definitions
 {
     public sealed partial class TypeDefinition<T>: TypeDefinition
     {
@@ -21,6 +24,6 @@ namespace Forestry.Deserialize
             {
                 TypeDefinition = this
             };
-        }
+        } 
     }
 }
