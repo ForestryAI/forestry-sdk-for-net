@@ -50,9 +50,6 @@ namespace Forestry.Deserialize.Deserializers
         /// </summary>
         /// <returns></returns>
         protected internal abstract DeserializerKind GetDeserializerKind();
-        #endregion
-
-        #region Reading
     
         /// <summary>
         /// Deserializer type assertion
@@ -74,7 +71,10 @@ namespace Forestry.Deserialize.Deserializers
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public abstract TypeDefinition InitializeTypeDefinition(DeserializeOptions options);
+        public virtual TypeDefinition InitializeTypeDefinition(DeserializeOptions options)
+        {
+            throw new InvalidOperationException();
+        }
 
         /// <summary>
         /// Deserializer overrides after <see cref="TypeDefinition"/> initialization
@@ -82,7 +82,7 @@ namespace Forestry.Deserialize.Deserializers
         internal virtual void AfterTypeDefinitionInitialization(TypeDefinition typeDefinition, DeserializeOptions options) { }
         #endregion Configuration
 
-        #region Value
+        #region Reading
         /// <summary>
         /// Try read value
         /// </summary>

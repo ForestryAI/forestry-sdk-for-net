@@ -37,7 +37,7 @@ namespace Forestry.Deserialize.Reading
         /// <param name="maximum">Maximum bytes with internal buffers</param>
         /// <returns></returns>
         public async readonly ValueTask<PipeReaderBuffering> ReadAsync(
-            PipeReader stream,
+            PipeReader _,
             CancellationToken cancellationToken,
             bool maximum = true
         )

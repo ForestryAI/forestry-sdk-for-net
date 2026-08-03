@@ -1,3 +1,4 @@
+using Forestry.Deserialize.Definitions;
 using Forestry.Deserialize.Reading;
 
 namespace Forestry.Deserialize.Deserializers
@@ -9,7 +10,37 @@ namespace Forestry.Deserialize.Deserializers
     /// <typeparam name="T"></typeparam>
     public abstract partial class Deserializer<T>: Deserializer
     {
+        #region Shape
+        /// <summary>
+        /// Type
+        /// </summary>
+        public sealed override Type Type { get; } = typeof(T);
 
+        /// <summary>
+        /// Deserializer kind
+        /// </summary>
+        /// <returns></returns>
+        protected internal override DeserializerKind GetDeserializerKind() => DeserializerKind.Value;
+
+        /// <summary>
+        /// Can deserialize type
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public override bool CanDeserialize(Type type)
+        {
+            return type == typeof(T);
+        }
+        #endregion
+
+        #region Configuration
+        public override TypeDefinition InitializeTypeDefinition(DeserializeOptions options)
+        {
+            return new TypeDefinition<T>(this, options);
+        }
+        #endregion
+
+        #region Reading
         /// <summary>
         /// Try read <see cref="Value"/> - a thin pass-through to
         /// <see cref="TryReadNullableValue{TBuffering, TStream}"/>. The reader path/position
@@ -47,15 +78,6 @@ namespace Forestry.Deserialize.Deserializers
         /// <param name="options"></param>
         /// <returns></returns>
         public abstract ReadingStatus TryReadNullableValue<TBuffering, TStream>(ref TBuffering buffering, scoped ref ReaderPath readerPath, Type type, out Value<T> value, DeserializeOptions options) where TBuffering : struct, IBuffering<TBuffering, TStream>;
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        public override bool CanDeserialize(Type type)
-        {
-            return type == typeof(T);
-        }
+        #endregion
     }
 }

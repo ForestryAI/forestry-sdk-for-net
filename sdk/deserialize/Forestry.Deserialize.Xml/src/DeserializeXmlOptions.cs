@@ -1,3 +1,6 @@
+using Forestry.Deserialize.Definitions;
+using Forestry.Deserialize.Deserializers;
+
 namespace Forestry.Deserialize.Xml
 {
     /// <summary>
@@ -10,19 +13,15 @@ namespace Forestry.Deserialize.Xml
         /// </summary>
         public static readonly DeserializeXmlOptions Default = new DeserializeXmlOptions();
 
-        /// <summary>
-        /// Type definition reflective instantiator for XML deserialization
-        /// </summary>
-        internal override Func<Type, Deserializer, DeserializeOptions, TypeDefinition> TypeDefinitionReflectiveInstantiator => (type, deserializer, options) => new XmlTypeDefinition(type, deserializer, options);
+        internal override Func<Type, Deserializer, DeserializeOptions, TypeDefinition> TypeDefinitionReflectiveInstantiator => throw new NotImplementedException();
 
-        /// <summary>
-        /// Property definition reflective instantiator for XML deserialization
-        /// </summary>
-        internal override Func<Type, TypeDefinition, DeserializeOptions, PropertyDefinition> PropertyDefinitionReflectiveInstantiator => (type, typeDefinition, options) => new XmlPropertyDefinition(type, typeDefinition, options);
+        internal override Func<Type, TypeDefinition, DeserializeOptions, PropertyDefinition> PropertyDefinitionReflectiveInstantiator => throw new NotImplementedException();
 
-        /// <summary>
-        /// Deserializer provider for XML deserialization
-        /// </summary>
-        internal override IDeserializerProvider DeserializerProvider => XmlDeserializerProvider.Instance;
+        internal override IDeserializerProvider DeserializerProvider => throw new NotImplementedException();
+
+        public override TState CreateReaderState<TState>(ReadOnlySpan<byte> buffer)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

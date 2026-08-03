@@ -1,3 +1,5 @@
+using Forestry.Deserialize.Definitions;
+
 namespace Forestry.Deserialize.Tests
 {
     internal sealed class TestingPropertyDefinition(

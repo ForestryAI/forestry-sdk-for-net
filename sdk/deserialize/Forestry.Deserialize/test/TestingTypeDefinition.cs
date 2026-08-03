@@ -1,3 +1,6 @@
+using Forestry.Deserialize.Definitions;
+using Forestry.Deserialize.Deserializers;
+
 namespace Forestry.Deserialize.Tests
 {
     /// <summary>

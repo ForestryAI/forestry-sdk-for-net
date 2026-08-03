@@ -1,25 +1,41 @@
-public ref partial struct Utf8XmlReader
+using Forestry.Deserialize.Xml;
+
+namespace Forestry.Deserialize.Xml.Reading
 {
-    /// <summary>
-    /// Reads next element || attribute
-    /// </summary>
-    /// <returns></returns>
-    public bool Read()
+    internal ref partial struct Utf8XmlReader
     {
-        return false;
-    }
+        private ReadOnlySpan<byte> _bytes;
 
-     /// <summary>
-     /// Skip current element || attribute
-     /// </summary>
-    public void Skip()
-    {}
+        private TokenType _tokenType;
 
-    #region Get
-    public string? GetString()
-    {
-        // TODO: Assert type is string
-        return null;
+        internal Utf8XmlReader(
+            ReadOnlySpan<byte> bytes,
+            ReaderState readerState
+        ) {
+            _bytes = bytes;
+
+            _tokenType = readerState.TokenType;
+        }
+
+        #region Position
+        public readonly TokenType TokenType => _tokenType;
+        #endregion
+
+        #region Reading 
+        /// <summary>
+        /// Reads next element || attribute
+        /// </summary>
+        /// <returns></returns>
+        public bool Read()
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Skip current element || attribute
+        /// </summary>
+        public void Skip()
+        {}
+        #endregion
     }
-    #endregion
 }

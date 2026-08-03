@@ -24,6 +24,8 @@ namespace Forestry.Deserialize
             Type type, 
             DeserializeOptions options
         ) {
+
+
             Debug.Assert(type is not null);
             options.SetReadOnly();
 
@@ -31,5 +33,8 @@ namespace Forestry.Deserialize
                 ? options.ObjectTypeDefintion
                 : options.GetTypeDefinition(type);
         }
+
+        private static TypeDefinition<T> GetTypeDefinition<T>(DeserializeOptions options)
+            => (TypeDefinition<T>)GetTypeDefinition(typeof(T), options);
     }
 }
