@@ -87,7 +87,7 @@ namespace Forestry.Deserialize.Deserializers
         /// Try read value
         /// </summary>
         /// <returns></returns>
-        internal abstract bool TryReadValue<TBuffering, TStream>(ref TBuffering buffering, scoped ref ReaderPath readerPath, out Value? value, DeserializeOptions options, CancellationToken cancellationToken = default) where TBuffering : struct, IBuffering<TBuffering, TStream>;
+        internal abstract ReadingStatus TryReadValue<TBuffering, TStream>(ref TBuffering buffering, scoped ref ReaderPath readerPath, out Value? value, DeserializeOptions options, CancellationToken cancellationToken = default) where TBuffering : struct, IBuffering<TBuffering, TStream>;
         #endregion
     }
 }

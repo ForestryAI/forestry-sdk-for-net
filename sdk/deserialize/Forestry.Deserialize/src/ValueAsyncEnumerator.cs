@@ -5,7 +5,7 @@ using Forestry.Deserialize.Reading;
 namespace Forestry.Deserialize
 {
     /// <summary>
-    /// Enumerates value <see cref="Value"/> from the type <see cref="TType"/> 
+    /// Enumerate <see cref="Value"/> starting from <see cref="TType"/> 
     /// </summary>
     public sealed class ValueAsyncEnumerator<TType, TBuffering, TStream>: IAsyncEnumerator<Value> where TBuffering : struct, IBuffering<TBuffering, TStream>
     {
@@ -45,45 +45,26 @@ namespace Forestry.Deserialize
         private ReaderPath _readerPath = default;
 
         /// <summary>
-        /// Value produced by the most recent successful <see cref="MoveNextAsync"/>
+        /// Current <see cref="Value"/> 
         /// </summary>
         public Value Current { get; private set; } = null!;
 
         /// <summary>
-        /// Advance to the next value. Under <see cref="ReadErrorHandling.ShuntAside"/> a failing
-        /// read is skipped in favor of the next one; under <see cref="ReadErrorHandling.ShortCircuit"/>
-        /// (the default) the first failure propagates and enumeration stops.
+        /// Move to next <see cref="Value"/> only async buffering with partial reads
         /// </summary>
-        public async ValueTask<bool> MoveNextAsync()
+        public async ValueTask<bool> MoveNextAsync() 
         {
+            // TODO: Failing read skipped <see cref="ReadErrorHandling.ShuntAside"/> rather than default <see cref="ReadErrorHandling.ShortCircuit"/>
             while (true)
             {
                 _cancellationToken.ThrowIfCancellationRequested();
 
-                _buffering = await _buffering.ReadAsync(_stream, _cancellationToken, maximum: true).ConfigureAwait(false);
-                bool readablePosition = TryReadPosition(ref _buffering, ref _stream);
+                ReadingStatus status =_readerPath.Position.TypeDefinition.Deserializer.TryReadValue<TBuffering, TStream>(ref _buffering, ref _readerPath, out Value? value, _typeDefinition.Options, _cancellationToken);
 
-                if (readablePosition)
-                {
-                    bool hasValue =_readerPath.Position.TypeDefinition.Deserializer.TryReadValue<TBuffering, TStream>(ref _buffering, ref _readerPath, out Value? value, _typeDefinition.Options, _cancellationToken);
-                    Current = hasValue ? value! : default!;
+                if (status == ReadingStatus.Value) { Current = value!; return true; }
+                if (status == ReadingStatus.NoValue) { Current = null!; return false; }
 
-                    // TODO: adjust reader path
-                    return hasValue;
-                }
-                {
-                    continue;
-                }
-            }
-        }
-
-        private bool TryReadPosition(ref TBuffering buffering, ref TStream stream)
-        {
-            try {
-                return false;
-            } finally
-            {
-                // TODO: advance buffering by the number of bytes used
+                _buffering = await _buffering.ReadAsync(_stream, _cancellationToken, maximum: true).ConfigureAwait(false);                
             }
         }
 
