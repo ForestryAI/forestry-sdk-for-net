@@ -1,3 +1,4 @@
+using Forestry.Deserialize.Definitions;
 using Xunit;
 
 namespace Forestry.Deserialize.Tests

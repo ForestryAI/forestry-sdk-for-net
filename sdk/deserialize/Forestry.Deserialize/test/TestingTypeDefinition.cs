@@ -1,3 +1,6 @@
+using Forestry.Deserialize.Definitions;
+using Forestry.Deserialize.Deserializers;
+
 namespace Forestry.Deserialize.Tests
 {
     /// <summary>
@@ -10,9 +13,6 @@ namespace Forestry.Deserialize.Tests
             : base(type, deserializer, options)
         {
         }
-
-        private protected override PropertyDefinition AsPropertyDefinition() =>
-            new TestingPropertyDefinition(Type, Type, this, Options) { TypeDefinition = this };
 
         private protected override PropertyDefinition CreatePropertyDefinition(
             TypeDefinition declaringTypeDefinition,

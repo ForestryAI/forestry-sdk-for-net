@@ -55,5 +55,11 @@ namespace Forestry.Deserialize
         {
             throw new OperationCanceledException(Formatting.PipeReaderCanceled);
         }
+
+        [DoesNotReturn]
+        public static void WhenDuplicatePropertyName(Type type, string propertyName)
+        {
+            throw new InvalidOperationException(Formatting.Format(Formatting.DuplicatePropertyName, type.FullName, propertyName));
+        }
     }
 }

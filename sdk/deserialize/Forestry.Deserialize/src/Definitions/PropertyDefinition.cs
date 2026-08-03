@@ -9,6 +9,19 @@ namespace Forestry.Deserialize.Definitions
         DeserializeOptions options
     )
     {
+        internal static readonly PropertyDefinition _Empty = CreateEmptyPropertyDefinition();
+
+        internal static PropertyDefinition CreateEmptyPropertyDefinition()
+        {
+            PropertyDefinition value = new PropertyDefinition<object>(typeof(object), declaringTypeDefinition: null, options: null!)
+            {
+                Name = string.Empty
+            };
+
+            // TODO: Debug assertions
+
+            return value;
+        }
 
         #region Shape
         /// <summary>
@@ -36,7 +49,7 @@ namespace Forestry.Deserialize.Definitions
         public virtual DeserializeOptions Options { get; } = options;
 
         /// <summary>
-        /// Name when deserializing
+        /// Unescaped property name e.g. escaped newlines or tabs from REST APIs
         /// </summary>
         /// <value></value>
         public string Name
@@ -58,10 +71,15 @@ namespace Forestry.Deserialize.Definitions
         private string? _name;
 
         /// <summary>
+        /// UTF-8 encoded property name
+        /// </summary>
+        internal byte[] Utf8Name { get; private set; } = null!;
+
+        /// <summary>
         /// Property <see cref="TypeDefinition"/>
         /// </summary>
         /// <value></value>
-        internal TypeDefinition TypeDefinition
+        public TypeDefinition TypeDefinition
         {
             get
             {
@@ -79,6 +97,26 @@ namespace Forestry.Deserialize.Definitions
         }
 
         private TypeDefinition? _typeDefinition;
+
+        /// <summary>
+        /// Property index in declaring <see cref="TypeDefinition"/> sealed set when 
+        /// this <see cref="PropertyDefinition"/> is configured
+        /// </summary>
+        internal int Index
+        {
+            get
+            {
+                Debug.Assert(IsConfigured);
+                return _index;
+            }
+            set
+            {
+                Debug.Assert(!IsConfigured);
+                _index = value;
+            }
+        }
+
+        private int _index;
         #endregion
 
         #region Configuration
@@ -96,31 +134,12 @@ namespace Forestry.Deserialize.Definitions
             Debug.Assert(DeclaringTypeDefinition is not null);
             Debug.Assert(!IsConfigured);
 
-            // TODO: Maybe ignore logic here?
-
+            // Synchronize configuration of declaring <see cref="TypeDefinition"/>
+            // TODO: Ingore property conditions
             _typeDefinition ??= Options.GetTypeDefinition(Type);
             _typeDefinition.SetConfiguration();
-
-            // A type definition's own self-referential property (TypeDefinition.PropertyDefinition,
-            // set via AsPropertyDefinition()) isn't a member that can be pruned for being empty -
-            // it's the root descriptor. Evaluating the checks below for it would also read
-            // _typeDefinition.ElementTypeDefinition while _typeDefinition (== this type,
-            // reentrantly) is still mid-Configure(), tripping that getter's IsConfigured assert.
-            if (_typeDefinition.PropertyDefinition != this)
-            {
-                if (TypeDefinition.Deserializer.CanReadValues)
-                {
-                    // TODO:
-                }
-                else if (_typeDefinition.Kind == TypeDefinitionKind.Object && _typeDefinition.Properties.Count == 0)
-                {
-                    DeclaringTypeDefinition.Properties.Remove(this);
-                }
-                else if (_typeDefinition.ElementTypeDefinition?.Kind == TypeDefinitionKind.Object && _typeDefinition.ElementTypeDefinition.Properties.Count == 0)
-                {
-                    DeclaringTypeDefinition.Properties.Remove(this);
-                }
-            }
+            
+            Utf8Name = System.Text.Encoding.UTF8.GetBytes(Name);
 
             IsConfigured = true;
         }

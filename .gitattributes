@@ -1,3 +1,4 @@
+# Update Visual Studio Code by searching Files in Settings then set Eol == \n (LF) because GIT uses LF internally
 * text=auto eol=lf
 
 *.bmp binary

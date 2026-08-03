@@ -4,6 +4,13 @@ using Forestry.Deserialize.Deserializers;
 
 namespace Forestry.Deserialize.Definitions
 {
+    /// <summary>
+    /// Type definition with 3 sections:
+    ///  - shape
+    ///  - configuration
+    ///  - creation
+    /// </summary>
+    /// <remarks>No support for multiple media lines e.g. JSON lines <see cref="https://jsonlines.org/"/></remarks>
     public abstract partial class TypeDefinition
     {
         protected TypeDefinition(
@@ -20,8 +27,6 @@ namespace Forestry.Deserialize.Definitions
 
             ElementType = deserializer.ElementType;
             KeyType = deserializer.KeyType;
-
-            PropertyDefinition = AsPropertyDefinition();
         }
 
         #region Shape
@@ -171,21 +176,18 @@ namespace Forestry.Deserialize.Definitions
         private string? _elementCollection;
 
         /// <summary>
-        /// Property defintion matching the declaring type of this type definition with simple values:
-        ///   - collection element type
-        ///   - dictionary key or value type
-        ///   - root-level value 
-        /// 
-        /// e.g. a property returning <see cref="List{T}"/> where T == is a string then 
-        /// a typed definition is created with .Type==typeof(string) and .PropertyDefinition=PropertyDefinition(typeof(string))
+        /// <see cref="Value"/> children by name
         /// </summary>
-        internal PropertyDefinition PropertyDefinition { get; }
+        internal Dictionary<string, PropertyDefinition> PropertyDefinitionsByName
+        {
+            get
+            {
+                Debug.Assert(IsConfigured is true && _propertyDefinitionsByName is not null);
+                return _propertyDefinitionsByName;
+            }
+        }
 
-        /// <summary>
-        /// Shapes this type definition as a property definition
-        /// </summary>
-        /// <returns></returns>
-        private protected abstract PropertyDefinition AsPropertyDefinition();
+        private Dictionary<string, PropertyDefinition>? _propertyDefinitionsByName;
         #endregion
 
         #region Configuration
@@ -197,6 +199,9 @@ namespace Forestry.Deserialize.Definitions
 
         public void SetInitialized() => IsInitialized = true;
 
+        /// <summary>
+        /// Only configure when <see cref="TypeDefinition"/> is not otherwise short-circuit
+        /// </summary>
         internal void SetConfiguration()
         {
             if (!IsConfigured)
@@ -245,8 +250,6 @@ namespace Forestry.Deserialize.Definitions
             Debug.Assert(Options.IsReadOnly);
             Debug.Assert(IsInitialized);
 
-            PropertyDefinition.Configure();
-
             if (Kind == TypeDefinitionKind.Object)
             {
                 ConfigureProperties();
@@ -289,10 +292,10 @@ namespace Forestry.Deserialize.Definitions
         }
         #endregion
 
-        #region Providing
+        #region Creation
         /// <summary>
-        /// Get <see cref="TypeDefinition"/> using deserializers falling back
-        /// on reflection type definition instantiators
+        /// Use deserializer to initialize the <see cref="TypeDefinition"/> otherwise failback on 
+        /// reflection
         /// </summary>
         /// <param name="type"></param>
         /// <param name="deserializer"></param>

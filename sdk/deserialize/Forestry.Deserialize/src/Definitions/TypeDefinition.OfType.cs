@@ -10,14 +10,6 @@ namespace Forestry.Deserialize.Definitions
             // TODO: Maybe an effective deserializer
         }
 
-        private protected override PropertyDefinition AsPropertyDefinition()
-        {
-            return new PropertyDefinition<T>(declaringType: typeof(T), declaringTypeDefinition: this, Options)
-            {
-                TypeDefinition = this  
-            };
-        }
-
         private protected override PropertyDefinition CreatePropertyDefinition(TypeDefinition declaringTypeDefinition, Type? declaringType, DeserializeOptions options)
         {
             return new PropertyDefinition<T>(declaringType ?? declaringTypeDefinition.Type, declaringTypeDefinition, options)

@@ -1,9 +1,12 @@
 using System.Diagnostics;
+using System.Text;
+using Forestry.Deserialize.Reading;
 
 namespace Forestry.Deserialize.Definitions
 {
     public abstract partial class TypeDefinition
     {
+        #region Configuration
         private ObservablePropertyDefinitionList? _properties;
 
         /// <summary>
@@ -31,16 +34,33 @@ namespace Forestry.Deserialize.Definitions
         private void ConfigureProperties()
         {
             Debug.Assert(Kind == TypeDefinitionKind.Object);
+            Debug.Assert(_propertyDefinitionsByName is null);
 
             ObservablePropertyDefinitionList properties = Properties;
+            // TODO: 
+            Dictionary<string, PropertyDefinition> propertyDefinitionsByName = new(properties.Count, StringComparer.Ordinal);
 
             for (int index = 0; index < properties.Count; index++)
             {
                 PropertyDefinition propertyDefinition = properties[index];
                 Debug.Assert(propertyDefinition.DeclaringTypeDefinition == this);
 
+                // TODO: Extensions
+                
+                propertyDefinition.Index = index;
+                // TODO: Required
+                // TODO: Sorted
+                // TODO: Faster lookup cache by name
+
+                if (!propertyDefinitionsByName.TryAdd(propertyDefinition.Name, propertyDefinition))
+                {
+                    Throwing.WhenDuplicatePropertyName(Type, propertyDefinition.Name);
+                }
+
                 propertyDefinition.Configure();
                 // TODO: has || is element then keep otherwise remove
+
+                _propertyDefinitionsByName = propertyDefinitionsByName;
             }
         }
 
@@ -123,5 +143,29 @@ namespace Forestry.Deserialize.Definitions
             /// <param name="item"></param>
             protected override void Before(PropertyDefinition item) => item.SetDeclaringTypeDefinition(_typeDefinition);
         }
+        #endregion
+
+        #region Get
+        internal PropertyDefinition? GetPropertyDefinition(
+            ReadOnlySpan<byte> name,
+            out byte[] utf8Name
+        )
+        {
+            Debug.Assert(IsConfigured);
+
+            if (PropertyDefinitionsByName.TryGetValue(Encoding.UTF8.GetString(name), out PropertyDefinition? value) && name.SequenceEqual(value.Utf8Name))
+            {
+                // Exact match
+                utf8Name = value.Utf8Name;
+
+            } else
+            {
+                // Copy name
+                utf8Name = name.ToArray();
+            }
+            
+            return value;
+        }
+        #endregion
     }
 }
