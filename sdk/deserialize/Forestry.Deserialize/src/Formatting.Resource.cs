@@ -20,5 +20,7 @@ namespace Forestry.Deserialize
         internal static string ConfigurePropertiesWrongDeclaringTypeDefintion => GetResourceString(nameof(ConfigurePropertiesWrongDeclaringTypeDefintion), "Type definition kind '{0}' not object");
 
         internal static string WhenNotSingularAttribute = GetResourceString(nameof(WhenNotSingularAttribute), @"Attribute [name: '{0}',target: '{1}'] is not singular");
+
+        internal static string PipeReaderCanceled = GetResourceString(nameof(PipeReaderCanceled), @"PipeReader was canceled");
     }
 }

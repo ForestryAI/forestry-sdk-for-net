@@ -6,7 +6,7 @@ namespace Forestry.Deserialize.Reading
     /// One level within a <see cref="ReaderPath"/>: a <see cref="TypeDefinition"/> together with
     /// which of its properties the deserialization will act on next.
     /// </summary>
-    internal struct ReaderPosition
+    public struct ReaderPosition
     {
         public TypeDefinition TypeDefinition;
     }

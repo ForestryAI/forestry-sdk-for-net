@@ -19,6 +19,11 @@ namespace Forestry.Deserialize
         public static IEnumerator<Value> Empty<Value>() => EmptyEnumerator<Value>.Instance;
 
         /// <summary>
+        /// UTF-8 BOM
+        /// </summary>
+        public static ReadOnlySpan<byte> Utf8Bom => [0xEF, 0xBB, 0xBF];
+
+        /// <summary>
         /// Empty async enumerator
         /// </summary>
         private sealed class EmptyAsyncEnumerator<T>: IAsyncEnumerator<T>

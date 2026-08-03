@@ -60,3 +60,39 @@ Net effect: because there's no per-branch namespace reassignment, "namespace res
 - A JSON media package — discussed hypothetically as the second real test of the abstraction, not started.
 - Handling XML outside this narrow dialect (namespace reassignment, CDATA, entity decoding, mixed content) — deliberately not supported unless a real StanForD sample surfaces one of these.
 - The real `Forestry.StanForD` ingestion project that this whole review is ultimately blocking (Feature #105) — out of scope for this task.
+
+---
+
+# Task #110 (continued) — Core plumbing reaches POC-sufficient shape
+
+## User Story
+#106 — Deserialize
+
+## Scope
+Implementation this round (the entry above was review-only, nothing built): `Reading/ReaderPath.cs`, `Reading/ReaderPosition.cs`, `Reading/ReadingStatus.cs`, `Reading/IReaderState.cs`, `Reading/IBuffering.cs`, `Reading/PipeReaderBuffering.cs`, `Deserializers/Deserializer.cs`, `Deserializers/Deserializer.OfType.cs`, `ValueAsyncEnumerator.cs`, `ValueAsyncEnumerable.cs`, `ARCHITECTURE.md`.
+
+## What was established
+
+**Everything the review left open about naming and the async/`ref` conflict is now settled and built, not just decided.** `IReadStack`/`Graph`/`Node`/`IState` became, after several rounds of naming discussion: `ReaderPath` (a stack of `ReaderPosition`s tracing one root-to-current chain through the `TypeDefinition` hierarchy — deliberately not "graph," since there's never more than one active chain) and `ReaderPosition` (one `TypeDefinition` plus which property it's currently on), and `IState` became `IReaderState<TState>` (continuation state to recreate a reader, generic per media). Both `ReaderPath`/`ReaderPosition` and `ReadingStatus` had to become `public`, not `internal` as first cut — `DeserializeOptions.UserDefinedDeserializers` already commits external consumers to writing their own `Deserializer<T>`, and a `public abstract` method can't expose a less-accessible type in its signature.
+
+**The walk's step function, `Deserializer.TryReadValue`, returns a three-state `ReadingStatus` (`Value`/`NoValue`/`Partial`), not a `bool`.** A `bool` genuinely can't carry this — it can't distinguish "no value yet, buffer more and retry" from "done forever," which would either cut enumeration short at every buffer boundary or spin forever past real EOF. Went through two intermediate shapes before landing here: first a separate `IsReadable` pre-check the Enumerator called before `TryReadValue` (rejected — two methods that have to agree with each other, real risk of drift), then folding the check into `TryReadNullableValue` itself via an `out Value<T>` + `ReadingStatus` return (settled).
+
+**Corrected mid-build: the generic `Deserializer<T>.TryReadValue` cannot own updating `ReaderPath`/`ReaderPosition` — only the concrete media `TryReadNullableValue` can.** The initial cut had `TryReadValue` responsible for advancing position, assuming a uniform, schema-declaration-order walk. Wrong: whether property order in the media matches declaration order, whether a property is an attribute or a child element, when a property's data is actually complete — all of that can only be determined by reading real tokens, which is exactly the thing that differs per media. So `TryReadValue` is now a thin pass-through; `TryReadNullableValue` (abstract, implemented per media) is fully responsible for reading a property, marking it read, and updating `ReaderPath`/`ReaderPosition` itself, in addition to returning `ReadingStatus`.
+
+**`PipeReaderBuffering` is the first real `IBuffering<TBuffering, TStream>` implementation — async-only, correct against real `PipeReader` semantics.** Uses `ReadAtLeastAsync` with a minimum size that doubles (`_partialReadBytes`) whenever a step consumes zero bytes, avoiding a tight little-by-little read loop for a value spanning a large chunk; `Advance(0)` maps to `AdvanceTo(sequence.Start, sequence.End)` — the correct `PipeReader` idiom for "examined everything, consumed nothing, don't wake me until there's more." Skips a UTF-8 BOM once, including the case where it spans multiple pipe segments. A real contract this depends on, not yet enforced anywhere except a `Debug.Assert`: whatever implements `TryReadNullableValue` **must** call `Advance` — even with `0` — before returning `Partial`, or the next `ReadAsync` call violates `PipeReader`'s own "no concurrent read before `AdvanceTo`" invariant and throws, one call removed from the actual mistake. Worth writing that requirement onto `TryReadNullableValue`'s own doc comment before a concrete media implementation is written against it.
+
+**Declared sufficient for POC purposes as of this note.** Stream-based buffering (sync and async, for testing without a real pipe) is deferred, not built. `IsCompleted` (real end-of-stream, as opposed to `Partial`) is captured on `PipeReaderBuffering` but nothing downstream reads it yet.
+
+## Acceptance criteria
+- Satisfied, for the core (`Forestry.Deserialize`) package's plumbing: `ReadingStatus` tri-state wired end to end through `Deserializer`/`Deserializer<T>`/`ValueAsyncEnumerator`; `ReaderPath`/`ReaderPosition` real, public, and correctly scoped (ownership corrected mid-build per above); `PipeReaderBuffering` implemented against real `PipeReader` semantics. All builds clean.
+- Not yet satisfied, moving to `Forestry.Deserialize.Xml` next (tracked by new GitHub issues, not yet filed as of this note):
+  - The ref-struct XML reader itself (started by the user, not yet reviewed here).
+  - Concrete `Deserializer<T>` subclasses implementing `TryReadNullableValue` for real XML types.
+  - `Forestry.Deserialize.Xml/Deserializers/ObjectDeserializer.cs` still doesn't compile against any of this — still the seed to rewrite, untouched so far.
+  - Stream-based `IBuffering` (sync + async) for testing without a real pipe — explicitly deferred by the user.
+
+## Out of scope
+- The ref-struct XML reader and concrete XML `Deserializer`s — next task, to be tracked by forthcoming GitHub issues.
+- Stream-based buffering — explicitly deferred ("later for testing").
+- A JSON media package — still just the second hypothetical test of the abstraction.
+- Wiring `IsCompleted`/true-EOF detection into the walk — `PipeReaderBuffering` captures it, nothing consumes it yet.

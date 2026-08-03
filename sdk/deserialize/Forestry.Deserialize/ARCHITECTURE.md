@@ -33,13 +33,16 @@ schema expects can be caught while streaming, not only after everything has been
 `TypeDefinition` carries the `Deserializer` responsible for actually reading its `Type`.
 
 **A `Deserializer` is an abstraction that advances position in the type/property graph and tries
-to produce a value.** It doesn't know how to parse any particular media — that's pushed down to a
-media-specific override (see `Deserializer<T>.ReadValue`, the "pull one value" hook a concrete
-package like `Forestry.Deserialize.Xml` implements). What the base `Deserializer<T>` owns is
-generic: given the current position in the walk, decide whether to descend into a property,
-finish the current object and return to its parent, or read a leaf value — and update that
-position accordingly. See §4.3 and `Forestry.Deserialize/CLAUDE.md`'s Task #110 entry for the
-current, still-settling shape of that walk.
+to produce a value — but the base, generic `Deserializer<T>` cannot do that advancing itself.**
+Updating the `ReaderPath`/`ReaderPosition` (matching the next raw token against a property,
+marking it read, moving position to reflect that, deciding when an object's properties are
+exhausted) depends on reading real tokens, which only the concrete media reader can do — property
+order in the media need not match declaration order, attributes vs. elements are visited
+differently, and so on. So `Deserializer<T>.TryReadValue` is a thin, generic pass-through; the
+actual walk — reading, marking properties read, and updating the path/position — lives entirely
+inside the abstract `Deserializer<T>.TryReadNullableValue` that a concrete package like
+`Forestry.Deserialize.Xml` implements. See §4.3 and `Forestry.Deserialize/CLAUDE.md`'s Task #110
+entry for the current, still-settling shape of that walk.
 
 **`DeserializeOptions` is the seam a concrete media plugs into.** It supplies the reflective
 instantiators that turn a `Type` into a `TypeDefinition`/`PropertyDefinition`, an
@@ -108,7 +111,7 @@ That position lives under `Forestry.Deserialize.Reading`, in two types:
   tracked.
 - **`ReaderPosition`** — one level within a `ReaderPath`: a `TypeDefinition` together with which of
   its properties the deserialization will act on next. `ReaderPath.Position` is the current (last)
-  one — where the active `Deserializer<T>.TryReadValue` is operating.
+  one — where the active `Deserializer<T>.TryReadNullableValue` is reading and updating position.
 
 See §4.4 for `IReaderState<TState>`, the type a concrete reader's continuation state implements.
 
@@ -121,6 +124,13 @@ Instead, each media package defines a small, ordinary (non-ref) storable state t
 a `Stream` sync or async. A reader is constructed fresh from `(buffer, state)` for each step, used,
 and its updated state captured back out before the step returns — mirroring
 `Utf8JsonReader`/`JsonReaderState`, not inventing a new pattern.
+
+`PipeReaderBuffering` is the first real `IBuffering` implementation — async-only, built directly
+against `System.IO.Pipelines.PipeReader`. Whatever implements `TryReadNullableValue` (§4.3) **must**
+call `Advance` — even with `0` bytes consumed — before returning `ReadingStatus.Partial`, or the
+next buffering `ReadAsync` violates `PipeReader`'s own invariant (no read before `AdvanceTo` on the
+prior result) and throws. Sync/stream-based buffering (for testing without a real pipe) is
+deferred, not built.
 
 ### 4.5 `DeserializeOptions`
 
@@ -135,19 +145,22 @@ options-equality comparer that currently treats every instance as equal (see §5
 
 ## 5. Status / POC Debt
 
-- **The walk's graph/node update is not implemented.** `Deserializer<T>.TryReadValue` currently
-  calls the media-specific `ReadValue` hook but does not yet advance position — every read acts as
-  if the type were a single flat value. This is the actively-in-progress piece; see
-  `CLAUDE.md`'s Task #110 entry for the fuller design history and open questions (dimension
+- **No concrete `TryReadNullableValue` implementation exists yet, so nothing actually advances
+  `ReaderPath`/`ReaderPosition`.** `Deserializer<T>.TryReadValue` is just a pass-through to it now
+  (see §2/§4.3) — the real walk (reading, marking properties read, updating position) has to live
+  in a media-specific override, and none has been written. This is the actively-in-progress piece;
+  see `CLAUDE.md`'s Task #110 entry for the fuller design history and open questions (dimension
   stamping, `Enumerable`/`Dictionary` kinds, the async hand-off shape).
 - **`Forestry.Deserialize.Xml` does not compile.** `ObjectDeserializer.cs` and
   `DeserializeXmlOptions.cs` predate the current core shape; `DeserializeXmlOptions` references
   `XmlTypeDefinition`/`XmlPropertyDefinition`/`XmlDeserializerProvider`, none of which exist
   anywhere in the repository yet.
-- **No concrete reader exists for any media.** Neither a real XML reader nor a JSON one has been
-  started — see `CLAUDE.md` for the decision to write a custom, `Utf8JsonReader`-shaped XML reader
-  (not `System.Xml.XmlReader`) scoped to StanForD's actual (narrow, single-default-namespace,
-  no-CDATA/entities/mixed-content) dialect.
+- **No concrete reader exists for any media in this repository yet, though one is in progress.** A
+  custom, `Utf8JsonReader`-shaped ref-struct XML reader (not `System.Xml.XmlReader`), scoped to
+  StanForD's actual (narrow, single-default-namespace, no-CDATA/entities/mixed-content) dialect per
+  `CLAUDE.md`'s decision, has been started but not reviewed here. Concrete `Deserializer<T>`
+  subclasses implementing `TryReadNullableValue` for XML types haven't been started. This work is
+  being tracked by new GitHub issues going forward rather than only this document.
 - **`Deserialization.Deserialize<T>(string, DeserializeOptions)` is an explicit
   `NotImplementedException` stub.** Its replacement is the `AsAsyncEnumerable<T>`-shaped entry
   point described in `CLAUDE.md`, not yet built.

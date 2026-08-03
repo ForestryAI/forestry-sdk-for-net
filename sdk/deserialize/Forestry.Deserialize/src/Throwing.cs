@@ -49,5 +49,11 @@ namespace Forestry.Deserialize
             string location = member is Type type ? type.ToString() : $"{member.DeclaringType}.{member.Name}";
             throw new InvalidOperationException(Formatting.Format(Formatting.WhenNotSingularAttribute, attributeType, location));
         }
+
+        [DoesNotReturn]
+        public static void WhenPipeReaderCanceled()
+        {
+            throw new OperationCanceledException(Formatting.PipeReaderCanceled);
+        }
     }
 }

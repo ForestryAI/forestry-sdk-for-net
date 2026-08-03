@@ -7,7 +7,7 @@ namespace Forestry.Deserialize.Reading
     /// <see cref="TypeDefinition"/>s from the root down to wherever reading currently is, each
     /// with its properties already expanded and indexed (<see cref="ReaderPosition"/>).
     /// </summary>
-    internal struct ReaderPath
+    public struct ReaderPath
     {
         /// <summary>
         /// Current (last) position - where the deserialization is currently acting
