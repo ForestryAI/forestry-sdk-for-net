@@ -19,9 +19,9 @@ namespace Forestry.Deserialize
         }
 
         [DoesNotReturn]
-        public static void WhenTypeDefinitionIsInitialized()
+        public static void WhenTypeDefinitionIsReadOnly()
         {
-            throw new InvalidOperationException(Formatting.TypeDefinitionIsInitialized);
+            throw new InvalidOperationException(Formatting.TypeDefinitionIsReadOnly);
         }
 
         [DoesNotReturn]

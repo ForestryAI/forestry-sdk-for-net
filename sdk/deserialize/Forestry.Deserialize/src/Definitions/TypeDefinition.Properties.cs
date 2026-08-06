@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Diagnostics;
 using System.Text;
 using Forestry.Deserialize.Reading;
@@ -37,8 +38,8 @@ namespace Forestry.Deserialize.Definitions
             Debug.Assert(_propertyDefinitionsByName is null);
 
             ObservablePropertyDefinitionList properties = Properties;
-            // TODO: 
             Dictionary<string, PropertyDefinition> propertyDefinitionsByName = new(properties.Count, StringComparer.Ordinal);
+            BitArray? requiredProperties = null;
 
             for (int index = 0; index < properties.Count; index++)
             {
@@ -48,8 +49,13 @@ namespace Forestry.Deserialize.Definitions
                 // TODO: Extensions
                 
                 propertyDefinition.Index = index;
-                // TODO: Required
-                // TODO: Sorted
+
+                if (propertyDefinition.IsRequired)
+                {
+                    (requiredProperties ??= new BitArray(properties.Count))[index] = true;
+                }
+
+                // TODO: Order property metadata
                 // TODO: Faster lookup cache by name
 
                 if (!propertyDefinitionsByName.TryAdd(propertyDefinition.Name, propertyDefinition))
@@ -118,7 +124,7 @@ namespace Forestry.Deserialize.Definitions
 
             private readonly TypeDefinition _typeDefinition;
 
-            public override bool IsReadOnly => _typeDefinition._properties == this && _typeDefinition.IsInitialized || _typeDefinition.Kind != TypeDefinitionKind.Object;
+            public override bool IsReadOnly => _typeDefinition._properties == this && _typeDefinition.IsReadOnly || _typeDefinition.Kind != TypeDefinitionKind.Object;
 
             /// <summary>
             /// Before an list operation assert the declaring type definition has not been 
@@ -128,7 +134,7 @@ namespace Forestry.Deserialize.Definitions
             {
                 if (_typeDefinition._properties == this)
                 {
-                    _typeDefinition.ThrowingWhenIsInitialized();
+                    _typeDefinition.ThrowingWhenIsReadOnly();
                 }
 
                 if (_typeDefinition.Kind != TypeDefinitionKind.Object)
@@ -151,7 +157,7 @@ namespace Forestry.Deserialize.Definitions
             out byte[] utf8Name
         )
         {
-            Debug.Assert(IsConfigured);
+            Debug.Assert(IsConfigurationImmutable);
 
             if (PropertyDefinitionsByName.TryGetValue(Encoding.UTF8.GetString(name), out PropertyDefinition? value) && name.SequenceEqual(value.Utf8Name))
             {

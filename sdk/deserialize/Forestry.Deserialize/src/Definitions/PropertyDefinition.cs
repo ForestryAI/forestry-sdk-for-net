@@ -61,7 +61,7 @@ namespace Forestry.Deserialize.Definitions
             }
             set
             {
-                ThrowingWhenIsInitialized();
+                ThrowingWhenIsReadOnly();
                 ArgumentNullException.ThrowIfNull(value);
 
                 _name = value;
@@ -83,10 +83,10 @@ namespace Forestry.Deserialize.Definitions
         {
             get
             {
-                Debug.Assert(_typeDefinition?.IsConfiguring == true);
+                Debug.Assert(_typeDefinition?.IsConfigurationMutable == true);
 
                 TypeDefinition value = _typeDefinition;
-                value.SetConfiguration();
+                value.AssertConfiguration();
 
                 return value;
             }
@@ -117,6 +117,25 @@ namespace Forestry.Deserialize.Definitions
         }
 
         private int _index;
+
+        /// <summary>
+        /// Required property
+        /// </summary>
+        public bool IsRequired
+        {
+            get => _isRequired;
+            set
+            {
+                ThrowingWhenIsReadOnly();
+                _isRequired = value;
+            }
+        }
+
+        private protected bool _isRequired;
+
+        internal bool IsSelfReferencedTypeDefinition { get; init; }
+
+        // TODO: Maybe property order metadata
         #endregion
 
         #region Configuration
@@ -137,7 +156,7 @@ namespace Forestry.Deserialize.Definitions
             // Synchronize configuration of declaring <see cref="TypeDefinition"/>
             // TODO: Ingore property conditions
             _typeDefinition ??= Options.GetTypeDefinition(Type);
-            _typeDefinition.SetConfiguration();
+            _typeDefinition.AssertConfiguration();
             
             Utf8Name = System.Text.Encoding.UTF8.GetBytes(Name);
 
@@ -145,11 +164,11 @@ namespace Forestry.Deserialize.Definitions
         }
 
         /// <summary>
-        /// Throw when declaring type definition is initialized
+        /// Throw when definition is read only
         /// </summary>
-        private protected void ThrowingWhenIsInitialized()
+        private protected void ThrowingWhenIsReadOnly()
         {
-            DeclaringTypeDefinition?.ThrowingWhenIsInitialized();
+            DeclaringTypeDefinition?.ThrowingWhenIsReadOnly();
         }
 
         /// <summary>

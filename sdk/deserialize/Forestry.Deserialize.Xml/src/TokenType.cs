@@ -1,7 +1,14 @@
 namespace Forestry.Deserialize.Xml {
     public enum TokenType: byte
     {
-        None = (byte)0,
-        Null = (byte)11  // TODO: How to handle nulls e.g. xs:int
+        StartingTag=(byte)0,
+        EndingTag=(byte)1,
+        EmptyTag=(byte)2,
+        AttributeName=(byte)3,
+        AttributeValue=(byte)4,
+        Declaration=(byte)5,
+        Comment=(byte)6,
+        CharacterData=(byte)7,
+        Null = (byte)8
     }
 }

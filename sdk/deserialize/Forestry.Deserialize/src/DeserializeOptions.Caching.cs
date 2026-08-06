@@ -51,7 +51,7 @@ namespace Forestry.Deserialize
             if (IsReadOnly)
             {
                 typeDefinition = Cache.GetOrAdd(type);
-                typeDefinition?.SetConfiguration();
+                typeDefinition?.AssertConfiguration();
             }
 
             if (typeDefinition is null)

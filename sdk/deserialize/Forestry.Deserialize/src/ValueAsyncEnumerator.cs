@@ -27,7 +27,7 @@ namespace Forestry.Deserialize
             _errorHandling = errorHandling;
             _cancellationToken = cancellationToken;
 
-            Debug.Assert(_typeDefinition.IsConfigured, "Type definition must be configured before enumerating values");
+            Debug.Assert(_typeDefinition.IsConfigurationImmutable, "Type definition must be configured before enumerating values");
             _readerPath = default;
             _readerPath.SetPosition(_typeDefinition, useContinuation: false);
         }

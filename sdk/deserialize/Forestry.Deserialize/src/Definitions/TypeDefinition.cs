@@ -27,6 +27,8 @@ namespace Forestry.Deserialize.Definitions
 
             ElementType = deserializer.ElementType;
             KeyType = deserializer.KeyType;
+
+            SelfReferencingPropertyDefinition = CreateSelfReferencingPropertyDefinition();
         }
 
         #region Shape
@@ -104,17 +106,17 @@ namespace Forestry.Deserialize.Definitions
         {
             get
             {
-                Debug.Assert(IsConfigured);
-                Debug.Assert(_elementTypeDefintion is null or { IsConfiguring: true });
+                Debug.Assert(IsConfigurationImmutable);
+                Debug.Assert(_elementTypeDefintion is null or { IsConfigurationMutable: true });
 
                 TypeDefinition? value = _elementTypeDefintion;
-                value?.SetConfiguration();
+                value?.AssertConfiguration();
 
                 return value;
             }
             set
             {
-                Debug.Assert(!IsInitialized);
+                Debug.Assert(!IsReadOnly);
                 Debug.Assert(value is null || value.Type == ElementType);
 
                 _elementTypeDefintion = value;
@@ -137,17 +139,17 @@ namespace Forestry.Deserialize.Definitions
         {
             get
             {
-                Debug.Assert(IsConfigured);
-                Debug.Assert(_keyTypeDefinition is null or { IsConfiguring: true });
+                Debug.Assert(IsConfigurationImmutable);
+                Debug.Assert(_keyTypeDefinition is null or { IsConfigurationMutable: true });
 
                 TypeDefinition? value = _keyTypeDefinition;
-                value?.SetConfiguration();
+                value?.AssertConfiguration();
 
                 return value;
             }
             set
             {
-                Debug.Assert(!IsInitialized);
+                Debug.Assert(!IsReadOnly);
                 Debug.Assert(value is null || value.Type == KeyType);
 
                 _keyTypeDefinition = value;
@@ -162,7 +164,7 @@ namespace Forestry.Deserialize.Definitions
             get => _elementCollection;
             set
             {
-                ThrowingWhenIsInitialized();
+                ThrowingWhenIsReadOnly();
 
                 if (value is null || !Options.CollectionNamingPolicy.TryEnforce(value))
                 {
@@ -182,12 +184,16 @@ namespace Forestry.Deserialize.Definitions
         {
             get
             {
-                Debug.Assert(IsConfigured is true && _propertyDefinitionsByName is not null);
+                Debug.Assert(IsConfigurationImmutable is true && _propertyDefinitionsByName is not null);
                 return _propertyDefinitionsByName;
             }
         }
 
         private Dictionary<string, PropertyDefinition>? _propertyDefinitionsByName;
+
+        internal PropertyDefinition SelfReferencingPropertyDefinition { get; }
+
+        private protected abstract PropertyDefinition CreateSelfReferencingPropertyDefinition();
         #endregion
 
         #region Configuration
@@ -195,16 +201,22 @@ namespace Forestry.Deserialize.Definitions
 
         private ExceptionDispatchInfo? _lastConfigureException;                          
 
-        public bool IsInitialized { get; private set; }
-
-        public void SetInitialized() => IsInitialized = true;
+        /// <summary>
+        /// Flag true when <see cref="TypeDefinition"> is immutable and false when mutable
+        /// </summary>
+        public bool IsReadOnly { get; private set; }
 
         /// <summary>
-        /// Only configure when <see cref="TypeDefinition"/> is not otherwise short-circuit
+        /// Set <see cref="TypeDefinition"> as immutable
         /// </summary>
-        internal void SetConfiguration()
+        public void SetReadOnly() => IsReadOnly = true;
+
+        /// <summary>
+        /// Assert configuration <see cref="TypeDefinition"/> only when configuration state == None
+        /// </summary>
+        internal void AssertConfiguration()
         {
-            if (!IsConfigured)
+            if (!IsConfigurationImmutable)
             {
                 SynchronizeConfigure();
             }
@@ -212,14 +224,14 @@ namespace Forestry.Deserialize.Definitions
             void SynchronizeConfigure()
             {
                 Options.SetReadOnly();
-                SetInitialized();
+                SetReadOnly();
 
                 // Before locking the type definition cache assert any configuration exception
                 _lastConfigureException?.Throw();
 
                 lock (Options.Cache)
                 {
-                    // When this thread has a redundant configuring || another thread has configured
+                    // When this thread has a redundant configuration mutation || another thread is mutating the configuration
                     if (_configurationState != ConfigurationState.None)
                     {
                         return;
@@ -230,9 +242,9 @@ namespace Forestry.Deserialize.Definitions
 
                     try
                     {
-                        _configurationState = ConfigurationState.Configuring;
+                        _configurationState = ConfigurationState.Mutating;
                         Configure();
-                        _configurationState = ConfigurationState.Configured;
+                        _configurationState = ConfigurationState.Immutable;
                     }
                     catch (Exception e)
                     {
@@ -246,9 +258,11 @@ namespace Forestry.Deserialize.Definitions
 
         private void Configure()
         {
-            Debug.Assert(Monitor.IsEntered(Options.Cache)); // Assert locked
+            Debug.Assert(Monitor.IsEntered(Options.Cache)); // Assert configuration locked
             Debug.Assert(Options.IsReadOnly);
-            Debug.Assert(IsInitialized);
+            Debug.Assert(IsReadOnly);
+
+            // TODO: Polymorphism
 
             if (Kind == TypeDefinitionKind.Object)
             {
@@ -259,35 +273,38 @@ namespace Forestry.Deserialize.Definitions
             if (ElementType is not null)
             {
                 _elementTypeDefintion ??= Options.ThrowingGetTypeDefinition(ElementType);
-                _elementTypeDefintion.SetConfiguration();
+                _elementTypeDefintion.AssertConfiguration();
             }
 
             // When KeyType member from Deserializer is not null
             if (KeyType is not null)
             {
                 _keyTypeDefinition ??= Options.ThrowingGetTypeDefinition(KeyType);
-                _keyTypeDefinition.SetConfiguration();
+                _keyTypeDefinition.AssertConfiguration();
             }
 
             // TODO: Assert targets Options
         }
 
-        internal bool IsConfigured => _configurationState == ConfigurationState.Configured;
+        internal bool IsConfigurationImmutable => _configurationState == ConfigurationState.Immutable;
 
-        internal bool IsConfiguring => _configurationState is not ConfigurationState.None;
+        internal bool IsConfigurationMutable => _configurationState is not ConfigurationState.None;
 
         private enum ConfigurationState : byte
         {
-            None = 0,
-            Configuring = 1,
-            Configured = 2
+            None = 0, // no mutation of the configuration is ongoing
+            Mutating = 1,
+            Immutable = 2
         }
 
-        internal void ThrowingWhenIsInitialized()
+        /// <summary>
+        /// Throwing when definition is read only
+        /// </summary>
+        internal void ThrowingWhenIsReadOnly()
         {
-            if (IsInitialized)
+            if (IsReadOnly)
             {
-                Throwing.WhenTypeDefinitionIsInitialized();
+                Throwing.WhenTypeDefinitionIsReadOnly();
             }
         }
         #endregion

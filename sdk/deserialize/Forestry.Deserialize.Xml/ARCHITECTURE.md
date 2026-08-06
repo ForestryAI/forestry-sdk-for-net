@@ -18,14 +18,18 @@ depends on (see core ARCHITECTURE.md §4.3–4.4). `Utf8XmlReader` is a `ref str
 only, operates over a caller-supplied span, and is reconstructed fresh from `(buffer, state)` per
 step — mirroring `Utf8JsonReader`/`JsonReaderState` exactly, not inventing a new pattern.
 
-**Scoped to StanForD's actual dialect, not general XML.** Verified directly against a real
-production `.hpr` export (see `CLAUDE.md`'s Task #110 entry for the grep evidence): a single
-default namespace declared once at the root and never reassigned deeper in the tree, zero
-CDATA/entity/character references, zero comments, and self-closing empty elements used for nulls.
-That means namespace resolution collapses to a constant check instead of an ancestor prefix-scope
-stack, and the tokenizer only has to recognize: start/end elements, attributes, self-closing
-empties, and plain text content. This is a tokenizer for one narrow grammar, not a competitor to
-`System.Xml`.
+**Built against StanForD's real shape first, but not permanently scoped to only what StanForD
+happens to use — full XML coverage is the goal.** A real production `.hpr` export (see
+`CLAUDE.md`'s Task #110 entry for the grep evidence) is what the reader is developed and tested
+against: single default namespace declared once at the root, zero CDATA/entity references, zero
+comments, self-closing empty elements for nulls. That sample is what keeps early development
+grounded in something real rather than assumed — but `TokenType`/`Constants` already carry CDATA,
+comment, and `xsi:nil` support ahead of any real StanForD file using them, on the position that
+narrow-dialect assumptions are an optional fast path to reach for later if ever needed, not a hard
+boundary on what the reader can parse. (Revised from an earlier, narrower stance — see CLAUDE.md's
+Task #110 entry for that history.) Namespace resolution collapsing to a constant check instead of
+an ancestor prefix-scope stack remains true for now since no real sample has needed otherwise, but
+isn't treated as a permanent constraint either.
 
 **Everything genuinely async stays in the core package's buffering layer.** `Utf8XmlReader` itself
 never awaits anything — refilling the span it reads from is `PipeReaderBuffering`'s job (core
@@ -44,8 +48,8 @@ into `Value`s.
   walk contract this package plugs into. See its own ARCHITECTURE.md for the shape this package is
   implementing against.
 
-**Stability:** Experimental — every type below is an early skeleton; several don't compile yet
-(§5).
+**Stability:** Experimental — the package builds clean today, but most types are still partial
+skeletons (§5).
 **Dependencies:** `Forestry.Deserialize` only.
 
 ## 4. Core Contracts
@@ -59,21 +63,30 @@ across an `await` or stored in a class field — a fresh instance is constructed
 `(buffer, ReaderState)`, exactly like `Utf8JsonReader`/`JsonReaderState` (see core ARCHITECTURE.md
 §4.4).
 
-### 4.2 `TokenType` (`src/TokenType.cs`)
+### 4.2 `TokenType` (`src/TokenType.cs`) and `Constants` (`src/Constants.cs`)
 
-The token kinds `Utf8XmlReader.Read()` advances between — currently only the `None` default
-exists (§5). Per the narrow-dialect decision in §2, this only ever needs to distinguish
-start/end element, attribute, self-closing empty element, and text content — not the full
-`System.Xml` token vocabulary (no CDATA, no entity references, no processing instructions/DTDs).
+`TokenType` is the set of token kinds `Utf8XmlReader.Read()` advances between: `StartingTag`,
+`EndingTag`, `EmptyTag`, `AttributeName`, `AttributeValue`, `Declaration`, `Comment`,
+`CharacterData`, `Null`. There is deliberately no `None`/"nothing yet" sentinel — every value is a
+real XML production (per §2, an empty/self-closing tag is itself a well-defined construct, not an
+absence of one), which is why `StartingTag` (not a placeholder) is the enum's default (`0`).
+
+`Constants` holds the raw UTF-8 byte-level vocabulary `Utf8XmlReader` scans against: markup
+delimiters (`<`, `>`, `&`, `;`), tag-internal delimiters (`/`, `=`, `"`, `?`, space), the UTF-8 BOM,
+all 5 predefined XML entities (`&lt;`/`&gt;`/`&amp;`/`&apos;`/`&quot;`), CDATA (`<![CDATA[`/`]]>`)
+and comment (`<!--`/`-->`) delimiters, an `xsi:nil` attribute-name constant for null detection, and
+`true`/`false` literal content. Per §2, some of these (CDATA, `xsi:nil`) don't occur in the real
+StanForD sample used for development and are unverified against real data as of this writing —
+they're there for eventual general-XML coverage, not because StanForD needs them today.
 
 ### 4.3 `ReaderState` (`src/Reading/ReaderState.cs`)
 
 The storable, non-ref continuation state for `Utf8XmlReader`, implementing the core package's
 `IReaderState<ReaderState>` (see core ARCHITECTURE.md §4.4) — this is what `DeserializeXmlOptions
 .CreateReaderState<TState>` is meant to produce and what a fresh `Utf8XmlReader` is reconstructed
-from between steps. Currently carries `ReaderPositionLineNumber` and `TokenType`; the interface
-also requires `ReaderPositionName`, `ReaderPosition` (byte offset in line), and `IsObject`, none of
-which are implemented yet (§5).
+from between steps. All 4 interface members (`ReaderPositionLineNumber`, `ReaderPositionName`,
+`ReaderPosition`, `IsObject`) plus `TokenType` are implemented as a plain immutable data holder —
+nothing populates real values into one yet (§5).
 
 ### 4.4 `DeserializeXmlOptions` (`src/DeserializeXmlOptions.cs`)
 
@@ -82,36 +95,57 @@ ARCHITECTURE.md §4.5): reflective `TypeDefinition`/`PropertyDefinition` instant
 `IDeserializerProvider`, and `CreateReaderState<TState>`. `Default` is the ready-made instance
 consumers are expected to reach for. Every member is currently a stub (§5).
 
-### 4.5 `ObjectDeserializer<T>` (`src/Deserializers/ObjectDeserializer.cs`)
+### 4.5 `ObjectDeserializer<T>` and `Deserializers/Value/BooleanDeserializer`
 
-The XML-specific `Deserializer<T>` for object-shaped types — where `TryReadNullableValue` will
-actually walk `Utf8XmlReader` tokens against `ReaderPath`/`ReaderPosition`, matching elements/
-attributes to `PropertyDefinition`s and marking them read (see core ARCHITECTURE.md §4.3 for why
-that walk can only live here, not in the core package). Not started (§5) beyond the empty class
-declaration. Value-kind, Enumerable-kind, and Dictionary-kind XML deserializers don't exist yet
-either — only the Object case has a (stub) file.
+`ObjectDeserializer<T>` (`src/Deserializers/ObjectDeserializer.cs`) is the XML-specific
+`Deserializer<T>` for object-shaped types — where `TryReadNullableValue` will actually walk
+`Utf8XmlReader` tokens against `ReaderPath`/`ReaderPosition`, matching elements/attributes to
+`PropertyDefinition`s and marking them read (see core ARCHITECTURE.md §4.3 for why that walk can
+only live here, not in the core package). `GetDeserializerKind` is real (`DeserializerKind
+.Object`); `TryReadNullableValue` itself is still a stub returning `Partial` unconditionally.
+
+`BooleanDeserializer` (`src/Deserializers/Value/BooleanDeserializer.cs`) is the first Value-kind
+XML deserializer — the pattern any leaf scalar type (numbers, strings, dates) will follow.
+`TryReadNullableValue` is currently an explicit `throw new NotImplementedException()`.
+Enumerable-kind and Dictionary-kind XML deserializers don't exist yet.
+
+### 4.6 `Deserialization.Property.cs`
+
+`PositionPropertyDefinition` (renamed from an earlier `GetPropertyDefinition` — the new name
+reflects that it does more than look up: it also advances `readerPath.Position.PropertyIndex` and
+records `PropertyUtf8Name`) resolves a raw property name read off the wire to a
+`PropertyDefinition` via the core's `TypeDefinition.GetPropertyDefinition`, falling back to
+`PropertyDefinition._Empty` on a miss (`// TODO: Potential dictionary extension support` marks the
+open question of what a miss should really mean). `GetPropertyName` pulls the raw name out of a
+`Utf8XmlReader` via `GetUnescapedValue()`.
 
 ## 5. Status / POC Debt
 
-- **Nothing in this package compiles.** Specifically, as of this writing:
-  - `ObjectDeserializer<T>` declares no members, so it does not satisfy `Deserializer`/
-    `Deserializer<T>`'s abstract surface (`Type`, `GetDeserializerKind`, `CanDeserialize`,
-    `InitializeTypeDefinition`, `TryReadNullableValue`) — a non-abstract class must implement all
-    of these.
-  - `ReaderState` implements only `ReaderPositionLineNumber` and a non-interface `TokenType`
-    member; `IReaderState<ReaderState>` also requires `ReaderPositionName`, `ReaderPosition`, and
-    `IsObject`, none of which are declared.
+- **The package builds clean** (both TFMs, `Forestry.Deserialize.Xml.slnx`), but most of the
+  actual tokenizing/walking logic is still stub:
+  - `Utf8XmlReader.Read()`/`Skip()` are unconditional stubs (`return false`/no-op) — no real
+    tokenizing happens yet, despite `TokenType`/`Constants` now carrying the real vocabulary to
+    tokenize against. `GetString()` only distinguishes `Null` from everything else (returns
+    `string.Empty` for any other token). `GetUnescapedValue()` doesn't yet decode entities
+    (`// TODO: When escaped convert`).
   - `DeserializeXmlOptions`'s three `internal abstract` overrides and `CreateReaderState<TState>`
     are all explicit `throw new NotImplementedException()` bodies.
-  - `Utf8XmlReader.cs` declares its `ref partial struct` with **no enclosing namespace** — it sits
-    in the global namespace, inconsistent with every other type in this package (`Forestry
-    .Deserialize.Xml.Reading`). Worth fixing when the reader is actually built out, so it resolves
-    the same way its `ReaderState`/`TokenType` neighbors do.
-- **`TokenType` has only its `None = 0` default** — no real token kinds defined yet (§4.2).
-- **`Utf8XmlReader.Read()`/`Skip()`/`GetString()` are unconditional stubs** (`return false`/no-op/
-  `return null`) — no actual tokenizing happens.
-- **No `Value`/`Enumerable`/`Dictionary`-kind XML deserializer exists** — only the `Object`-kind
-  stub file. `DeserializerFactory`/`IDeserializerProvider` wiring for any of them is unbuilt.
+  - `ObjectDeserializer<T>.TryReadNullableValue` always returns `Partial`
+    (`// TODO: Reader get next property`); `BooleanDeserializer.TryReadNullableValue` throws.
+  - `ReaderState` implements the full `IReaderState<ReaderState>` shape but nothing populates real
+    values into one from an actual read yet.
+- **`Constants.NullAttributeName` (`xsi:nil`) and the CDATA delimiters are unverified against real
+  StanForD data** — the Task #110 sample has zero occurrences of either (confirmed by grep against
+  the same file again this round). Per §2 this is an intentional, accepted gap — general-XML
+  coverage ahead of StanForD actually needing it — not a bug, but worth remembering when a real
+  StanForD file's null representation (a bare self-closing empty element, no `xsi:nil` attribute)
+  needs to actually work end to end.
+- **`Utf8XmlReader.cs` declares its `ref partial struct` with no enclosing namespace** — it sits in
+  the global namespace, inconsistent with every other type in this package (`Forestry.Deserialize
+  .Xml.Reading`). Still unfixed.
+- **No `Enumerable`/`Dictionary`-kind XML deserializer exists** — only `Object` (Object-kind) and
+  `Boolean` (Value-kind, the first of what leaf scalar types will follow) have files.
+  `DeserializerFactory`/`IDeserializerProvider` wiring for any of them is unbuilt.
 - **No test project content** — `Forestry.Deserialize.Xml.Tests` exists as a `.csproj` shell only
   (no test files under it yet).
 
@@ -119,19 +153,25 @@ either — only the Object case has a (stub) file.
 
 | Module | Stability | Notes |
 |---|---|---|
-| `Utf8XmlReader` | **Unstarted** | `ref struct` shape agreed (§2), no real tokenizing implemented |
-| `TokenType` | **Unstarted** | Only the `None` default exists |
-| `ReaderState` | **Unstarted** | Missing 3 of 4 `IReaderState<TState>` members |
+| `Utf8XmlReader` | **Started** | `ref struct` shape + `Value`/`Values` span-vs-sequence split in place; `Read()`/`Skip()` still stubs |
+| `TokenType` | **Settling** | 9 real token kinds defined; no `None` sentinel (§4.2) |
+| `Constants` | **Started** | Byte-level vocabulary defined; `xsi:nil`/CDATA constants unverified against real data (§5) |
+| `ReaderState` | **Shape settled** | Full `IReaderState<TState>` implemented; nothing populates real values yet |
 | `DeserializeXmlOptions` | **Unstarted** | Every override throws |
-| `ObjectDeserializer<T>` | **Unstarted** | Stale seed from before the current `Deserializer<T>` shape; doesn't compile |
-| Value/Enumerable/Dictionary deserializers | **Not begun** | No files exist |
+| `ObjectDeserializer<T>` | **Started** | `GetDeserializerKind` real; `TryReadNullableValue` still a stub |
+| `BooleanDeserializer` | **Started** | First Value-kind deserializer; `TryReadNullableValue` throws |
+| `PositionPropertyDefinition`/`GetPropertyName` | **Started** | Real lookup + `ReaderPath.Position` bookkeeping wired |
+| Enumerable/Dictionary deserializers | **Not begun** | No files exist |
 
 ## 7. Anti-Goals
 
-- This package does not aim to parse general XML — no namespace-prefix reassignment, no CDATA, no
-  entity/character reference decoding, no mixed content, no comments, no processing instructions
-  or DTDs — unless a real StanForD sample surfaces one of these (see CLAUDE.md's Task #110 entry
-  for the grep evidence this scoping is based on).
+- **Revised** (see §2) — this package no longer treats general-XML constructs as permanently out
+  of scope. CDATA, predefined entity decoding, and comments are being built as real, if optional,
+  capabilities rather than excluded until a StanForD sample happens to need them. What remains a
+  genuine anti-goal: DTD processing and external entity resolution (a real security concern for any
+  XML parser, not just a scoping convenience) and XInclude — general-XML features with no StanForD
+  relevance and real complexity/attack-surface cost, not planned unless something concrete requires
+  them.
 - It does not reimplement anything the core `Forestry.Deserialize` package already owns — the
   walk contract, `Value`/`TypeDefinition` shapes, and buffering all come from there; this package
   only supplies the XML-specific reader and `Deserializer<T>` subclasses.

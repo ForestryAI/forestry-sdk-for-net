@@ -1,5 +1,4 @@
 using Forestry.Deserialize.Deserializers;
-using Forestry.Deserialize.Reading;
 
 namespace Forestry.Deserialize.Definitions
 {
@@ -10,12 +9,32 @@ namespace Forestry.Deserialize.Definitions
             // TODO: Maybe an effective deserializer
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="declaringTypeDefinition"></param>
+        /// <param name="declaringType"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
         private protected override PropertyDefinition CreatePropertyDefinition(TypeDefinition declaringTypeDefinition, Type? declaringType, DeserializeOptions options)
         {
             return new PropertyDefinition<T>(declaringType ?? declaringTypeDefinition.Type, declaringTypeDefinition, options)
             {
                 TypeDefinition = this
             };
-        } 
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private protected override PropertyDefinition CreateSelfReferencingPropertyDefinition()
+        {
+            return new PropertyDefinition<T>(declaringType: typeof(T), declaringTypeDefinition: this, Options)
+            {
+                TypeDefinition = this,
+                IsSelfReferencedTypeDefinition = true
+            };
+        }
     }
 }

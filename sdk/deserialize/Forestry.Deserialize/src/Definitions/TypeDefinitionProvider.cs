@@ -56,7 +56,7 @@ namespace Forestry.Deserialize.Definitions
         private static void GetPropertyDefinitions(
             TypeDefinition typeDefinition
         ) {
-            Debug.Assert(!typeDefinition.IsInitialized);
+            Debug.Assert(!typeDefinition.IsReadOnly);
             Debug.Assert(typeDefinition.Kind is TypeDefinitionKind.Object);
 
             foreach (Type derivedType in typeDefinition.Type.GetSortedTypeHierarchy())
@@ -79,7 +79,7 @@ namespace Forestry.Deserialize.Definitions
             TypeDefinition typeDefinition,
             Type derivedType
         ) {
-            Debug.Assert(!typeDefinition.IsInitialized);
+            Debug.Assert(!typeDefinition.IsReadOnly);
             Debug.Assert(derivedType.IsAssignableFrom(typeDefinition.Type));
 
             foreach (PropertyInfo property in derivedType.GetProperties(_memberBindingFlags))

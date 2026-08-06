@@ -105,3 +105,43 @@ Implementation this round (the entry above was review-only, nothing built): `Rea
 - A JSON media package — still just the second hypothetical test of the abstraction.
 - Wiring `IsCompleted`/true-EOF detection into the walk — `PipeReaderBuffering` captures it, nothing consumes it yet.
 - An `Object`-kind fixture driven through the real pipe walk — only the `Value`-kind (scalar) case has been exercised end to end so far.
+
+---
+
+# Task #110 (continued) — Scope reversal: full XML coverage, not StanForD-only
+
+## User Story
+#106 — Deserialize
+
+## What changed
+
+**The narrow-StanForD-dialect scoping decided earlier in this task is reversed.** The original
+review (above) resolved to scope `Utf8XmlReader` to only what the real `.hpr` sample actually uses
+— no CDATA, no entity/character reference decoding, no comments — on the reasoning that a narrower
+grammar is simpler to build and the real data didn't need more. Building `TokenType`/`Constants`
+surfaced the user's actual intent: StanForD's dialect is what development is grounded and tested
+against first (not assumed, still verified by grep against the real sample), but it is not meant to
+be a permanent ceiling on what the reader can parse — "doesn't matter how StanForD uses CDATA or
+nulls... got to cover any kind of XML later on." `Forestry.Deserialize.Xml/ARCHITECTURE.md` §2/§5/§7
+have been updated to match; read those for the current, accurate scope statement rather than the
+original review entry above, which is now historical record of the earlier (narrower) decision.
+
+**Concretely, `TokenType` and `Constants` were built ahead of what StanForD needs:** CDATA
+delimiters (`<![CDATA[`/`]]>`) and an `xsi:nil` null-attribute constant are both in `Constants.cs`
+despite zero occurrences of either in the Task #110 sample (re-verified by grep this round, same
+result as the original review) — StanForD represents null via a bare self-closing empty element,
+not `xsi:nil`. This is an accepted, intentional gap per the reversed scope above, not a bug — but
+whatever eventually detects "this value is null" needs to fall out of an empty tag with no
+attributes, not an `xsi:nil` lookup, if it's going to work against real StanForD data specifically.
+
+**`TokenType.None` was dropped, not replaced 1:1.** Every remaining value (`StartingTag`,
+`EndingTag`, `EmptyTag`, `AttributeName`, `AttributeValue`, `Declaration`, `Comment`,
+`CharacterData`, `Null`) is a real XML production; an empty/self-closing tag is itself well-defined,
+not an absence of one, so a separate "nothing yet" sentinel was judged unnecessary. `StartingTag`
+being ordinal `0` (the enum's default) is a side effect of this, not a chosen sentinel value.
+
+## Out of scope
+- Actually wiring CDATA/comment/`xsi:nil` handling into `Utf8XmlReader.Read()` — `Constants` has
+  the vocabulary; the tokenizer doesn't consume it yet.
+- DTD processing, external entity resolution, XInclude — still genuinely out of scope (real
+  security/complexity cost, no StanForD relevance), unlike CDATA/comments/entities above.

@@ -11,7 +11,7 @@ namespace Forestry.Deserialize
 
         private static System.Resources.ResourceManager s_resourceManager = null!;
 
-        internal static string TypeDefinitionIsInitialized => GetResourceString(nameof(TypeDefinitionIsInitialized), @"Type definition instance is initialized i.e. type has been deserialized at least once.");
+        internal static string TypeDefinitionIsReadOnly => GetResourceString(nameof(TypeDefinitionIsReadOnly), @"Type definition is readonly (immutable) i.e. type has been deserialized at least once.");
 
         internal static string DeserializeOptionsIsReadOnly => GetResourceString(nameof(DeserializeOptionsIsReadOnly), @"Deserialize options instance is read-only i.e. locked for changes.");
 

@@ -11,11 +11,12 @@ behind those decisions, see [CLAUDE.md](../CLAUDE.md).
 
 ## Status
 
-**Not usable yet — nothing in this package compiles.** Every type here (`Utf8XmlReader`,
-`TokenType`, `ReaderState`, `DeserializeXmlOptions`, `ObjectDeserializer<T>`) is an early skeleton:
-either an explicit `NotImplementedException` stub, a class missing required interface/abstract
-members, or an unconditional no-op. See ARCHITECTURE.md §5 for the precise list of what's missing
-in each file.
+**Not usable yet, though the package builds clean.** `TokenType`/`Constants` now carry a real XML
+token vocabulary, and `ReaderState` fully implements the core's `IReaderState<TState>` shape, but
+the actual tokenizing (`Utf8XmlReader.Read()`) and walking (`ObjectDeserializer<T>
+.TryReadNullableValue`, `BooleanDeserializer.TryReadNullableValue`, `DeserializeXmlOptions`) are
+still stubs. See ARCHITECTURE.md §5 for the precise, current list of what's built vs. stubbed in
+each file.
 
 Until then, [Forestry.Deserialize](../Forestry.Deserialize/README.md)'s own README/tests are the
 best reference for what actually works today — schema reflection and the core pipe-based walk,
