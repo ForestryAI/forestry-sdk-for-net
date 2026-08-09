@@ -6,23 +6,23 @@ namespace Forestry.Deserialize.Reading
     public interface IReaderState<TState> where TState : struct, IReaderState<TState>
     {
         /// <summary>
-        /// Reader position line number
+        /// Reader line number
         /// </summary>
-        public long ReaderPositionLineNumber { get; }
+        internal long _lineNumber { get; }
 
         /// <summary>
-        /// Reader position name
+        /// Reader line number's position (byte)
         /// </summary>
-        public string ReaderPositionName { get; }
+        internal long _lineNumberPosition { get; }
 
         /// <summary>
-        /// Reader position (byte) in line
+        /// Is in an object
         /// </summary>
-        public long ReaderPosition { get; }
+        internal bool _isObject { get; }
 
         /// <summary>
-        /// Is reader position in an object
+        /// Is in a none privitive
         /// </summary>
-        public bool IsObject { get; }
+        internal bool _isNotPrimitive { get; }
     }
 }

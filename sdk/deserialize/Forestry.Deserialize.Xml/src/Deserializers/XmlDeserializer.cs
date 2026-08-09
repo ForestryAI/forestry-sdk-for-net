@@ -13,9 +13,10 @@ namespace Forestry.Deserialize.Xml.Deserializers
             DeserializeOptions options
         )
         {
+            // TODO: Create Reader from buffer
+
             try
             {
-                if (readerPath)
             } catch (Exception e)
             {
                 switch (e)

@@ -20,27 +20,27 @@ namespace Forestry.Deserialize.Reading
         {
             get
             {
-                Debug.Assert(_depth > 1);
+                Debug.Assert(_positionsCount > 1);
                 Debug.Assert(_positions is not null);
 
-                return ref _positions[_depth - 2];
+                return ref _positions[_positionsCount - 2];
             }
         }
 
         /// <summary>
-        /// When the path has paused positions ready for re-entry
+        /// When the path has paused positions waiting for continuation
         /// </summary>
         public readonly bool HasPausedPositions => _pausedPositionsCount != 0;
 
         /// <summary>
-        /// When not zero then paused positions are ready for re-entry
+        /// Paused positions count
         /// </summary>
         private int _pausedPositionsCount;
 
         /// <summary>
-        /// Path depth
+        /// Positions count
         /// </summary>
-        private int _depth;
+        private int _positionsCount;
 
         /// <summary>
         /// Positions constituting the path
@@ -48,36 +48,38 @@ namespace Forestry.Deserialize.Reading
         private ReaderPosition[] _positions;
 
         /// <summary>
-        /// Open 
+        /// When non-root not waiting for continuation then shift the current position to 
+        /// the <see cref="TypeDefinition"/> of active property otherwise unshift to the previous position
         /// </summary>
-        public void Open()
+        public void Shift()
         {
             if (_pausedPositionsCount == 0)
             {
-                if (_depth == 0) // just use current position
+                if (_positionsCount == 0) // root waiting for continuation
                 {
-                    _depth = 1;
+                    _positionsCount = 1;
                 } else
                 {
                     TypeDefinition typeDefinition = Position.PropertyDefinition.TypeDefinition;
 
                     GrowPathSize();
-                    _positions[_depth - 1] = Position;
+                    _positions[_positionsCount - 1] = Position;
                     Position = default;
-                    _depth++;
+                    _positionsCount++;
 
+                    // remarks: property definition overwritten to a non-self referencing in object deserializers
                     Position.TypeDefinition = typeDefinition;
                     Position.PropertyDefinition = typeDefinition.SelfReferencingPropertyDefinition;
                 }
             } else
             {
-                if (_depth++ > 0)
+                if (_positionsCount++ > 0)
                 {
-                    _positions[_depth - 2] = Position;
-                    Position = _positions[_depth - 1];
+                    _positions[_positionsCount - 2] = Position;
+                    Position = _positions[_positionsCount - 1];
                 }
 
-                if (_pausedPositionsCount == _depth)
+                if (_pausedPositionsCount == _positionsCount)
                 {
                     _pausedPositionsCount = 0;
                 }
@@ -85,42 +87,43 @@ namespace Forestry.Deserialize.Reading
         }
 
         /// <summary>
-        /// Move the path back
+        /// When done there are no paused positions before unshifting to the previous position 
+        /// otherwise
         /// </summary>
         /// <param name="done"></param>
         public void Close(bool done)
         {
-            Debug.Assert(_depth > 0);
+            Debug.Assert(_positionsCount > 0);
 
             if (!done)
             {
-                if (_pausedPositionsCount == 0) // next position at the same depth
+                if (_pausedPositionsCount == 0)
                 {
-                    if (_depth == 1)
+                    if (_positionsCount == 1)
                     {
                         _pausedPositionsCount = 1;
-                        _depth = 0;
+                        _positionsCount = 0;
                         return;
                     }
 
                     GrowPathSize();
-                    _pausedPositionsCount = _depth--;
+                    _pausedPositionsCount = _positionsCount--;
                 }
-                else if (--_depth == 0)  // no more positions e.g. root
+                else if (--_positionsCount == 0)
                 {
                     return;
                 }
 
-                _positions[_depth] = Position;
-                Position = _positions[_depth - 1];
+                _positions[_positionsCount] = Position;
+                Position = _positions[_positionsCount - 1];
             }
             else
             {
                 Debug.Assert(_pausedPositionsCount == 0);
 
-                if (--_depth > 0)
+                if (--_positionsCount > 0)
                 {
-                    Position = _positions[_depth - 1];
+                    Position = _positions[_positionsCount - 1];
                 }
             }
         }
@@ -131,7 +134,7 @@ namespace Forestry.Deserialize.Reading
             {
                 _positions = new ReaderPosition[4];
             }
-            else if (_depth - 1 == _positions.Length)
+            else if (_positionsCount - 1 == _positions.Length)
             {
                 Array.Resize(ref _positions, 2 * _positions.Length);
             }

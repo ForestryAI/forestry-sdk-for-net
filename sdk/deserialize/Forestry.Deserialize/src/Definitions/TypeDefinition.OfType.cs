@@ -25,7 +25,7 @@ namespace Forestry.Deserialize.Definitions
         }
 
         /// <summary>
-        /// 
+        /// Create a self referencing <see cref="PropertyDefinition"/> to this <see cref="TypeDefinition{T}"/>
         /// </summary>
         /// <returns></returns>
         private protected override PropertyDefinition CreateSelfReferencingPropertyDefinition()

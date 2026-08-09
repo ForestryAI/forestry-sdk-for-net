@@ -22,5 +22,14 @@ namespace Forestry.Deserialize.Tests
         {
             TypeDefinition = this
         };
+
+        private protected override PropertyDefinition CreateSelfReferencingPropertyDefinition()
+        {
+            return new TestingPropertyDefinition(this.Type, this.Type, this, Options)
+            {
+                TypeDefinition = this,
+                IsSelfReferencedTypeDefinition = true
+            };
+        }
     }
 }
