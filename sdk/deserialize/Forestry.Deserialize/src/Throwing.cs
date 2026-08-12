@@ -61,11 +61,5 @@ namespace Forestry.Deserialize
         {
             throw new InvalidOperationException(Formatting.Format(Formatting.DuplicatePropertyName, type.FullName, propertyName));
         }
-
-        [DoesNotReturn]
-        public static void WhenIntegerNotPositive(int value, string valueName)
-        {
-            throw new InvalidOperationException(Formatting.Format(Formatting.IntegerNotPositive, value, valueName));
-        }
     }
 }

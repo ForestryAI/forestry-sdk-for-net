@@ -117,7 +117,7 @@ namespace Forestry.Deserialize.Xml.Reading
 
         #region Reading 
         /// <summary>
-        /// Reads next token
+        /// Read
         /// </summary>
         /// <returns></returns>
         public bool Read()
@@ -135,7 +135,7 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// Skip current token
+        /// Skip
         /// </summary>
         public void Skip()
         {}
@@ -153,29 +153,22 @@ namespace Forestry.Deserialize.Xml.Reading
             {
                 goto ReadingCompleted;
             }
-
-            byte value = _buffer[_bufferPosition];
-
-            // TODO: Spaces
-
+            
             if (_tokenType == TokenType.None)
             {
-                goto ReadFirstToken;
+                goto ReadDocument;
             }
 
-            // TODO: Comments
-
-            // TODO: Declaration
+            byte value = _buffer[_bufferPosition];
             
             if (_tokenType == TokenType.StartingTag)
             {
-                // TODO: value within XML element + attribute valid characters
+                // TODO: Read element
 
-                // TODO: when space then attribute name
-                // TODO: when equals then attribute value
-
+                readable = true;
                 goto ReadingCompleted;
-            } else
+            } 
+            else
             {
                 // TODO: when nothing matches
                 goto ReadingCompleted;
@@ -184,8 +177,8 @@ namespace Forestry.Deserialize.Xml.Reading
             ReadingCompleted:
                 return readable;
 
-            ReadFirstToken:
-                readable = ReadFirstToken(value);
+            ReadDocument:
+                readable = ReadDocument(_buffer);
                 goto ReadingCompleted;
         }
 
@@ -216,21 +209,84 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// Read first token
+        /// Read document defined as: prolog element miscellaneous*
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        private bool ReadFirstToken(byte value)
+        /// <see cref="https://www.w3.org/TR/REC-xml/">Using EBNF concatenation-by-juxtaposition</see>
+        private bool ReadDocument(ReadOnlySpan<byte> value)
+        {            
+            return SkipProlog(value) && ReadElement(value) && SkipMiscellaneous(value);
+        }
+
+        /// <summary>
+        /// Skip prolog defined as: declaration? miscellaneous* (document-type miscellaneous*)?
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private bool SkipProlog(ReadOnlySpan<byte> value)
         {
-            // TODO: More than one value is needed to determine the first token
-            if (value == Constants.LessThan)
-            {
-            } else if (value == Constants.Slash)
-            {
-            }
+            return false;
+        }
 
+        /// <summary>
+        /// Skip declaration
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private bool SkipDeclaration(ReadOnlySpan<byte> value)
+        {
+            return false;
+        }
 
-            return true;
+        /// <summary>
+        /// Read element
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private bool ReadElement(ReadOnlySpan<byte> value)
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Skip miscellaneous: comment | processing-instruction | whitespace
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private bool SkipMiscellaneous(ReadOnlySpan<byte> value)
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Skip comment
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private bool SkipComment(ReadOnlySpan<byte> value)
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Skip process instruction
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private bool SkipProcessInstruction(ReadOnlySpan<byte> value)
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Skip whitespace
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private bool SkipWhitespace(ReadOnlySpan<byte> value)
+        {
+            return false;
         }
         #endregion
     }

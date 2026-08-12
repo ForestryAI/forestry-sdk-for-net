@@ -13,7 +13,7 @@ namespace Forestry.Deserialize.Xml.Reading
             {
                 if (value < 0)
                 {
-                    Throwing.WhenIntegerNotPositive(value, nameof(MaxDepth));
+                    Throwing.WhenValueNotPositive(value, nameof(MaxDepth));
                 }
 
                 _maxDepth = value;

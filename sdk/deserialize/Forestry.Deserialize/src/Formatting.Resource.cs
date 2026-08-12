@@ -24,7 +24,5 @@ namespace Forestry.Deserialize
         internal static string PipeReaderCanceled => GetResourceString(nameof(PipeReaderCanceled), @"PipeReader was canceled");
 
         internal static string DuplicatePropertyName => GetResourceString(nameof(DuplicatePropertyName), @"Duplicate property name '{1}' on type '{0}'");
-
-        internal static string IntegerNotPositive => GetResourceString(nameof(IntegerNotPositive), @"Integer value '{1}' not positive with name '{0}'");
     }
 }

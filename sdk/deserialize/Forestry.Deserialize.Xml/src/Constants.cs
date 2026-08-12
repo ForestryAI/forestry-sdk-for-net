@@ -23,9 +23,11 @@ namespace Forestry.Deserialize.Xml
 
         public const byte QuestionMark = (byte)'?';
 
-        public const string NewLineLineFeed = "\n";
+        public const byte LineFeed = (byte)'\n';
 
-        public const string NewLineCarriageReturnLineFeed = "\r\n";
+        public const byte CarriageReturn = (byte)'\r';
+
+        public const byte Tab = (byte)'\t';
         #endregion
 
         #region BOM
@@ -60,8 +62,59 @@ namespace Forestry.Deserialize.Xml
         public static ReadOnlySpan<byte> NullAttributeName => "xsi:nil"u8;
         #endregion
 
-        #region Declaration
+        #region Declaration + Processing instruction + Document Type
         public static ReadOnlySpan<byte> DeclartionStart => "<?xml "u8;
+
+        public static ReadOnlySpan<byte> ProcessingInstructionStart => "<?"u8;
+
+        public static ReadOnlySpan<byte> DocumentType => "<!DOCTYPE "u8;
+        #endregion
+
+        #region Characters
+        public const byte Colon = (byte)':';
+
+        public const byte Underscore = (byte)'_';
+
+        public const byte Hyphen = (byte)'-';
+
+        public const byte Period = (byte)'.';
+        #endregion
+
+        #region XML characters
+        /// <summary>
+        /// Starting character for element or attribute names
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static bool IsNameStartByte(byte value) =>
+            value == Colon ||
+            (value >= (byte)'A' && value <= (byte)'Z') ||
+            value == Underscore ||
+            (value >= (byte)'a' && value <= (byte)'z') ||
+            value >= 0x80;
+
+        /// <summary>
+        /// Characters after the starting for element or attribute names
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static bool IsNameByte(byte value) =>
+            IsNameStartByte(value) ||
+            value == Hyphen ||
+            value == Period ||
+            (value >= (byte)'0' && value <= (byte)'9');
+
+        /// <summary>
+        /// Characters inside a comment
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static bool IsCommentCharByte(byte value) =>
+            value == Tab ||
+            value == LineFeed ||
+            value == CarriageReturn ||
+            (value >= 0x20 && value <= 0x7F) ||
+            value >= 0x80;
         #endregion
     }
 }

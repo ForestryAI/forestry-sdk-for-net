@@ -79,7 +79,7 @@ namespace Forestry.Deserialize
             return resourceString!; // only null if missing resources
         }
 
-        static string GetResourceString(string resourceKey, string defaultString)
+        internal static string GetResourceString(string resourceKey, string defaultString)
         {
             string resourceString = GetResourceString(resourceKey);
 

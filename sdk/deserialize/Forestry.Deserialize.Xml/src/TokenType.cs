@@ -10,8 +10,9 @@ namespace Forestry.Deserialize.Xml {
         AttributeName=(byte)6,
         AttributeValue=(byte)7,
         Declaration=(byte)8,
-        Comment=(byte)9,
-        CharacterData=(byte)10,
-        Null = (byte)11
+        ProcessInstruction=(byte)9,
+        Comment=(byte)10,
+        CharacterData=(byte)11,
+        Null = (byte)12
     }
 }
