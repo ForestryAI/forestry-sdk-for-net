@@ -60,10 +60,8 @@ namespace Forestry.Deserialize.Xml
         public static ReadOnlySpan<byte> NullAttributeName => "xsi:nil"u8;
         #endregion
 
-        #region Values
-        public static ReadOnlySpan<byte> TrueValue => "true"u8;
-        
-        public static ReadOnlySpan<byte> FalseValue => "false"u8;
+        #region Declaration
+        public static ReadOnlySpan<byte> DeclartionStart => "<?xml "u8;
         #endregion
     }
 }

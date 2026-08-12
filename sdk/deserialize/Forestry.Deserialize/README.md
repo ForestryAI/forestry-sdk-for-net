@@ -1,19 +1,23 @@
 # Forestry Deserialize
 
-Forestry Deserialize reads large documents — the primary case today is StanForD XML from
-harvesting and forwarding machines — and streams data out rather than loading a whole file into
-memory. A multi-gigabyte harvester log should cost roughly the same, memory-wise, to process as a
-small one.
+Forestry Deserialize reads large documents and streams data out rather than loading a whole file
+into memory. A multi-gigabyte document should cost roughly the same, memory-wise, to process as a
+small one. The need originated with StanForD XML from harvesting and forwarding machines — that's
+the catalyst and the real data this is developed and tested against — but neither this package nor
+`Forestry.Deserialize.Xml` are limited to StanForD's rules; both are general-purpose.
 
 For how the package is put together internally — the walk, the buffering model, the split between
 this package and a concrete media provider — see [ARCHITECTURE.md](ARCHITECTURE.md). For the
-in-progress design history behind the current shape, see [CLAUDE.md](CLAUDE.md).
+in-progress design history behind the current shape, see [CLAUDE.md](CLAUDE.md). Some of this
+package's design is adapted from Microsoft's open-source .NET runtime — see
+[THIRD-PARTY-NOTICES.md](../../../THIRD-PARTY-NOTICES.md).
 
 ## Packages
 
 - **Forestry.Deserialize** — the media-agnostic core. Install this to describe a document's shape
   with `[Element]`/`[Collection]` and drive it against a concrete reader.
-- **Forestry.Deserialize.Xml** — StanForD XML support. Not usable yet — see Status below.
+- **Forestry.Deserialize.Xml** — general XML support, developed against real StanForD documents.
+  Not usable yet — see Status below.
 
 ## Describing a document's shape
 

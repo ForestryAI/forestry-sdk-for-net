@@ -3,10 +3,12 @@
 ## 1. Purpose
 
 **Forestry.Deserialize.Xml** is the first concrete media provider for `Forestry.Deserialize`
-(see that package's own [ARCHITECTURE.md](../Forestry.Deserialize/ARCHITECTURE.md)), targeting
-StanForD XML from harvesting and forwarding machines. It supplies the one thing the core package
-deliberately does not: a reader that knows how to walk actual XML tokens and the
-`Deserializer<T>` subclasses that drive `ReaderPath`/`ReaderPosition` from what that reader sees.
+(see that package's own [ARCHITECTURE.md](../Forestry.Deserialize/ARCHITECTURE.md)) — a general XML
+reader, not a StanForD-specific one. StanForD XML from harvesting and forwarding machines is what
+created the need for this package and is the real data it's developed and tested against (see
+`CLAUDE.md`'s Task #110 entry), but that's the origin story, not the scope: this package supplies
+the one thing the core package deliberately does not — a reader that knows how to walk actual XML
+tokens — and it isn't limited to what StanForD's documents happen to use.
 
 ## 2. High-Level Architecture
 
@@ -185,3 +187,14 @@ open question of what a miss should really mean). `GetPropertyName` pulls the ra
     - Task #110 — Review current code base / core plumbing (see `CLAUDE.md` for the design
       history this document summarizes, including the real `.hpr` sample analysis behind §2's
       dialect scoping)
+
+## 9. Attribution
+
+`Utf8XmlReader`'s shape — a `ref struct` tokenizer over a caller-supplied buffer, reconstructed
+fresh from `(buffer, state)` per step rather than held across an `await` — deliberately mirrors
+`System.Text.Json.Utf8JsonReader`/`JsonReaderState` (§2, §4.1; see core ARCHITECTURE.md §4.4 for
+why). That's Microsoft's open-source .NET runtime (`dotnet/runtime`, MIT licensed), and design
+patterns and, in places, specific logic are adapted from it throughout this package. See
+[/THIRD-PARTY-NOTICES.md](../../../THIRD-PARTY-NOTICES.md) for the license text and the inline
+attribution comment convention used where a specific method is a direct adaptation rather than
+just a shared shape.

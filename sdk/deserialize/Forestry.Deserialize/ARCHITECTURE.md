@@ -2,12 +2,13 @@
 
 ## 1. Purpose
 
-**Forestry Deserialize** reads large documents — the primary case is StanForD XML from
-harvesting and forwarding machines — and streams `Value`s out one at a time instead of loading a
-whole document into memory. A multi-gigabyte harvester log should cost roughly the same,
-memory-wise, to process as a small one. This package defines the media-agnostic machinery that
-makes that possible; it does not itself know how to parse XML, JSON, or any other concrete
-format — that's a sibling package per media (`Forestry.Deserialize.Xml` today).
+**Forestry Deserialize** reads large documents and streams `Value`s out one at a time instead of
+loading a whole document into memory. A multi-gigabyte document should cost roughly the same,
+memory-wise, to process as a small one. StanForD XML from harvesting and forwarding machines is
+what created the need for this and is the real data it's developed and tested against — but this
+package is media-agnostic by design and isn't scoped to StanForD's rules; it does not itself know
+how to parse XML, JSON, or any other concrete format — that's a sibling package per media
+(`Forestry.Deserialize.Xml` today).
 
 ---
 
@@ -60,9 +61,9 @@ constructed once and held; it's reconstructed cheaply from `(buffer, state)` on 
 - **`Forestry.Deserialize`** — the media-agnostic core: `Value`/`Value<T>`, `TypeDefinition`/
   `PropertyDefinition`, `Deserializer`/`Deserializer<T>`, `DeserializeOptions`, the buffering/
   reader-state contracts, and the walk machinery that ties them together.
-- **`Forestry.Deserialize.Xml`** — the first concrete media provider, targeting StanForD XML. A
-  JSON or other format provider is a sibling package built the same way, not a variant of this one.
-  **Currently non-compiling** — see §5.
+- **`Forestry.Deserialize.Xml`** — the first concrete media provider: general XML, developed
+  against real StanForD documents. A JSON or other format provider is a sibling package built the
+  same way, not a variant of this one. **Currently non-compiling** — see §5.
 
 **Stability:** Experimental — the walk contract (§4.3) is still actively changing; treat every
 type name below as more likely to be renamed than not.
@@ -151,16 +152,12 @@ options-equality comparer that currently treats every instance as equal (see §5
   in a media-specific override, and none has been written. This is the actively-in-progress piece;
   see `CLAUDE.md`'s Task #110 entry for the fuller design history and open questions (dimension
   stamping, `Enumerable`/`Dictionary` kinds, the async hand-off shape).
-- **`Forestry.Deserialize.Xml` does not compile.** `ObjectDeserializer.cs` and
-  `DeserializeXmlOptions.cs` predate the current core shape; `DeserializeXmlOptions` references
-  `XmlTypeDefinition`/`XmlPropertyDefinition`/`XmlDeserializerProvider`, none of which exist
-  anywhere in the repository yet.
-- **No concrete reader exists for any media in this repository yet, though one is in progress.** A
-  custom, `Utf8JsonReader`-shaped ref-struct XML reader (not `System.Xml.XmlReader`), scoped to
-  StanForD's actual (narrow, single-default-namespace, no-CDATA/entities/mixed-content) dialect per
-  `CLAUDE.md`'s decision, has been started but not reviewed here. Concrete `Deserializer<T>`
-  subclasses implementing `TryReadNullableValue` for XML types haven't been started. This work is
-  being tracked by new GitHub issues going forward rather than only this document.
+- **`Forestry.Deserialize.Xml` now builds clean, but its own tokenizing/walking logic is still
+  largely stub** — no longer the "does not compile" state described in an earlier version of this
+  document. See `Forestry.Deserialize.Xml/ARCHITECTURE.md` (§5/§6 there) for the current, accurate
+  status rather than duplicating it here — a custom `Utf8JsonReader`-shaped ref-struct XML reader
+  is in active development, developed against real StanForD documents but not scoped to only
+  StanForD's dialect (see that document's §2).
 - **`Deserialization.Deserialize<T>(string, DeserializeOptions)` is an explicit
   `NotImplementedException` stub.** Its replacement is the `AsAsyncEnumerable<T>`-shaped entry
   point described in `CLAUDE.md`, not yet built.
@@ -184,7 +181,7 @@ options-equality comparer that currently treats every instance as equal (see §5
 | `ReaderPath`/`ReaderPosition` naming | Settled | Renamed from `Graph`/`Node` |
 | `IReaderState` naming | Settled | Renamed from `IState` |
 | `IBuffering`/reader-state pattern | Settling | Direction agreed (mirror `Utf8JsonReader`/`JsonReaderState`), not yet exercised by a real reader |
-| `Forestry.Deserialize.Xml` | **Broken** | Does not compile; effectively unstarted against the current core |
+| `Forestry.Deserialize.Xml` | **In development** | Builds clean; see its own ARCHITECTURE.md §5/§6 for current status |
 
 ---
 

@@ -36,3 +36,9 @@ dotnet test sdk/<package>/<Project>/<Project>.slnx
 
 This SDK is under active, early development — expect breaking changes between beta releases.
 Each package keeps its own `CHANGELOG.md`; update it alongside any change to public API surface.
+
+## License
+
+MIT licensed — see [LICENSE](LICENSE). Some packages adapt design patterns and, in places,
+specific code from Microsoft's open-source .NET runtime; see
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) for attribution.

@@ -1,5 +1,6 @@
 using System.Buffers;
 using Forestry.Deserialize.Xml;
+using Forestry.Deserialize.Xml.Deserializers;
 
 namespace Forestry.Deserialize.Xml.Reading
 {
@@ -25,6 +26,23 @@ namespace Forestry.Deserialize.Xml.Reading
         /// Is buffering completed
         /// </summary>
         private bool _isBufferingCompleted;
+
+        /// <summary>
+        /// Position in buffer
+        /// </summary>
+        private int _bufferPosition;
+
+        /// <summary>
+        /// When has multiple segements then true otherwise false if a single segment when sequencing
+        /// </summary>
+        private bool _isMultipleSegments;
+
+        /// <summary>
+        /// When not sequencing and when sequencing the last segment
+        /// </summary>
+        private bool _isLastSegment;
+
+        private readonly bool IsSequencingCompleted => _isBufferingCompleted && (!_isMultipleSegments || _isLastSegment);
 
         /// <summary>
         /// Reading bytes without buffering i.e. meant for in-memory smaller XML
@@ -69,45 +87,151 @@ namespace Forestry.Deserialize.Xml.Reading
                 _readerOptions.MaxDepth = ReaderOptions.DefaultMaxDepth;
             }
 
-            IsSequencing = false;
+            IsWithSequencing = false;
             Value = [];
             ValueSequence = ReadOnlySequence<byte>.Empty;
 
+            _bufferPosition = 0;
+            _isMultipleSegments = false;
+            _isLastSegment = isBufferingCompleted;
         }
 
         #region Shape
         public readonly TokenType TokenType => _tokenType;
 
-        public bool IsSequencing { get; private set; }
+        /// <summary>
+        /// When reading is against sequencing 
+        /// </summary>
+        public bool IsWithSequencing { get; private set; }
 
+        /// <summary>
+        /// Value with sequencing
+        /// </summary>
         public ReadOnlySequence<byte> ValueSequence { get; private set; }
 
+        /// <summary>
+        /// Value without sequencing
+        /// </summary>
         public ReadOnlySpan<byte> Value { get; private set; }
         #endregion
 
         #region Reading 
         /// <summary>
-        /// Reads next element || attribute
+        /// Reads next token
         /// </summary>
         /// <returns></returns>
         public bool Read()
         {
-            return false;
+            bool readable = IsWithSequencing ? TryReadWithSequencing() : TryReadWithoutSequencing();
+            if (!readable)
+            {
+                if (_isBufferingCompleted && _tokenType is TokenType.None)
+                {
+                    throw new InvalidOperationException(); // TODO: Formatting
+                }
+            }
+
+            return readable;
         }
 
         /// <summary>
-        /// Skip current element || attribute
+        /// Skip current token
         /// </summary>
         public void Skip()
         {}
-        #endregion
 
-        internal ReadOnlySpan<byte> GetUnescapedValue()
+        /// <summary>
+        /// Try read when not sequencing
+        /// </summary>
+        /// <returns></returns>
+        private bool TryReadWithoutSequencing()
         {
-            ReadOnlySpan<byte> value = IsSequencing ? ValueSequence.ToArray() : Value;
-            // TODO: When escaped convert
+            bool readable = false;
+            Value = default;
 
-            return value;
+            if (!IsBufferPositionReadable())
+            {
+                goto ReadingCompleted;
+            }
+
+            byte value = _buffer[_bufferPosition];
+
+            // TODO: Spaces
+
+            if (_tokenType == TokenType.None)
+            {
+                goto ReadFirstToken;
+            }
+
+            // TODO: Comments
+
+            // TODO: Declaration
+            
+            if (_tokenType == TokenType.StartingTag)
+            {
+                // TODO: value within XML element + attribute valid characters
+
+                // TODO: when space then attribute name
+                // TODO: when equals then attribute value
+
+                goto ReadingCompleted;
+            } else
+            {
+                // TODO: when nothing matches
+                goto ReadingCompleted;
+            }
+
+            ReadingCompleted:
+                return readable;
+
+            ReadFirstToken:
+                readable = ReadFirstToken(value);
+                goto ReadingCompleted;
         }
+
+        /// <summary>
+        /// Try read when sequencing
+        /// </summary>
+        /// <returns></returns>
+        private bool TryReadWithSequencing()
+        {
+            bool readable = false;
+
+            return readable;
+        }
+
+        /// <summary>
+        /// When buffer position less than the buffer length then 
+        /// the buffer is readable
+        /// </summary>
+        /// <returns></returns>
+        private bool IsBufferPositionReadable()
+        {
+            if (_bufferPosition >= (uint)_buffer.Length)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Read first token
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private bool ReadFirstToken(byte value)
+        {
+            // TODO: More than one value is needed to determine the first token
+            if (value == Constants.LessThan)
+            {
+            } else if (value == Constants.Slash)
+            {
+            }
+
+
+            return true;
+        }
+        #endregion
     }
 }
