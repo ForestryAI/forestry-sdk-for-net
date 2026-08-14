@@ -79,42 +79,5 @@ namespace Forestry.Deserialize.Xml
 
         public const byte Period = (byte)'.';
         #endregion
-
-        #region XML characters
-        /// <summary>
-        /// Starting character for element or attribute names
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static bool IsNameStartByte(byte value) =>
-            value == Colon ||
-            (value >= (byte)'A' && value <= (byte)'Z') ||
-            value == Underscore ||
-            (value >= (byte)'a' && value <= (byte)'z') ||
-            value >= 0x80;
-
-        /// <summary>
-        /// Characters after the starting for element or attribute names
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static bool IsNameByte(byte value) =>
-            IsNameStartByte(value) ||
-            value == Hyphen ||
-            value == Period ||
-            (value >= (byte)'0' && value <= (byte)'9');
-
-        /// <summary>
-        /// Characters inside a comment
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public static bool IsCommentCharByte(byte value) =>
-            value == Tab ||
-            value == LineFeed ||
-            value == CarriageReturn ||
-            (value >= 0x20 && value <= 0x7F) ||
-            value >= 0x80;
-        #endregion
     }
 }

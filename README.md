@@ -12,6 +12,7 @@ one ships and versions independently.
 | [Forestry.Raindrop](sdk/raindrop/Forestry.Raindrop/README.md) | `sdk/raindrop` | Dependency-free unique identity generation, inspired by Twitter Snowflake. | Stable |
 | [Forestry.Turn](sdk/turn/Forestry.Turn/README.md) | `sdk/turn` | Turn-taking pipeline that carries an intention through retry/transform directives to a resolved answer. | In development |
 | [Forestry.Deserialize](sdk/deserialize/Forestry.Deserialize/README.md) | `sdk/deserialize` | Streams large documents (starting with XML, e.g. StanForD harvester/forwarder files) without loading them fully into memory. | In development, architecture under revision |
+| [Forestry.StanForD](sdk/stanford/Forestry.StanForD/README.md) | `sdk/stanford` | C# types for [StanForD](https://www.skogforsk.se/)'s XML format (harvester/forwarder data exchange). | Very early — 2 types built |
 | [Forestry.PapiNet](sdk/papinet/README.md) | `sdk/papinet` | Helper types for [PapiNet](https://www.papinet.org) business agreement documents. | Early scaffolding |
 | Biometria | `sdk/biometria` | Helper for publishing/subscribing to [Biometria](https://www.biometria.se/) entities. | Not started |
 

@@ -1,0 +1,3602 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2008 rel. 2 sp2 (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010:1:release" xmlns:doc="urn:skogforsk:stanford2010:doc" targetNamespace="urn:skogforsk:stanford2010:1:release" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_1.0">
+	<xsd:complexType name="AddressType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>AddressTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="Street" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Street address</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="City" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Province" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Province/State</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Country" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="BarkFunctionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>BarkFunctionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:choice minOccurs="0">
+			<xsd:element name="SwedishZacco" type="SwedishZaccoType"/>
+			<xsd:element name="German" type="GermanType"/>
+			<xsd:element name="Skogforsk2004ScotsPine" type="Skogforsk2004ScotsPineType"/>
+		</xsd:choice>
+		<xsd:attribute name="barkFunctionCategory" type="BarkFunctionCategoryType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VarNumber>V113_t7</doc:VarNumber>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Alloed list values:"None","Swedish Zacco","German",Skogforsk 2004, Scots pine" and "Skogforsk 2004, Norway spruce". If this attributes value is None the BarkFunction element is empty </doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ButtEndProfileExtrapolationFunctionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>ButtEndProfileExtrapolationFunctionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="Parameter" maxOccurs="unbounded">
+				<xsd:complexType>
+					<xsd:sequence>
+						<xsd:element name="ParameterName" type="xsd:string">
+							<xsd:annotation>
+								<xsd:documentation>
+									<doc:VarNumber>V170_t10</doc:VarNumber>
+									<doc:Unit>free text</doc:Unit>
+									<doc:Description>Name of the parameter of the diameter extrapolation function (e.g. a00, a01 …)</doc:Description>
+								</xsd:documentation>
+							</xsd:annotation>
+						</xsd:element>
+						<xsd:element name="ParameterValue" type="xsd:decimal">
+							<xsd:annotation>
+								<xsd:documentation>
+									<doc:VarNumber>V170_t11_t12</doc:VarNumber>
+									<doc:Description>parameter value in butt diameter extrapolation function, negative values are possible</doc:Description>
+								</xsd:documentation>
+							</xsd:annotation>
+						</xsd:element>
+					</xsd:sequence>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="ButtEndProfileExtrapolationFunctionCategory" type="ButtEndProfileExtrapolationFunctionCategoryType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>extrapolation of butt end diameter values. Volume
+calculation of butt end is done according the extrapolated
+diameters. Allowed values: Poikela 2007 =>
+ Function DL = [1 + (a0*(1.3-L) + a1*(1.3-L)a2)/100] *
+D1.3
+a0 = a00 + a01*DBH+a02*DBH^2 + a03*DBH^3 + a04
+*DBH^4
+a1 = a10 + a11*DBH+a12*DBH^2 + a13*DBH^3
+a2 = a20 + a21*DBH+a22*DBH^2</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ButtEndProfileExtrapolationTableType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>ButtEndProfileExtrapolationTableTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ExtrapolationCoefficient" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V170_t7</doc:VarNumber>
+						<doc:Description>Extrapolation coefficient tables: coefficient values
+(multiplying values) / distance class / diameter
+class / tree species:
+1…var170_t4 / 1 … var170_t3 / 1…var111_t1.
+Example: Measured diameter at reference height
+(normally dbh) of stem = 23,3 cm. Distance to
+extrapolation point = 90 cm. Coefficient value in table at
+(23, 90) = 1.042. Estimated diameter value at 90 cm =
+23,3 cm * 1.042 = 24,3 cm (243 mm).</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:decimal">
+							<xsd:attribute name="diameterClass" type="xsd:nonNegativeInteger" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VarNumber>V170_t5</doc:VarNumber>
+										<doc:Unit>cm</doc:Unit>
+										<doc:Description>Diameter class values for the reference height in
+extrapolation coefficient table / tree species.
+1 … var170_t3 / 1…var111_t1.
+Values can be e.g. 8 – 50 cm in 1 cm intervals:
+If the measured diameter at reference height is greater
+than the greatest diameter class, the greatest class is used</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+							<xsd:attribute name="distanceClass" type="xsd:nonNegativeInteger" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VarNumber>V170_t6</doc:VarNumber>
+										<doc:Unit>cm</doc:Unit>
+										<doc:Description>Distance class values (distance from the felling cut) in
+extrapolation coefficient table / tree species: 1 …
+var170_t4 / 1…var111_t1.
+First value is 0 cm and last is the value of the actual
+reference height in var170_t1 (e.g. 130 cm). Intervals
+normally 10 cm</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ButtEndProfileExtrapolationType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>ButtEndProfileExtrapolationTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ReferenceHeight" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V170_t2</doc:VarNumber>
+						<doc:Unit>cm</doc:Unit>
+						<doc:Description>Reference height / tree species: 1…var111_t1. Diameter
+measurement height from the felling cut point. Normally
+breast height (130 cm in Finland, 120 cm in Sweden) is
+used for extrapolation of butt end diameter values.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ButtEndProfileExtrapolationTable" type="ButtEndProfileExtrapolationTableType" minOccurs="0"/>
+			<xsd:element name="ButtEndProfileExtrapolationFunction" type="ButtEndProfileExtrapolationFunctionType" minOccurs="0"/>
+		</xsd:sequence>
+		<xsd:attribute name="buttEndProfileExtrapolationMethod" type="ButtEndProfileExtrapolationMethodType" use="required"/>
+	</xsd:complexType>
+	<xsd:complexType name="ClassifiedProductDefinitionMachineType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>ClassifiedProductDefinitionMachineTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="CommonProductDefinitionMachineType">
+				<xsd:sequence>
+					<xsd:element name="DiameterDefinition" type="DiameterDefinitionType"/>
+					<xsd:element name="LengthDefinition" type="LengthDefinitionType"/>
+					<xsd:element name="PriceDefinition" type="PriceDefinitionType"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="CoordinatesType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>coordinatestypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="Latitude">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V522_t1</doc:VarNumber>
+						<doc:Unit>degrees</doc:Unit>
+						<doc:Description>Latitude, absolute value.Registered according to
+coordinateReferenceSystem and receiverPosition..</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="NonNegativeDecimal">
+							<xsd:attribute name="latitudeCategory" type="LatitudeCategoryType" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VarNumber>V522_t2</doc:VarNumber>
+										<doc:Unit>list</doc:Unit>
+										<doc:Description>North, South. Registered according to
+coordinateReferenceSystem and receiverPosition.</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="Longitude">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V522_t3</doc:VarNumber>
+						<doc:Unit>degrees</doc:Unit>
+						<doc:Description>Longitude, absolute value. Registered according to
+coordinateReferenceSystem and receiverPosition..</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="NonNegativeDecimal">
+							<xsd:attribute name="longitudeCategory" type="LongitudeCategoryType" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VarNumber>V522_t4</doc:VarNumber>
+										<doc:Unit>list</doc:Unit>
+										<doc:Description>East, West  Registered according to
+coordinateReferenceSystem and receiverPosition.</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="Altitude" type="xsd:decimal">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V522_t5</doc:VarNumber>
+						<doc:Unit>m</doc:Unit>
+						<doc:Description>Altitude, height above sea level, registered according to
+CoordinateReference and CoordinateType.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="CoordinateDate" type="StanForD2010DateTimeType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V522_t6</doc:VarNumber>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Date and time when recording coordinate data</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attributeGroup ref="CoordinatesAttributeGroup"/>
+	</xsd:complexType>
+	<xsd:complexType name="CommonProductDefinitionType" abstract="true">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>CommonProductDefinitionTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ProductName" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V121_t1</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Name of the product</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ModificationDate" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V16_t4</doc:VarNumber>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Date and time when product definition was last modified. ProductKey updated if modified in machine.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProductInfo" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V121_t3</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Free text information about product</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProductVersion" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V121_t5</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Additional identity information description of product</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProductBuyer" type="ContactInformationType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V32_t2</doc:VarNumber>
+						<doc:Description>Contact information of buyer</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LoggingOrganization" type="LoggingOrganizationType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v31</doc:VarNumber>
+						<doc:Description>Contact information for organisation responsible for
+logging an object (normaly forest company or forest
+owners association), owner of the right to harvest a certain
+object. Old types Organization, Region, District, Working
+team, Wood pile</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProductDestination" type="ContactInformationType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Description>Destination address of product</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProductGroupName" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V127</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Descriptive text for code in ProductGroupCode. In Finland
+used primarelly in order to aggregate data per stem type.
+Can also be used for old "Product group".
+ProductGroupName adn ProductGroupCode replaces old
+variables 123 - 127.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="StemTypeCode" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V124_t2</doc:VarNumber>
+						<doc:Unit>free text (usually finish PMP-codes)</doc:Unit>
+						<doc:Description>Code for stem type</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="CommonProductDefinitionMachineType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>CommonProductDefinitionMachinegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="CommonProductDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="ProductUserID" type="UserIDType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VarNumber>V121_t2</doc:VarNumber>
+								<doc:Unit>free text</doc:Unit>
+								<doc:Description>Identity per product defined by user of data, normally
+logging organisation</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="SpeciesGroupKey" type="xsd:positiveInteger">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:Unit>sequential no</doc:Unit>
+								<doc:Description>Machine specific identity per species group set by
+machine. Must be updated if any modifications to product
+is done. Running number reset only when MachineKey is
+changed.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ComplementaryGISFilesType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>ComplementaryGISFilesTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ComplementaryGISFilename" type="xsd:string" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v461_t2</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Name of file connected to GIS-files with
+complimentary/theme data (e.g. dbf, tab, dat, shx,
+tfw)</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ContactInformationType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>contactinformationtypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="FirstName" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>First name of contact</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LastName" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Last name of contact</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Address" type="AddressType" minOccurs="0"/>
+			<xsd:element name="Phone" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Phone number  of contact</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Fax" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Fax number  of contact</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Email" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>email address of contact</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="BusinessName" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Name of organization/Company</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="BusinessID" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>The Business ID (Business Identity Code) is a code given to businesses and organisations by the authorities</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="CuttingWindowDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>CuttingWindowDefinitionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="LowerLengthLimit" type="xsd:integer">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v135_t3</doc:VarNumber>
+						<doc:Unit>cm</doc:Unit>
+						<doc:Description>Lower length limit for "cutting window"/price
+matrix/tree species. Lower length class limit
+(var132) and variable 135, type 1 and 3 together,
+define the length class of a log if lower limit of the
+cutting window is below lower length class limit</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="UpperLengthLimit" type="xsd:integer">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v135_t4</doc:VarNumber>
+						<doc:Unit>cm</doc:Unit>
+						<doc:Description>Upper length limit for "cutting window"/price
+matrix/tree species. It does not affect length
+classification of a log. It can not be above lower
+length class limit (132_t1) nor above lower length
+limit for the "cutting window" (135_t3), of the next
+length class</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>true/false</doc:Unit>
+					<doc:Description>if attributes value is "true" then modification of the defintion is restricted, if "false" then modification is allowed</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="DeliveryEstimationType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>DeliveryEstimationTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="DeliveryEstimationMethod" type="DeliveryEstimationMethodType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v441_t11</doc:VarNumber>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Enumeration value describing how forwarder production data was generated per transport object. Allowed values are: "Manual estimation by operator", "Scale", "Estimation through Harvested Production message" and "Other"</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DeliveryEstimationUnit" type="DeliveryEstimationUnitType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v441_t10</doc:VarNumber>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Enumeration value describing the unit wich was estimated by operator or measured by forwarder (not calculated by machine) per transport object. Allowed values are: "Volume, m3sob", 
+Volume, m3sub", "Green mass, kg","Number of logs", "Number of loads", "Loose volume, m3", "Solid volume including bark, branches and needles, m3", "Solid volume of bundles (length*cross sectional area), m3" and "Number of bundles"</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterClassesType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>DiameterClassesTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="DiameterClass" type="DiameterClassType" maxOccurs="unbounded"/>
+			<xsd:element name="DiameterClassMAX" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V131_t1</doc:VarNumber>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>Maximum diameter use in combination with DiamClasses</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DiameterClassAdjustment" type="DiameterClassAdjustmentType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Allowed list values are: "DiameterClassAdjustment1" = Log belongs to first diameter class smaller or equal to log diameter (227 mm => class 220 mm)
+"DiameterClassAdjustment2" = Log belongs to closest diameter class, normal rounding, (227 mm => class 230 mm)</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DiameterUnderBark" type="xsd:boolean">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>true/false</doc:Unit>
+						<doc:Description>Flag that informs us if fiameter classes are defined under bark</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="diameterClassCategory" type="DiameterClassCategoryType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VarNumber>v164_t1</doc:VarNumber>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Type of diameters in DiamClasses (used for determining cell in price matrix) Allowed list values:"Top", "Midpoint",
+"Calculated Norwegian mid" and "Calculated Estonian mid"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterClassType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>DiameterClassTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="DiameterClassLowerLimit" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v131_t1</doc:VarNumber>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>Lower diameter limit of diameter class</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DiameterClassName" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v131_t2</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Diameter class name (free descriptive text)/diameter
+class/price matrix/tree species: Primarily for use in
+Germany where the classes have standardized names</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>DiameterDefinitionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="DiameterClasses" type="DiameterClassesType"/>
+			<xsd:element name="DiameterMINTop" type="xsd:nonNegativeInteger" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V134_t1</doc:VarNumber>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>Used toghether with volumes and classes dependent on mid diameter (study how this correlate with DiamPos
+(machine setting), DiamType and PriceVolumeType!!!!!)</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DiameterMAXButt" type="xsd:positiveInteger" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V134_t2</doc:VarNumber>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>Maximum diameter in the large end of the log per price matrix per tree species:</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DiameterTopPosition" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V164_t4</doc:VarNumber>
+						<doc:Unit>cm</doc:Unit>
+						<doc:Description>Position from top end of log where top diameter is measured.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>true/false</doc:Unit>
+					<doc:Description>if attributes value is "true" then modification of the defintion is restricted, if "false" then modification is allowed</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterSectionDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>diametersectiondefinitiontypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="DiameterSectionUserID" type="UserIDType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V531_t2</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Identity per diameter sections defined by user of data,
+normally logging organisation</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DiameterSectionName" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V531_t1</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Description of diameter section / diameter section / tree
+species Descriptions can be free text and are company
+specific (not standardized).</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MinimumDiameter" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V531_t3</doc:VarNumber>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>Minimum diameter o.b. of diameter section / diameter
+section / tree species:</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MinimumLength" type="xsd:nonNegativeInteger" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V531_t4</doc:VarNumber>
+						<doc:Unit>cm</doc:Unit>
+						<doc:Description>Minimum length of diameter section / diameter section /
+tree species Value 0 means that minimum length
+requirement is not in use. The smallest diameter section of
+a tree species does not have a minimum length
+requirement. More detailed descriptions can be found in
+Diameter Sections documents (only in Finnish).</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DiameterSectionUsage" type="DiameterSectionUsageType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V531_t5</doc:VarNumber>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Useage enumeration list per diameter section
+Buyer  =  Only for buyer’s own needs
+Commercial = Diameter section is used for commercial volume
+measurement</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterSectionDefinitionMachineType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>diametersectiondefinitionmachinetypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="DiameterSectionDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="DiameterSectionKey" type="xsd:positiveInteger">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:Unit>sequential no</doc:Unit>
+								<doc:Description>Machine specific identity per diameter sections set by
+machine. Must be updated if any modifications to diameter
+sections is done. Running no reset only when MachineKey
+is changed.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="SpeciesGroupKey" type="xsd:positiveInteger">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:Unit>sequential no</doc:Unit>
+								<doc:Description>Machine specific identity per species group set by
+machine. Must be updated if any modifications to product
+is done. Running number reset only when MachineKey is
+changed.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterSectionProductionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>diametersectionproductiontypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="DiameterSectionKey" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per diameter sections set by
+machine. Must be updated if any modifications to diameter
+sections is done. Running no reset only when MachineKey
+is changed.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DiameterSectionVolume" type="NonNegativeDecimal">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V544_t1</doc:VarNumber>
+						<doc:Unit>m3sob</doc:Unit>
+						<doc:Description>Volume (m3 solid o.b.) of diameter sections per log</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DiameterSectionLimitPosition" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V543</doc:VarNumber>
+						<doc:Unit>cm</doc:Unit>
+						<doc:Description>Height of the registered diameter section limit value of
+diameter sections. Height from the butt end of log.
+The last height should be equal to the height of the top of
+the last log</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ExtensionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>extensiontypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:any namespace="##any" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:sequence>
+		<xsd:attribute name="extensionAction" type="ExtensionActionType"/>
+	</xsd:complexType>
+	<xsd:complexType name="FormatFontType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>FormatFontTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="FormatFontFileName" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v465_t21</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Name of font file used for symbols to be presented in GIS
+application per format class and layer.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="FormatFontName" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v465_t23</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Font name used for symbols to be presented in GIS
+application per format class and layer.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="FormatSymbolNumber" type="xsd:integer">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v465_t7</doc:VarNumber>
+						<doc:Description>Symbol number (symbols in font file) format class and layer.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="FormatSymbolSize" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v465_t8</doc:VarNumber>
+						<doc:Unit>point</doc:Unit>
+						<doc:Description>Symbol size format class and layer.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="GermanType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>GermanTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="BarkDeduction" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V113_t3</doc:VarNumber>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>Deduction for double bark thickness per species group:
+Bark function based on diameterclasses with fixed bark
+deductions (double), based on German requirements.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:nonNegativeInteger">
+							<xsd:attribute name="lowerDiameterLimit" type="xsd:nonNegativeInteger" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VarNumber>V113_t2</doc:VarNumber>
+										<doc:Unit>mm</doc:Unit>
+										<doc:Description>Lower diameter limits per species group: Bark function
+based on diameterclasses with fixed bark deductions
+(double), based on German requirements</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="GISDatabaseFileSpecificationType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>GISDatabaseFileSpecificationTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ColumnNameObject" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Column name for name of harvesting object identity (same as ObjUserId), in files connected to GIS-files with
+complimentary/theme data (e.g. dbf, tab, dat, shx, tfw) per
+layer.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ColumnNameSubObject" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Column name for name of harvesting sub-object identity (same as SubObjUserId),, in files connected to GIS-files
+with complimentary/theme data (e.g. dbf, tab, dat, shx, tfw)
+per layer.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ColumnNameFeature" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v462_t1</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Column name for name of feature (free text), in files
+connected to GIS-files with complimentary/theme data
+(e.g. dbf, tab, dat, shx, tfw) per layer.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ColumnNameID" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v462_t2</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Column name for unique id (free text) per layer</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ColumnNameDescription" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v462_t3</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Column name for description (free text) per layer</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ColumnNameTreatment" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v462_t4</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Column name for treatment (free text) per layer</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ColumnNameMarked" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v462_t5</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Column name for marked in terrain, eg. painted borders per layer: Codes in column: 0 = yes, 1 = no (default)</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ColumnNameWarning" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v462_t6</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Column name for warning (whether machine activities are permitted or not) per layer: Codes: 0 = no warning
+(default), 1 = warning</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ColumnNameWarningDistance" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v462_t7</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Column name for warning distance (m) per layer:</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ColumnNameFormatID" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v462_t8</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Column name for format class per laye. Used for
+controlling the appearance of all features included in a
+specific layer. Format classes defined in var465.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="GISFileFormatType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>GISFileFormatTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="FormatID" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v460_t2</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Id/name of format class per format class and layer</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="FormatName" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v465_t9</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Descriptive name of format class, free text. May be used in
+user interface of software</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="FormatDefaultClass" type="xsd:boolean">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v465_t20</doc:VarNumber>
+						<doc:Unit>true/falset</doc:Unit>
+						<doc:Description>Default format class to be used if no match is found for
+certain objects (line, point or polygon) per format class and
+layer. Only one format class per layer expected to have
+value "true"</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="FormatColor" type="xsd:integer">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v465_t3</doc:VarNumber>
+						<doc:Unit>RGB</doc:Unit>
+						<doc:Description>Color (RGB) per format class and layer.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="GISFileFormatLineType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>GISFileFormatLineTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="GISFileFormatType">
+				<xsd:sequence>
+					<xsd:element name="FormatLineStyle" type="FormatLineStyleType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VarNumber>v465_t4</doc:VarNumber>
+								<doc:Unit>list</doc:Unit>
+								<doc:Description>Line style per format class and layer. Allowed values are: "Solid", "Dash", "Dot", "Dash-Dot","Double solid" and "HashLine"</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="FormatLineThickness" type="xsd:nonNegativeInteger">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VarNumber>v465_t5</doc:VarNumber>
+								<doc:Unit>point</doc:Unit>
+								<doc:Description>Line thickness, no of points, (independently of line style)
+per format class and layer.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="TopRendering" type="TopRenderingLineType" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="GISFileFormatPointType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>GISFileFormatPointTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="GISFileFormatType">
+				<xsd:sequence>
+					<xsd:element name="FormatFont" type="FormatFontType"/>
+					<xsd:element name="TopRendering" type="TopRenderingPointType" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="GISFileFormatPolygonType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>GISFileFormatPolygonTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="GISFileFormatType">
+				<xsd:sequence>
+					<xsd:element name="FormatLineStyle" type="FormatLineStyleType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VarNumber>v465_t4</doc:VarNumber>
+								<doc:Unit>list</doc:Unit>
+								<doc:Description>Line style per format class and layer. Allowed values are: "Solid", "Dash", "Dot", "Dash-Dot","Double solid" and "HashLine"</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="FormatLineThickness" type="xsd:nonNegativeInteger">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VarNumber>v465_t5</doc:VarNumber>
+								<doc:Unit>point</doc:Unit>
+								<doc:Description>Line thickness, no of points, (independently of line style)
+per format class and layer.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="FormatFillStyle" type="FormatFillStyleType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VarNumber>v465_t6</doc:VarNumber>
+								<doc:Unit>list</doc:Unit>
+								<doc:Description>Fill style format class and layer. Allowed values are: 
+SolidFill,
+TransparentFill,
+HorizontalFill,
+VerticalFill,
+UpwardDiagonalFill,
+DownwardDiagonalFill,
+CrossFill,
+DiagonalCrossFill,
+LightGrayFill,
+GrayFill,
+DarkGrayFill and HalfTransparentFill</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="TopRendering" type="TopRenderingPolygonType" minOccurs="0"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="GISLayerType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>GISLayerTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="GISFileName" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v460_t2</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Name of GIS-files with geographical/layer data (e.g. shp, mif, tif, jpg)</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="GISFileOrder" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v460_t4</doc:VarNumber>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Order of layer as presented in GIS application: For
+example, 1 is the topmost layer.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ComplementaryGISFiles" type="ComplementaryGISFilesType" minOccurs="0"/>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>true/false</doc:Unit>
+					<doc:Description>if attributes value is "true" then modification of the defintion is restricted, if "false" then modification is allowed</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="LengthDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>LengthDefinitionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="LengthClassAdjustment" type="LengthClassAdjustmentType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Allowed list values are "LengthClassAdjustment1" = Log belongs to first length class smaller or equal to log length (427 cm => class 400 cm)
+"LengthClassAdjustment1" = Log belongs to closest length class, normal rounding, (427 cm => class 430 cm)</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LengthClass" type="LengthClassType" maxOccurs="unbounded"/>
+			<xsd:element name="LengthClassMAX" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v132_t1</doc:VarNumber>
+						<doc:Unit>cm</doc:Unit>
+						<doc:Description>Maximum length. Use in combination with LengthClasses</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>true/false</doc:Unit>
+					<doc:Description>if attributes value is "true" then modification of the defintion is restricted, if "false" then modification is allowed</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="LengthDistributionDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>LengthDistributionDefinitionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="DistributionAllowed" type="xsd:boolean">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v136_t2</doc:VarNumber>
+						<doc:Unit>true/false</doc:Unit>
+						<doc:Description>Distribution bucking allowed for product</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DistributionCategory" type="DistributionCategoryType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v191</doc:VarNumber>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Definies type of distribution matrix in
+"DistributionMatrix_%" Allowed list values:
+"Number of logs" and "Volume of logs"
+Two separate matrixes in old standard, v191_t4 or v191</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MAXDeviation" type="NonNegativeDecimal">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v192_t2</doc:VarNumber>
+						<doc:Unit>%</doc:Unit>
+						<doc:Description>Maximum allowed deviation (%) in distribution bucking per
+product</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DistributionWithinProduct" type="xsd:boolean">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v197_t1</doc:VarNumber>
+						<doc:Unit>true/false</doc:Unit>
+						<doc:Description>Defining if distribution bucking is only allowed within
+optimal product. If true only within optimal product, if false
+also allowed to buck non-optimal products. Simplification
+of old v197_t1</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>true/false</doc:Unit>
+					<doc:Description>if attributes value is "true" then modification of the defintion is restricted, if "false" then modification is allowed</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="LengthClassType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>LengthClassTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="LengthClassLowerLimit" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v132_t1</doc:VarNumber>
+						<doc:Unit>cm</doc:Unit>
+						<doc:Description>Lower length limit of length class</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LengthClassMargin" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v135_t1</doc:VarNumber>
+						<doc:Unit>cm</doc:Unit>
+						<doc:Description>Additional length margin, can not be a negative number /length class/price matrix/tree species: Has been
+discussed!!</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LongTimberDefinition" type="LongTimberDefinitionType" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="LimitationDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>LimitationDefinitionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="LimitationCategory" type="LimitationCategoryType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v190_t1</doc:VarNumber>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Type of limitation matrix per product Codes for limitation of production. The allowed list values are: "No limitation",
+"Total number, quantity per product", "Total volume, m3 per product", "Number per diameter class per product", "Volume per diameter class per product", "Number per length class per product", "Volume per length class per product", "Number per cell (log size class) per product and tree species" and "Volume per cell (log size class) per product and tree species".</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LimitationResult" type="LimitationResultType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v196_t2</doc:VarNumber>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Action if production target is fulfilled (overproduction
+according to LimitationMatrix and LimitationType). The allowed list values are:"No action", "Production is stopped, forbidden to buck logs, only manually bucked logs allowed" and "Production is stopped, forbidden to buck logs including manual bucking of logs" </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>true/false</doc:Unit>
+					<doc:Description>if attributes value is "true" then modification of the defintion is restricted, if "false" then modification is allowed</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="LogColorMarkingType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>LogColorMarkingTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="Color1" type="xsd:boolean"/>
+			<xsd:element name="Color2" type="xsd:boolean"/>
+			<xsd:element name="Color3" type="xsd:boolean"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="LoggingFormType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>loggingformtypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="LoggingFormCode" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v23_t2</doc:VarNumber>
+						<doc:Unit>code</doc:Unit>
+						<doc:Description>Code for logging form</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LoggingFormDescription" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v23_t2</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Description of logging method</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="agency" type="AgencyType">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Enumeration list defining the agency who is responsible of logging form</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="LoggingOrganizationType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>LoggingOrganizationTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ContactInformation" type="ContactInformationType"/>
+			<xsd:element name="District" type="xsd:string" minOccurs="0"/>
+			<xsd:element name="Team" type="xsd:string" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="LogMeasurementType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>logmeasurementtypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="LogDiameter" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V256_t1 (201-208)</doc:VarNumber>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>Measured diameter of log</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:positiveInteger">
+							<xsd:attribute name="logDiameterCategory" type="LogDiameterCategoryType" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:Unit>list</doc:Unit>
+										<doc:Description>Enumeration list describing how log is measured: top ob,
+top ub,
+mid ob,
+mid ub,
+butt ob,
+butt ub,
+mid HKS,
+mid HKS ub</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="LogLength" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V256_t1 (301)</doc:VarNumber>
+						<doc:Unit>cm</doc:Unit>
+						<doc:Description>Measured length of log</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="logMeasurementCategory" type="LogMeasurementCategoryType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Type of log measurement: Machine, Operator and Auditor (3rd party</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="LogType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>logtypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="LogKey" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v306, v256_t1 (501)</doc:VarNumber>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Log identity per stem. Running no reset for each stem.
+First log (butt end) always LogKey=1.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProductKey" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v121_t6,v256_t1</doc:VarNumber>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per product set by machine. Must
+be updated if any modifications to product is done.
+Running no reset only when MachineKey is changed. </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LogVolume" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V256_t1 (400,401,402)</doc:VarNumber>
+						<doc:Unit>positive decimal</doc:Unit>
+						<doc:Description>Volume of log</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="NonNegativeDecimal">
+							<xsd:attribute name="logVolumeCategory" type="LogVolumeCategoryType" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:Unit>list</doc:Unit>
+										<doc:Description>Enumeration list: m3 (price) = Volume according to VolumeLengthType,
+VolumeDiamType and VolumeDiamAdjust
+(Old log code 400), m3sob = Volume m3sob. (Old log code 401, v256), m3sub =  Volume m3sub. (Old log code 402)</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+							<xsd:attribute name="logMeasurementCategory" type="LogMeasurementCategoryType" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:Unit>list</doc:Unit>
+										<doc:Description>Type of log measurement: Machine, Operator and Auditor (3rd party</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="ManualCuttingCategory" type="ManualCuttingCategoryType" minOccurs="0"/>
+			<xsd:element name="DiameterSectionProduction" type="DiameterSectionProductionType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Description>Product information of  diameter sections
+</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="LongTimberDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>LongTimberDefinitionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="LongLogButtMIN" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v165_t1</doc:VarNumber>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>Lower limit for butt diameter per length class and product</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LongLogButtMAX" type="xsd:nonNegativeInteger" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v166_t1</doc:VarNumber>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>Upper limit for butt diameter per length class product</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MachineType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>machinetypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="MachineKey" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Machine specific globally uniqe identity (GUID). Must be
+updated if memory of previously used Keys are lost.
+Possible for manufacturers to use this in order to identify
+indivudal machines. Other users of data should use
+MachineUserId or MachineIdOwner.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MachineUserID" type="UserIDType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V3_t2</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Machine identity set by user of data. Normally to be used
+and decided by logging organisation in order to identify a
+certain machine. For example necessary when paying
+forest on based on machine measurement. Registered in
+machine.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MachineIDOwner" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V3_t2</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Machine identity set by machine owner. Identification that
+may be used by machine owner.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MachineApplicationVersion" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Name and version of main software application in forest
+machine</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MachineBaseManufacturer" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V3_t5</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Machine manufacturer. Free text that describes the
+machine manufacturer.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MachineBaseModel">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V3_t6</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Machine model. Free text that describes the model of the
+machine.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="baseModelYear" type="xsd:gYear" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:Unit>Year</doc:Unit>
+										<doc:Description>Manufacturing year of base machine </doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="MachineHeadManufacturer" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V3_t7</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Harvester head manufacturer. Free text that describes the
+head manufacturer.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MachineHeadModel" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V3_t8</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Harvester head model. Free text that describes the model
+of the harvester head.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="headModelYear" type="xsd:gYear">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:Unit>Year</doc:Unit>
+										<doc:Description>Manufacturing year of harvester head.</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="RegistrationNumber" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Registration number of machine</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MachineOwner" type="ContactInformationType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Description>Contact information of machine owner </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LoggingContractor" type="ContactInformationType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Description>Contact information of machine contractor </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="OperatorDefinition" type="OperatorDefinitionType" maxOccurs="unbounded"/>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="machineCategory" type="MachineCategoryType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VarNumber>V3_t3</doc:VarNumber>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Enumeration list describing type of machine: Harvester,
+Forwarder,
+Harwarder,
+Bundler,
+Scarifier,
+Other</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ManualCuttingCategoryType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>ManualCuttingCategoryTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ManualCuttingReason" type="CuttingReasonType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V256_t1 (300)</doc:VarNumber>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Forced cross-cut (break) at small end Operator
+selected cross cut. Enumeration list:
+Decay,
+Damage,
+Crook,
+Sweep,
+Grade break,
+Pulpwood grade,
+Top break,
+Spinning,Other manual</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ManualCuttingReasonSpecification" type="CuttingReasonSpecificationType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>"Outside cutting window", "Quality change" and "Unclassified log" </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MessageHeaderType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>messageheadertypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="SenderApplication" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Name and version of application sending the message</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="CreationDate" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V12</doc:VarNumber>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Date when message was created and saved </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ModificationDate" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V12</doc:VarNumber>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Date when message was last modified and saved</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ApplicationVersionCreated" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V5_t1</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Name and version of software application that created and
+saved a message</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ApplicationVersionModified" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V5_t1</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Name and version of software application that modified
+and saved message</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="CountryCode" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V6_t1</doc:VarNumber>
+						<doc:Unit>code</doc:Unit>
+						<doc:Description>Country code for computer generating message Country
+code: numerical code as per Swedish Std. SS-ISO 3166</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ObjectDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>objectdefinitiontypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ObjectUserID" type="UserIDType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Identity per harvesting object defined by user of data</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ObjectName" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v21</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Descriptive name of harvesting object</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ForestCertification" type="ForestCertificationType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v21_t5</doc:VarNumber>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Harvesting object certified. Forest certifications as enumeration. Allowed values: "FSC",
+"PEFC",
+"Other",
+"None", "Not known" and "Multiple"</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LoggingForm" type="LoggingFormType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Description>Defines possible loggin form of object</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ObjectArea" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v23_t3</doc:VarNumber>
+						<doc:Unit>ha</doc:Unit>
+						<doc:Description>Area of harvesting object</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="PositiveDecimal"/>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="LoggingOrganization" type="LoggingOrganizationType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v31</doc:VarNumber>
+						<doc:Description>Contact information for organisation responsible for
+logging an object (normaly forest company or forest
+owners association), owner of the right to harvest a certain
+object. Old types Organization, Region, District, Working
+team, Wood pile</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ForestOwner" type="ContactInformationType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v33</doc:VarNumber>
+						<doc:Description>Seller of the right to harvest a forest/object. Person or
+organisation owning forest that is harvested by logging
+organisation.
+Observe that ForestOwner and LoggingOrgansiation may
+be identical.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ContractNumber" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v35</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Harvesting object contract number/identity</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="ContractCategory" type="xsd:string"/>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="RealEstateIDObject" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description> </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="acency" type="AgencyType" use="optional">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:Unit>list</doc:Unit>
+										<doc:Description>Enumeration list defining the agency who is responsible of logging form</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="AuditingOrganisation" type="ContactInformationType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Description>Contact information for organisation responsible for 3rd party control of measuring accuracy</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ObjectDefinitionMachineType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>objectdefinitionmachinetypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="ObjectDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="ObjectKey" type="xsd:positiveInteger">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:Unit>sequential no</doc:Unit>
+								<doc:Description>Machine specific identity per harvesting object. Set when
+new harvesting object is started. Running no
+recommended, reset only when MachineKey is changed</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="TextFromMachine" type="xsd:string" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VarNumber>v200_t3</doc:VarNumber>
+								<doc:Unit>free text</doc:Unit>
+								<doc:Description>Text related to harvesting object sent from machine</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="StartDate" type="StanForD2010DateTimeType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VarNumber>v16_t4</doc:VarNumber>
+								<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+								<doc:Description>Time and date for starting production at a site for the first
+time.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="EndDate" type="StanForD2010DateTimeType" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VarNumber>v17_t4</doc:VarNumber>
+								<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+								<doc:Description>Time and date for ending a site.
+Mandatory when object is finished</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="SubObject" type="SubObjectDefinitionMachineType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:Description>Subobject specific information</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="OperatorDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>operatordefinitiontypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="OperatorKey" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine unique operator identity, set by machine</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="OperatorUserID" type="UserIDType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Identity of operator defined by user of data, set in machine</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ContactInformation" type="ContactInformationType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v212_t1</doc:VarNumber>
+						<doc:Description>Operator name and other possible contact information</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="PermittedGradesDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>PermittedGradesDefinitionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="PermittedGradeNumber" type="xsd:positiveInteger" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v141_t1</doc:VarNumber>
+						<doc:Description>Permitted quality grades per product. This is a reference to GradeNumber element in GradeType definition in SpeciesGropuInstruction message. Not binary code as in old standard.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="GradeToleranceTop" type="xsd:nonNegativeInteger" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v145_t1</doc:VarNumber>
+						<doc:Unit>cm</doc:Unit>
+						<doc:Description>Tolerance of grade break, top/price matrix/tree species</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="GradeToleranceButt" type="xsd:nonNegativeInteger" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v146_t1</doc:VarNumber>
+						<doc:Unit>cm</doc:Unit>
+						<doc:Description>Tolerance of grade break, butt/price matrix/tree species</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>true/false</doc:Unit>
+					<doc:Description>if attributes value is "true" then modification of the defintion is restricted, if "false" then modification is allowed</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="PriceDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>PriceDefinitionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="VolumeDiameterAdjustment" type="VolumeDiameterAdjustmentType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Diameters in log price volume calculation
+Allowed list values are: "Measured diameter in mm" and 
+"Measured diameter rounded downwards to cm". The las one is identical with HKS (227 mm => 220 mm)</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="VolumeDiameterCategory">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v161_t1</doc:VarNumber>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Diameters used in price volume calculation. Allowed list values are: "All diameters (solid volume)", "Top", "Mid", "Calculated Norwegian mid" and "Calculated Estonian mid"</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="VolumeDiameterCategoryType">
+							<xsd:attribute name="volumeDiameterTopPosition" type="xsd:nonNegativeInteger" use="optional">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:Unit>cm</doc:Unit>
+										<doc:Description>Position from top end of log where top diameter for volume calculation is measured.</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="VolumeLengthCategory" type="VolumeLengthCategoryType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v163_t1</doc:VarNumber>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Lengths used in price volume calculation. Allowed list values are: "Physical length,cm", "Length as defined in DiamClasses",
+"Rounded downwards to nearest dm-module" and "Rounded to nearest mid-dm</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="VolumeUnderBark" type="xsd:boolean">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>true/false</doc:Unit>
+						<doc:Description>Boolean flag that informs if price based volume is defined under bark</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>true/false</doc:Unit>
+					<doc:Description>if attributes value is "true" then modification of the defintion is restricted, if "false" then modification is allowed</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ProductDefinitionMachineType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>ProductDefinitionMachineTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ProductKey" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v121_t6,v256_t1</doc:VarNumber>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per product set by machine. Must
+be updated if any modifications to product is done.
+Running no reset only when MachineKey is changed. </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:choice>
+				<xsd:element name="ClassifiedProductDefinition" type="ClassifiedProductDefinitionMachineType"/>
+				<xsd:element name="UnclassifiedProductDefinition" type="UnclassifiedProductDefinitionMachineType"/>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ProductMatrixItemType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>ProductMatrixItemTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="Price" type="xsd:integer">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v162_t2</doc:VarNumber>
+						<doc:Unit>currency</doc:Unit>
+						<doc:Description>Price/diameter class/length class/product</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Distribution" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v191</doc:VarNumber>
+						<doc:Unit>%</doc:Unit>
+						<doc:Description>Relative number or relative volume of logs/diameter
+class/length class/product: Volume or number of logs
+defined by "DistributionType" Negative values not
+allowed. Desired length distribution based on number of
+cut logs for each diameter class. The percentage rate is
+calculated for each diameter class as the denominator"</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Limitation" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v190_t2</doc:VarNumber>
+						<doc:Unit>no</doc:Unit>
+						<doc:Description>Limit according to "LimitationType", specified for all cells in all price matrixes for all tree species.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="BuckingCriteria" type="BuckingCriteriaType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v190_t2</doc:VarNumber>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description> Allowed special
+values: "No limit", "Forbidden to buck the log even manually", "The log is excluded from apportionment bucking,only bucking according to value allowed" and "Only logs bucked manually allowed"</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LogColorMarking" type="LogColorMarkingType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v152_t1</doc:VarNumber>
+						<doc:Unit>no</doc:Unit>
+						<doc:Description>Log marking/diameter class/length class/price
+matrices/tree species</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="diameterClassLowerLimit" type="xsd:positiveInteger" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>mm</doc:Unit>
+					<doc:Description>Lower diameter limit of diameter class</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="lengthClassLowerLimit" type="xsd:positiveInteger" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>cm</doc:Unit>
+					<doc:Description>Lower length limit of length class</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ProductMatrixType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>ProductMatrixTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ProductMatrixItem" type="ProductMatrixItemType" maxOccurs="unbounded"/>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>true/false</doc:Unit>
+					<doc:Description>if attributes value is "true" then modification of the defintion is restricted, if "false" then modification is allowed</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ScaleDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>ScaleDefinitionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ScaleKey" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>??</doc:Unit>
+						<doc:Description>??</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ScaleID" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V61_t8</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Name and identity of certificate of type examination for scale</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ScaleModel" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V61_t9</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Scale model and manufacturer</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ScaleCategory" type="ScaleCategoryType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V61_t10</doc:VarNumber>
+						<doc:Unit>enumeration list</doc:Unit>
+						<doc:Description>Scale type: grapple scale or load bearer scale</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ScaleApplicationVersion" type="xsd:string"/>
+			<xsd:element name="ScaleCertificate" type="xsd:string" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="Skogforsk2004ScotsPineType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>Skogforsk2004ScotsPineTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="Latitude" type="PositiveDecimal" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V113_t4</doc:VarNumber>
+						<doc:Unit>latitude</doc:Unit>
+						<doc:Description>Latitude used in bark function Should be set in machine
+since it is specific for certain geographical area..</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SpeciesDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>SpeciesDefinitionTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="SpeciesName" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>??</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Name of species included in species group </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SpeciesUserID" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>??</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>User id of species included in species group</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SpeciesGroupDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>speciesgroupdefinitiontypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="SpeciesGroupModificationDate" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Date when species group definition was last modified</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SpeciesGroupUserID" type="UserIDType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v120_t3</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Identity per species group defined by  user of data</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SpeciesGroupName" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V120_t1</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Name per species group</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SpeciesGroupInfo" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Free text information about species group</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SpeciesGroupVersion" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Additional identity information description of species groupt</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DBHHeight">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v500_t1</doc:VarNumber>
+						<doc:Unit>cm</doc:Unit>
+						<doc:Description>Height above stump of DBH, when DBH is a measured
+value (normally 120 cm above stump in Sweden, 110cm in
+Norway), per species group Set in machine</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:positiveInteger">
+							<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:Unit>true/false</doc:Unit>
+										<doc:Description>if attributes value is "true" then modification of the defintion is restricted, if "false" then modification is allowed</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="StemTypeDefinition" type="StemTypeDefinitionType" minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SpeciesGroupDefinitionMachineType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>speciesgroupdefinitionmachinetypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="SpeciesGroupDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="SpeciesGroupKey" type="xsd:positiveInteger">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:Unit>sequential no</doc:Unit>
+								<doc:Description>Machine specific identity per species group set by
+machine. Must be updated if any modifications to product
+is done. Running number reset only when MachineKey is
+changed.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="BarkFunction" type="BarkFunctionType" nillable="true"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="StemDiametersType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>stemdiameterstypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="DiameterMeasuredStartHeight" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v271_t3</doc:VarNumber>
+						<doc:Unit>cm</doc:Unit>
+						<doc:Description>Height from stump of first measured diameter in
+DiameterVectorOb</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DiameterMeasuredEndHeight" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v272_t3</doc:VarNumber>
+						<doc:Unit>cm</doc:Unit>
+						<doc:Description>Height from stump of last measured diameter in
+DiameterVectorOb</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DiameterValue" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v273</doc:VarNumber>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>Diameter at heights defined by diameterPosition attribute Refers
+to filtered values over bark (representing the actual point
+of measuring). Same values as used in bucking
+optimization and calculations of solid volumes. No
+systematic error when comparing log volumes and volume
+calculations based on DiamVectorOb (saw dust???).
+Diameter values must start at heighet 0 cm from stump.
+Extrapolated diameters at butt end are to be registered.
+Height of first and last measured diameter registered in
+DiamMeasuredStart and DiamMeasuredLast</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:nonNegativeInteger">
+							<xsd:attribute name="diameterPosition" type="xsd:nonNegativeInteger" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:Unit>cm</doc:Unit>
+										<doc:Description>Distance from butt end of stem where diameter is registered. First measurement
+must start at height 0 cm from stump.</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+							<xsd:attribute name="diameterMeasurementCategory" type="DiameterMeasurementCategory" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:Unit>list</doc:Unit>
+										<doc:Description>Possibility to include separate diameters per measuring direction when doing a cross measurement. Allowed values are. "AverageDiameter", "FirstMeasuredDiameter" and "SecondMeasuredDiameter"</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="diameterCategory" type="DiameterCategoryType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Measured diameter type. Enumeration value: over bark </doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="StemGradeType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>stemgradetypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="GradeValue">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V276_t1</doc:VarNumber>
+						<doc:Unit> </doc:Unit>
+						<doc:Description>Grade of stem,</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:nonNegativeInteger">
+							<xsd:attribute name="gradeStartPosition" type="xsd:nonNegativeInteger" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VarNumber>V275_t1</doc:VarNumber>
+										<doc:Unit>cm</doc:Unit>
+										<doc:Description>Specifies the height at which the
+grade starts.</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="StemType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>stemtypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="StemKey" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per stem. Must be totally unique
+for a certain MachineKey. Running no, reset only when
+MachineKey is changed.
+The sum of the length of all logs from one stem must be
+larger than the minimum length of all available price
+matrixes and the diameter at minimum length, from butt
+end, must be larger than the minimum diameter in all price
+matrixes, in order to be registered as a stem.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ObjectKey" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per harvesting object. Set when
+new harvesting object is started. Running no
+recommended, reset only when MachineKey is changed.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SubObjectKey" type="xsd:positiveInteger" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per harvesting sub object, set by
+machine. Set when new harvesting sub object is started.
+Running no recommended, reset when ObjectKey is
+updated.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SpeciesGroupKey" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per species group set by
+machine. Must be updated if any modifications to product
+is done. Running number reset only when MachineKey is
+changed.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="OperatorKey" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V266_t1(750) </doc:VarNumber>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine unique operator identity, set by machine</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="HarvestDate" type="StanForD2010DateTimeType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Date when stem was harvested (identical with M1-
+measurement)</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="BioEnergyAdaption" type="BioEnergyAdaptionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V266_t1(505)</doc:VarNumber>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Adaption of harvesting for retrieving bio energy products,
+in other words whether extraction of logging residues for
+bio energy purposes is suitable. Allowed enumeration values: none,
+logging residues,
+stumps,
+logging residues and stumps</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="StemNumber" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V270</doc:VarNumber>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Stem number. A running / sequential number only to be
+reset when starting on a new harvesting object.
+(Old stem code 500 in v266)</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProcessingCategory" type="ProcessingCategoryType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Possible enumeration values are: SingleTreeProcessing,MultiTreeProcessing,  SingleTreeFelling and MultiTreeFelling</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="StemCoordinates" type="CoordinatesType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Description>Stem coordinates, describes the location of the standing
+tree.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="StemTypeDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>stemtypedefinitiontypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="StemTypeCode" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V124_t2</doc:VarNumber>
+						<doc:Unit>free text (usually finish PMP-codes)</doc:Unit>
+						<doc:Description>Code for stem type</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="StemTypeName" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V124_t1</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Name/Description of stem type</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SubObjectDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>subobjectdefinitiontypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="SubObjectUserID" type="UserIDType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Identity per sub harvesting object defined by user of data</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SubObjectName" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Descriptive name of sub harvesting object</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SubObjectArea" type="PositiveDecimal" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>ha</doc:Unit>
+						<doc:Description>Area of harvesting subobject</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LoggingForm" type="LoggingFormType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Description>Defines possible loggin form of subobject</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="RealEstateIDSubObject" minOccurs="0">
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="agency" type="AgencyType"/>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SubObjectDefinitionMachineType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>subobjectdefinitionmachinetypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="SubObjectDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="SubObjectKey" type="xsd:positiveInteger">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:Unit>sequential no</doc:Unit>
+								<doc:Description>Machine specific identity per harvesting sub object, set by
+machine. Set when new harvesting sub object is started.
+Running no recommended, reset when ObjectKey is
+updated.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="SwedishZaccoType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>SwedishZaccoTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ConstantA" type="NonNegativeDecimal">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V113_t1</doc:VarNumber>
+						<doc:Unit>positive decimal</doc:Unit>
+						<doc:Description>Constant a in the following linear function: Double bark
+thickness = a + b * diameter ob Bark thicknes and
+diameter in mm.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="FactorB" type="NonNegativeDecimal">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V113_t1</doc:VarNumber>
+						<doc:Unit>positive decimal</doc:Unit>
+						<doc:Description>Factor b in the following linear function: Double bark
+thickness = a + b * diameter ob Bark thicknes and
+diameter in mm.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="TopRenderingLineType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>TopRenderingLineTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="FormatColor" type="xsd:integer">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v465_t3</doc:VarNumber>
+						<doc:Unit>RGB</doc:Unit>
+						<doc:Description>Color (RGB) per format class and layer.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="FormatLineStyle" type="FormatLineStyleType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v465_t4</doc:VarNumber>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Line style per format class and layer. Allowed values are: "Solid", "Dash", "Dot", "Dash-Dot","Double solid" and "HashLine"</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="FormatLineThickness" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v465_t5</doc:VarNumber>
+						<doc:Unit>point</doc:Unit>
+						<doc:Description>Line thickness, no of points, (independently of line style)
+per format class and layer.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="TopRenderingPointType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>TopRenderingPointTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="FormatColor" type="xsd:integer">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v465_t3</doc:VarNumber>
+						<doc:Unit>RGB</doc:Unit>
+						<doc:Description>Color (RGB) per format class and layer.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="FormatFont" type="FormatFontType"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="TopRenderingPolygonType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>TopRenderingPolygonTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="FormatColor" type="xsd:integer">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v465_t3</doc:VarNumber>
+						<doc:Unit>RGB</doc:Unit>
+						<doc:Description>Color (RGB) per format class and layer.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="FormatLineStyle" type="FormatLineStyleType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v465_t4</doc:VarNumber>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Line style per format class and layer. Allowed values are: "Solid", "Dash", "Dot", "Dash-Dot","Double solid" and "HashLine"</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="FormatLineThickness" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v465_t5</doc:VarNumber>
+						<doc:Unit>point</doc:Unit>
+						<doc:Description>Line thickness, no of points, (independently of line style)
+per format class and layer.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="FormatFillStyle" type="FormatFillStyleType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v465_t6</doc:VarNumber>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Fill style format class and layer. Allowed values are: 
+SolidFill,
+TransparentFill,
+HorizontalFill,
+VerticalFill,
+UpwardDiagonalFill,
+DownwardDiagonalFill,
+CrossFill,
+DiagonalCrossFill,
+LightGrayFill,
+GrayFill,
+DarkGrayFill and HalfTransparentFill</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="UnclassifiedProductDefinitionMachineType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>UnClassifiedProductDefinitionMachineTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ProductName" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V121_t1</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Name of the product</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ModificationDate" type="StanForD2010DateTimeType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V16_t4</doc:VarNumber>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Date and time when product definition was last modified. ProductKey updated if modified in machine.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProductInfo" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V121_t3</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Free text information about product</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProductIDInfo" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V121_t5</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Additional identity information description of product</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LoggingOrganization" type="ContactInformationType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>v31</doc:VarNumber>
+						<doc:Description>Contact information for organisation responsible for
+logging an object (normaly forest company or forest
+owners association), owner of the right to harvest a certain
+object. Old types Organization, Region, District, Working
+team, Wood pile</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProductGroupName" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VarNumber>V127</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Descriptive text for code in ProductGroupCode. In Finland
+used primarelly in order to aggregate data per stem type.
+Can also be used for old "Product group".
+ProductGroupName adn ProductGroupCode replaces old
+variables 123 - 127.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="UserIDType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Graph>useridtypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="agency" type="AgencyType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:Unit>list</doc:Unit>
+							<doc:Description>Enumeration list defining the agency who is responsible of the user ID</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:simpleType name="AgencyType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Buyer"/>
+			<xsd:enumeration value="ForestOwner"/>
+			<xsd:enumeration value="LoggingContractor"/>
+			<xsd:enumeration value="LoggingOrganization"/>
+			<xsd:enumeration value="MachineOwner"/>
+			<xsd:enumeration value="Other"/>
+			<xsd:enumeration value="Seller"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AreaUnitType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="ha"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="BarkFunctionCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="None"/>
+			<xsd:enumeration value="Swedish Zacco"/>
+			<xsd:enumeration value="German"/>
+			<xsd:enumeration value="Skogforsk 2004, Scots pine"/>
+			<xsd:enumeration value="Skogforsk 2004, Norway spruce"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="BioEnergyAdaptionType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="None"/>
+			<xsd:enumeration value="Logging residues"/>
+			<xsd:enumeration value="Stumps"/>
+			<xsd:enumeration value="Logging residues and stumps"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="BuckingCriteriaType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="No limit"/>
+			<xsd:enumeration value="Forbidden to buck the log even manually"/>
+			<xsd:enumeration value="The log is excluded from apportionment bucking,only bucking according to value allowed"/>
+			<xsd:enumeration value="Only logs bucked manually allowed"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ButtEndProfileExtrapolationFunctionCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Poikela 2007"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ButtEndProfileExtrapolationMethodType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="ExtrapolationFunction"/>
+			<xsd:enumeration value="ExtrapolationTable"/>
+			<xsd:enumeration value="Both"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CoordinateReferenceSystemType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="WGS84"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CountryCodeCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="ISO 3166"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CuttingReasonSpecificationType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Outside cutting window"/>
+			<xsd:enumeration value="Quality change"/>
+			<xsd:enumeration value="Unclassified log"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CuttingReasonType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Decay"/>
+			<xsd:enumeration value="Damage"/>
+			<xsd:enumeration value="Crook"/>
+			<xsd:enumeration value="Sweep"/>
+			<xsd:enumeration value="Grade break"/>
+			<xsd:enumeration value="Pulpwood grade"/>
+			<xsd:enumeration value="Top break"/>
+			<xsd:enumeration value="Spinning"/>
+			<xsd:enumeration value="Other manual"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DeliveryEstimationMethodType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Manual estimation by operator"/>
+			<xsd:enumeration value="Scale"/>
+			<xsd:enumeration value="Estimation through Harvested Production message"/>
+			<xsd:enumeration value="Other"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DeliveryEstimationUnitType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Volume, m3sob"/>
+			<xsd:enumeration value="Volume, m3sub"/>
+			<xsd:enumeration value="Green mass, kg"/>
+			<xsd:enumeration value="Number of logs"/>
+			<xsd:enumeration value="Number of loads"/>
+			<xsd:enumeration value="Loose volume, m3"/>
+			<xsd:enumeration value="Solid volume including bark, branches and needles, m3"/>
+			<xsd:enumeration value="Solid volume of bundles (length*cross sectional area), m3"/>
+			<xsd:enumeration value="Number of bundles"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DensityCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Under bark"/>
+			<xsd:enumeration value="On bark"/>
+			<xsd:enumeration value="Not specified"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DiameterClassAdjustmentType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="DiameterClassAdjustment1"/>
+			<xsd:enumeration value="DiameterClassAdjustment2"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DiameterClassCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Top"/>
+			<xsd:enumeration value="Midpoint"/>
+			<xsd:enumeration value="Calculated Norwegian mid"/>
+			<xsd:enumeration value="Calculated Estonian mid"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DiameterMeasurementCategory">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Average"/>
+			<xsd:enumeration value="First"/>
+			<xsd:enumeration value="Second"/>
+			<xsd:enumeration value="Third"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DiameterSectionUsageType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Buyer"/>
+			<xsd:enumeration value="Commercial"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DiameterCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Over bark"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DiameterUnitType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="mm"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DistributionCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Number of logs"/>
+			<xsd:enumeration value="Volume of logs"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ExtensionActionType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Copy"/>
+			<xsd:enumeration value="Ignore"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ForestCertificationType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="FSC"/>
+			<xsd:enumeration value="PEFC"/>
+			<xsd:enumeration value="Other"/>
+			<xsd:enumeration value="None"/>
+			<xsd:enumeration value="Not known"/>
+			<xsd:enumeration value="Multiple"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="FormatFillStyleType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="SolidFill"/>
+			<xsd:enumeration value="TransparentFill"/>
+			<xsd:enumeration value="HorizontalFill"/>
+			<xsd:enumeration value="VerticalFill"/>
+			<xsd:enumeration value="UpwardDiagonalFill"/>
+			<xsd:enumeration value="DownwardDiagonalFill"/>
+			<xsd:enumeration value="CrossFill"/>
+			<xsd:enumeration value="DiagonalCrossFill"/>
+			<xsd:enumeration value="LightGrayFill"/>
+			<xsd:enumeration value="GrayFill"/>
+			<xsd:enumeration value="DarkGrayFill"/>
+			<xsd:enumeration value="HalfTransparentFill"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="FormatLineStyleType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Solid"/>
+			<xsd:enumeration value="Dash"/>
+			<xsd:enumeration value="Dot"/>
+			<xsd:enumeration value="Dash-Dot"/>
+			<xsd:enumeration value="Double solid"/>
+			<xsd:enumeration value="HashLine"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="GISCoordinateReferenceSystemType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="WGS84"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LatitudeCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="North"/>
+			<xsd:enumeration value="South"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LengthClassAdjustmentType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="LengthClassAdjustment1"/>
+			<xsd:enumeration value="LengthClassAdjustment2"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LengthUnitType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="cm"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LimitationCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="No limitation"/>
+			<xsd:enumeration value="Total number, quantity per product"/>
+			<xsd:enumeration value="Total volume, m3 per product"/>
+			<xsd:enumeration value="Number per diameter class per product"/>
+			<xsd:enumeration value="Volume per diameter class per product"/>
+			<xsd:enumeration value="Number per length class per product"/>
+			<xsd:enumeration value="Volume per length class per product"/>
+			<xsd:enumeration value="Number per cell (log size class) per product and tree species"/>
+			<xsd:enumeration value="Volume per cell (log size class) per product and tree species"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LimitationResultType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="No action"/>
+			<xsd:enumeration value="Production is stopped, forbidden to buck logs, only manually bucked logs allowed"/>
+			<xsd:enumeration value="Production is stopped, forbidden to buck logs including manual bucking of logs"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LoadNumberCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Estimated number of logs"/>
+			<xsd:enumeration value="Number of bundles"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LongitudeCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="East"/>
+			<xsd:enumeration value="West"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LogDiameterCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Top ob"/>
+			<xsd:enumeration value="Top ub"/>
+			<xsd:enumeration value="Mid ob"/>
+			<xsd:enumeration value="Mid ub"/>
+			<xsd:enumeration value="Butt ob"/>
+			<xsd:enumeration value="Butt ub"/>
+			<xsd:enumeration value="Mid HKS ob"/>
+			<xsd:enumeration value="Mid HKS ub"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LogMeasurementCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Machine"/>
+			<xsd:enumeration value="Operator"/>
+			<xsd:enumeration value="Auditor"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LogBunchVolumeCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="NetVolOb"/>
+			<xsd:enumeration value="NetVolUb"/>
+			<xsd:enumeration value="GrossVolOb"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LogVolumeCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="m3 (price)"/>
+			<xsd:enumeration value="m3sob"/>
+			<xsd:enumeration value="m3sub"/>
+			<xsd:enumeration value="m3sobEstimated"/>
+			<xsd:enumeration value="m3subEstimated"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="MachineCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Harvester"/>
+			<xsd:enumeration value="Forwarder"/>
+			<xsd:enumeration value="Harwarder"/>
+			<xsd:enumeration value="Bundler"/>
+			<xsd:enumeration value="Scarifier"/>
+			<xsd:enumeration value="Other"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="MessageCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="env"/>
+			<xsd:enumeration value="fdi"/>
+			<xsd:enumeration value="foi"/>
+			<xsd:enumeration value="fpr"/>
+			<xsd:enumeration value="fqc"/>
+			<xsd:enumeration value="hpr"/>
+			<xsd:enumeration value="hqc"/>
+			<xsd:enumeration value="ogi"/>
+			<xsd:enumeration value="ogr"/>
+			<xsd:enumeration value="oin"/>
+			<xsd:enumeration value="mom"/>
+			<xsd:enumeration value="pin"/>
+			<xsd:enumeration value="spi"/>
+			<xsd:enumeration value="thp"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="NonNegativeDecimal">
+		<xsd:restriction base="xsd:decimal">
+			<xsd:minInclusive value="0"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="PositiveDecimal">
+		<xsd:restriction base="xsd:decimal">
+			<xsd:minExclusive value="0"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ProcessingCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="SingleTreeProcessing"/>
+			<xsd:enumeration value="MultiTreeProcessing"/>
+			<xsd:enumeration value="SingleTreeFelling"/>
+			<xsd:enumeration value="MultiTreeFelling"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ProductConditionType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Buck always"/>
+			<xsd:enumeration value="Buck butt-log only"/>
+			<xsd:enumeration value="Do not buck butt log"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ReceiverPositionType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Base machine position"/>
+			<xsd:enumeration value="Crane tip position when felling the tree"/>
+			<xsd:enumeration value="Crane tip position when processing the tree"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ScaleCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Crane tip scale"/>
+			<xsd:enumeration value="Load bearer scale"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="StanForD2010DateTimeType">
+		<xsd:restriction base="xsd:dateTime">
+			<xsd:pattern value=".+T.+[+-].+"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="StemVolumeCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="m3sob"/>
+			<xsd:enumeration value="m3sub"/>
+			<xsd:enumeration value="m3sobEstimated"/>
+			<xsd:enumeration value="m3subEstimated"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="TrackingCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Points tracking"/>
+			<xsd:enumeration value="Lines tracking"/>
+			<xsd:enumeration value="Polygons tracking"/>
+			<xsd:enumeration value="Tracking not required"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="VolumeDiameterAdjustmentType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Measured diameter in mm"/>
+			<xsd:enumeration value="Measured diameter rounded downwards to cm"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="VolumeDiameterCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="All diameters (solid volume)"/>
+			<xsd:enumeration value="Top"/>
+			<xsd:enumeration value="Mid"/>
+			<xsd:enumeration value="Calculated Norwegian mid"/>
+			<xsd:enumeration value="Calculated Estonian mid"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="VolumeLengthCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Physical length cm"/>
+			<xsd:enumeration value="Length as defined in LengthClasses"/>
+			<xsd:enumeration value="Rounded downwards to nearest dm-module"/>
+			<xsd:enumeration value="Rounded to nearest mid-dm"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="VolumeUnitType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="m3"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="WeightUnitType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="kg"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:attributeGroup name="CoordinatesAttributeGroup">
+		<xsd:attribute name="receiverPosition" type="ReceiverPositionType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VarNumber>V520_t1</doc:VarNumber>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Position of coordinate registration in file:
+Base machine position,
+Crane tip position when felling the tree (harvester),
+Crane tip position when processing the tree
+(harvester)</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="coordinateReferenceSystem" type="CoordinateReferenceSystemType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VarNumber>V521_t2</doc:VarNumber>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Coordinate system used in StanForD file: WGS84</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:attributeGroup>
+	<xsd:attributeGroup name="MessageAttributeGroup">
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Enumeration list of file extensions of StanForD 2010 messages: Allowed values are: "fdi", "foi", "fpr", "fqc", "hpr", "hqc", "ogi", "ogr", "oin", "mom", "pin", "spi" and "thp"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="areaUnit" type="AreaUnitType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Unit of area information in StanForD 2010 messages.Only allowed value: ha</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="diameterUnit" type="DiameterUnitType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Unit of diameter information in StanForD 2010 messages.Only allowed value: mm</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="lengthUnit" type="LengthUnitType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Unit of length information in StanForD 2010 messages.Only allowed value: cm</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="volumeUnit" type="VolumeUnitType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Unit of length information in StanForD 2010 messages. Only allowed value: m3</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="weightUnit" type="WeightUnitType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Enumeration list of file extensions of StanForD 2010 messages.Only allowed value: kg</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:attributeGroup>
+</xsd:schema>
