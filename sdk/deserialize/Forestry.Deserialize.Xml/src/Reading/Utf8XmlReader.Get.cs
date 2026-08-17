@@ -15,7 +15,7 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <returns></returns>
         internal ReadOnlySpan<byte> GetUnescapedValue()
         {
-            ReadOnlySpan<byte> value = IsWithSequencing ? ValueSequence.ToArray() : Value;
+            ReadOnlySpan<byte> value = HasValueSequence ? ValueSequence.ToArray() : Value;
             // TODO: When escaped convert
 
             return value;
@@ -28,22 +28,17 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <exception cref="InvalidOperationException"></exception>
         public readonly ReadOnlySpan<byte> GetString()
         {
-            if (_tokenType == TokenType.Null)
+            if (_currentTokenType == TokenType.Null)
             {
                 return null;
             }
 
-            if (
-                _tokenType != TokenType.ElementName && 
-                _tokenType != TokenType.ElementValue && 
-                _tokenType != TokenType.AttributeName && 
-                _tokenType != TokenType.AttributeValue 
-            )
+            if (_currentTokenType != TokenType.Value)
             {
                 throw new InvalidOperationException();  // TODO Throwing + Formatting
             }
 
-            ReadOnlySpan<byte> value = IsWithSequencing ? ValueSequence.ToArray() : Value;
+            ReadOnlySpan<byte> value = HasValueSequence ? ValueSequence.ToArray() : Value;
             return value;
         }
 

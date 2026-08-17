@@ -2,17 +2,14 @@ namespace Forestry.Deserialize.Xml {
     public enum TokenType: byte
     {
         None = (byte)0,
-        StartingTag=(byte)1,
-        EndingTag=(byte)2,
-        EmptyTag=(byte)3,
-        ElementName=(byte)4,
-        ElementValue=(byte)5,
-        AttributeName=(byte)6,
-        AttributeValue=(byte)7,
-        Declaration=(byte)8,
-        ProcessInstruction=(byte)9,
-        Comment=(byte)10,
-        CharacterData=(byte)11,
-        Null = (byte)12
+        Element=(byte)1,
+        ElementEnd=(byte)2,
+        Attribute=(byte)3,
+        Value=(byte)4,
+        Declaration=(byte)5,
+        ProcessInstruction=(byte)6,
+        Comment=(byte)7,
+        DocumentType=(byte)8,
+        Null = (byte)9
     }
 }

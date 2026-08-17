@@ -13,4 +13,10 @@
     <ProjectReference Include="$(MSBuildThisFileDirectory)\..\..\Forestry.Deserialize\src\Forestry.Deserialize.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Forestry.Deserialize.Xml.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
 </Project>

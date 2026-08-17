@@ -11,18 +11,9 @@ namespace Forestry.Deserialize.Reading
         internal long _lineNumber { get; }
 
         /// <summary>
-        /// Reader line number's position (byte)
+        /// Reader line position (byte)
         /// </summary>
-        internal long _lineNumberPosition { get; }
+        internal long _linePosition { get; }
 
-        /// <summary>
-        /// Is in an object
-        /// </summary>
-        internal bool _isObject { get; }
-
-        /// <summary>
-        /// Is in a none privitive
-        /// </summary>
-        internal bool _isNotPrimitive { get; }
     }
 }

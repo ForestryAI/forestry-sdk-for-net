@@ -9,26 +9,30 @@ namespace Forestry.Deserialize.Xml.Reading
     {
         internal readonly long _lineNumber;
 
-        internal readonly long _lineNumberPosition;
+        internal readonly long _linePosition;
 
-        internal readonly bool _isObject;
+        internal readonly bool _isElement;
 
-        internal readonly bool _isNotPrimitive;
+        internal readonly bool _isProlog;
 
         internal readonly TokenType _tokenType;
 
         internal readonly TokenType _lastTokenType;
+
+        internal readonly ElementNameStack _elementNameStack;
 
         internal readonly ReaderOptions _readerOptions;
 
         public ReaderState(ReaderOptions readerOptions = default)
         {
             _lineNumber = default;
-            _lineNumberPosition = default;
-            _isObject = default;
-            _isNotPrimitive = default;
+            _linePosition = default;
+            _isElement = default;
+            _isProlog = default;
             _tokenType = default;
             _lastTokenType = default;
+            _elementNameStack = default;
+
             _readerOptions = readerOptions;
         }
 
@@ -39,15 +43,18 @@ namespace Forestry.Deserialize.Xml.Reading
             bool isNotPrimitive,
             TokenType tokenType,
             TokenType lastTokenType,
+            ElementNameStack elementNameStack,
             ReaderOptions readerOptions
         )
         {
             _lineNumber = lineNumber;
-            _lineNumberPosition = lineNumberPosition;
-            _isObject = isObject;
-            _isNotPrimitive = isNotPrimitive;
+            _linePosition = lineNumberPosition;
+            _isElement = isObject;
+            _isProlog = isNotPrimitive;
             _tokenType = tokenType;
             _lastTokenType = lastTokenType;
+            _elementNameStack = elementNameStack;
+
             _readerOptions = readerOptions;
         }
 
@@ -58,11 +65,7 @@ namespace Forestry.Deserialize.Xml.Reading
         // this type, instead of promoting four of them to `public` just to satisfy the interface.
         long IReaderState<ReaderState>._lineNumber => _lineNumber;
 
-        long IReaderState<ReaderState>._lineNumberPosition => _lineNumberPosition;
-
-        bool IReaderState<ReaderState>._isObject => _isObject;
-
-        bool IReaderState<ReaderState>._isNotPrimitive => _isNotPrimitive;
+        long IReaderState<ReaderState>._linePosition => _linePosition;
 
         /// <summary>
         /// Any deviations from strict adherence to the XML specification
