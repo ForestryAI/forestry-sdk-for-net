@@ -5,6 +5,7 @@ namespace Forestry.Deserialize.Reading
     /// </summary>
     public interface IReaderState<TState> where TState : struct, IReaderState<TState>
     {
+        #region Debug
         /// <summary>
         /// Reader line number
         /// </summary>
@@ -14,6 +15,6 @@ namespace Forestry.Deserialize.Reading
         /// Reader line position (byte)
         /// </summary>
         internal long _linePosition { get; }
-
+        #endregion
     }
 }

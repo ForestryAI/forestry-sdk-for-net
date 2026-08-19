@@ -25,14 +25,9 @@ namespace Forestry.Deserialize.Xml.Reading
         private long _linePosition;
 
         /// <summary>
-        /// When reading is inside markup
+        /// Document non-terminal
         /// </summary>
-        private bool _isElement;
-
-        /// <summary>
-        /// When reading is inside prolog i.e. the document start
-        /// </summary>
-        private bool _isProlog;
+        private EBNF.Document _documentNonTerminal;
 
         /// <summary>
         /// Current XML Token
@@ -144,11 +139,10 @@ namespace Forestry.Deserialize.Xml.Reading
             _lineNumber = readerState._lineNumber;
             _linePosition = readerState._linePosition;
 
-            _isElement = readerState._isElement;
-            _isProlog = readerState._isProlog;
+            _documentNonTerminal = readerState._documentNonTerminal;
 
-            _currentTokenType = readerState._tokenType;
-            _previousTokenType = readerState._lastTokenType;
+            _currentTokenType = readerState._currentTokenType;
+            _previousTokenType = readerState._previousTokenType;
 
             _readerOptions = readerState.ReaderOptions;
 
@@ -294,9 +288,9 @@ namespace Forestry.Deserialize.Xml.Reading
                 goto ReadingCompleted;
             }
 
-            if (_currentTokenType == TokenType.None || _isProlog)
+            if (_currentTokenType == TokenType.None || _documentNonTerminal == EBNF.Document.Prolog)
             {
-                _isProlog = true;         
+                _documentNonTerminal = EBNF.Document.Prolog;        
                 goto ReadDocument;
             }
 
@@ -419,18 +413,18 @@ namespace Forestry.Deserialize.Xml.Reading
         {
             bool readable = false;
 
-            if (_isProlog)
+            if (_documentNonTerminal == EBNF.Document.Prolog)
             {
                 readable = ReadProlog();
                 goto ReadingCompleted;
             }
 
-            if (_isProlog is false && _isElement)
+            if (_documentNonTerminal == EBNF.Document.Element)
             {
                 
             }
 
-            if (_isProlog is false && _isElement is false)
+            if (_documentNonTerminal == EBNF.Document.Miscellaneous)
             {
                 
             }
@@ -455,7 +449,7 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <returns></returns>
         private bool ReadDeclaration()
         {
-            if (_isProlog && _currentTokenType == TokenType.None)
+            if (_documentNonTerminal == EBNF.Document.None && _currentTokenType == TokenType.None)
             {
                 
             }

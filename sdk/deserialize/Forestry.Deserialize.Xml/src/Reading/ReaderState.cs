@@ -3,34 +3,39 @@ using Forestry.Deserialize.Reading;
 namespace Forestry.Deserialize.Xml.Reading
 {
     /// <summary>
-    /// Unlike reader structs the reader state can live over async || sync bounderies
+    /// The reader state is meant to live over async || sync bounderies to 
+    /// reconstruc a reader with debuging, assertions and options fields.
     /// </summary>
     public readonly struct ReaderState: IReaderState<ReaderState>
     {
+        #region debug
         internal readonly long _lineNumber;
 
         internal readonly long _linePosition;
+        #endregion
 
-        internal readonly bool _isElement;
+        #region assertions
+        internal readonly EBNF.Document _documentNonTerminal;
+        
+        internal readonly TokenType _currentTokenType;
 
-        internal readonly bool _isProlog;
-
-        internal readonly TokenType _tokenType;
-
-        internal readonly TokenType _lastTokenType;
-
+        internal readonly TokenType _previousTokenType;
+        
         internal readonly ElementNameStack _elementNameStack;
+        #endregion
 
+        #region options
         internal readonly ReaderOptions _readerOptions;
+        #endregion
 
         public ReaderState(ReaderOptions readerOptions = default)
         {
             _lineNumber = default;
             _linePosition = default;
-            _isElement = default;
-            _isProlog = default;
-            _tokenType = default;
-            _lastTokenType = default;
+
+            _documentNonTerminal = default;
+            _currentTokenType = default;
+            _previousTokenType = default;
             _elementNameStack = default;
 
             _readerOptions = readerOptions;
@@ -39,8 +44,7 @@ namespace Forestry.Deserialize.Xml.Reading
         internal ReaderState(
             long lineNumber,
             long lineNumberPosition,
-            bool isObject,
-            bool isNotPrimitive,
+            EBNF.Document documentEBNF,
             TokenType tokenType,
             TokenType lastTokenType,
             ElementNameStack elementNameStack,
@@ -49,10 +53,10 @@ namespace Forestry.Deserialize.Xml.Reading
         {
             _lineNumber = lineNumber;
             _linePosition = lineNumberPosition;
-            _isElement = isObject;
-            _isProlog = isNotPrimitive;
-            _tokenType = tokenType;
-            _lastTokenType = lastTokenType;
+
+            _documentNonTerminal = documentEBNF;
+            _currentTokenType = tokenType;
+            _previousTokenType = lastTokenType;
             _elementNameStack = elementNameStack;
 
             _readerOptions = readerOptions;
