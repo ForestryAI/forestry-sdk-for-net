@@ -544,15 +544,12 @@ namespace Forestry.Raindrop
         {
             if (string.IsNullOrEmpty(format)) return ToString();
 
-            switch (format[0] | 0x20)
+            return (format[0] | 0x20) switch
             {
-                case 'd':
-                    return ToString('-');
-                case 's':
-                    return ToString(' ');
-                default:
-                    throw new FormatException($"Format specifier '{format}' is not supported.");
-            }
+                'd' => ToString('-'),
+                's' => ToString(' '),
+                _ => throw new FormatException($"Format specifier '{format}' is not supported."),
+            };
         }
 
         /// <summary>

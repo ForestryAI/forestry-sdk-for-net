@@ -164,7 +164,7 @@ namespace Forestry.Raindrop.Tests
         }
 
         /// <summary>
-        /// Suffix must have a maximum of 21 characters adhering to a Biometria policy 
+        /// Suffix must have a maximum of 21 characters adhering to a fictive policy 
         /// even though UInt128 has space for 25
         /// </summary>
         [Fact]
