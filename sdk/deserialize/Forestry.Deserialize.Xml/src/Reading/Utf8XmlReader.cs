@@ -108,7 +108,7 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <summary>
         /// Position in the document
         /// </summary>
-        private int _documentPosition;
+        private int _documentPosition;  // TODO: Explain usage
 
         /// <summary>
         /// Reading segment from a byte span
@@ -243,7 +243,7 @@ namespace Forestry.Deserialize.Xml.Reading
             }
         }
 
-        #region readable token
+        #region token
         public readonly TokenType TokenType => _currentTokenType;
 
         /// <summary>
@@ -277,92 +277,13 @@ namespace Forestry.Deserialize.Xml.Reading
         );
         #endregion
 
-        #region Reading 
+        #region segment
         /// <summary>
-        /// Read next token
-        /// </summary>
-        /// <returns></returns>
-        public bool Read()
-        {
-            bool readable = TryRead();
-            if (!readable)
-            {
-                if (_isExternalFinalSegment && _currentTokenType is TokenType.None)
-                {
-                    throw new InvalidOperationException(); // TODO: Formatting
-                }
-            }
-
-            return readable;
-        }
-
-        /// <summary>
-        /// Skip
-        /// </summary>
-        public void Skip()
-        {}
-
-        /// <summary>
-        /// Try read
-        /// </summary>
-        /// <returns></returns>
-        private bool TryRead()
-        {
-            bool readable = false;
-            Value = default;
-
-            if (!IsBufferReadable())
-            {
-                // Not enough buffered data to make any progress right now - not "invalid,"
-                // just "nothing more to look at yet." Nothing below has run, so there's
-                // nothing to roll back: the caller refills and calls Read() again, and this
-                // same check is where it picks back up.
-                goto ReadingCompleted;
-            }
-
-            if (_currentTokenType == TokenType.None || _documentNonTerminal == EBNF.Document.Prolog)
-            {
-                _documentNonTerminal = EBNF.Document.Prolog;        
-                goto ReadDocument;
-            }
-
-            if (_currentTokenType == TokenType.Element)
-            {
-                readable = true;
-                goto ReadingCompleted;
-            }
-            else if (_currentTokenType == TokenType.Attribute)
-            {
-                goto ReadingCompleted;
-            }
-            else if (_currentTokenType == TokenType.Value)
-            {
-
-                goto ReadingCompleted;
-            }
-            else if (_currentTokenType == TokenType.ElementEnd)
-            {
-                goto ReadingCompleted;
-            }
-            else
-            {
-                goto ReadDocument;
-            }
-
-            ReadingCompleted:
-                return readable;
-
-            ReadDocument:
-                readable = ReadDocument();
-                goto ReadingCompleted;
-        }
-
-        /// <summary>
-        /// When buffer position within the buffer
+        /// When segment position within the segment length
         /// </summary>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool IsBufferReadable()
+        private bool IsSegmentReadable()
         {
             if (_segmentPosition >= (uint)_segment.Length)
             {
@@ -435,103 +356,44 @@ namespace Forestry.Deserialize.Xml.Reading
 
             return true;
         }
+        #endregion
 
+        #region read 
         /// <summary>
-        /// Read document as EBNF defined: prolog element miscellaneous*
+        /// Read token
         /// </summary>
         /// <returns></returns>
-        /// <see cref="https://www.w3.org/TR/REC-xml/">Using EBNF concatenation-by-juxtaposition</see>
-        private bool ReadDocument()
+        public bool Read()
         {
             bool readable = false;
+            Value = default;
 
-            if (_documentNonTerminal == EBNF.Document.Prolog)
+            if (!IsSegmentReadable())
             {
-                readable = ReadProlog();
+                // Not invalid token just not enough read
                 goto ReadingCompleted;
             }
 
-            if (_documentNonTerminal == EBNF.Document.Element)
-            {
-                
-            }
-
-            if (_documentNonTerminal == EBNF.Document.Miscellaneous)
-            {
-                
-            }
+            readable = ReadDocument();
+            goto ReadingCompleted;
 
             ReadingCompleted:
+                if (!readable)
+                {
+                    if (_isExternalFinalSegment && _currentTokenType is TokenType.None)
+                    {
+                        throw new InvalidOperationException(); // TODO: Formatting
+                    }
+                }
+
                 return readable;
         }
 
-        /// <summary>
-        /// Read prolog defined as: declaration? miscellaneous* (document-type miscellaneous*)?
-        /// </summary>
-        /// <returns></returns>
-        private bool ReadProlog()
-        {
-            // TODO: When an element is found then set _isProlog to false and rollback
-            return false;
-        }
-
-        /// <summary>
-        /// Read declaration
-        /// </summary>
-        /// <returns></returns>
-        private bool ReadDeclaration()
-        {
-            if (_documentNonTerminal == EBNF.Document.None && _currentTokenType == TokenType.None)
-            {
-                
-            }
-            
-            throw new InvalidOperationException();  // TODO: Formated throwing if declartion not preceeded by None
-        }
-
-        /// <summary>
-        /// Read element
-        /// </summary>
-        /// <returns></returns>
-        private bool ReadElement()
+        internal bool ReadDocument()
         {
             return false;
         }
-
-        private bool ReadElementEnd()
-        {
-            return false;
-        }
-
-        /// <summary>
-        /// Read miscellaneous: comment | processing-instruction | whitespace
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        private bool ReadMiscellaneous(ReadOnlySpan<byte> value)
-        {
-            return false;
-        }
-
-        /// <summary>
-        /// Read comment
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        private bool ReadComment(ReadOnlySpan<byte> value)
-        {
-            return false;
-        }
-
-        /// <summary>
-        /// Read process instruction
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        private bool ReadProcessInstruction(ReadOnlySpan<byte> value)
-        {
-            return false;
-        }
+        #endregion
 
         /// <summary>
         /// Skip whitespace
@@ -542,6 +404,5 @@ namespace Forestry.Deserialize.Xml.Reading
         {
             return false;
         }
-        #endregion
     }
 }

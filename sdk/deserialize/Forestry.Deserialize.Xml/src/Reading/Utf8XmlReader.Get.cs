@@ -28,11 +28,6 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <exception cref="InvalidOperationException"></exception>
         public readonly ReadOnlySpan<byte> GetString()
         {
-            if (_currentTokenType == TokenType.Null)
-            {
-                return null;
-            }
-
             if (_currentTokenType != TokenType.Value)
             {
                 throw new InvalidOperationException();  // TODO Throwing + Formatting
