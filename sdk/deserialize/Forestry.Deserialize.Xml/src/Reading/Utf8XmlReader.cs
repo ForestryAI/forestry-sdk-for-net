@@ -8,12 +8,62 @@ namespace Forestry.Deserialize.Xml.Reading
 {
     internal ref partial struct Utf8XmlReader
     {
+        #region segments
         /// <summary>
-        /// Internal buffer deriving from a span (i.e. single segment) or 
-        /// sequencing which can have a single or multiple segments
+        /// Internal segment deriving from either a byte span or byte sequence
         /// </summary>
-        private ReadOnlySpan<byte> _buffer;
+        private ReadOnlySpan<byte> _segment;
 
+        /// <summary>
+        /// Internal segment position
+        /// </summary>
+        private int _segmentPosition;
+
+        /// <summary>
+        /// Final segment from an external flag
+        /// </summary>
+        private bool _isExternalFinalSegment;
+
+        /// <summary>
+        /// Only true when the internal segment derives from a byte sequence that has multiple segments
+        /// </summary>
+        private bool _isMultipleSegments;
+
+        /// <summary>
+        /// Final segment internal flag
+        /// </summary>
+        private bool _isFinalSegment;
+
+                /// <summary>
+        /// Reading is completed when the external final segment is flagged and there are 
+        /// no multiple segments or the internal final segment is flagged
+        /// </summary>
+        private readonly bool IsReadingCompleted => _isExternalFinalSegment && (!_isMultipleSegments || _isFinalSegment);
+        #endregion
+
+        #region sequence
+        /// <summary>
+        /// When the segment derives from a byte sequence
+        /// </summary>
+        private readonly bool _isSequence;
+
+        /// <summary>
+        /// Sequence backing the internal buffer
+        /// </summary>
+        private readonly ReadOnlySequence<byte> _sequence;
+
+        /// <summary>
+        /// Current sequence position
+        /// </summary>
+        private SequencePosition _currentSequencePosition;
+
+        /// <summary>
+        /// Next sequence position
+        /// </summary>
+        private SequencePosition _nextSequencePosition;
+        #endregion
+
+        #region state
         /// <summary>
         /// Line number i.e. top to bottom
         /// </summary>
@@ -40,37 +90,6 @@ namespace Forestry.Deserialize.Xml.Reading
         private TokenType _previousTokenType;
 
         /// <summary>
-        /// Reader options
-        /// </summary>
-        private ReaderOptions _readerOptions;
-
-        /// <summary>
-        /// Is buffering completed
-        /// </summary>
-        private bool _isBufferingCompleted;
-
-        /// <summary>
-        /// Position in the internal buffer
-        /// </summary>
-        private int _bufferPosition;
-
-        /// <summary>
-        /// Position in the document
-        /// </summary>
-        private int _documentPosition;
-
-        /// <summary>
-        /// Only true when the internal buffer derives from sequencing with multiple segments i.e. 
-        /// false if contains only a single segment or if the buffer dervires from a span
-        /// </summary>
-        private bool _isMultipleSegments;
-
-        /// <summary>
-        /// When at the last segment in the document
-        /// </summary>
-        private bool _isLastSegment;
-
-        /// <summary>
         /// Element name when the element contains a value
         /// </summary>
         private ulong[] _elementName;
@@ -81,61 +100,50 @@ namespace Forestry.Deserialize.Xml.Reading
         private ElementNameStack _elementNameStack;
 
         /// <summary>
-        /// When buffering completed and is either the last or not multiple segments
+        /// Reader options
         /// </summary>
-        private readonly bool IsReadingCompleted => _isBufferingCompleted && (!_isMultipleSegments || _isLastSegment);
+        private ReaderOptions _readerOptions;
+        #endregion
 
         /// <summary>
-        /// When a sequence backs the internal buffer
+        /// Position in the document
         /// </summary>
-        private readonly bool _isSequencing;
+        private int _documentPosition;
 
         /// <summary>
-        /// Sequence backing the internal buffer
+        /// Reading segment from a byte span
         /// </summary>
-        private readonly ReadOnlySequence<byte> _sequence;
-
-        /// <summary>
-        /// Current sequence position
-        /// </summary>
-        private SequencePosition _currentSequencePosition;
-
-        /// <summary>
-        /// Next sequence position
-        /// </summary>
-        private SequencePosition _nextSequencePosition;
-
-        /// <summary>
-        /// Reading bytes from a single span i.e. meant for in-memory smaller XML
-        /// </summary>
-        /// <param name="bytes"></param>
+        /// <param name="segment"></param>
         /// <param name="readerOptions"></param>
         public Utf8XmlReader(
-            ReadOnlySpan<byte> bytes,
+            ReadOnlySpan<byte> segment,
             ReaderOptions readerOptions = default
-        ): this(bytes, isBufferingCompleted: true, new ReaderState(readerOptions))
+        ): this(segment, isFinalSegment: true, new ReaderState(readerOptions))
         {
             
         }
 
         /// <summary>
-        /// Reading bytes from a single span
+        /// Reading segment from a byte span using a reader state (where options follow along)
         /// </summary>
-        /// <param name="bytes"></param>
-        /// <param name="isBufferingCompleted"></param>
+        /// <param name="segment"></param>
+        /// <param name="isFinalSegment"></param>
         /// <param name="readerState"></param>
         public Utf8XmlReader(
-            ReadOnlySpan<byte> bytes,
-            bool isBufferingCompleted,
+            ReadOnlySpan<byte> segment,
+            bool isFinalSegment,
             ReaderState readerState
         ) {
-            _buffer = bytes;
-            _isBufferingCompleted = isBufferingCompleted;
-            _isLastSegment = isBufferingCompleted;
+            // segment
+            _segment = segment;
+            _segmentPosition = 0;
 
-            _bufferPosition = 0;
+            _isExternalFinalSegment = isFinalSegment;
+            _isFinalSegment = isFinalSegment;
+
             _documentPosition = 0;
 
+            // state
             _lineNumber = readerState._lineNumber;
             _linePosition = readerState._linePosition;
 
@@ -143,7 +151,6 @@ namespace Forestry.Deserialize.Xml.Reading
 
             _currentTokenType = readerState._currentTokenType;
             _previousTokenType = readerState._previousTokenType;
-
             _readerOptions = readerState.ReaderOptions;
 
             if (_readerOptions.MaxDepth == 0)
@@ -154,47 +161,58 @@ namespace Forestry.Deserialize.Xml.Reading
             _elementName = [];
             _elementNameStack = readerState._elementNameStack;
 
+            // sequence (not used when byte span)
             HasValueSequence = false;
             Value = [];
             ValueSequence = ReadOnlySequence<byte>.Empty;
 
-            _isSequencing = false;
-            _isMultipleSegments = false;
-
+            _isSequence = false;
             _sequence = default;
+
             _currentSequencePosition = default;
             _nextSequencePosition = default;
+
+            _isMultipleSegments = false;
         }
 
         /// <summary>
-        /// Reading byte sequences i.e. when piping larger XML documents
+        /// Reading segments from a byte sequence starting with the first segment
         /// </summary>
-        /// <param name="bytes"></param>
+        /// <param name="segments"></param>
         /// <param name="readerOptions"></param>
         public Utf8XmlReader(
-            ReadOnlySequence<byte> bytes,
+            ReadOnlySequence<byte> segments,
             ReaderOptions readerOptions = default
-        ): this(bytes, isBufferingCompleted: true, new ReaderState(readerOptions))
+        ): this(segments, isFinalSegment: true, new ReaderState(readerOptions))
         {
             
         }
 
         /// <summary>
-        /// Reading byte sequences i.e. when piping larger XML documents
+        /// Reading segments from a byte sequence starting with the first segment using a 
+        /// reader state (where options follow along)
+        /// 
+        /// The <paramref name="isFinalSegment"/> is always respected when the sequence 
+        /// only has a single segment.
+        /// 
+        /// The <paramref name="isFinalSegment"/> is only respected when using the last 
+        /// segment in the sequence otherwise ignored.  All starting segments that are 
+        /// empty are ignored when multiple segments.
         /// </summary>
-        /// <param name="bytes"></param>
+        /// <param name="segments"></param>
         public Utf8XmlReader(
-            ReadOnlySequence<byte> bytes,
-            bool isBufferingCompleted,
+            ReadOnlySequence<byte> segments,
+            bool isFinalSegment,
             ReaderState readerState
-        ): this(bytes.FirstSpan, isBufferingCompleted, readerState)
+        ): this(segments.FirstSpan, isFinalSegment, readerState)
         {
-            _isSequencing = true;
-            _sequence = bytes;
+            _isSequence = true;
+            _sequence = segments;
 
-            _currentSequencePosition = bytes.Start;
+            _currentSequencePosition = segments.Start;
 
-            if (bytes.IsSingleSegment)
+            // remaining fields depend on if the sequence has a single segment or multiple ignoring empty segments
+            if (segments.IsSingleSegment)
             {
                 _isMultipleSegments = false;
                 _nextSequencePosition = default;
@@ -202,30 +220,30 @@ namespace Forestry.Deserialize.Xml.Reading
             {
                 _nextSequencePosition = _currentSequencePosition;
 
-                bool emptyFirstSegment = _buffer.Length == 0;
+                bool emptyFirstSegment = _segment.Length == 0;
                 if (emptyFirstSegment)
                 {
                     SequencePosition referenceSequencePosition = _nextSequencePosition;
-                    while (bytes.TryGet(ref _nextSequencePosition, out ReadOnlyMemory<byte> memory, advance: true))
+                    while (segments.TryGet(ref _nextSequencePosition, out ReadOnlyMemory<byte> memory, advance: true))
                     {
                         _currentSequencePosition = referenceSequencePosition;
                         if (memory.Length != 0)
                         {
-                            _buffer = memory.Span;
+                            _segment = memory.Span;
                             break;
                         }
                         referenceSequencePosition = _nextSequencePosition;
                     }
                 }
 
-                _isLastSegment = !bytes.TryGet(ref _nextSequencePosition, out _, advance: !emptyFirstSegment) && isBufferingCompleted; 
+                _isFinalSegment = !segments.TryGet(ref _nextSequencePosition, out _, advance: !emptyFirstSegment) && isFinalSegment; 
 
                 Debug.Assert(!_nextSequencePosition.Equals(_currentSequencePosition));
                 _isMultipleSegments = true;
             }
         }
 
-        #region Shape
+        #region readable token
         public readonly TokenType TokenType => _currentTokenType;
 
         /// <summary>
@@ -243,6 +261,20 @@ namespace Forestry.Deserialize.Xml.Reading
         /// Value without sequencing
         /// </summary>
         public ReadOnlySpan<byte> Value { get; private set; }
+
+        /// <summary>
+        /// Reader state
+        /// </summary>
+        public readonly ReaderState ReaderState => new(
+            lineNumber: _lineNumber,
+            linePosition: _linePosition,
+            documentNonTerminal: _documentNonTerminal,
+            currentTokenType: _currentTokenType,
+            previousTokenType: _previousTokenType,
+            elementName: _elementName,
+            elementNameStack: _elementNameStack,
+            readerOptions: _readerOptions
+        );
         #endregion
 
         #region Reading 
@@ -255,7 +287,7 @@ namespace Forestry.Deserialize.Xml.Reading
             bool readable = TryRead();
             if (!readable)
             {
-                if (_isBufferingCompleted && _currentTokenType is TokenType.None)
+                if (_isExternalFinalSegment && _currentTokenType is TokenType.None)
                 {
                     throw new InvalidOperationException(); // TODO: Formatting
                 }
@@ -332,21 +364,21 @@ namespace Forestry.Deserialize.Xml.Reading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool IsBufferReadable()
         {
-            if (_bufferPosition >= (uint)_buffer.Length)
+            if (_segmentPosition >= (uint)_segment.Length)
             {
-                if (_isLastSegment)
+                if (_isFinalSegment)
                 {
                     // TODO: Maybe validation
                 }
 
-                if (!_isSequencing)
+                if (!_isSequence)
                 {
                     return false;
                 }
 
                 if (!ReadNextSegment())
                 {
-                    if (_isLastSegment)
+                    if (_isFinalSegment)
                     {
                         // TODO: Maybe validation
                     }
@@ -377,7 +409,7 @@ namespace Forestry.Deserialize.Xml.Reading
                 if (!_sequence.TryGet(ref _nextSequencePosition, out memory, advance: true))
                 {
                     _currentSequencePosition = referenceSequencePosition;
-                    _isLastSegment = true;
+                    _isFinalSegment = true;
 
                     return false;
                 }
@@ -391,15 +423,15 @@ namespace Forestry.Deserialize.Xml.Reading
                 Debug.Assert(!_isMultipleSegments || _currentSequencePosition.GetObject() is not null);
             }
 
-            if (_isBufferingCompleted)
+            if (_isExternalFinalSegment)
             {
-                _isLastSegment = !_sequence.TryGet(ref _nextSequencePosition, out _, advance: false);
+                _isFinalSegment = !_sequence.TryGet(ref _nextSequencePosition, out _, advance: false);
             }
 
-            _buffer = memory.Span;
+            _segment = memory.Span;
 
-            _documentPosition += _bufferPosition;
-            _bufferPosition = 0;
+            _documentPosition += _segmentPosition;
+            _segmentPosition = 0;
 
             return true;
         }

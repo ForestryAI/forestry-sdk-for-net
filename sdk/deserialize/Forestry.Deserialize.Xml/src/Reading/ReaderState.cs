@@ -4,7 +4,7 @@ namespace Forestry.Deserialize.Xml.Reading
 {
     /// <summary>
     /// The reader state is meant to live over async || sync bounderies to 
-    /// reconstruc a reader with debuging, assertions and options fields.
+    /// reconstruct a reader with debuging, assertions and options fields.
     /// </summary>
     public readonly struct ReaderState: IReaderState<ReaderState>
     {
@@ -20,6 +20,8 @@ namespace Forestry.Deserialize.Xml.Reading
         internal readonly TokenType _currentTokenType;
 
         internal readonly TokenType _previousTokenType;
+
+        internal readonly ulong[] _elementName;
         
         internal readonly ElementNameStack _elementNameStack;
         #endregion
@@ -36,6 +38,7 @@ namespace Forestry.Deserialize.Xml.Reading
             _documentNonTerminal = default;
             _currentTokenType = default;
             _previousTokenType = default;
+            _elementName = [];
             _elementNameStack = default;
 
             _readerOptions = readerOptions;
@@ -43,20 +46,22 @@ namespace Forestry.Deserialize.Xml.Reading
 
         internal ReaderState(
             long lineNumber,
-            long lineNumberPosition,
-            EBNF.Document documentEBNF,
-            TokenType tokenType,
-            TokenType lastTokenType,
+            long linePosition,
+            EBNF.Document documentNonTerminal,
+            TokenType currentTokenType,
+            TokenType previousTokenType,
+            ulong[] elementName,
             ElementNameStack elementNameStack,
             ReaderOptions readerOptions
         )
         {
             _lineNumber = lineNumber;
-            _linePosition = lineNumberPosition;
+            _linePosition = linePosition;
 
-            _documentNonTerminal = documentEBNF;
-            _currentTokenType = tokenType;
-            _previousTokenType = lastTokenType;
+            _documentNonTerminal = documentNonTerminal;
+            _currentTokenType = currentTokenType;
+            _previousTokenType = previousTokenType;
+            _elementName = elementName;
             _elementNameStack = elementNameStack;
 
             _readerOptions = readerOptions;
