@@ -17,24 +17,28 @@ offers no way to ask how many raw bytes its last `Read()` actually consumed, so 
 bound a synchronous parse burst to only what's already buffered — which breaks the buffer-in/
 token-out contract the core package's `IBuffering`/`Deserializer<T>.TryReadNullableValue` walk
 depends on (see core ARCHITECTURE.md §4.3–4.4). `Utf8XmlReader` is a `ref struct` instead: sync
-only, operates over a caller-supplied span, and is reconstructed fresh from `(buffer, state)` per
-step — mirroring `Utf8JsonReader`/`JsonReaderState` exactly, not inventing a new pattern.
+only, operates over a caller-supplied span or sequence, and is reconstructed fresh from
+`(segment, ReaderState)` per step — mirroring `Utf8JsonReader`/`JsonReaderState` exactly, not
+inventing a new pattern. `ReaderState` is the piece that makes reconstruction actually possible: a
+plain (non-ref) struct that can survive an `await` a `Utf8XmlReader` itself never could, handed
+back out via the reader's own `ReaderState` property and passed into the next constructor call
+(§4.3, §4.1).
 
 **Built against StanForD's real shape first, but not permanently scoped to only what StanForD
 happens to use — full XML coverage is the goal.** A real production `.hpr` export (see
 `CLAUDE.md`'s Task #110 entry for the grep evidence) is what the reader is developed and tested
 against: single default namespace declared once at the root, zero CDATA/entity references, zero
 comments, self-closing empty elements for nulls. That sample is what keeps early development
-grounded in something real rather than assumed — but `TokenType`/`Constants` already carry CDATA,
-comment, and `xsi:nil` support ahead of any real StanForD file using them, on the position that
-narrow-dialect assumptions are an optional fast path to reach for later if ever needed, not a hard
-boundary on what the reader can parse. (Revised from an earlier, narrower stance — see CLAUDE.md's
-Task #110 entry for that history.) Namespace resolution collapsing to a constant check instead of
-an ancestor prefix-scope stack remains true for now since no real sample has needed otherwise, but
-isn't treated as a permanent constraint either.
+grounded in something real rather than assumed — but `TokenType`/`Constants` already carry CDATA
+and comment support ahead of any real StanForD file using them, on the position that narrow-dialect
+assumptions are an optional fast path to reach for later if ever needed, not a hard boundary on
+what the reader can parse. (Revised from an earlier, narrower stance — see CLAUDE.md's Task #110
+entry for that history.) Namespace resolution collapsing to a constant check instead of an ancestor
+prefix-scope stack remains true for now since no real sample has needed otherwise, but isn't
+treated as a permanent constraint either.
 
 **Everything genuinely async stays in the core package's buffering layer.** `Utf8XmlReader` itself
-never awaits anything — refilling the span it reads from is `PipeReaderBuffering`'s job (core
+never awaits anything — refilling the segment it reads from is `PipeReaderBuffering`'s job (core
 package), not this one's. This package's only responsibility is turning already-buffered bytes
 into tokens, and turning a schema (`TypeDefinition`/`PropertyDefinition`) plus a stream of tokens
 into `Value`s.
@@ -48,8 +52,9 @@ identify what kind of construct is starting (`<?xml ` needs 6 bytes to tell the 
 from a same-prefixed processing instruction target; `<!--` needs 4 to know it's a comment and not
 `<!DOCTYPE`), which makes the distinction impossible to ignore: recognizing the *start* of a
 construct and having *fully read* it are genuinely different moments, and only the second one is
-allowed to be reported as a `TokenType`. See §4.7 for what this means concretely for `TokenType`'s
-shape (still to be built — the current enum in §4.2 predates this principle being made explicit).
+allowed to be reported as a `TokenType`. See §4.2 for `TokenType`'s current shape, built to this
+principle from the start (`Element` isn't reported until the name, attributes, and `>`/`/>`
+resolution are all read).
 
 **On insufficient buffered data mid-token: roll back, don't resume incrementally.** When a token
 can't be completed within the currently-buffered bytes, the reader reverts to the position where
@@ -61,28 +66,17 @@ isn't a new mechanism to invent for `Utf8XmlReader` — it's making sure the rea
 more), and `_partialReadBytes` doubles specifically to avoid a tight retry loop when a token spans
 a large chunk. `Utf8JsonReader` does the same thing for exactly the same reason.
 
-**Does support `ReadOnlySequence<byte>` (multi-segment) input directly, via a second constructor
-— reverses an earlier call recorded in this section.** The original reasoning was that mirroring
-`Utf8JsonReader`'s dual single-segment/multi-segment code paths wasn't worth it for a POC, on the
-assumption that doing so meant duplicating scanning logic the way `Utf8JsonReader` itself does.
-That assumption turned out not to hold for how this got built: sequencing-awareness is isolated
-entirely to the buffering layer (`IsBufferReadable()`/`ReadNextSegment()`, `Utf8XmlReader.cs`) —
-`ReadDocument`/`ReadProlog`/every token-level method downstream operates on `_buffer` as an
-ordinary `ReadOnlySpan<byte>` and has no idea whether it came from a span or a sequence. `TryRead()`
-is a single method, not two — there's no parallel `TryReadWithSequencing()` reimplementing parsing.
-So the actual cost paid is a handful of extra fields and one buffer-refill method, not duplicated
-scanning logic throughout. Combined with piping being the actual point of the POC — chunking a
-large file through a `PipeReader` and moving the reader along token by token without loading the
-whole thing into memory, the core value proposition stated since this package's own README — a
-buffer genuinely spanning multiple segments is normal, expected behavior once a meaningful amount
-of streamed data has accumulated, not a rare edge case worth deferring to rollback-and-retry.
-Treating it as first-class was the right call once the actual implementation cost was known, not
-assumed.
-
-`Utf8XmlReader.IsWithSequencing`/`ValueSequence`/`TryReadWithSequencing` (the earlier, since-removed
-placeholder surface this section previously flagged as a cleanup candidate) has been replaced
-entirely by the real implementation above — nothing left to remove; that item is resolved, not
-just relocated.
+**Does support `ReadOnlySequence<byte>` (multi-segment) input directly, via a second pair of
+constructors.** Sequencing-awareness is isolated entirely to the segment-reading layer
+(`IsSegmentReadable()`/`ReadNextSegment()`, `Utf8XmlReader.cs`) — `ReadDocument` and every
+token-level method built under it operates on `_segment` as an ordinary `ReadOnlySpan<byte>` and
+has no idea whether it came from a span directly or from walking a sequence. `Read()` is a single
+method, not two — there's no parallel sequence-aware reimplementation of parsing. Combined with
+piping being the actual point of the POC — chunking a large file through a `PipeReader` and moving
+the reader along token by token without loading the whole thing into memory, the core value
+proposition stated since this package's own README — a segment genuinely spanning multiple pieces
+is normal, expected behavior once a meaningful amount of streamed data has accumulated, not a rare
+edge case worth deferring to rollback-and-retry.
 
 ## 3. Module Boundaries
 
@@ -103,29 +97,108 @@ skeletons (§5).
 
 ### 4.1 `Utf8XmlReader` (`src/Reading/Utf8XmlReader.cs`)
 
-A `ref partial struct`, sync-only tokenizer over a caller-supplied buffer — the XML analogue of
-`Utf8JsonReader`. `Read()` advances to the next element/attribute; `Skip()` skips the current one;
-`GetString()` reads the current token as a string. Being a `ref struct`, it can never be held
-across an `await` or stored in a class field — a fresh instance is constructed per step from
-`(buffer, ReaderState)`, exactly like `Utf8JsonReader`/`JsonReaderState` (see core ARCHITECTURE.md
-§4.4).
+A `ref partial struct`, sync-only tokenizer over a caller-supplied byte span or sequence — the XML
+analogue of `Utf8JsonReader`. `Read()` advances to the next token and returns whether it did;
+`GetString()`/`GetUnescapedValue()` read the current token's raw content. Being a `ref struct`, it
+can never be held across an `await` or stored in a class field — a fresh instance is constructed
+per step from `(segment, ReaderState)`, exactly like `Utf8JsonReader`/`JsonReaderState` (see core
+ARCHITECTURE.md §4.4).
 
-### 4.2 `TokenType` (`src/TokenType.cs`), `Constants` (`src/Constants.cs`), `Syntax` (`src/Syntax.cs`)
+**Fields split into three regions matching what does and doesn't survive reconstruction:**
+`segments` and `sequence` are reader-local — the current buffer, its position, and (when backed by
+a `ReadOnlySequence<byte>`) the sequence-walking machinery — none of it appears in `ReaderState`,
+because a fresh segment/sequence is handed to every constructor call regardless of what came
+before. `state` is everything that *does* need to survive — line/position, the `EBNF.Document`
+phase, current/previous `TokenType`, the element name tracking, and `ReaderOptions` — mirroring
+`ReaderState`'s own `debug`/`assertions`/`options` regions field-for-field (§4.3). `_documentPosition`
+sits outside both groupings; a `// TODO` marks that its reset-to-zero-per-reconstruction behavior
+(offset within the *current* segment, not an absolute document-wide position) is a known open
+question, not a settled design choice.
 
-`TokenType` is the set of token kinds `Utf8XmlReader.Read()` advances between — current, as-built
-shape: `None`, `StartingTag`, `EndingTag`, `EmptyTag`, `ElementName`, `ElementValue`,
-`AttributeName`, `AttributeValue`, `Declaration`, `ProcessInstruction`, `Comment`, `CharacterData`,
-`Null`. **This shape predates §2's "token = fully-consumed unit" principle and is superseded by the
-redesign in §4.7 (not yet built)** — several of these values (`StartingTag` in particular) report
-"recognized the start of," not "fully read," which §4.7 replaces.
+**Four public constructors**, matching `Utf8JsonReader`'s own constructor set:
+- `Utf8XmlReader(ReadOnlySpan<byte> segment, ReaderOptions readerOptions = default)` — whole
+  document in memory. `isFinalSegment` is hardcoded `true` and state starts fresh; there is no
+  reconstruction path from this overload.
+- `Utf8XmlReader(ReadOnlySpan<byte> segment, bool isFinalSegment, ReaderState readerState)` —
+  manual buffer management. The caller owns a reusable buffer, refills it themselves, and must pass
+  back exactly the `ReaderState` the previous instance ended holding (via its `ReaderState`
+  property) on every call after the first. `isFinalSegment: true` means this segment is the last
+  bytes that will *ever* be supplied — not that the segment is merely full or exhausted.
+- `Utf8XmlReader(ReadOnlySequence<byte> segments, ReaderOptions readerOptions = default)` — whole
+  document, already sequence-shaped (e.g. built from several pooled buffers). Same "entire
+  document, nothing more ever" contract as the span convenience overload.
+- `Utf8XmlReader(ReadOnlySequence<byte> segments, bool isFinalSegment, ReaderState readerState)` —
+  the real piping path. `segments` is typically a `PipeReader`'s current `ReadResult.Buffer`, which
+  may already span multiple unconsumed pieces. The reader walks forward across those internally via
+  `ReadNextSegment()` without needing reconstruction, until the sequence itself runs out. Two
+  construction-time behaviors specific to this overload: any empty leading segments are skipped
+  automatically before `_segment` is set, and `isFinalSegment`'s recomputation only happens when
+  `segments` has more than one piece — for a single-segment sequence, the caller's flag is taken at
+  face value, same as the span path.
+
+**`isFinalSegment` (parameter) vs. `_isFinalSegment` (field) vs. `_isExternalFinalSegment` (field).**
+The caller's raw flag is stored verbatim as `_isExternalFinalSegment` and re-consulted every time
+`ReadNextSegment()` walks forward. `_isFinalSegment` is never set directly from the caller — it's
+always derived (trivially, for a span; by conjunction with "is there a next segment already
+present" for a sequence) and it's what `IsSegmentReadable()` actually gates on. Naming them
+differently (rather than both being "segment"-flavored, or both "buffering"-flavored) is
+deliberate: it keeps the caller-supplied input and the reader's own re-derived fact visually
+distinct at every call site.
+
+**`ReaderState` property** builds a fresh `ReaderState` from every live field in the `state`
+region — the `Utf8JsonReader.CurrentState`-equivalent snapshot a consumer reads after a `Read()`
+burst and carries into the next reconstruction's constructor call. Named after its own return type
+rather than `CurrentState` — a deliberate departure from the `Utf8JsonReader` naming precedent
+this package otherwise mirrors, on the view that it's more literal about what it returns.
+
+**`Skip()` was removed**, along with the entire pre-redesign dispatch chain (`ReadProlog`,
+`ReadDeclaration`, `ReadElement`, `ReadElementEnd`, `ReadMiscellaneous`, `ReadComment`,
+`ReadProcessInstruction`) — none of it held real logic, and `Read()` now calls straight into
+`ReadDocument()` (currently an empty stub, §5) rather than dispatching through a token-type switch
+that was itself scaffolding with nothing behind it. `SkipWhitespace` is a known, acknowledged
+leftover stub, not yet cleaned up.
+
+### 4.2 `TokenType` (`src/TokenType.cs`), `EBNF` (`src/EBNF.cs`), `Constants` (`src/Constants.cs`), `Syntax` (`src/Syntax.cs`)
+
+`TokenType` is the set of token kinds `Utf8XmlReader.Read()` advances between, grouped into regions
+matching the grammar: `None`; `markup` — `Element`, `ElementEnd`, `Attribute`, `Value`; `prolog` —
+`Declaration`, `DocumentType`; `miscellaneous` — `ProcessInstruction`, `Comment`. Every value means
+"fully consumed," per §2's principle. `Attribute`/`Value` are shared shapes, not doubled per
+context (an attribute's name vs. an element's name both report as the token that names them; an
+attribute's value vs. an element's text content both report as `Value`) — the consumer disambiguates
+via `_previousTokenType` (`Attribute` immediately before means this `Value` belongs to it;
+`Element` immediately before means element content) rather than a dedicated context field, which is
+why no `_isAttribute` field exists anywhere in `ReaderState`/`Utf8XmlReader`.
+
+**There is no `TokenType.Null`.** `<Name/>` and `<Name></Name>` are syntactically different but
+both represent "no content" identically — an `Element` token immediately followed by `ElementEnd`,
+with no `Value` token in between. Whether "no content" means C# `null` or an empty string is a
+schema-aware decision (the target property's nullability), made by the deserializer, not the
+tokenizer — consistent with this package staying a general XML reader rather than baking a
+StanForD-specific convention (self-closing-means-null) into the token vocabulary every consumer
+has to share. `Constants.NullAttributeName` (`xsi:nil`) still exists as unused vocabulary from
+before this decision — worth revisiting whether it belongs in `Constants` at all now that null
+detection isn't the reader's concern (§5).
+
+`EBNF` (`src/EBNF.cs`) is a `static partial class` wrapping the grammar's non-terminals as nested
+enums — currently just `EBNF.Document: byte { None, Prolog, Element, Miscellaneous }`, tracking
+`document ::= prolog element Misc*`'s three sequential, mutually-exclusive phases. Deliberately a
+flat enum, not a hierarchical stack: the three phases never nest into each other (once you leave
+`Prolog` you never return to it), so a linear state machine models it exactly. The one grammar rule
+phase alone can't enforce — `doctypedecl` occurring at most once inside `prolog`, non-adjacent to
+itself since `Misc` can appear between — is flagged as needing a small dedicated bit of state (not
+yet built), not a reason to restructure `EBNF.Document` into something bigger. The `partial`
+modifier leaves room for other non-terminals to get their own nested enum later without needing a
+new top-level type each time. Recursive nesting (arbitrary element depth) is deliberately *not*
+handled here — that's `ElementNameStack`'s job (§4.3) — because sequential phase-tracking and
+recursive depth-tracking are different kinds of complexity that don't need to share one structure.
 
 `Constants` holds the raw UTF-8 byte-level vocabulary `Utf8XmlReader` scans against: markup
 delimiters (`<`, `>`, `&`, `;`), tag-internal delimiters (`/`, `=`, `"`, `?`, space, tab/CR/LF),
-the UTF-8 BOM, all 5 predefined XML entities, CDATA/comment/declaration/DOCTYPE delimiters, an
-`xsi:nil` attribute-name constant for null detection, and the ASCII byte set for `:`/`_`/`-`/`.`.
-Per §2, some of these (CDATA, `xsi:nil`) don't occur in the real StanForD sample used for
-development and are unverified against real data as of this writing — they're there for eventual
-general-XML coverage, not because StanForD needs them today.
+the UTF-8 BOM, all 5 predefined XML entities, CDATA/comment/declaration/DOCTYPE delimiters, and the
+ASCII byte set for `:`/`_`/`-`/`.`. Per §2, CDATA doesn't occur in the real StanForD sample used for
+development and is unverified against real data as of this writing — it's there for eventual
+general-XML coverage, not because StanForD needs it today.
 
 `Syntax` holds the grammar-level predicates built from those bytes — `IsNameStartingCharacter`/
 `IsNameCharacter` (`NameStartChar`/`NameChar`) and `IsCommentCharacter` (`Char`, as referenced by
@@ -142,16 +215,45 @@ track it.
 
 ### 4.3 `ReaderState` (`src/Reading/ReaderState.cs`)
 
-The storable, non-ref continuation state for `Utf8XmlReader`, implementing the core package's
-`IReaderState<ReaderState>` (see core ARCHITECTURE.md §4.4) — this is what `DeserializeXmlOptions
-.CreateReaderState<TState>` is meant to produce and what a fresh `Utf8XmlReader` is reconstructed
-from between steps. Currently backs the 4 core interface members (via explicit interface
-implementation — see the comment on `ReaderState.cs` for why: `IReaderState<TState>`'s members are
-`internal`, which can only be satisfied by a `public` implementing member or an explicit
-implementation, never implicitly by an `internal` one, even across the `InternalsVisibleTo` friend
-assembly) plus `TokenType`, as a plain immutable data holder — nothing populates real values into
-one yet (§5). §4.7 plans a local field rename (`_isObject`→`_isElement`, XML-side only — the core
-interface member name doesn't change) plus a new `_isAttribute` field, not yet built.
+The storable, non-`ref` continuation state for `Utf8XmlReader` — a `readonly struct` implementing
+the core package's `IReaderState<ReaderState>` (see core ARCHITECTURE.md §4.4), meant to live
+across async/sync boundaries the reader itself can't cross. Fields split into three regions, and
+"private fields to the state are the state machine in its entirety" — anything needed to faithfully
+resume a reader lives in one of them; nothing about resumption depends on a field that lives only
+on `Utf8XmlReader`:
+
+- **`debug`** — `_lineNumber`/`_linePosition`. Help diagnose an exception; otherwise no operative
+  function. These are also the *only* fields on the core `IReaderState<TState>` interface — a
+  deliberate choice, not a gap: every other field here is XML-specific and reached only through the
+  concrete `ReaderState` type, never through the media-agnostic interface.
+- **`assertions`** — `_documentNonTerminal` (`EBNF.Document`), `_currentTokenType`/
+  `_previousTokenType`, `_elementName`, `_elementNameStack`. Named for their role: validation
+  propagates downward through subsequent method calls from `Read()`, each of which must resolve to
+  a `bool` or a thrown exception — never silently swallow an inconsistency. `_elementName` is
+  `ulong[]` (owned, packed name bytes), not a `ReadOnlySpan<byte>` — a `ReadOnlySpan<byte>` is
+  itself a `ref struct` and can only live inside another `ref struct`, which `ReaderState`
+  deliberately isn't (that's the whole reason it can survive an `await`), and even setting the
+  compile error aside, a span would reference the caller's buffer rather than owning its own copy,
+  which wouldn't survive being handed a different buffer on reconstruction.
+- **`options`** — `_readerOptions` (`ReaderOptions`: currently just `MaxDepth`, defaulting to 64 to
+  match `JsonReaderOptions`'s own default; `MaxDepth == 0` is treated as "caller didn't set one,"
+  not a literal zero-depth limit).
+
+**`ElementNameStack`** tracks XML's Element Type Match well-formedness constraint (end-tag name
+must match its start-tag's — a WFC, not enforceable at the grammar level alone) without pushing
+one entry per element: most StanForD elements are leaves with no children, so the
+most-recently-opened element's name is meant to live in a single cheap slot (`_elementName`) by
+default, only *promoted* onto a real, geometrically-grown stack the moment another `Element` token
+(not a `Value`) is seen — i.e. exactly when an element turns out to have a child. The stack becoming
+empty after a pop is also meant to double as the signal `ReadDocument` needs to transition from the
+`Element` phase to trailing `Miscellaneous`. **None of this is built yet** — `ElementNameStack` is
+still a genuinely empty struct (§5); this section describes the intended design, not current
+behavior.
+
+`ReaderState`'s own `ReaderState` constructor (the parameterless-except-`ReaderOptions` one) is
+what a first-ever construction uses; the internal 8-field constructor is what `Utf8XmlReader`'s
+`ReaderState` property (§4.1) calls to snapshot a live reader — the only caller of that constructor
+today.
 
 ### 4.4 `DeserializeXmlOptions` (`src/DeserializeXmlOptions.cs`)
 
@@ -184,118 +286,63 @@ records `PropertyUtf8Name`) resolves a raw property name read off the wire to a
 open question of what a miss should really mean). `GetPropertyName` pulls the raw name out of a
 `Utf8XmlReader` via `GetUnescapedValue()`.
 
-### 4.7 Planned: `TokenType` redesign + the open-element-name boundary (decided, not yet built)
-
-Settled in design discussion; none of this is in code yet (`TokenType.cs`/`ReaderState.cs`/
-`Utf8XmlReader.cs` are all still the §4.2/§4.3 as-built shape as of this writing). Recorded here
-specifically so it isn't lost before implementation catches up.
-
-**New `TokenType` set: `Element`, `ElementEnd`, `Attribute`, `Value`** (replacing `StartingTag`/
-`EndingTag`/`EmptyTag`/`ElementName`/`ElementValue`/`AttributeName`/`AttributeValue`) —
-`Declaration`/`ProcessInstruction`/`Comment`/`CharacterData`/`Null` are unaffected. Two changes
-bundled together:
-- Each remaining value now means "fully consumed," per §2's principle — `Element` isn't reported
-  until the name, all attributes, and the `>`/`/>` resolution are all read, not the instant `<` +
-  a name-start byte is seen.
-- `AttributeName`/`AttributeValue` and `ElementName`/`ElementValue` collapse into shared
-  `Attribute`/`Value` — not different token *shapes*, just the same shape in two contexts,
-  disambiguated by new context fields rather than doubled enum values (next point).
-
-**New context fields on `Utf8XmlReader`/`ReaderState`: `_isElement` (renamed from `_isObject`)
-and `_isAttribute`.** `_isObject` is not a free local field — it satisfies the core package's
-`IReaderState<TState>._isObject`, a media-agnostic interface member that has to stay generically
-named (a hypothetical JSON reader's "object" is the right word there). The rename is XML-side
-only: the *local* backing field becomes `_isElement` (XML's own vocabulary for "positioned within
-a non-leaf construct"), still satisfying `IReaderState<ReaderState>._isObject` through the same
-explicit-interface-implementation forwarder already in `ReaderState.cs`. `_isAttribute` is new,
-needed specifically because `Value` is now shared between element content and attribute values —
-something has to say which context a given `Value` token came from.
-
-**WFC: Element Type Match (`https://www.w3.org/TR/xml/#dt-etag`) is enforced inside `Utf8XmlReader`/
-`ReaderState`, not lifted to the walk layer.** The spec requires an end-tag's name to match its
-start-tag's — `ETag ::= '</' Name S? '>'` doesn't constrain this at the grammar level, it's a
-separate well-formedness constraint, so an `ElementEnd` token needs the currently-open element
-name(s) to validate against. **Reverses an earlier call recorded in this same section**: the
-original reasoning was that `ReaderState` (a `readonly struct` with fixed-size fields,
-reconstructed fresh every step) can't cheaply hold a variable-depth stack, so end-tag-name tracking
-should live in the deserialization/walk layer instead. That objection turned out to be weaker than
-it looked — a struct can hold a reference-type field (an array) fine without losing its own
-cheap-to-copy nature (`PipeReaderBuffering`, core package, already does exactly this), so
-`ReaderState` holding a name stack isn't actually blocked. Two things made reader-ownership the
-better fit once that was clear, not just a viable alternative:
-- **A pragmatic, lazy-push stack, not one push per element.** Most elements in real StanForD data
-  are leaves (text content, no children) — nothing can nest between a leaf's open and its own
-  close, so a leaf's name never needs to coexist with another open name and never needs the stack
-  at all. The most-recently-opened element's name is kept in a single cheap slot by default;
-  it's only *promoted* onto the real (geometrically-grown, not `Array.Resize`-per-character) stack
-  at the moment another `Element` token — not a `Value` — is seen, i.e. exactly when it's
-  discovered to have a child. A leaf's `ElementEnd` matches directly against the held slot, stack
-  untouched. Against the Task #110 sample's shape (278 `<Log>` records, ~8 `<LogDiameter>` leaf
-  children each), this is one push per `Log`, not nine.
-- **The stack becoming empty after a pop is also exactly the `_isElement`→trailing-`Misc` phase
-  transition signal `ReadDocument` needs.** `document ::= prolog element Misc*` requires the reader
-  to know precisely when the one mandatory `element` is fully done so it can start reading `Misc*`.
-  If the stack lived in the walk layer, the reader would still need its own separate way to detect
-  that moment — probably a redundant depth counter duplicating information the walk layer's stack
-  already has but the reader can't see. With the stack in the reader, "just popped back to empty"
-  *is* that signal, for free, from the same structure that does WFC validation - not a second
-  mechanism.
-
-`ReaderPath` (core package) is unaffected by this and remains conceptually separate: it tracks
-position in the *schema*/`TypeDefinition` graph, not raw XML tag names — the reversal changes
-*where* the name stack lives, not whether it's the same thing as `ReaderPath` (it still isn't).
-
 ## 5. Status / POC Debt
 
 - **The package builds clean** (both TFMs, `Forestry.Deserialize.Xml.slnx`), but most of the
   actual tokenizing/walking logic is still stub:
-  - `Utf8XmlReader.Read()`/`Skip()` are unconditional stubs (`return false`/no-op) — no real
-    tokenizing happens yet, despite `TokenType`/`Constants` now carrying the real vocabulary to
-    tokenize against. `GetString()` only distinguishes `Null` from everything else (returns
-    `string.Empty` for any other token). `GetUnescapedValue()` doesn't yet decode entities
-    (`// TODO: When escaped convert`).
+  - `Utf8XmlReader.ReadDocument()` is an unconditional stub (`return false`) — no real tokenizing
+    happens yet, despite `TokenType`/`EBNF`/`Constants` now carrying the real vocabulary to
+    tokenize against, and `Read()`/the constructors/segment-reading machinery being real. `Skip()`
+    no longer exists at all (removed, §4.1) rather than being a no-op stub. `GetUnescapedValue()`
+    doesn't yet decode entities (`// TODO: When escaped convert`).
   - `DeserializeXmlOptions`'s three `internal abstract` overrides and `CreateReaderState<TState>`
     are all explicit `throw new NotImplementedException()` bodies.
   - `ObjectDeserializer<T>.TryReadNullableValue` always returns `Partial`
     (`// TODO: Reader get next property`); `BooleanDeserializer.TryReadNullableValue` throws.
-  - `ReaderState` implements the full `IReaderState<ReaderState>` shape but nothing populates real
-    values into one from an actual read yet.
-- **`Constants.NullAttributeName` (`xsi:nil`) and the CDATA delimiters are unverified against real
-  StanForD data** — the Task #110 sample has zero occurrences of either (confirmed by grep against
-  the same file again this round). Per §2 this is an intentional, accepted gap — general-XML
-  coverage ahead of StanForD actually needing it — not a bug, but worth remembering when a real
-  StanForD file's null representation (a bare self-closing empty element, no `xsi:nil` attribute)
-  needs to actually work end to end.
-- **`Utf8XmlReader.cs` declares its `ref partial struct` with no enclosing namespace** — it sits in
-  the global namespace, inconsistent with every other type in this package (`Forestry.Deserialize
-  .Xml.Reading`). Still unfixed.
+  - `ElementNameStack` is a genuinely empty struct — no fields at all (§4.3). Nothing backs the
+    lazy single-slot/promoted-stack design it's meant to implement yet.
+  - `ReaderState` implements the full `IReaderState<ReaderState>` shape and now round-trips real
+    values via `Utf8XmlReader`'s `ReaderState` property, but since `ReadDocument()` never actually
+    advances anything yet, nothing populates it with real, non-default values from an actual read.
+- **`_documentPosition`'s semantics are marked `// TODO`, not settled.** It resets to `0` on every
+  reconstruction along with everything else in the `segments` region — meaning it currently means
+  "offset within the current segment," not "offset within the whole document," and nothing carries
+  it forward via `ReaderState` the way `_lineNumber`/`_linePosition` do. Whether it should is an
+  open question, not yet decided.
+- **`Constants.NullAttributeName` (`xsi:nil`) is now vocabulary without a clear purpose.** It
+  predates the decision to drop `TokenType.Null` (§4.2) — null detection is no longer a reader-level
+  concern, so whether `xsi:nil` recognition belongs in `Constants` at all (versus being something a
+  schema-aware deserializer checks for itself, if ever needed) hasn't been revisited since that
+  decision landed. The CDATA delimiters remain a deliberate, unrelated gap: general-XML coverage
+  ahead of StanForD actually needing it, not a bug.
 - **No `Enumerable`/`Dictionary`-kind XML deserializer exists** — only `Object` (Object-kind) and
   `Boolean` (Value-kind, the first of what leaf scalar types will follow) have files.
   `DeserializerFactory`/`IDeserializerProvider` wiring for any of them is unbuilt.
 - **No test project content** — `Forestry.Deserialize.Xml.Tests` exists as a `.csproj` shell only
   (no test files under it yet).
-- **§4.7's `TokenType`/`ReaderState` redesign is decided but unbuilt** — the current `TokenType`/
-  `ReaderState`/`Utf8XmlReader` shapes described in §4.2/§4.3 still reflect the pre-redesign
-  version. Next real implementation step for the reader.
+- **`SkipWhitespace(ReadOnlySpan<byte> value)` is a known, acknowledged leftover stub** — not
+  wired to anything, not yet cleaned up.
 - **Multi-segment support exists (§2) but is effectively untestable right now, for two independent
-  reasons.** `Forestry.Deserialize.Xml.Tests` now has `InternalsVisibleTo` access (added this
-  round), but `_buffer`/`_bufferPosition`/`ReadNextSegment()` are `private`, not `internal` —
-  cross-assembly visibility doesn't reach `private` members, so the test project still can't drive
-  or observe segment transitions directly. Separately, nothing currently *causes* a segment
-  transition through the public `Read()` API anyway: `ReadDocument`/`ReadProlog`/etc. are all still
-  stub bodies that never advance `_bufferPosition`, so there's no way to exercise `ReadNextSegment()`
-  end-to-end yet even with the right visibility. Real verification has to wait for real
-  token-reading logic (§4.7), or a deliberate visibility change if earlier, isolated testing of the
-  buffering layer alone is wanted before that lands.
+  reasons.** `Forestry.Deserialize.Xml.Tests` has `InternalsVisibleTo` access, but `_segment`/
+  `_segmentPosition`/`ReadNextSegment()` are `private`, not `internal` — cross-assembly visibility
+  doesn't reach `private` members, so the test project still can't drive or observe segment
+  transitions directly. Separately, nothing currently *causes* a segment transition through the
+  public `Read()` API anyway: `ReadDocument()` is still a stub body that never advances
+  `_segmentPosition`, so there's no way to exercise `ReadNextSegment()` end-to-end yet even with the
+  right visibility. Real verification has to wait for real token-reading logic, or a deliberate
+  visibility change if earlier, isolated testing of the segment-reading layer alone is wanted before
+  that lands.
 
 ## 6. Stability & Volatility Map
 
 | Module | Stability | Notes |
 |---|---|---|
-| `Utf8XmlReader` | **Started** | `ref struct` shape + real span/`ReadOnlySequence<byte>` dual-constructor buffering in place (§2); token-level reading (`ReadDocument`/`ReadElement`/etc.) still stubs |
-| `TokenType` | **Settling** | 9 real token kinds defined; no `None` sentinel (§4.2) |
-| `Constants` | **Started** | Byte-level vocabulary defined; `xsi:nil`/CDATA constants unverified against real data (§5) |
-| `ReaderState` | **Shape settled** | Full `IReaderState<TState>` implemented; nothing populates real values yet |
+| `Utf8XmlReader` | **Started** | `ref struct` shape, real span/`ReadOnlySequence<byte>` dual-constructor buffering, and a working `ReaderState` round-trip all in place (§4.1); `ReadDocument()`/token-level reading still a stub |
+| `TokenType` | **Settled** | 9 real token kinds, grouped by grammar region; no `Null` (§4.2), deliberately |
+| `EBNF` | **Settled** | `EBNF.Document` covers the 3 sequential top-level phases; extensible via `partial` for future non-terminals |
+| `Constants` | **Started** | Byte-level vocabulary defined; `xsi:nil` now unused pending revisit, CDATA unverified against real data (§5) |
+| `ReaderState` | **Shape settled** | Full `IReaderState<TState>` implemented, real round-trip via `Utf8XmlReader.ReaderState`; nothing populates non-default values from an actual read yet |
+| `ElementNameStack` | **Not begun** | Empty struct; lazy single-slot/promoted-stack design decided (§4.3), unbuilt |
 | `DeserializeXmlOptions` | **Unstarted** | Every override throws |
 | `ObjectDeserializer<T>` | **Started** | `GetDeserializerKind` real; `TryReadNullableValue` still a stub |
 | `BooleanDeserializer` | **Started** | First Value-kind deserializer; `TryReadNullableValue` throws |
@@ -311,6 +358,9 @@ position in the *schema*/`TypeDefinition` graph, not raw XML tag names — the r
   XML parser, not just a scoping convenience) and XInclude — general-XML features with no StanForD
   relevance and real complexity/attack-surface cost, not planned unless something concrete requires
   them.
+- **Null detection is not a reader-level concern** (§4.2) — `Utf8XmlReader` reports what's
+  syntactically there (an `Element`/`ElementEnd` pair with no `Value` between them); whether that
+  means C# `null` or an empty string is left entirely to the schema-aware deserializer layer.
 - It does not reimplement anything the core `Forestry.Deserialize` package already owns — the
   walk contract, `Value`/`TypeDefinition` shapes, and buffering all come from there; this package
   only supplies the XML-specific reader and `Deserializer<T>` subclasses.
@@ -324,11 +374,18 @@ position in the *schema*/`TypeDefinition` graph, not raw XML tag names — the r
     - Task #110 — Review current code base / core plumbing (see `CLAUDE.md` for the design
       history this document summarizes, including the real `.hpr` sample analysis behind §2's
       dialect scoping)
+- Feature #12 — Reader architecture (this document's current focus)
+  - Task #13 — Reader state — `EBNF.Document` phase tracking, the `debug`/`assertions`/`options`
+    field split, `_elementName`/`ElementNameStack`'s lazy-promotion design (§4.3)
+  - Task #14 — Reader constructor — the four constructors' span vs. sequence contracts,
+    `isFinalSegment`'s external/internal split (§4.1)
+  - Task #15 — Read token — `TokenType`'s current shape, the `Null` token's removal in favor of
+    deserialization-owned nullability (§4.2)
 
 ## 9. Attribution
 
 `Utf8XmlReader`'s shape — a `ref struct` tokenizer over a caller-supplied buffer, reconstructed
-fresh from `(buffer, state)` per step rather than held across an `await` — deliberately mirrors
+fresh from `(segment, state)` per step rather than held across an `await` — deliberately mirrors
 `System.Text.Json.Utf8JsonReader`/`JsonReaderState` (§2, §4.1; see core ARCHITECTURE.md §4.4 for
 why). That's Microsoft's open-source .NET runtime (`dotnet/runtime`, MIT licensed), and design
 patterns and, in places, specific logic are adapted from it throughout this package. See
