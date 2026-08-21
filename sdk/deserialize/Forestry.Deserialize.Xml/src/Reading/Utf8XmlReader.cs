@@ -8,7 +8,7 @@ namespace Forestry.Deserialize.Xml.Reading
 {
     internal ref partial struct Utf8XmlReader
     {
-        #region segments
+        #region segment
         /// <summary>
         /// Internal segment deriving from either a byte span or byte sequence
         /// </summary>
@@ -279,7 +279,11 @@ namespace Forestry.Deserialize.Xml.Reading
 
         #region segment
         /// <summary>
-        /// When segment position within the segment length
+        /// A readable segment is only possible whe the segment position is less than 
+        /// the segment length and the segment is not closed.
+        /// 
+        /// Multiple segment read until the next non-empty segment before throwing 
+        /// if the segment is not closed.
         /// </summary>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -287,33 +291,41 @@ namespace Forestry.Deserialize.Xml.Reading
         {
             if (_segmentPosition >= (uint)_segment.Length)
             {
-                if (_isFinalSegment)
+                if (_isMultipleSegments && ReadNextSegment())
                 {
-                    // TODO: Maybe validation
+                    return true;
                 }
 
-                if (!_isSequence)
-                {
-                    return false;
-                }
-
-                if (!ReadNextSegment())
-                {
-                    if (_isFinalSegment)
-                    {
-                        // TODO: Maybe validation
-                    }
-
-                    return false;
-                }
+                ThrowableSegmentClosed();  // throws if we're now confirmed final and invalid; no-op otherwise
+                return false;
             }
 
             return true;
         }
 
         /// <summary>
-        /// Reads only non-empty segments into the internal buffer and reseting 
-        /// the buffer position
+        /// Throws when the segment is not closed and is the final segment:
+        /// 
+        /// - element block is not closed
+        /// - document non-terminal is None or Prolog i.e. no markup has been read
+        /// </summary>
+        /// <returns></returns>
+        private void ThrowableSegmentClosed()
+        {
+            if (_isFinalSegment)
+            {
+                // TODO: element name stack length != 0 || element name is not empty
+
+                if (_documentNonTerminal == EBNF.Document.None || _documentNonTerminal == EBNF.Document.Prolog)
+                {
+                    throw new InvalidOperationException();  // TODO: formatting
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reads only non-empty segments into the internal segment and reseting 
+        /// the segment position
         /// </summary>
         /// <returns></returns>
         private bool ReadNextSegment()
@@ -370,7 +382,6 @@ namespace Forestry.Deserialize.Xml.Reading
 
             if (!IsSegmentReadable())
             {
-                // Not invalid token just not enough read
                 goto ReadingCompleted;
             }
 
