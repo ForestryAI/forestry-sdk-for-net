@@ -244,7 +244,15 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         #region token
+        /// <summary>
+        /// Current token type
+        /// </summary>
         public readonly TokenType TokenType => _currentTokenType;
+
+        /// <summary>
+        /// Current token index excluding the value
+        /// </summary>
+        public long TokenIndex { get; private set; }
 
         /// <summary>
         /// Value could not fit inside a single byte span <see cref="Value"/> instead inside a 
@@ -287,7 +295,7 @@ namespace Forestry.Deserialize.Xml.Reading
         /// </summary>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool IsSegmentReadable()
+        internal bool IsSegmentReadable()
         {
             if (_segmentPosition >= (uint)_segment.Length)
             {
@@ -296,7 +304,7 @@ namespace Forestry.Deserialize.Xml.Reading
                     return true;
                 }
 
-                ThrowableSegmentClosed();  // throws if we're now confirmed final and invalid; no-op otherwise
+                ThrowableSegmentClosed();
                 return false;
             }
 
@@ -310,7 +318,7 @@ namespace Forestry.Deserialize.Xml.Reading
         /// - document non-terminal is None or Prolog i.e. no markup has been read
         /// </summary>
         /// <returns></returns>
-        private void ThrowableSegmentClosed()
+        private readonly void ThrowableSegmentClosed()
         {
             if (_isFinalSegment)
             {
@@ -372,7 +380,8 @@ namespace Forestry.Deserialize.Xml.Reading
 
         #region read 
         /// <summary>
-        /// Read token
+        /// Read token returning false when unable and throwing 
+        /// on any invalid operations
         /// </summary>
         /// <returns></returns>
         public bool Read()
@@ -400,20 +409,42 @@ namespace Forestry.Deserialize.Xml.Reading
                 return readable;
         }
 
+        /// <summary>
+        /// Read document non-terminals in order
+        /// </summary>
+        /// <returns></returns>
         internal bool ReadDocument()
         {
-            return false;
+            bool readable = false;
+            TokenIndex = _segmentPosition;
+
+            if (_documentNonTerminal == EBNF.Document.None || _documentNonTerminal == EBNF.Document.Prolog)
+            {
+                goto ReadProlog;
+            }
+
+            if (_documentNonTerminal == EBNF.Document.Element)
+            {
+                goto ReadMarkup;
+            }
+
+            if (_documentNonTerminal == EBNF.Document.Miscellaneous)
+            {
+                goto ReadMiscellaneous;
+            }
+
+            ReadProlog:
+                goto ReadCompleted;
+
+            ReadMarkup:
+                goto ReadCompleted;
+
+            ReadMiscellaneous:
+                goto ReadCompleted;
+             
+            ReadCompleted:
+                return readable;
         }
         #endregion
-
-        /// <summary>
-        /// Skip whitespace
-        /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        private bool SkipWhitespace(ReadOnlySpan<byte> value)
-        {
-            return false;
-        }
     }
 }
