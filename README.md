@@ -25,8 +25,10 @@ answer — together they form the read → decide path that the rest of the SDK 
 Every package is its own MSBuild SDK-style project with a matching `.slnx`. Shared build,
 packaging, and versioning behavior is centralized under [`eng/`](eng) and pulled in via
 `Directory.Build.props`. See [doc/README.md](doc/README.md) and [doc/dev/Building.md](doc/dev/Building.md)
-for how properties, artifacts, and package versions are wired together, and
-[doc/dev/Pipelines.md](doc/dev/Pipelines.md) for CI.
+for how properties, artifacts, and package versions are wired together,
+[doc/dev/Pipelines.md](doc/dev/Pipelines.md) for CI, and
+[doc/dev/Troubleshooting.md](doc/dev/Troubleshooting.md) for local environment issues that aren't
+about the SDK's own code.
 
 ```bash
 dotnet build sdk/<package>/<Project>/<Project>.slnx

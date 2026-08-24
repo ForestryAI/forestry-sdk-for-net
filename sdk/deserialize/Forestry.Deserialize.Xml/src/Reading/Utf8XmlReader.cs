@@ -61,6 +61,24 @@ namespace Forestry.Deserialize.Xml.Reading
         /// Next sequence position
         /// </summary>
         private SequencePosition _nextSequencePosition;
+
+        public readonly SequencePosition Position
+        {
+            get
+            {
+                if (_isSequence)
+                {
+                    Debug.Assert(_currentSequencePosition.GetObject() is not null);
+                    return _sequence.GetPosition(_segmentPosition, _currentSequencePosition);
+                }
+                return default;
+            }
+        }
+
+        /// <summary>
+        /// External access to the internal sequence
+        /// </summary>
+        internal readonly ReadOnlySequence<byte> Sequence => _sequence;
         #endregion
 
         #region state
@@ -284,6 +302,7 @@ namespace Forestry.Deserialize.Xml.Reading
             readerOptions: _readerOptions
         );
         #endregion
+
 
         #region segment
         /// <summary>
