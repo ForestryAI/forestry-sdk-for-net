@@ -469,6 +469,15 @@ namespace Forestry.Deserialize.Xml.Reading
             }
 
             ReadProlog:
+                if (_currentTokenType == TokenType.None)
+                {
+                    readable = _isMultipleSegments ? ReadMultipleSegmentOpaqueValue("<?xml"u8, "?>"u8) : ReadSingleSegmentOpaqueValue("<?xml"u8, "?>"u8, TokenType.Declaration);
+
+                    if (readable)
+                    {
+                        _documentNonTerminal = EBNF.Document.Prolog;
+                    }
+                }
                 goto ReadCompleted;
 
             ReadMarkup:
@@ -479,6 +488,59 @@ namespace Forestry.Deserialize.Xml.Reading
              
             ReadCompleted:
                 return readable;
+        }
+
+        /// <summary>
+        /// Read opaque value from a single segment
+        /// </summary>
+        /// <param name="startingTerminal"></param>
+        /// <param name="endingTerminal"></param>
+        /// <param name="tokenType"></param>
+        /// <returns></returns>
+        internal bool ReadSingleSegmentOpaqueValue(
+            ReadOnlySpan<byte> startingTerminal,
+            ReadOnlySpan<byte> endingTerminal,
+            TokenType tokenType
+        ) {
+            if (
+                Utf8Reader.TryMatch(_segment[_segmentPosition..], startingTerminal, out int matchReadBytes) &&
+                Utf8Reader.TrySkip(_segment[(_segmentPosition + matchReadBytes)..], endingTerminal, out int skipReadBytes, out int lineNumbersRead, out int linePosition)
+            )
+            {
+                if (lineNumbersRead > 0)
+                {
+                    _lineNumber += lineNumbersRead;
+                    _linePosition = linePosition;
+                }
+                else
+                {
+                    _linePosition += matchReadBytes + linePosition;
+                }
+
+                _previousTokenType = _currentTokenType;
+                _currentTokenType = tokenType;
+
+                Value = _segment.Slice(_segmentPosition, matchReadBytes + skipReadBytes);
+                _segmentPosition = _segmentPosition + matchReadBytes + skipReadBytes;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Read opaque value from a multiple segments
+        /// </summary>
+        /// <param name="startingTerminal"></param>
+        /// <param name="endingTermianl"></param>
+        /// <returns></returns>
+        internal bool ReadMultipleSegmentOpaqueValue(
+            ReadOnlySpan<byte> startingTerminal,
+            ReadOnlySpan<byte> endingTermianl
+        )
+        {
+            return false;
         }
         #endregion
     }
