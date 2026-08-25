@@ -1,8 +1,6 @@
 using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using Forestry.Deserialize.Xml;
-using Forestry.Deserialize.Xml.Deserializers;
 
 namespace Forestry.Deserialize.Xml.Reading
 {
@@ -62,7 +60,7 @@ namespace Forestry.Deserialize.Xml.Reading
         /// </summary>
         private SequencePosition _nextSequencePosition;
 
-        public readonly SequencePosition Position
+        public readonly SequencePosition SequencePosition
         {
             get
             {
@@ -123,10 +121,12 @@ namespace Forestry.Deserialize.Xml.Reading
         private ReaderOptions _readerOptions;
         #endregion
 
+        #region document
         /// <summary>
         /// Position in the document
         /// </summary>
-        private int _documentPosition;  // TODO: Explain usage
+        private int _documentPosition; 
+        #endregion
 
         /// <summary>
         /// Reading segment from a byte span
@@ -394,6 +394,22 @@ namespace Forestry.Deserialize.Xml.Reading
             _segmentPosition = 0;
 
             return true;
+        }
+
+        /// <summary>
+        /// Rollback is only applicable to element entities that effect 
+        /// internal state whereas the prolog and miscellaneous have entities
+        /// with opaque values only peeking to match the starting terminal 
+        /// and skip until the ending terminal.
+        /// </summary>
+        /// <returns></returns>
+        private bool Rollback()
+        {
+            // TODO: Local copy of state
+
+            
+
+            return false;
         }
         #endregion
 

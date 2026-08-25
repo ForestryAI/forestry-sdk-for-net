@@ -309,6 +309,21 @@ open question of what a miss should really mean). `GetPropertyName` pulls the ra
   "offset within the current segment," not "offset within the whole document," and nothing carries
   it forward via `ReaderState` the way `_lineNumber`/`_linePosition` do. Whether it should is an
   open question, not yet decided.
+- **No bound exists on how far a single token's scan can grow while chasing an ending terminal
+  that never arrives.** The rollback contract (§2, §4.1: not the final segment → reset
+  `_segmentPosition` to `TokenIndex` and return `false`, wait for more data) has no cutoff — a
+  malformed document missing its ending terminal (e.g. a declaration with no `?>` anywhere) would
+  have the caller keep expanding the buffer/pulling more segments indefinitely, since nothing
+  distinguishes "not found *yet*" from "will never be found" until the true final segment is
+  reached, which for a large or endlessly-streamed malformed input may be arbitrarily far away.
+  Deliberately **not** solved the way `ReaderOptions.MaxDepth` solves the structural-nesting
+  case — `MaxDepth` bounds a genuinely different problem (the bit/name-stack's capacity; exceeding
+  it means "this valid document is deeper than your configured budget, raise `MaxDepth`," not "this
+  document is malformed") and `Utf8JsonReader` itself has the identical unbounded-scan gap for an
+  unterminated string, so there's no existing precedent to lean on either. Decided to leave this
+  open for the POC rather than guess at a default — if a bound like `ReaderOptions.MaxTokenLength`
+  gets built later, the actual limit should be the consumer's call, not this package's, the same way
+  `MaxDepth`'s value already is.
 - **`Constants.NullAttributeName` (`xsi:nil`) is now vocabulary without a clear purpose.** It
   predates the decision to drop `TokenType.Null` (§4.2) — null detection is no longer a reader-level
   concern, so whether `xsi:nil` recognition belongs in `Constants` at all (versus being something a
