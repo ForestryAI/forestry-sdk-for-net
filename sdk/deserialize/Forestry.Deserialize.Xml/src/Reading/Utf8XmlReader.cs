@@ -445,50 +445,163 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// Read document non-terminals in order
+        /// Read document non-terminals in order:
+        ///   document ::= prolog element miscellaneous
         /// </summary>
         /// <returns></returns>
         internal bool ReadDocument()
         {
             bool readable = false;
+
             TokenIndex = _segmentPosition;
+            EBNF.Document previousNonTerminal;
+            int previousSegmentPosition;
 
-            if (_documentNonTerminal == EBNF.Document.None || _documentNonTerminal == EBNF.Document.Prolog)
+            do
             {
-                goto ReadProlog;
-            }
+                previousNonTerminal = _documentNonTerminal;
+                previousSegmentPosition = _segmentPosition;
 
-            if (_documentNonTerminal == EBNF.Document.Element)
-            {
-                goto ReadMarkup;
-            }
-
-            if (_documentNonTerminal == EBNF.Document.Miscellaneous)
-            {
-                goto ReadMiscellaneous;
-            }
-
-            ReadProlog:
-                if (_currentTokenType == TokenType.None)
+                readable = _documentNonTerminal switch
                 {
-                    readable = _isMultipleSegments ? ReadMultipleSegmentOpaqueValue("<?xml"u8, "?>"u8) : ReadSingleSegmentOpaqueValue("<?xml"u8, "?>"u8, TokenType.Declaration);
+                    EBNF.Document.None or EBNF.Document.Prolog => ReadProlog(),
+                    EBNF.Document.Element => ReadMarkup(),
+                    EBNF.Document.Miscellaneous => ReadMiscellaneous(),
+                    _ => false
+                };
+                // Spacing advances _segmentPosition without producing a token or changing
+                // _documentNonTerminal, so the phase-only check below isn't enough on its own -
+                // without also watching position, leading whitespace before real content would
+                // make this return false for one whole Read() call even though the very next
+                // bytes are perfectly readable, and on the final segment that's a spurious throw.
+            }
+            while (!readable && (_documentNonTerminal != previousNonTerminal || _segmentPosition != previousSegmentPosition));
 
-                    if (readable)
-                    {
-                        _documentNonTerminal = EBNF.Document.Prolog;
-                    }
+            return readable;
+        }
+
+        /// <summary>
+        /// Read prolog non-terminals in order:
+        ///   prolog ::= declaration? miscellaneous* (document-type miscellaneous*)?
+        /// </summary>
+        /// <remarks>
+        /// no assert against multiple document-type non-terminals.
+        ///
+        /// The declaration's starting terminal is matched as "&lt;?xml " (6 bytes, including the
+        /// trailing space) rather than the bare 5-byte "&lt;?xml" - a real, legal processing
+        /// instruction target only has to *start with* "xml" (e.g. "xml-stylesheet"; only the
+        /// exact target "xml", case-insensitive, is reserved), so a bare prefix match would
+        /// misread such a PI as a declaration. This is an approximation, not a full implementation
+        /// of the EBNF's actual boundary: XML's <c>S</c> production also allows tab/CR/LF, not
+        /// just a literal space, so "&lt;?xml" followed by a tab would wrongly fail to match even
+        /// though it is technically legal XML. Accepted for the POC since real StanForD data only
+        /// ever uses a plain space there.
+        /// </remarks>
+        /// <returns></returns>
+        internal bool ReadProlog()
+        {
+            bool readable = false;
+
+            if (_documentNonTerminal == EBNF.Document.None)
+            {
+                _documentNonTerminal = EBNF.Document.Prolog;
+                readable = ReadOpaqueValue("<?xml "u8, "?>"u8,  TokenType.Declaration);
+
+                if (readable) {
+                    goto ReadCompleted;
                 }
-                goto ReadCompleted;
+            }
 
-            ReadMarkup:
+            if (IsElementStartingTag())
+            {
+                _documentNonTerminal = EBNF.Document.Element;
                 goto ReadCompleted;
+            }
+            
+            // 
+            readable = ReadMiscellaneous() || (_currentTokenType != TokenType.DocumentType && ReadOpaqueValue("<!DOCTYPE"u8, ">"u8, TokenType.DocumentType));
 
-            ReadMiscellaneous:
-                goto ReadCompleted;
-             
             ReadCompleted:
                 return readable;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadMarkup()
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Read miscellaneous non-terminals in order:
+        ///   miscellaneous ::= comment | processing-instruction | spacing
+        /// Spacing is not a token - it only advances the segment position - so it is drained
+        /// first (there can be more than one run of it once a comment/PI's own trailing spacing
+        /// and the next miscellaneous item's leading spacing are both considered) before comment
+        /// and processing instruction, which are opaque values, are tried.
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadMiscellaneous()
+        {
+            while (ReadSpacing())
+            {
+            }
+
+            return ReadOpaqueValue("<!--"u8, "-->"u8, TokenType.Comment) ||
+                   ReadOpaqueValue("<?"u8, "?>"u8, TokenType.ProcessInstruction);
+        }
+
+        /// <summary>
+        /// Read (i.e. skip) a contiguous run of whitespace at the current segment position.
+        /// Spacing is not a token - it never sets <see cref="TokenType"/>/<see cref="Value"/> -
+        /// it only advances the segment position (and line number/position) past whatever
+        /// whitespace is immediately available right now. Returns false, not an error, when
+        /// there's no whitespace to consume at the current position.
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadSpacing()
+        {
+            int whiteSpaceLength = _segment[_segmentPosition..].IndexOfExceptWhiteSpace();
+            if (whiteSpaceLength == 0)
+            {
+                return false;
+            }
+
+            ReadOnlySpan<byte> whiteSpace = _segment.Slice(_segmentPosition, whiteSpaceLength);
+            (int lineNumbersRead, int lastLineFeedIndex) = Utf8Reader.LineFeeds(whiteSpace);
+
+            if (lineNumbersRead > 0)
+            {
+                _lineNumber += lineNumbersRead;
+                _linePosition = whiteSpaceLength - lastLineFeedIndex - 1;
+            }
+            else
+            {
+                _linePosition += whiteSpaceLength;
+            }
+
+            _segmentPosition += whiteSpaceLength;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Read opaque value including and between the starting and ending
+        /// terminals then if able set the current token type to <paramref name="tokenType"/>
+        /// </summary>
+        /// <param name="startingTerminal"></param>
+        /// <param name="endingTerminal"></param>
+        /// <param name="tokenType"></param>
+        /// <returns></returns>
+        private bool ReadOpaqueValue(
+            ReadOnlySpan<byte> startingTerminal, 
+            ReadOnlySpan<byte> endingTerminal, 
+            TokenType tokenType
+        ) => _isMultipleSegments
+            ? ReadMultipleSegmentOpaqueValue(startingTerminal, endingTerminal, tokenType)
+            : ReadSingleSegmentOpaqueValue(startingTerminal, endingTerminal, tokenType);
 
         /// <summary>
         /// Read opaque value from a single segment
@@ -537,10 +650,46 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <returns></returns>
         internal bool ReadMultipleSegmentOpaqueValue(
             ReadOnlySpan<byte> startingTerminal,
-            ReadOnlySpan<byte> endingTermianl
+            ReadOnlySpan<byte> endingTermianl,
+            TokenType tokenType
         )
         {
             return false;
+        }
+        #endregion
+
+        #region peek
+        /// <summary>
+        /// Element starting tags have a '<' character then valid name characters
+        /// </summary>
+        /// <returns></returns>
+        private bool IsElementStartingTag()
+        {
+            if (_segmentPosition >= _segment.Length || _segment[_segmentPosition] != (byte)'<')
+            {
+                return false;
+            }
+
+            if (_segmentPosition + 1 < _segment.Length)
+            {
+                return EBNF.IsNameStartingCharacter(_segment[_segmentPosition + 1]);
+            }
+
+            if (!_isMultipleSegments)
+            {
+                return false; // exhausted after '<' when no sequencing
+            }
+
+            SequencePosition peekPosition = _nextSequencePosition;   
+            while (_sequence.TryGet(ref peekPosition, out ReadOnlyMemory<byte> nextMemory, advance: true))
+            {
+                if (nextMemory.Length > 0) // else empty
+                {
+                    return EBNF.IsNameStartingCharacter(nextMemory.Span[0]);
+                }
+            }
+
+            return false; // exhausted after '<' when sequencing
         }
         #endregion
     }

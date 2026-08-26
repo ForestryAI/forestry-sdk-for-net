@@ -309,6 +309,25 @@ open question of what a miss should really mean). `GetPropertyName` pulls the ra
   "offset within the current segment," not "offset within the whole document," and nothing carries
   it forward via `ReaderState` the way `_lineNumber`/`_linePosition` do. Whether it should is an
   open question, not yet decided.
+- **`ReadProlog()` doesn't assert against a second `document-type` non-terminal.** The EBNF only
+  allows `(document-type miscellaneous*)?` once per prolog, but the current guard
+  (`_currentTokenType != TokenType.DocumentType`) only catches a doctype immediately followed by
+  another doctype — any `Misc` (comment/PI/spacing) in between resets `_currentTokenType`, so a
+  second, illegal `<!DOCTYPE>` separated from the first by so much as a comment would silently be
+  accepted. Catching this for real needs a dedicated "has a document type already been read this
+  prolog" flag living alongside `_documentNonTerminal`/`_currentTokenType` (and threaded through
+  `ReaderState` the same way), not something derivable from the current/previous token alone.
+  Documented in code via `ReadProlog()`'s `<remarks>`; left as a known, accepted POC gap rather than
+  built now.
+- **The declaration's starting terminal is matched as `<?xml ` (6 bytes, with a trailing space),
+  not the bare 5-byte `<?xml`.** A real, legal processing instruction target only has to *start
+  with* "xml" (`<?xml-stylesheet ...?>` is a real, common PI — only the exact target `xml`,
+  case-insensitive, is reserved), so a bare 5-byte prefix match would misread such a PI as a
+  declaration — confirmed by a failing test before this was caught. The 6-byte match is itself an
+  approximation, not a full implementation of the EBNF boundary: XML's `S` production also allows
+  tab/CR/LF, not just a literal space, so `<?xml` followed by a tab would wrongly fail to match
+  even though that's technically legal XML. Accepted for the POC since real StanForD data only ever
+  uses a plain space there. Documented in code via `ReadProlog()`'s `<remarks>` too.
 - **No bound exists on how far a single token's scan can grow while chasing an ending terminal
   that never arrives.** The rollback contract (§2, §4.1: not the final segment → reset
   `_segmentPosition` to `TokenIndex` and return `false`, wait for more data) has no cutoff — a
