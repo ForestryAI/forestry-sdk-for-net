@@ -38,7 +38,7 @@ namespace Forestry.Deserialize.Xml.Reading
             _documentNonTerminal = default;
             _currentTokenType = default;
             _previousTokenType = default;
-            _elementName = [];
+            _elementName = new ulong[4];
             _elementNameStack = default;
 
             _readerOptions = readerOptions;

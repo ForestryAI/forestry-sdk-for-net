@@ -176,7 +176,7 @@ namespace Forestry.Deserialize.Xml.Reading
                 _readerOptions.MaxDepth = ReaderOptions.DefaultMaxDepth;
             }
 
-            _elementName = [];
+            _elementName = readerState._elementName;
             _elementNameStack = readerState._elementNameStack;
 
             // sequence (not used when byte span)
