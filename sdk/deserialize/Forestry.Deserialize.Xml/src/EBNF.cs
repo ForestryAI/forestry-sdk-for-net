@@ -13,7 +13,7 @@ namespace Forestry.Deserialize.Xml {
 
         public const byte Equal = (byte)'=';
 
-        public const byte Quote = (byte)'"';
+        public const byte DoubleQuote = (byte)'"';
 
         public const byte QuestionMark = (byte)'?';
 
@@ -30,6 +30,10 @@ namespace Forestry.Deserialize.Xml {
         public const byte Hyphen = (byte)'-';
 
         public const byte Period = (byte)'.';
+        #endregion
+
+        #region terminal
+        public static ReadOnlySpan<byte> StartingElementTerminal => "<"u8;
         #endregion
 
         #region BOM

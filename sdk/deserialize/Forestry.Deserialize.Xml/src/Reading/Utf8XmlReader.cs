@@ -451,12 +451,11 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <returns></returns>
         internal bool ReadDocument()
         {
-            bool readable = false;
-
             TokenIndex = _segmentPosition;
             EBNF.Document previousNonTerminal;
             int previousSegmentPosition;
 
+            bool readable;
             do
             {
                 previousNonTerminal = _documentNonTerminal;
@@ -526,12 +525,36 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// 
+        /// Read markup acts on non-terimal elements, end elements,
+        /// attributes and values both associated to attributes and
+        /// simple content in elements.
         /// </summary>
         /// <returns></returns>
         internal bool ReadMarkup()
         {
-            return false;
+            bool readable = false;
+            do
+            {
+                if (Utf8Reader.TryMatch(_segment.Slice(_segmentPosition, 1), EBNF.StartingElementTerminal, out int _))
+                {
+                    // TODO: Read name using new method expect position at '<' and ending in any space avoiding a forever loop
+                    // TODO: When readable break fast else ? throw
+                }
+
+                // TODO: exhaust spacing || '>' (maybe flag expecting content)
+
+                // TODO: when attribute token with value == name
+
+                // TODO: when attribute value token with value between quotes
+
+                // TODO: when empty element
+
+                // TODO: peek complex content pushing name then recursive else simple content reading opaque value
+
+                // TODO: when ending element peek check content type to match name
+            } while (!readable && IsElementStartingTag());
+
+            return readable;
         }
 
         /// <summary>

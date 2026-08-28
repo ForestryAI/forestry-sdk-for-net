@@ -386,7 +386,7 @@ open question of what a miss should really mean). `GetPropertyName` pulls the ra
 
 | Module | Stability | Notes |
 |---|---|---|
-| `Utf8XmlReader` | **Started** | `ref struct` shape, real span/`ReadOnlySequence<byte>` dual-constructor buffering, and a working `ReaderState` round-trip all in place (§4.1); `ReadDocument()`/token-level reading still a stub |
+| `Utf8XmlReader` | **Started** | `ref struct` shape, real span/`ReadOnlySequence<byte>` dual-constructor buffering, and a working `ReaderState` round-trip all in place (§4.1); `ReadProlog()`/`ReadMiscellaneous()` real and tested; `ReadMarkup()` still a stub awaiting #24/#25 (§5) |
 | `TokenType` | **Settled** | 9 real token kinds, grouped by grammar region; no `Null` (§4.2), deliberately |
 | `EBNF` | **Settled** | `EBNF.Document` covers the 3 sequential top-level phases; extensible via `partial` for future non-terminals |
 | `Constants` | **Started** | Byte-level vocabulary defined; `xsi:nil` now unused pending revisit, CDATA unverified against real data (§5) |
