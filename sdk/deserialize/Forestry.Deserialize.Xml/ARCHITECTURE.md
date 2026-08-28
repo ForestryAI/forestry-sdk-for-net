@@ -299,8 +299,23 @@ open question of what a miss should really mean). `GetPropertyName` pulls the ra
     are all explicit `throw new NotImplementedException()` bodies.
   - `ObjectDeserializer<T>.TryReadNullableValue` always returns `Partial`
     (`// TODO: Reader get next property`); `BooleanDeserializer.TryReadNullableValue` throws.
-  - `ElementNameStack` is a genuinely empty struct — no fields at all (§4.3). Nothing backs the
-    lazy single-slot/promoted-stack design it's meant to implement yet.
+  - `ElementNameStack`'s non-allocating path is real and tested (§4.3 update pending): `Push`/`Pop`
+    take/return raw bytes/`ReadOnlySpan<ulong>` directly, packing into a `[InlineArray(64 * 4)]`
+    pool slot per depth — no allocation for depth ≤ 64, matching real StanForD nesting (typically
+    3 levels deep) with room to spare. **The allocating fallback beyond depth 64 is deliberately
+    unbuilt** — `PushAllocating`/`PopAllocating` both explicitly `throw new
+    NotImplementedException()` rather than doing nothing/something wrong, so a document that
+    genuinely nests that deep fails loudly instead of silently corrupting a WFC comparison.
+    Accepted POC debt (#23), same shape as the other documented-not-solved gaps in this section —
+    not planned unless something concrete needs more than 64 levels.
+  - **Name comparison is capped, not exact.** Packed names are truncated to 32 bytes (4 `ulong`s,
+    `ElementNameStack.PackedNameLength`) via `Extensions.Pack(this ReadOnlySpan<byte>,
+    Span<ulong>)` — two different full names that are byte-identical through the cap and only
+    diverge after it would be wrongly treated as equal. Accepted for the POC on the belief real
+    StanForD names don't collide this way (spot-checked against the one real `.hpr.xml` sample's
+    element names, e.g. `ApplicationVersionCreated`/`ApplicationVersionModified` diverge at
+    character 19, well inside the cap) — not verified against the full StanForD XSD schema, so not
+    a guarantee.
   - `ReaderState` implements the full `IReaderState<ReaderState>` shape and now round-trips real
     values via `Utf8XmlReader`'s `ReaderState` property, but since `ReadDocument()` never actually
     advances anything yet, nothing populates it with real, non-default values from an actual read.
@@ -376,7 +391,7 @@ open question of what a miss should really mean). `GetPropertyName` pulls the ra
 | `EBNF` | **Settled** | `EBNF.Document` covers the 3 sequential top-level phases; extensible via `partial` for future non-terminals |
 | `Constants` | **Started** | Byte-level vocabulary defined; `xsi:nil` now unused pending revisit, CDATA unverified against real data (§5) |
 | `ReaderState` | **Shape settled** | Full `IReaderState<TState>` implemented, real round-trip via `Utf8XmlReader.ReaderState`; nothing populates non-default values from an actual read yet |
-| `ElementNameStack` | **Not begun** | Empty struct; lazy single-slot/promoted-stack design decided (§4.3), unbuilt |
+| `ElementNameStack` | **Started** | Non-allocating path (depth ≤ 64) real and tested; allocating fallback beyond that throws `NotImplementedException` (§5) |
 | `DeserializeXmlOptions` | **Unstarted** | Every override throws |
 | `ObjectDeserializer<T>` | **Started** | `GetDeserializerKind` real; `TryReadNullableValue` still a stub |
 | `BooleanDeserializer` | **Started** | First Value-kind deserializer; `TryReadNullableValue` throws |
