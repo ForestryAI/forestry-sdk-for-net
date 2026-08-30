@@ -4,7 +4,10 @@ using System.Runtime.CompilerServices;
 
 namespace Forestry.Deserialize.Xml.Reading
 {
-    internal ref partial struct Utf8XmlReader
+    /// <summary>
+    /// Public constructors, properties and methods
+    /// </summary>
+    public ref partial struct Utf8XmlReader
     {
         #region segment
         /// <summary>
@@ -32,7 +35,7 @@ namespace Forestry.Deserialize.Xml.Reading
         /// </summary>
         private bool _isFinalSegment;
 
-                /// <summary>
+        /// <summary>
         /// Reading is completed when the external final segment is flagged and there are 
         /// no multiple segments or the internal final segment is flagged
         /// </summary>
@@ -59,24 +62,6 @@ namespace Forestry.Deserialize.Xml.Reading
         /// Next sequence position
         /// </summary>
         private SequencePosition _nextSequencePosition;
-
-        public readonly SequencePosition SequencePosition
-        {
-            get
-            {
-                if (_isSequence)
-                {
-                    Debug.Assert(_currentSequencePosition.GetObject() is not null);
-                    return _sequence.GetPosition(_segmentPosition, _currentSequencePosition);
-                }
-                return default;
-            }
-        }
-
-        /// <summary>
-        /// External access to the internal sequence
-        /// </summary>
-        internal readonly ReadOnlySequence<byte> Sequence => _sequence;
         #endregion
 
         #region state
@@ -128,6 +113,7 @@ namespace Forestry.Deserialize.Xml.Reading
         private int _documentPosition; 
         #endregion
 
+        #region constructors
         /// <summary>
         /// Reading segment from a byte span
         /// </summary>
@@ -136,10 +122,7 @@ namespace Forestry.Deserialize.Xml.Reading
         public Utf8XmlReader(
             ReadOnlySpan<byte> segment,
             ReaderOptions readerOptions = default
-        ): this(segment, isFinalSegment: true, new ReaderState(readerOptions))
-        {
-            
-        }
+        ): this(segment, isFinalSegment: true, new ReaderState(readerOptions)) {}
 
         /// <summary>
         /// Reading segment from a byte span using a reader state (where options follow along)
@@ -147,51 +130,11 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <param name="segment"></param>
         /// <param name="isFinalSegment"></param>
         /// <param name="readerState"></param>
-        public Utf8XmlReader(
+        public partial Utf8XmlReader(
             ReadOnlySpan<byte> segment,
             bool isFinalSegment,
             ReaderState readerState
-        ) {
-            // segment
-            _segment = segment;
-            _segmentPosition = 0;
-
-            _isExternalFinalSegment = isFinalSegment;
-            _isFinalSegment = isFinalSegment;
-
-            _documentPosition = 0;
-
-            // state
-            _lineNumber = readerState._lineNumber;
-            _linePosition = readerState._linePosition;
-
-            _documentNonTerminal = readerState._documentNonTerminal;
-
-            _currentTokenType = readerState._currentTokenType;
-            _previousTokenType = readerState._previousTokenType;
-            _readerOptions = readerState.ReaderOptions;
-
-            if (_readerOptions.MaxDepth == 0)
-            {
-                _readerOptions.MaxDepth = ReaderOptions.DefaultMaxDepth;
-            }
-
-            _elementName = readerState._elementName;
-            _elementNameStack = readerState._elementNameStack;
-
-            // sequence (not used when byte span)
-            HasValueSequence = false;
-            Value = [];
-            ValueSequence = ReadOnlySequence<byte>.Empty;
-
-            _isSequence = false;
-            _sequence = default;
-
-            _currentSequencePosition = default;
-            _nextSequencePosition = default;
-
-            _isMultipleSegments = false;
-        }
+        ); 
 
         /// <summary>
         /// Reading segments from a byte sequence starting with the first segment
@@ -201,10 +144,7 @@ namespace Forestry.Deserialize.Xml.Reading
         public Utf8XmlReader(
             ReadOnlySequence<byte> segments,
             ReaderOptions readerOptions = default
-        ): this(segments, isFinalSegment: true, new ReaderState(readerOptions))
-        {
-            
-        }
+        ): this(segments, isFinalSegment: true, new ReaderState(readerOptions)) {}
 
         /// <summary>
         /// Reading segments from a byte sequence starting with the first segment using a 
@@ -218,48 +158,12 @@ namespace Forestry.Deserialize.Xml.Reading
         /// empty are ignored when multiple segments.
         /// </summary>
         /// <param name="segments"></param>
-        public Utf8XmlReader(
+        public partial Utf8XmlReader(
             ReadOnlySequence<byte> segments,
             bool isFinalSegment,
             ReaderState readerState
-        ): this(segments.FirstSpan, isFinalSegment, readerState)
-        {
-            _isSequence = true;
-            _sequence = segments;
-
-            _currentSequencePosition = segments.Start;
-
-            // remaining fields depend on if the sequence has a single segment or multiple ignoring empty segments
-            if (segments.IsSingleSegment)
-            {
-                _isMultipleSegments = false;
-                _nextSequencePosition = default;
-            } else
-            {
-                _nextSequencePosition = _currentSequencePosition;
-
-                bool emptyFirstSegment = _segment.Length == 0;
-                if (emptyFirstSegment)
-                {
-                    SequencePosition referenceSequencePosition = _nextSequencePosition;
-                    while (segments.TryGet(ref _nextSequencePosition, out ReadOnlyMemory<byte> memory, advance: true))
-                    {
-                        _currentSequencePosition = referenceSequencePosition;
-                        if (memory.Length != 0)
-                        {
-                            _segment = memory.Span;
-                            break;
-                        }
-                        referenceSequencePosition = _nextSequencePosition;
-                    }
-                }
-
-                _isFinalSegment = !segments.TryGet(ref _nextSequencePosition, out _, advance: !emptyFirstSegment) && isFinalSegment; 
-
-                Debug.Assert(!_nextSequencePosition.Equals(_currentSequencePosition));
-                _isMultipleSegments = true;
-            }
-        }
+        );
+        #endregion
 
         #region token
         /// <summary>
@@ -271,6 +175,24 @@ namespace Forestry.Deserialize.Xml.Reading
         /// Current token index excluding the value
         /// </summary>
         public long TokenIndex { get; private set; }
+
+        /// <summary>
+        /// Current token depth
+        /// </summary>
+        public readonly int TokenDepth
+        {
+            get
+            {
+                int _depth = _elementNameStack.Depth;
+                if (TokenType is TokenType.Element or TokenType.Attribute)  // TODO: token type == value of an attribute
+                {
+                    Debug.Assert(_depth >= 1);
+                    _depth--;
+                }
+
+                return _depth;
+            }
+        }
 
         /// <summary>
         /// Value could not fit inside a single byte span <see cref="Value"/> instead inside a 
@@ -305,6 +227,11 @@ namespace Forestry.Deserialize.Xml.Reading
 
 
         #region segment
+        /// <summary>
+        /// Is final segment
+        /// </summary>
+        public readonly bool IsFinalSegment => _isFinalSegment;
+
         /// <summary>
         /// A readable segment is only possible whe the segment position is less than 
         /// the segment length and the segment is not closed.
@@ -348,52 +275,6 @@ namespace Forestry.Deserialize.Xml.Reading
                     throw new InvalidOperationException();  // TODO: formatting
                 }
             }
-        }
-
-        /// <summary>
-        /// Reads only non-empty segments into the internal segment and reseting 
-        /// the segment position
-        /// </summary>
-        /// <returns></returns>
-        private bool ReadNextSegment()
-        {
-            ReadOnlyMemory<byte> memory;
-
-            while (true)
-            {
-                Debug.Assert(!_isMultipleSegments || _currentSequencePosition.GetObject() is not null);
-
-                SequencePosition referenceSequencePosition = _currentSequencePosition;
-                _currentSequencePosition = _nextSequencePosition;
-
-                if (!_sequence.TryGet(ref _nextSequencePosition, out memory, advance: true))
-                {
-                    _currentSequencePosition = referenceSequencePosition;
-                    _isFinalSegment = true;
-
-                    return false;
-                }
-
-                if (memory.Length != 0)
-                {
-                    break;
-                }
-
-                _currentSequencePosition = referenceSequencePosition;
-                Debug.Assert(!_isMultipleSegments || _currentSequencePosition.GetObject() is not null);
-            }
-
-            if (_isExternalFinalSegment)
-            {
-                _isFinalSegment = !_sequence.TryGet(ref _nextSequencePosition, out _, advance: false);
-            }
-
-            _segment = memory.Span;
-
-            _documentPosition += _segmentPosition;
-            _segmentPosition = 0;
-
-            return true;
         }
 
         /// <summary>
@@ -625,60 +506,6 @@ namespace Forestry.Deserialize.Xml.Reading
         ) => _isMultipleSegments
             ? ReadMultipleSegmentOpaqueValue(startingTerminal, endingTerminal, tokenType)
             : ReadSingleSegmentOpaqueValue(startingTerminal, endingTerminal, tokenType);
-
-        /// <summary>
-        /// Read opaque value from a single segment
-        /// </summary>
-        /// <param name="startingTerminal"></param>
-        /// <param name="endingTerminal"></param>
-        /// <param name="tokenType"></param>
-        /// <returns></returns>
-        internal bool ReadSingleSegmentOpaqueValue(
-            ReadOnlySpan<byte> startingTerminal,
-            ReadOnlySpan<byte> endingTerminal,
-            TokenType tokenType
-        ) {
-            if (
-                Utf8Reader.TryMatch(_segment[_segmentPosition..], startingTerminal, out int matchReadBytes) &&
-                Utf8Reader.TrySkip(_segment[(_segmentPosition + matchReadBytes)..], endingTerminal, out int skipReadBytes, out int lineNumbersRead, out int linePosition)
-            )
-            {
-                if (lineNumbersRead > 0)
-                {
-                    _lineNumber += lineNumbersRead;
-                    _linePosition = linePosition;
-                }
-                else
-                {
-                    _linePosition += matchReadBytes + linePosition;
-                }
-
-                _previousTokenType = _currentTokenType;
-                _currentTokenType = tokenType;
-
-                Value = _segment.Slice(_segmentPosition, matchReadBytes + skipReadBytes);
-                _segmentPosition = _segmentPosition + matchReadBytes + skipReadBytes;
-
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Read opaque value from a multiple segments
-        /// </summary>
-        /// <param name="startingTerminal"></param>
-        /// <param name="endingTermianl"></param>
-        /// <returns></returns>
-        internal bool ReadMultipleSegmentOpaqueValue(
-            ReadOnlySpan<byte> startingTerminal,
-            ReadOnlySpan<byte> endingTermianl,
-            TokenType tokenType
-        )
-        {
-            return false;
-        }
         #endregion
 
         #region peek

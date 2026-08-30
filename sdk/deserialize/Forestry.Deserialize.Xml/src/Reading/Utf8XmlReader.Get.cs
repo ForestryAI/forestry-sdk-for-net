@@ -5,7 +5,10 @@ using System.Text;
 
 namespace Forestry.Deserialize.Xml.Reading
 {
-    internal ref partial struct Utf8XmlReader
+    /// <summary>
+    /// Typed value getters
+    /// </summary>
+    public ref partial struct Utf8XmlReader
     {
         public static readonly UTF8Encoding Encoding = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
