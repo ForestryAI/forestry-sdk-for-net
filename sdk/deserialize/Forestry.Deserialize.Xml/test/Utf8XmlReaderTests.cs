@@ -174,5 +174,239 @@ namespace Forestry.Deserialize.Xml.Tests
             // Assert
             Assert.Equal(EBNF.Document.Element, reader.ReaderState._documentNonTerminal);
         }
+
+        [Fact]
+        public void Read_ForMultipleCommentsBeforeTheRootElement_ItShould_ReadTheFirstCommentWithoutThrowing()
+        {
+            // Arrange - regression case: a "no element found yet" check placed inside ReadProlog
+            // itself once threw here, because PeekElementStartingTag() is (correctly) false right
+            // after the first comment - it's sitting on the second comment, not yet the root. That
+            // treated legitimate multi-comment prolog content as if no element would ever come, when
+            // it's simply one ReadProlog call away. The real "no element ever found" case belongs to
+            // ThrowableSegmentClosed() (data truly exhausted, final segment), not an inline check here.
+            Utf8XmlReader reader = new("<!--first--><!--second--><Root/>"u8);
+
+            // Act
+            bool readable = reader.Read();
+
+            // Assert
+            Assert.True(readable);
+            Assert.Equal(TokenType.Comment, reader.TokenType);
+        }
+
+        [Fact]
+        public void ReaderState_ForAFreshDefaultInstance_ItShould_HaveNothingOpen()
+        {
+            // Arrange & Act - a fresh ReaderState represents "nothing read yet". The explicit
+            // bare ReaderState() constructor (forwarding to the real one) is what makes this
+            // safe to call with no arguments at all - without it, a struct's implicit
+            // parameterless constructor would zero-initialize every field instead.
+            ReaderState state = new();
+
+            // Assert
+            Assert.Equal(0, state._elementNameStack.Depth);
+        }
+
+        [Theory]
+        [InlineData("<Root/>", "Root")]
+        [InlineData("<Root>", "Root")]
+        [InlineData("<Root attr=\"1\">", "Root")]
+        [InlineData("<Root >", "Root")]
+        public void Read_ForAStartingElementTag_ItShould_YieldTheElementNameAsTheValue(
+            string elementText, string expectedName)
+        {
+            // Arrange - no space required before '>'/'/' - "<Root/>" and "<Root>" have no space
+            // anywhere in either, and still need to read a name.
+            Utf8XmlReader reader = new(Encoding.UTF8.GetBytes(elementText));
+
+            // Act
+            bool readable = reader.Read();
+
+            // Assert
+            Assert.True(readable);
+            Assert.Equal(TokenType.Element, reader.TokenType);
+            Assert.True(((ReadOnlySpan<byte>)Encoding.UTF8.GetBytes(expectedName)).SequenceEqual(reader.Value));
+        }
+
+        [Fact]
+        public void Read_ForAStartingElementTag_ItShould_LeaveSegmentPositionRightAfterTheName()
+        {
+            // Arrange
+            byte[] source = Encoding.UTF8.GetBytes("<Root/>");
+            Utf8XmlReader reader = new(source);
+
+            // Act
+            reader.Read();
+
+            // Assert - "Root" is 4 bytes, "<" is 1, so position 5 sits right on the '/'.
+            Assert.Equal(5, reader.TokenIndex + reader.Value.Length + 1);
+        }
+
+        [Fact]
+        public void Read_ForALessThanNotFollowedByAValidNameCharacter_ItShould_Throw()
+        {
+            // Arrange - malformed: '<' immediately followed by something that can't start a
+            // Name. PeekElementStartingTag() already requires a valid NameStartChar to transition
+            // Prolog -> Element in the first place, so this can't be reached through the normal
+            // Read() path from a fresh document - constructing directly in the Element phase
+            // (via ReaderState) to exercise ReadMarkup's own malformed-name throw in isolation.
+            ReaderState elementPhase = new(
+                lineNumber: 0,
+                linePosition: 0,
+                documentNonTerminal: EBNF.Document.Element,
+                currentTokenType: TokenType.None,
+                previousTokenType: TokenType.None,
+                elementNameStack: default,
+                readerOptions: default
+            );
+            Utf8XmlReader reader = new("< Root>"u8, isFinalSegment: true, elementPhase);
+
+            // Act & Assert
+            bool threw = false;
+            try
+            {
+                reader.ReadMarkup();
+            }
+            catch (InvalidOperationException)
+            {
+                threw = true;
+            }
+
+            Assert.True(threw);
+        }
+
+        private static ReaderState ElementPhase(ElementNameStack elementNameStack) => new(
+            lineNumber: 0,
+            linePosition: 0,
+            documentNonTerminal: EBNF.Document.Element,
+            currentTokenType: TokenType.Element,
+            previousTokenType: TokenType.None,
+            elementNameStack: elementNameStack,
+            readerOptions: default
+        );
+
+        [Fact]
+        public void ReadMarkup_ForAMatchingEndingTag_ItShould_ReturnTrueAndPopTheStack()
+        {
+            // Arrange - <Root>...</Root>: the stack already has "Root" open (as ReadElementName
+            // would have pushed it), and the reader sits at the ending tag.
+            ElementNameStack stack = default;
+            stack.Push(Encoding.UTF8.GetBytes("Root"));
+            Utf8XmlReader reader = new("</Root>"u8, isFinalSegment: true, ElementPhase(stack));
+
+            // Act
+            bool readable = reader.ReadMarkup();
+
+            // Assert
+            Assert.True(readable);
+            Assert.Equal(TokenType.ElementEnd, reader.TokenType);
+            Assert.Equal(0, reader.ReaderState._elementNameStack.Depth);
+        }
+
+        [Fact]
+        public void ReadMarkup_ForAMismatchedEndingTag_ItShould_Throw()
+        {
+            // Arrange - Element Type Match WFC violation: </Wrong> can't close an open "Root".
+            ElementNameStack stack = default;
+            stack.Push(Encoding.UTF8.GetBytes("Root"));
+            Utf8XmlReader reader = new("</Wrong>"u8, isFinalSegment: true, ElementPhase(stack));
+
+            // Act & Assert
+            bool threw = false;
+            try
+            {
+                reader.ReadMarkup();
+            }
+            catch (InvalidOperationException)
+            {
+                threw = true;
+            }
+
+            Assert.True(threw);
+        }
+
+        [Fact]
+        public void ReadMarkup_ForAnEndingTagWithANestedParentStillOpen_ItShould_LeaveTheParentOnTheStack()
+        {
+            // Arrange - <HarvestedProduction><Log>...</Log> - closing "Log" should pop only
+            // "Log", leaving "HarvestedProduction" still open underneath it.
+            ElementNameStack stack = default;
+            stack.Push(Encoding.UTF8.GetBytes("HarvestedProduction"));
+            stack.Push(Encoding.UTF8.GetBytes("Log"));
+            Utf8XmlReader reader = new("</Log>"u8, isFinalSegment: true, ElementPhase(stack));
+
+            // Act
+            bool readable = reader.ReadMarkup();
+
+            // Assert
+            Assert.True(readable);
+            Assert.Equal(TokenType.ElementEnd, reader.TokenType);
+            Assert.Equal(1, reader.ReaderState._elementNameStack.Depth);
+        }
+
+        [Fact]
+        public void SkipSpacing_ForLeadingWhitespace_ItShould_ReturnTrueAndAdvancePastAllOfIt()
+        {
+            // Arrange
+            Utf8XmlReader reader = new("   <Root/>"u8);
+
+            // Act
+            bool skipped = reader.SkipSpacing();
+
+            // Assert
+            Assert.True(skipped);
+            Assert.Equal(3, reader.ReaderState._linePosition);
+        }
+
+        [Fact]
+        public void SkipSpacing_ForNoLeadingWhitespace_ItShould_ReturnFalse()
+        {
+            // Arrange
+            Utf8XmlReader reader = new("<Root/>"u8);
+
+            // Act
+            bool skipped = reader.SkipSpacing();
+
+            // Assert
+            Assert.False(skipped);
+        }
+
+        [Fact]
+        public void ReadElement_ForAnEmptyElementTag_ItShould_ReturnTrueSetElementEndAndPopTheStack()
+        {
+            // Arrange - <Root/>'s own closing '/>' , as if reached right after ReadElementName
+            // already pushed "Root" and set TokenType.Element.
+            ElementNameStack stack = default;
+            stack.Push(Encoding.UTF8.GetBytes("Root"));
+            Utf8XmlReader reader = new("/>"u8, isFinalSegment: true, ElementPhase(stack));
+
+            // Act
+            bool readable = reader.ReadElement();
+
+            // Assert
+            Assert.True(readable);
+            Assert.Equal(TokenType.ElementEnd, reader.TokenType);
+            Assert.True(((ReadOnlySpan<byte>)Encoding.UTF8.GetBytes("Root")).SequenceEqual(reader.Value));
+            Assert.Equal(0, reader.ReaderState._elementNameStack.Depth);
+        }
+
+        [Fact]
+        public void Read_ForASelfClosingRootElement_ItShould_ReadElementThenElementEndAcrossTwoCalls()
+        {
+            // Arrange - <Root/> end to end through the public Read() API: this is the first
+            // complete document shape the reader can now walk from start to finish.
+            Utf8XmlReader reader = new("<Root/>"u8);
+
+            // Act & Assert - first call: the starting tag's Name
+            Assert.True(reader.Read());
+            Assert.Equal(TokenType.Element, reader.TokenType);
+            Assert.True(((ReadOnlySpan<byte>)Encoding.UTF8.GetBytes("Root")).SequenceEqual(reader.Value));
+
+            // Act & Assert - second call: the implied close, no separate Value token in between
+            Assert.True(reader.Read());
+            Assert.Equal(TokenType.ElementEnd, reader.TokenType);
+            Assert.True(((ReadOnlySpan<byte>)Encoding.UTF8.GetBytes("Root")).SequenceEqual(reader.Value));
+            Assert.Equal(0, reader.ReaderState._elementNameStack.Depth);
+        }
     }
 }

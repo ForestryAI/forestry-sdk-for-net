@@ -34,6 +34,10 @@ namespace Forestry.Deserialize.Xml {
 
         #region terminal
         public static ReadOnlySpan<byte> StartingElementTerminal => "<"u8;
+
+        public static ReadOnlySpan<byte> EndingElementTerminal => "</"u8;
+
+        public static ReadOnlySpan<byte> EmptyElementTerminal => "/>"u8;
         #endregion
 
         #region BOM

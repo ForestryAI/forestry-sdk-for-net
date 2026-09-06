@@ -68,7 +68,7 @@ a large chunk. `Utf8JsonReader` does the same thing for exactly the same reason.
 
 **Does support `ReadOnlySequence<byte>` (multi-segment) input directly, via a second pair of
 constructors.** Sequencing-awareness is isolated entirely to the segment-reading layer
-(`IsSegmentReadable()`/`ReadNextSegment()`, `Utf8XmlReader.cs`) — `ReadDocument` and every
+(`IsSegmentFetchable()`/`FetchNextSegment()`, `Utf8XmlReader.cs`) — `ReadDocument` and every
 token-level method built under it operates on `_segment` as an ordinary `ReadOnlySpan<byte>` and
 has no idea whether it came from a span directly or from walking a sequence. `Read()` is a single
 method, not two — there's no parallel sequence-aware reimplementation of parsing. Combined with
@@ -130,7 +130,7 @@ question, not a settled design choice.
 - `Utf8XmlReader(ReadOnlySequence<byte> segments, bool isFinalSegment, ReaderState readerState)` —
   the real piping path. `segments` is typically a `PipeReader`'s current `ReadResult.Buffer`, which
   may already span multiple unconsumed pieces. The reader walks forward across those internally via
-  `ReadNextSegment()` without needing reconstruction, until the sequence itself runs out. Two
+  `FetchNextSegment()` without needing reconstruction, until the sequence itself runs out. Two
   construction-time behaviors specific to this overload: any empty leading segments are skipped
   automatically before `_segment` is set, and `isFinalSegment`'s recomputation only happens when
   `segments` has more than one piece — for a single-segment sequence, the caller's flag is taken at
@@ -138,9 +138,9 @@ question, not a settled design choice.
 
 **`isFinalSegment` (parameter) vs. `_isFinalSegment` (field) vs. `_isExternalFinalSegment` (field).**
 The caller's raw flag is stored verbatim as `_isExternalFinalSegment` and re-consulted every time
-`ReadNextSegment()` walks forward. `_isFinalSegment` is never set directly from the caller — it's
+`FetchNextSegment()` walks forward. `_isFinalSegment` is never set directly from the caller — it's
 always derived (trivially, for a span; by conjunction with "is there a next segment already
-present" for a sequence) and it's what `IsSegmentReadable()` actually gates on. Naming them
+present" for a sequence) and it's what `IsSegmentFetchable()` actually gates on. Naming them
 differently (rather than both being "segment"-flavored, or both "buffering"-flavored) is
 deliberate: it keeps the caller-supplied input and the reader's own re-derived fact visually
 distinct at every call site.
@@ -227,31 +227,34 @@ on `Utf8XmlReader`:
   deliberate choice, not a gap: every other field here is XML-specific and reached only through the
   concrete `ReaderState` type, never through the media-agnostic interface.
 - **`assertions`** — `_documentNonTerminal` (`EBNF.Document`), `_currentTokenType`/
-  `_previousTokenType`, `_elementName`, `_elementNameStack`. Named for their role: validation
-  propagates downward through subsequent method calls from `Read()`, each of which must resolve to
-  a `bool` or a thrown exception — never silently swallow an inconsistency. `_elementName` is
-  `ulong[]` (owned, packed name bytes), not a `ReadOnlySpan<byte>` — a `ReadOnlySpan<byte>` is
-  itself a `ref struct` and can only live inside another `ref struct`, which `ReaderState`
-  deliberately isn't (that's the whole reason it can survive an `await`), and even setting the
-  compile error aside, a span would reference the caller's buffer rather than owning its own copy,
-  which wouldn't survive being handed a different buffer on reconstruction.
+  `_previousTokenType`, `_elementNameStack`. Named for their role: validation propagates downward
+  through subsequent method calls from `Read()`, each of which must resolve to a `bool` or a
+  thrown exception — never silently swallow an inconsistency.
 - **`options`** — `_readerOptions` (`ReaderOptions`: currently just `MaxDepth`, defaulting to 64 to
   match `JsonReaderOptions`'s own default; `MaxDepth == 0` is treated as "caller didn't set one,"
   not a literal zero-depth limit).
 
 **`ElementNameStack`** tracks XML's Element Type Match well-formedness constraint (end-tag name
-must match its start-tag's — a WFC, not enforceable at the grammar level alone) without pushing
-one entry per element: most StanForD elements are leaves with no children, so the
-most-recently-opened element's name is meant to live in a single cheap slot (`_elementName`) by
-default, only *promoted* onto a real, geometrically-grown stack the moment another `Element` token
-(not a `Value`) is seen — i.e. exactly when an element turns out to have a child. The stack becoming
-empty after a pop is also meant to double as the signal `ReadDocument` needs to transition from the
-`Element` phase to trailing `Miscellaneous`. **None of this is built yet** — `ElementNameStack` is
-still a genuinely empty struct (§5); this section describes the intended design, not current
-behavior.
+must match its start-tag's — a WFC, not enforceable at the grammar level alone) and is real and
+tested (§5) — `Push`/`TryPop` both non-allocating (`[InlineArray(64 * 4)]` pool) for depth ≤ 64.
+An earlier design (a single-slot `_elementName` field on `ReaderState`/`Utf8XmlReader`, only
+*promoting* onto the stack once an element was shown to have a child) was dropped: since the
+stack's own non-allocating pool already makes pushing/popping *every* element cheap, the second
+storage location wasn't buying anything, and it forced an awkward "which of two places holds the
+answer" split whenever an ending tag needed checking. Now every element, leaf or not, is pushed
+via `ReadElementName()` and popped via `TryPop()` in `ReadMarkup()` — one uniform path, checked
+against whatever's actually on top. `TryPop(ReadOnlySpan<byte> name)` packs `name` and compares it
+against the tail slot *before* mutating anything, only decrementing `Depth` on an actual match
+(same "peek, don't mutate on failure" contract as `Utf8Reader.TryMatch`/`TrySkip`) — a mismatch or
+an empty stack both just return `false`, never throw; `ReadMarkup()` is the one that turns a
+`false` into a thrown Element Type Match violation. The stack becoming empty after a pop is also
+meant to double as the signal `ReadDocument` needs to transition from the `Element` phase to
+trailing `Miscellaneous` (not yet wired up).
 
 `ReaderState`'s own `ReaderState` constructor (the parameterless-except-`ReaderOptions` one) is
-what a first-ever construction uses; the internal 8-field constructor is what `Utf8XmlReader`'s
+what a first-ever construction uses — plus an explicit bare `ReaderState()` forwarding to it, since
+a struct's implicit parameterless constructor would otherwise zero-initialize every field instead
+(a real gotcha this hit in practice); the internal 7-field constructor is what `Utf8XmlReader`'s
 `ReaderState` property (§4.1) calls to snapshot a live reader — the only caller of that constructor
 today.
 
@@ -319,6 +322,27 @@ open question of what a miss should really mean). `GetPropertyName` pulls the ra
   - `ReaderState` implements the full `IReaderState<ReaderState>` shape and now round-trips real
     values via `Utf8XmlReader`'s `ReaderState` property, but since `ReadDocument()` never actually
     advances anything yet, nothing populates it with real, non-default values from an actual read.
+  - **`ReadMarkup()` (#22/#25) can now read a starting element's Name for real.** `ReadElementName()`
+    is a thin, element-specific wrapper (stamps `Value`/`TokenType.Element`) around `ReadName()` -
+    a shared, deliberately element-agnostic `Name ::= NameStartChar (NameChar)*` scan, split
+    single/multiple (`ReadSingleSegmentName()`/`ReadMultipleSegmentName()`) the same way
+    `ReadOpaqueValue` already splits. The same scan is meant to serve attribute-name reading next
+    (#25) without duplication - only the `TokenType` the caller stamps afterward differs. Stops at
+    the first non-`NameChar` byte, not just whitespace (`<Root>`/`<Root/>` have no space before
+    their delimiter). Returns `false` only when there's no valid Name at all, which `ReadMarkup()`
+    treats as a thrown malformed-document error, not "not readable yet." Real and tested (6 new
+    cases in `Utf8XmlReaderTests.cs`). **Single-segment only** - `ReadMultipleSegmentName()` is a
+    `return false;` shell (#24), same accepted-debt shape as `ReadMultipleSegmentOpaqueValue`.
+  - **`ReadMarkup()` can also read an ending tag and verify the Element Type Match WFC for real.**
+    Matches `</` (checked *before* the bare `<` starting-element check, since the latter would
+    otherwise misfire on the same leading `<`), reads the Name via the same `ReadName()` scan
+    (single-segment only, same #24 debt as above), and calls `_elementNameStack.TryPop(Value)` -
+    a `false` (mismatch or nothing open) is a thrown Element Type Match violation, a match sets
+    `TokenType.ElementEnd` and pops the stack for real. Tested (3 new cases), constructing directly
+    in the Element phase with a pre-populated `ElementNameStack` since nothing yet consumes the
+    `>`/attributes after a start tag's Name, so an ending tag can't be reached through `Read()` end
+    to end today. Everything else in `ReadMarkup()` remains `// TODO`: attribute name/value
+    reading, empty elements (`/>`), and complex-vs-simple content recursion.
 - **`_documentPosition`'s semantics are marked `// TODO`, not settled.** It resets to `0` on every
   reconstruction along with everything else in the `segments` region — meaning it currently means
   "offset within the current segment," not "offset within the whole document," and nothing carries
@@ -373,11 +397,11 @@ open question of what a miss should really mean). `GetPropertyName` pulls the ra
   wired to anything, not yet cleaned up.
 - **Multi-segment support exists (§2) but is effectively untestable right now, for two independent
   reasons.** `Forestry.Deserialize.Xml.Tests` has `InternalsVisibleTo` access, but `_segment`/
-  `_segmentPosition`/`ReadNextSegment()` are `private`, not `internal` — cross-assembly visibility
+  `_segmentPosition`/`FetchNextSegment()` are `private`, not `internal` — cross-assembly visibility
   doesn't reach `private` members, so the test project still can't drive or observe segment
   transitions directly. Separately, nothing currently *causes* a segment transition through the
   public `Read()` API anyway: `ReadDocument()` is still a stub body that never advances
-  `_segmentPosition`, so there's no way to exercise `ReadNextSegment()` end-to-end yet even with the
+  `_segmentPosition`, so there's no way to exercise `FetchNextSegment()` end-to-end yet even with the
   right visibility. Real verification has to wait for real token-reading logic, or a deliberate
   visibility change if earlier, isolated testing of the segment-reading layer alone is wanted before
   that lands.
@@ -386,7 +410,7 @@ open question of what a miss should really mean). `GetPropertyName` pulls the ra
 
 | Module | Stability | Notes |
 |---|---|---|
-| `Utf8XmlReader` | **Started** | `ref struct` shape, real span/`ReadOnlySequence<byte>` dual-constructor buffering, and a working `ReaderState` round-trip all in place (§4.1); `ReadProlog()`/`ReadMiscellaneous()` real and tested; `ReadMarkup()` still a stub awaiting #24/#25 (§5) |
+| `Utf8XmlReader` | **Started** | `ref struct` shape, real span/`ReadOnlySequence<byte>` dual-constructor buffering, and a working `ReaderState` round-trip all in place (§4.1); `ReadProlog()`/`ReadMiscellaneous()` real and tested; `ReadMarkup()` reads a starting element's Name for real (single-segment), rest still `// TODO` (§5) |
 | `TokenType` | **Settled** | 9 real token kinds, grouped by grammar region; no `Null` (§4.2), deliberately |
 | `EBNF` | **Settled** | `EBNF.Document` covers the 3 sequential top-level phases; extensible via `partial` for future non-terminals |
 | `Constants` | **Started** | Byte-level vocabulary defined; `xsi:nil` now unused pending revisit, CDATA unverified against real data (§5) |

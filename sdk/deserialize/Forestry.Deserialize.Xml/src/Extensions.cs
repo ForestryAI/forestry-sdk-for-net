@@ -57,5 +57,37 @@ namespace Forestry.Deserialize.Xml
             }
         }
         #endregion
+
+        #region ReadOnlySpan<ulong>
+        /// <summary>
+        /// Reverse of <see cref="Pack"/>: writes <paramref name="packed"/> back out as raw bytes
+        /// into <paramref name="destination"/> (which must have room for
+        /// <c>packed.Length * 8</c> bytes) and returns the real, trimmed length - not
+        /// <paramref name="destination"/>'s full capacity. Trimming works by scanning back past
+        /// trailing zero bytes, which is safe for the same reason <see cref="Pack"/>'s own
+        /// padding is: XML names can never legally contain a NUL byte, so every trailing zero is
+        /// padding (from a short name, or from <see cref="Pack"/>'s cap), never real content.
+        /// </summary>
+        /// <param name="packed"></param>
+        /// <param name="destination"></param>
+        /// <returns></returns>
+        public static int Unpack(this ReadOnlySpan<ulong> packed, Span<byte> destination)
+        {
+            for (int i = 0; i < packed.Length; i++)
+            {
+                BinaryPrimitives.WriteUInt64LittleEndian(destination.Slice(i * 8, 8), packed[i]);
+            }
+
+            ReadOnlySpan<byte> written = destination[..(packed.Length * 8)];
+            int length = written.Length;
+
+            while (length > 0 && written[length - 1] == 0)
+            {
+                length--;
+            }
+
+            return length;
+        }
+        #endregion
     }
 }

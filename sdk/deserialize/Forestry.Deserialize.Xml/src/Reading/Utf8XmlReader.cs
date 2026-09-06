@@ -91,14 +91,24 @@ namespace Forestry.Deserialize.Xml.Reading
         private TokenType _previousTokenType;
 
         /// <summary>
-        /// Element name when the element contains a value
-        /// </summary>
-        private ulong[] _elementName;
-
-        /// <summary>
-        /// Element names when the element contains a child element
+        /// Packed names of every currently-open element, innermost last - see
+        /// <see cref="ReaderState._elementNameStack"/> for why there's no separate single-slot
+        /// storage for a leaf any more.
         /// </summary>
         private ElementNameStack _elementNameStack;
+
+        /// <summary>
+        /// Scratch storage <see cref="ElementNameStack.Pop(Span{byte})"/> unpacks a popped
+        /// name's raw bytes into, so an unconditional pop (e.g. an empty element closing itself)
+        /// can set <see cref="Value"/> - a plain array, allocated once here at construction, not
+        /// an `[InlineArray]`: converting an inline-array *field* to a span requires a real
+        /// conversion that returns a reference into `this`, and a struct can't assign that
+        /// result into a property (<see cref="Value"/>) at all, however directly it's written -
+        /// a genuine C# restriction, not something written around it avoids. An array reference
+        /// converts to a span without that step, matching how <see cref="_segment"/> itself
+        /// already assigns into <see cref="Value"/> successfully.
+        /// </summary>
+        private readonly byte[] _poppedNameBuffer = new byte[ElementNameStack.PackedNameLength * 8];
 
         /// <summary>
         /// Reader options
@@ -219,7 +229,6 @@ namespace Forestry.Deserialize.Xml.Reading
             documentNonTerminal: _documentNonTerminal,
             currentTokenType: _currentTokenType,
             previousTokenType: _previousTokenType,
-            elementName: _elementName,
             elementNameStack: _elementNameStack,
             readerOptions: _readerOptions
         );
@@ -233,19 +242,19 @@ namespace Forestry.Deserialize.Xml.Reading
         public readonly bool IsFinalSegment => _isFinalSegment;
 
         /// <summary>
-        /// A readable segment is only possible whe the segment position is less than 
-        /// the segment length and the segment is not closed.
-        /// 
-        /// Multiple segment read until the next non-empty segment before throwing 
+        /// The segment's underlying byte data is only accessible when the segment position is
+        /// less than the segment length and the segment is not closed.
+        ///
+        /// Multiple segments access the next non-empty segment before throwing
         /// if the segment is not closed.
         /// </summary>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal bool IsSegmentReadable()
+        internal bool IsSegmentFetchable()
         {
             if (_segmentPosition >= (uint)_segment.Length)
             {
-                if (_isMultipleSegments && ReadNextSegment())
+                if (_isMultipleSegments && FetchNextSegment())
                 {
                     return true;
                 }
@@ -268,12 +277,24 @@ namespace Forestry.Deserialize.Xml.Reading
         {
             if (_isFinalSegment)
             {
-                // TODO: element name stack length != 0 || element name is not empty
+                ThrowableElementNotClosed();
 
                 if (_documentNonTerminal == EBNF.Document.None || _documentNonTerminal == EBNF.Document.Prolog)
                 {
                     throw new InvalidOperationException();  // TODO: formatting
                 }
+            }
+        }
+
+        /// <summary>
+        /// Throws when the segment has closed while an element is still open -
+        /// <see cref="_elementNameStack"/> has one or more names still pushed.
+        /// </summary>
+        private readonly void ThrowableElementNotClosed()
+        {
+            if (_elementNameStack.Depth > 0)
+            {
+                throw new InvalidOperationException(); // TODO: formatting
             }
         }
 
@@ -305,7 +326,7 @@ namespace Forestry.Deserialize.Xml.Reading
             bool readable = false;
             Value = default;
 
-            if (!IsSegmentReadable())
+            if (!IsSegmentFetchable())
             {
                 goto ReadingCompleted;
             }
@@ -392,13 +413,12 @@ namespace Forestry.Deserialize.Xml.Reading
                 }
             }
 
-            if (IsElementStartingTag())
+            if (PeekElementStartingTag())
             {
                 _documentNonTerminal = EBNF.Document.Element;
                 goto ReadCompleted;
             }
-            
-            // 
+
             readable = ReadMiscellaneous() || (_currentTokenType != TokenType.DocumentType && ReadOpaqueValue("<!DOCTYPE"u8, ">"u8, TokenType.DocumentType));
 
             ReadCompleted:
@@ -406,9 +426,16 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// Read markup acts on non-terimal elements, end elements,
-        /// attributes and values both associated to attributes and
-        /// simple content in elements.
+        /// Read markup - starting/ending elements, attributes, and the values that belong to
+        /// either an attribute or an element's simple content.
+        ///
+        /// A starting ('&lt;Name') or ending ('&lt;/Name') tag can legally appear regardless of
+        /// what token was just read, so both are tried first, unconditionally, after draining
+        /// any spacing. Once neither matches, what's legal next depends entirely on
+        /// <see cref="TokenType"/> - an <see cref="TokenType.Element"/> and an
+        /// <see cref="TokenType.Attribute"/> each allow completely different follow-on
+        /// constructs - so dispatch shifts to <see cref="ReadElement"/>/<see cref="ReadAttribute"/>,
+        /// each owning its own "given this token, what can come next" cases.
         /// </summary>
         /// <returns></returns>
         internal bool ReadMarkup()
@@ -416,26 +443,98 @@ namespace Forestry.Deserialize.Xml.Reading
             bool readable = false;
             do
             {
-                if (Utf8Reader.TryMatch(_segment.Slice(_segmentPosition, 1), EBNF.StartingElementTerminal, out int _))
+                SkipSpacing();
+
+                if (Utf8Reader.TryMatch(_segment[_segmentPosition..], EBNF.EndingElementTerminal, out int endMatchReadBytes))
                 {
-                    // TODO: Read name using new method expect position at '<' and ending in any space avoiding a forever loop
-                    // TODO: When readable break fast else ? throw
+                    _segmentPosition += endMatchReadBytes; // consume '</' - ReadName scans from here
+
+                    if (!ReadName())
+                    {
+                        // '</' matched but no valid Name followed it - not recoverable, the
+                        // document is malformed.
+                        throw new InvalidOperationException(); // TODO: formatting
+                    }
+
+                    if (!_elementNameStack.TryPop(Value))
+                    {
+                        // Element Type Match WFC: the ending tag's name doesn't match whatever
+                        // is actually open right now.
+                        throw new InvalidOperationException(); // TODO: formatting
+                    }
+
+                    _previousTokenType = _currentTokenType;
+                    _currentTokenType = TokenType.ElementEnd;
+
+                    readable = true;
                 }
+                else if (Utf8Reader.TryMatch(_segment[_segmentPosition..], EBNF.StartingElementTerminal, out int matchReadBytes))
+                {
+                    _segmentPosition += matchReadBytes; // consume '<' - ReadElementName scans from here
 
-                // TODO: exhaust spacing || '>' (maybe flag expecting content)
-
-                // TODO: when attribute token with value == name
-
-                // TODO: when attribute value token with value between quotes
-
-                // TODO: when empty element
-
-                // TODO: peek complex content pushing name then recursive else simple content reading opaque value
-
-                // TODO: when ending element peek check content type to match name
-            } while (!readable && IsElementStartingTag());
+                    readable = ReadElementName();
+                    if (!readable)
+                    {
+                        // '<' matched but no valid Name followed it - not recoverable, the
+                        // document is malformed.
+                        throw new InvalidOperationException(); // TODO: formatting
+                    }
+                }
+                else
+                {
+                    readable = _currentTokenType switch
+                    {
+                        TokenType.Element => ReadElement(),
+                        TokenType.Attribute => ReadAttribute(),
+                        _ => false
+                    };
+                }
+            } while (!readable && PeekElementStartingTag());
 
             return readable;
+        }
+
+        /// <summary>
+        /// Given an already-read Element (start tag) token, read whatever's legal right after
+        /// its Name: an empty element's own closing '/&gt;', an attribute name, or '&gt;'
+        /// starting its content.
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadElement()
+        {
+            SkipSpacing();
+
+            if (Utf8Reader.TryMatch(_segment[_segmentPosition..], EBNF.EmptyElementTerminal, out int emptyMatchReadBytes))
+            {
+                _segmentPosition += emptyMatchReadBytes;
+
+                // No name to read here - the caller is closing exactly the element it just
+                // opened, so ElementNameStack.Pop() (not TryPop) is the right tool: there's
+                // nothing to compare against, only something to unconditionally close.
+                int poppedNameLength = _elementNameStack.Pop(_poppedNameBuffer);
+                Value = ((ReadOnlySpan<byte>)_poppedNameBuffer)[..poppedNameLength];
+
+                _previousTokenType = _currentTokenType;
+                _currentTokenType = TokenType.ElementEnd;
+
+                return true;
+            }
+
+            // TODO: Peek spacing with following name character then skip spacing, read name to value and set token == Attribute
+
+            // TODO: Peek '>' then read content either complex or simple
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadAttribute()
+        {
+            // TODO: Peek spacing then '=', skip spacing + '=' + trailing spacing then read opaque string between '"' to value
+
+            return false;
         }
 
         /// <summary>
@@ -449,23 +548,49 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <returns></returns>
         internal bool ReadMiscellaneous()
         {
-            while (ReadSpacing())
-            {
-            }
+            SkipSpacing();
 
             return ReadOpaqueValue("<!--"u8, "-->"u8, TokenType.Comment) ||
                    ReadOpaqueValue("<?"u8, "?>"u8, TokenType.ProcessInstruction);
         }
 
         /// <summary>
-        /// Read (i.e. skip) a contiguous run of whitespace at the current segment position.
-        /// Spacing is not a token - it never sets <see cref="TokenType"/>/<see cref="Value"/> -
-        /// it only advances the segment position (and line number/position) past whatever
-        /// whitespace is immediately available right now. Returns false, not an error, when
-        /// there's no whitespace to consume at the current position.
+        /// Skip every contiguous run of whitespace starting at the current segment position -
+        /// the XML <c>S</c> production ("one or more" space characters) is always a whole run,
+        /// never a single character in isolation, so the single-segment scan step
+        /// (<see cref="SkipSpace"/>) exists only in service of this method, never called on its
+        /// own. It's a private instance method rather than a true local function only because
+        /// C# doesn't allow a local function inside a `ref struct`'s method to touch the
+        /// struct's own instance fields (`this` can't be implicitly captured the way a class
+        /// allows) - the intent is the same either way. Drains across as many
+        /// <see cref="SkipSpace"/> calls as it takes to exhaust the run (e.g. one that continues
+        /// past the end of the current segment). Never produces a token - it only advances the
+        /// segment position (and line number/position) past whatever whitespace is available.
+        /// Returns whether any whitespace was skipped at all across the whole drain - not just
+        /// whatever the final, naturally-failing call in the loop happened to return.
         /// </summary>
         /// <returns></returns>
-        internal bool ReadSpacing()
+        internal bool SkipSpacing()
+        {
+            bool skippedAny = false;
+
+            while (SkipSpace())
+            {
+                skippedAny = true;
+            }
+
+            return skippedAny;
+        }
+
+        /// <summary>
+        /// Skip a single contiguous run of whitespace bounded by the current segment - a run
+        /// continuing into the next fetched segment needs another call from
+        /// <see cref="SkipSpacing"/>'s own loop. Returns false, not an error, when there's no
+        /// whitespace to consume right now. Exists only to serve <see cref="SkipSpacing"/> - see
+        /// its summary for why this isn't a local function instead.
+        /// </summary>
+        /// <returns></returns>
+        private bool SkipSpace()
         {
             int whiteSpaceLength = _segment[_segmentPosition..].IndexOfExceptWhiteSpace();
             if (whiteSpaceLength == 0)
@@ -492,6 +617,49 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
+        /// Read a starting element tag's Name - the caller has already matched and consumed the
+        /// '<' itself (<see cref="ReadMarkup"/>), so <see cref="_segmentPosition"/> already sits
+        /// on the Name's first byte. Delegates the actual character scan to <see cref="ReadName"/>,
+        /// which is deliberately unaware of elements at all - the exact same scan will serve
+        /// attribute names later (#25), the only difference being which <see cref="TokenType"/>
+        /// the caller stamps once it succeeds. Pushes the Name onto <see cref="_elementNameStack"/>
+        /// unconditionally - every element, leaf or not, is tracked there now (see
+        /// <see cref="ReaderState._elementNameStack"/> for why the earlier single-slot fast path
+        /// was dropped), so an ending tag later has exactly one place to check against.
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadElementName()
+        {
+            if (!ReadName())
+            {
+                return false;
+            }
+
+            _elementNameStack.Push(Value);
+
+            _previousTokenType = _currentTokenType;
+            _currentTokenType = TokenType.Element;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Read a Name (<c>NameStartChar (NameChar)*</c>) starting exactly at
+        /// <see cref="_segmentPosition"/> - callers are responsible for having already
+        /// positioned there (past whatever delimiter applies to them: '<' for an element,
+        /// nothing at all for an attribute), since an attribute name has no leading delimiter
+        /// of its own to skip. Sets <see cref="Value"/> and advances
+        /// <see cref="_segmentPosition"/> past the Name on success; returns <see langword="false"/>
+        /// when there's no valid Name at all (nothing there, or the first byte isn't a
+        /// NameStartChar) without touching either - single/multiple segment aware, matching
+        /// <see cref="ReadOpaqueValue"/>'s own dispatch shape.
+        /// </summary>
+        /// <returns></returns>
+        private bool ReadName() => _isMultipleSegments
+            ? ReadMultipleSegmentName()
+            : ReadSingleSegmentName();
+
+        /// <summary>
         /// Read opaque value including and between the starting and ending
         /// terminals then if able set the current token type to <paramref name="tokenType"/>
         /// </summary>
@@ -510,10 +678,11 @@ namespace Forestry.Deserialize.Xml.Reading
 
         #region peek
         /// <summary>
-        /// Element starting tags have a '<' character then valid name characters
+        /// Peek whether an element's starting tag begins here - a '<' character then a valid
+        /// name-starting character - without advancing the reader at all.
         /// </summary>
         /// <returns></returns>
-        private bool IsElementStartingTag()
+        private bool PeekElementStartingTag()
         {
             if (_segmentPosition >= _segment.Length || _segment[_segmentPosition] != (byte)'<')
             {

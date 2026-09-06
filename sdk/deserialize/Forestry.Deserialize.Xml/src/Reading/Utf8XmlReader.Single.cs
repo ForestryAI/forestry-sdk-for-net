@@ -36,7 +36,6 @@ namespace Forestry.Deserialize.Xml.Reading
                 _readerOptions.MaxDepth = ReaderOptions.DefaultMaxDepth;
             }
 
-            _elementName = readerState._elementName;
             _elementNameStack = readerState._elementNameStack;
 
             // sequence (not used when byte span)
@@ -90,6 +89,33 @@ namespace Forestry.Deserialize.Xml.Reading
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Read a Name (<c>NameStartChar (NameChar)*</c>) from a single segment, starting
+        /// exactly at <see cref="_segmentPosition"/> - stops at the first byte that isn't a
+        /// valid NameChar (whitespace, '>', '/', or anything else - deliberately not just
+        /// whitespace, since "&lt;Foo&gt;"/"&lt;Foo/&gt;" have no space before their delimiter
+        /// and still need a name read).
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadSingleSegmentName()
+        {
+            if (_segmentPosition >= _segment.Length || !EBNF.IsNameStartingCharacter(_segment[_segmentPosition]))
+            {
+                return false;
+            }
+
+            int nameLength = 1;
+            while (_segmentPosition + nameLength < _segment.Length && EBNF.IsNameCharacter(_segment[_segmentPosition + nameLength]))
+            {
+                nameLength++;
+            }
+
+            Value = _segment.Slice(_segmentPosition, nameLength);
+            _segmentPosition += nameLength;
+
+            return true;
         }
     }
 }

@@ -21,8 +21,13 @@ namespace Forestry.Deserialize.Xml.Reading
 
         internal readonly TokenType _previousTokenType;
 
-        internal readonly ulong[] _elementName;
-        
+        /// <summary>
+        /// Packed names of every currently-open element, innermost last - the sole record of
+        /// what's open. There's no separate single-slot fast path for a leaf: the stack's own
+        /// non-allocating pool (depth <= <see cref="ElementNameStack.NonAllocatingMaxDepth"/>)
+        /// already makes pushing/popping every element, leaf or not, cheap enough that a second
+        /// storage location just to avoid touching it wasn't buying anything.
+        /// </summary>
         internal readonly ElementNameStack _elementNameStack;
         #endregion
 
@@ -38,11 +43,15 @@ namespace Forestry.Deserialize.Xml.Reading
             _documentNonTerminal = default;
             _currentTokenType = default;
             _previousTokenType = default;
-            _elementName = new ulong[4];
             _elementNameStack = default;
 
             _readerOptions = readerOptions;
         }
+
+        /// <summary>
+        /// Explicit bare-constructor with a default <see cref="ReaderOptions"/>
+        /// </summary>
+        public ReaderState() : this(default) {}
 
         internal ReaderState(
             long lineNumber,
@@ -50,7 +59,6 @@ namespace Forestry.Deserialize.Xml.Reading
             EBNF.Document documentNonTerminal,
             TokenType currentTokenType,
             TokenType previousTokenType,
-            ulong[] elementName,
             ElementNameStack elementNameStack,
             ReaderOptions readerOptions
         )
@@ -61,7 +69,6 @@ namespace Forestry.Deserialize.Xml.Reading
             _documentNonTerminal = documentNonTerminal;
             _currentTokenType = currentTokenType;
             _previousTokenType = previousTokenType;
-            _elementName = elementName;
             _elementNameStack = elementNameStack;
 
             _readerOptions = readerOptions;

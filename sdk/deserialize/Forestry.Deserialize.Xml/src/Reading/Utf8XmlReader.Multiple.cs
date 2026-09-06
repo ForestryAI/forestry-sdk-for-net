@@ -72,11 +72,13 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// Reads only non-empty segments into the internal segment and reseting 
-        /// the segment position
+        /// Access the next non-empty segment of the underlying byte sequence, replacing
+        /// <see cref="_segment"/> and resetting <see cref="_segmentPosition"/> - raw buffer
+        /// plumbing, not a grammar-level operation, so it sits outside the Read/Skip/Peek
+        /// vocabulary (see <see cref="IsSegmentFetchable"/>).
         /// </summary>
         /// <returns></returns>
-        private bool ReadNextSegment()
+        private bool FetchNextSegment()
         {
             ReadOnlyMemory<byte> memory;
 
@@ -128,6 +130,19 @@ namespace Forestry.Deserialize.Xml.Reading
             ReadOnlySpan<byte> endingTermianl,
             TokenType tokenType
         )
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Read a Name across multiple segments - not yet built (#24: a Name split across a
+        /// segment boundary needs the same kind of stitching/rollback
+        /// <see cref="ReadMultipleSegmentOpaqueValue"/> still owes, not a naive retry). Returning
+        /// <see langword="false"/> here is indistinguishable from a genuinely malformed Name to
+        /// the caller today - accepted POC debt, same shape as the opaque-value gap above.
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadMultipleSegmentName()
         {
             return false;
         }

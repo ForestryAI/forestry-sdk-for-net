@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace Forestry.Deserialize.Xml.Reading
@@ -62,24 +61,74 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// Pop the most recently pushed name. Returns a view into the pool slot, not a copy -
-        /// the caller only ever needs to compare it against a freshly packed closing-tag name,
-        /// never keep it around past that one comparison.
+        /// Try pop the most recently pushed name, matching it against <paramref name="name"/> -
+        /// the Element Type Match WFC (an ending tag's name must match its starting tag's).
+        /// Peeks before mutating anything: packs <paramref name="name"/> and compares it against
+        /// the tail slot first, only decrementing <see cref="Depth"/> on an actual match - same
+        /// "peek, don't mutate on failure" contract as <see cref="Utf8Reader.TryMatch"/>/
+        /// <see cref="Utf8Reader.TrySkip"/>. Returns <see langword="false"/>, never throws, for
+        /// either failure case: nothing to pop, or a name that doesn't match - the caller decides
+        /// what a mismatch means (a thrown malformed-document error), not this method.
         /// </summary>
+        /// <param name="name"></param>
         /// <returns></returns>
-        [UnscopedRef]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReadOnlySpan<ulong> Pop()
+        public bool TryPop(ReadOnlySpan<byte> name)
         {
-            _depth--;
-
-            if (_depth < NonAllocatingMaxDepth)
+            if (_depth == 0)
             {
-                Span<ulong> pool = _nonAllocatingArray;
-                return pool.Slice(_depth * PackedNameLength, PackedNameLength);
+                return false;
             }
 
-            return PopAllocating();
+            int tailIndex = _depth - 1;
+
+            Span<ulong> packedName = stackalloc ulong[PackedNameLength];
+            name.Pack(packedName);
+
+            ReadOnlySpan<ulong> tail = tailIndex < NonAllocatingMaxDepth
+                ? ((Span<ulong>)_nonAllocatingArray).Slice(tailIndex * PackedNameLength, PackedNameLength)
+                : PeekAllocating();
+
+            if (!tail.SequenceEqual(packedName))
+            {
+                return false;
+            }
+
+            _depth = tailIndex;
+            return true;
+        }
+
+        /// <summary>
+        /// Pop the most recently pushed name unconditionally - no comparison, unlike
+        /// <see cref="TryPop"/>. For a case where the caller already knows something is open and
+        /// is closing exactly that (e.g. an empty element's own '/&gt;' immediately after its
+        /// name was pushed) - there's nothing to validate, so nothing to fail gracefully on.
+        /// Calling this with nothing open is a caller bug, not a document condition, so unlike
+        /// every other method on this type it throws rather than returning something misleading -
+        /// this method comes with that responsibility. Unpacks the popped name back into raw
+        /// bytes (see <see cref="Extensions.Unpack"/>) into caller-owned <paramref name="destination"/>
+        /// (needs room for <see cref="PackedNameLength"/> * 8 bytes) and returns its real,
+        /// trimmed length - a plain value copy into storage the caller already owns, rather than
+        /// returning a span into this stack's own storage, which a caller elsewhere (e.g.
+        /// <c>Utf8XmlReader.Value</c>) couldn't safely hold onto past the call.
+        /// </summary>
+        /// <param name="destination"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int Pop(Span<byte> destination)
+        {
+            if (_depth == 0)
+            {
+                throw new InvalidOperationException(); // TODO: formatting - caller responsibility violated
+            }
+
+            _depth--;
+
+            ReadOnlySpan<ulong> tail = _depth < NonAllocatingMaxDepth
+                ? ((Span<ulong>)_nonAllocatingArray).Slice(_depth * PackedNameLength, PackedNameLength)
+                : PeekAllocating();
+
+            return tail.Unpack(destination);
         }
 
         /// <summary>
@@ -94,10 +143,12 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// Fallback for depth beyond <see cref="NonAllocatingMaxDepth"/> - not yet built.
+        /// Fallback for depth beyond <see cref="NonAllocatingMaxDepth"/> - not yet built. Peeks
+        /// (does not remove) the tail slot, matching <see cref="TryPop"/>'s own peek-before-mutate
+        /// contract for the non-allocating path.
         /// </summary>
         /// <returns></returns>
-        private readonly ReadOnlySpan<ulong> PopAllocating()
+        private readonly ReadOnlySpan<ulong> PeekAllocating()
         {
             throw new NotImplementedException();
         }
