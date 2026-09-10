@@ -175,21 +175,19 @@ namespace Forestry.Deserialize.Xml.Reading
         );
         #endregion
 
-        #region token
-        /// <summary>
-        /// Current token type
-        /// </summary>
-        public readonly TokenType TokenType => _currentTokenType;
+        #region public properties
 
         /// <summary>
-        /// Current token index excluding the value
+        /// Position in the buffer.  Advancement sets the position after the value of 
+        /// the current token including any drift e.g. from spacing.  Rollback resets 
+        /// the position to the value of the previous token including any drift.
         /// </summary>
-        public long TokenIndex { get; private set; }
+        public readonly long Position => default;  // TODO: total bytes read together with bytes after Read calls
 
         /// <summary>
-        /// Current token depth
+        /// Depth in the element stack either affected by advancement or rollback.
         /// </summary>
-        public readonly int TokenDepth
+        public readonly int Depth
         {
             get
             {
@@ -205,23 +203,7 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// Value could not fit inside a single byte span <see cref="Value"/> instead inside a 
-        /// byte sequence <see cref="ValueSequence"/>
-        /// </summary>
-        public bool HasValueSequence { get; private set; }
-
-        /// <summary>
-        /// Value with sequencing
-        /// </summary>
-        public ReadOnlySequence<byte> ValueSequence { get; private set; }
-
-        /// <summary>
-        /// Value without sequencing
-        /// </summary>
-        public ReadOnlySpan<byte> Value { get; private set; }
-
-        /// <summary>
-        /// Reader state
+        /// Reader state used to resume reading with a new reader
         /// </summary>
         public readonly ReaderState ReaderState => new(
             lineNumber: _lineNumber,
@@ -232,6 +214,32 @@ namespace Forestry.Deserialize.Xml.Reading
             elementNameStack: _elementNameStack,
             readerOptions: _readerOptions
         );
+
+        /// <summary>
+        /// Current token type.  Rollback reverts to the previous token type.
+        /// </summary>
+        public readonly TokenType TokenType => _currentTokenType;
+
+        /// <summary>
+        /// Position at the start of the current token in the buffer.
+        /// </remarks>
+        public long TokenPosition { get; private set; }
+
+        /// <summary>
+        /// Value could not fit inside a single byte span <see cref="Value"/> instead inside a 
+        /// byte sequence <see cref="ValueSequence"/>
+        /// </summary>
+        public bool HasValueSequence { get; private set; }
+
+        /// <summary>
+        /// Value with sequencing including all EBNF terminals
+        /// </summary>
+        public ReadOnlySequence<byte> ValueSequence { get; private set; }
+
+        /// <summary>
+        /// Value without sequencing including all EBNF terminals
+        /// </summary>
+        public ReadOnlySpan<byte> Value { get; private set; }
         #endregion
 
 
@@ -317,9 +325,9 @@ namespace Forestry.Deserialize.Xml.Reading
 
         #region read 
         /// <summary>
-        /// Read token returning false when unable and throwing 
-        /// on any invalid operations
+        /// Advancement to the next token i.e. EBNF non-terminal and the value including all terminals
         /// </summary>
+        /// <remarks>value properties are defaulted making them unreliable after rollback</remarks>
         /// <returns></returns>
         public bool Read()
         {
@@ -347,13 +355,23 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
+        /// Skips all prolog, miscellaneous, End Element and Value tokens blindly except for:
+        ///  - Element tokens where all child tokens i.e. elements and attributes are ignored
+        ///  - Attribute tokens ignore the next Value token
+        /// </summary>
+        public void Skip()
+        {
+            // TODO: Reads based on the current token
+        }
+
+        /// <summary>
         /// Read document non-terminals in order:
         ///   document ::= prolog element miscellaneous
         /// </summary>
         /// <returns></returns>
         internal bool ReadDocument()
         {
-            TokenIndex = _segmentPosition;
+            TokenPosition = _segmentPosition;
             EBNF.Document previousNonTerminal;
             int previousSegmentPosition;
 
@@ -365,9 +383,9 @@ namespace Forestry.Deserialize.Xml.Reading
 
                 readable = _documentNonTerminal switch
                 {
-                    EBNF.Document.None or EBNF.Document.Prolog => ReadProlog(),
-                    EBNF.Document.Element => ReadMarkup(),
-                    EBNF.Document.Miscellaneous => ReadMiscellaneous(),
+                    EBNF.Document.None or EBNF.Document.Prolog => ReadPrologNonTerminal(),
+                    EBNF.Document.Element => ReadElementNonTerminal(),
+                    EBNF.Document.Miscellaneous => ReadMiscellaneousNonTerminal(),
                     _ => false
                 };
                 // Spacing advances _segmentPosition without producing a token or changing
@@ -382,116 +400,139 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// Read prolog non-terminals in order:
+        /// Read in order non-terminals defining the prolog non-terminal:
         ///   prolog ::= declaration? miscellaneous* (document-type miscellaneous*)?
+        /// 
+        /// Peek if next non-terminal is an element when reading is false setting 
+        /// the document non-terminal too element
         /// </summary>
         /// <remarks>
-        /// no assert against multiple document-type non-terminals.
-        ///
-        /// The declaration's starting terminal is matched as "&lt;?xml " (6 bytes, including the
-        /// trailing space) rather than the bare 5-byte "&lt;?xml" - a real, legal processing
-        /// instruction target only has to *start with* "xml" (e.g. "xml-stylesheet"; only the
-        /// exact target "xml", case-insensitive, is reserved), so a bare prefix match would
-        /// misread such a PI as a declaration. This is an approximation, not a full implementation
-        /// of the EBNF's actual boundary: XML's <c>S</c> production also allows tab/CR/LF, not
-        /// just a literal space, so "&lt;?xml" followed by a tab would wrongly fail to match even
-        /// though it is technically legal XML. Accepted for the POC since real StanForD data only
-        /// ever uses a plain space there.
         /// </remarks>
         /// <returns></returns>
-        internal bool ReadProlog()
+        internal bool ReadPrologNonTerminal()
+        {
+            bool readable;
+
+            readable = ReadDeclaration() || ReadMiscellaneousNonTerminal() || (_currentTokenType != TokenType.DocumentType && ReadOpaqueValue("<!DOCTYPE"u8, ">"u8, TokenType.DocumentType));
+
+            if (readable && _documentNonTerminal == EBNF.Document.None)
+            {
+                _documentNonTerminal = EBNF.Document.Prolog;
+            }
+
+            if (!readable && PeekElementStartingTag())
+            {
+                _documentNonTerminal = EBNF.Document.Element;
+            }
+
+            return readable;
+        }
+
+        /// <summary>
+        /// XML declarations must start at the beginning of an XML document. This method asserts only
+        /// against the declaration's starting and ending terminals ("&lt;?xml " and "?&gt;") - the
+        /// real <c>XMLDecl</c> production's non-terminals in between (<c>VersionInfo</c>,
+        /// <c>EncodingDecl</c>, <c>SDDecl</c>) move the segment position along as part of finding the
+        /// ending terminal, but are skipped rather than separately read into their own token or value.
+        /// A successful match sets the token type to <see cref="TokenType.Declaration"/> and the value
+        /// to that whole opaque span; a failed match leaves both untouched.
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadDeclaration()
         {
             bool readable = false;
 
             if (_documentNonTerminal == EBNF.Document.None)
             {
-                _documentNonTerminal = EBNF.Document.Prolog;
-                readable = ReadOpaqueValue("<?xml "u8, "?>"u8,  TokenType.Declaration);
-
-                if (readable) {
-                    goto ReadCompleted;
-                }
+                readable = ReadOpaqueValue(EBNF.StartDeclarationTerminal, EBNF.StopDeclarationTerminal, TokenType.Declaration);
             }
 
-            if (PeekElementStartingTag())
-            {
-                _documentNonTerminal = EBNF.Document.Element;
-                goto ReadCompleted;
-            }
-
-            readable = ReadMiscellaneous() || (_currentTokenType != TokenType.DocumentType && ReadOpaqueValue("<!DOCTYPE"u8, ">"u8, TokenType.DocumentType));
-
-            ReadCompleted:
-                return readable;
+            return readable;
         }
 
         /// <summary>
-        /// Read markup - starting/ending elements, attributes, and the values that belong to
-        /// either an attribute or an element's simple content.
-        ///
-        /// A starting ('&lt;Name') or ending ('&lt;/Name') tag can legally appear regardless of
-        /// what token was just read, so both are tried first, unconditionally, after draining
-        /// any spacing. Once neither matches, what's legal next depends entirely on
-        /// <see cref="TokenType"/> - an <see cref="TokenType.Element"/> and an
-        /// <see cref="TokenType.Attribute"/> each allow completely different follow-on
-        /// constructs - so dispatch shifts to <see cref="ReadElement"/>/<see cref="ReadAttribute"/>,
-        /// each owning its own "given this token, what can come next" cases.
+        /// Read element non-terminal:
+        ///   element ::= Empty Element | Start Content End
+        /// 
+        /// where Start Content End is an element with content that can also
+        /// be empty
+        /// <returns></returns>
+        internal bool ReadElementNonTerminal()
+        {
+            SkipSpacing();
+
+            return ReadEmptyElementNonTerminal() || ReadContentElementNonTerminal();
+        }
+
+        internal bool ReadEmptyElementNonTerminal()
+        {
+            return false;
+        }
+
+        internal bool ReadContentElementNonTerminal()
+        {
+            return false;
+        }
+
+        internal bool ReadStartNonTerminal()
+        {
+            if (Utf8Reader.TryMatch(_segment[_segmentPosition..], EBNF.StopTerminal, out int lastMatchReadBytes))
+            {
+                if (Utf8Reader.TryMatch(_segment[_segmentPosition..], EBNF.StartTerminal, out int firstMatchReadBytes)) {
+                    ReadMiscellaneousNonTerminal();
+                    // TODO: Complex content
+                } else
+                {
+                    // TODO: Simple content
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Read end non-terminal:
+        ///   end ::= '</' Name Spacing? '>'
         /// </summary>
         /// <returns></returns>
-        internal bool ReadMarkup()
+        /// <exception cref="InvalidOperationException"></exception>
+        internal bool ReadEndingNonTerminal()
         {
-            bool readable = false;
-            do
+            if (Utf8Reader.TryMatch(_segment[_segmentPosition..], EBNF.EndTerminal, out int endTerminalBytes))
             {
+                _segmentPosition += endTerminalBytes; // advance past '</'
+
+                if (!ReadName())
+                {
+                    // document malformed when '</' without expected Name non-terminal
+                    throw new InvalidOperationException(); // TODO: formatting
+                }
+
+                if (!_elementNameStack.TryPop(Value))
+                {
+                    // document malformed when read name non-terminal does not equal the name of the current element
+                    throw new InvalidOperationException(); // TODO: formatting
+                }
+
                 SkipSpacing();
 
-                if (Utf8Reader.TryMatch(_segment[_segmentPosition..], EBNF.EndingElementTerminal, out int endMatchReadBytes))
+                if (Utf8Reader.TryMatch(_segment[_segmentPosition..], EBNF.StopTerminal, out int stopTerminalBytes))
                 {
-                    _segmentPosition += endMatchReadBytes; // consume '</' - ReadName scans from here
-
-                    if (!ReadName())
-                    {
-                        // '</' matched but no valid Name followed it - not recoverable, the
-                        // document is malformed.
-                        throw new InvalidOperationException(); // TODO: formatting
-                    }
-
-                    if (!_elementNameStack.TryPop(Value))
-                    {
-                        // Element Type Match WFC: the ending tag's name doesn't match whatever
-                        // is actually open right now.
-                        throw new InvalidOperationException(); // TODO: formatting
-                    }
-
-                    _previousTokenType = _currentTokenType;
-                    _currentTokenType = TokenType.ElementEnd;
-
-                    readable = true;
-                }
-                else if (Utf8Reader.TryMatch(_segment[_segmentPosition..], EBNF.StartingElementTerminal, out int matchReadBytes))
-                {
-                    _segmentPosition += matchReadBytes; // consume '<' - ReadElementName scans from here
-
-                    readable = ReadElementName();
-                    if (!readable)
-                    {
-                        // '<' matched but no valid Name followed it - not recoverable, the
-                        // document is malformed.
-                        throw new InvalidOperationException(); // TODO: formatting
-                    }
+                    _segmentPosition += stopTerminalBytes; // advance past '>'
                 }
                 else
                 {
-                    readable = _currentTokenType switch
-                    {
-                        TokenType.Element => ReadElement(),
-                        TokenType.Attribute => ReadAttribute(),
-                        _ => false
-                    };
+                    // document malformed when '</' Name without expected '>' stop terminal
+                    throw new InvalidOperationException(); // TODO: formatting
                 }
-            } while (!readable && PeekElementStartingTag());
 
-            return readable;
+                _previousTokenType = _currentTokenType;
+                _currentTokenType = TokenType.ElementEnd;
+
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -504,7 +545,7 @@ namespace Forestry.Deserialize.Xml.Reading
         {
             SkipSpacing();
 
-            if (Utf8Reader.TryMatch(_segment[_segmentPosition..], EBNF.EmptyElementTerminal, out int emptyMatchReadBytes))
+            if (Utf8Reader.TryMatch(_segment[_segmentPosition..], EBNF.EmptyTerminal, out int emptyMatchReadBytes))
             {
                 _segmentPosition += emptyMatchReadBytes;
 
@@ -518,6 +559,15 @@ namespace Forestry.Deserialize.Xml.Reading
                 _currentTokenType = TokenType.ElementEnd;
 
                 return true;
+            } else if (Utf8Reader.TryMatch(_segment[_segmentPosition..], EBNF.StopTerminal, out int lastMatchReadBytes))
+            {
+                if (Utf8Reader.TryMatch(_segment[_segmentPosition..], EBNF.StartTerminal, out int firstMatchReadBytes)) {
+                    ReadMiscellaneousNonTerminal();
+                    // TODO: Complex content
+                } else
+                {
+                    // TODO: Simple content
+                }
             }
 
             // TODO: Peek spacing with following name character then skip spacing, read name to value and set token == Attribute
@@ -546,7 +596,7 @@ namespace Forestry.Deserialize.Xml.Reading
         /// and processing instruction, which are opaque values, are tried.
         /// </summary>
         /// <returns></returns>
-        internal bool ReadMiscellaneous()
+        internal bool ReadMiscellaneousNonTerminal()
         {
             SkipSpacing();
 
@@ -618,7 +668,7 @@ namespace Forestry.Deserialize.Xml.Reading
 
         /// <summary>
         /// Read a starting element tag's Name - the caller has already matched and consumed the
-        /// '<' itself (<see cref="ReadMarkup"/>), so <see cref="_segmentPosition"/> already sits
+        /// '<' itself (<see cref="ReadElementNonTerminal"/>), so <see cref="_segmentPosition"/> already sits
         /// on the Name's first byte. Delegates the actual character scan to <see cref="ReadName"/>,
         /// which is deliberately unaware of elements at all - the exact same scan will serve
         /// attribute names later (#25), the only difference being which <see cref="TokenType"/>
@@ -684,7 +734,7 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <returns></returns>
         private bool PeekElementStartingTag()
         {
-            if (_segmentPosition >= _segment.Length || _segment[_segmentPosition] != (byte)'<')
+            if (_segmentPosition >= _segment.Length || _segment[_segmentPosition] != EBNF.StartTerminal[0])
             {
                 return false;
             }

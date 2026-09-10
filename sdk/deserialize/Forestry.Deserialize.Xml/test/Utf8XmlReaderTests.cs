@@ -239,7 +239,7 @@ namespace Forestry.Deserialize.Xml.Tests
             reader.Read();
 
             // Assert - "Root" is 4 bytes, "<" is 1, so position 5 sits right on the '/'.
-            Assert.Equal(5, reader.TokenIndex + reader.Value.Length + 1);
+            Assert.Equal(5, reader.TokenPosition + reader.Value.Length + 1);
         }
 
         [Fact]
@@ -265,7 +265,7 @@ namespace Forestry.Deserialize.Xml.Tests
             bool threw = false;
             try
             {
-                reader.ReadMarkup();
+                reader.ReadElementNonTerminal();
             }
             catch (InvalidOperationException)
             {
@@ -295,7 +295,7 @@ namespace Forestry.Deserialize.Xml.Tests
             Utf8XmlReader reader = new("</Root>"u8, isFinalSegment: true, ElementPhase(stack));
 
             // Act
-            bool readable = reader.ReadMarkup();
+            bool readable = reader.ReadElementNonTerminal();
 
             // Assert
             Assert.True(readable);
@@ -315,7 +315,49 @@ namespace Forestry.Deserialize.Xml.Tests
             bool threw = false;
             try
             {
-                reader.ReadMarkup();
+                reader.ReadElementNonTerminal();
+            }
+            catch (InvalidOperationException)
+            {
+                threw = true;
+            }
+
+            Assert.True(threw);
+        }
+
+        [Fact]
+        public void ReadEndingTerminal_ForOptionalSpacingBeforeTheStopTerminal_ItShould_ReturnTrue()
+        {
+            // Arrange - end ::= '</' Name Spacing? '>' - the Spacing? between Name and '>' is
+            // legal and must be drained before the stop terminal is found.
+            ElementNameStack stack = default;
+            stack.Push(Encoding.UTF8.GetBytes("Root"));
+            Utf8XmlReader reader = new("</Root  >"u8, isFinalSegment: true, ElementPhase(stack));
+
+            // Act
+            bool readable = reader.ReadElementNonTerminal();
+
+            // Assert
+            Assert.True(readable);
+            Assert.Equal(TokenType.ElementEnd, reader.TokenType);
+            Assert.Equal(0, reader.ReaderState._elementNameStack.Depth);
+        }
+
+        [Fact]
+        public void ReadEndingTerminal_ForAMissingStopTerminal_ItShould_Throw()
+        {
+            // Arrange - '</Root' with no closing '>' at all - malformed, not "not readable yet".
+            // reader is a ref struct, so it can't be captured by Assert.Throws' lambda; a plain
+            // try/catch is the only option here.
+            ElementNameStack stack = default;
+            stack.Push(Encoding.UTF8.GetBytes("Root"));
+            Utf8XmlReader reader = new("</Root"u8, isFinalSegment: true, ElementPhase(stack));
+
+            // Act & Assert
+            bool threw = false;
+            try
+            {
+                reader.ReadElementNonTerminal();
             }
             catch (InvalidOperationException)
             {
@@ -336,7 +378,7 @@ namespace Forestry.Deserialize.Xml.Tests
             Utf8XmlReader reader = new("</Log>"u8, isFinalSegment: true, ElementPhase(stack));
 
             // Act
-            bool readable = reader.ReadMarkup();
+            bool readable = reader.ReadElementNonTerminal();
 
             // Assert
             Assert.True(readable);

@@ -32,12 +32,18 @@ namespace Forestry.Deserialize.Xml {
         public const byte Period = (byte)'.';
         #endregion
 
-        #region terminal
-        public static ReadOnlySpan<byte> StartingElementTerminal => "<"u8;
+        #region Terminals
+        public static ReadOnlySpan<byte> StartTerminal => "<"u8;
 
-        public static ReadOnlySpan<byte> EndingElementTerminal => "</"u8;
+        public static ReadOnlySpan<byte> StopTerminal => ">"u8;  // TODO: why the Stop prefix was choosen
 
-        public static ReadOnlySpan<byte> EmptyElementTerminal => "/>"u8;
+        public static ReadOnlySpan<byte> StartDeclarationTerminal => "<?xml "u8;
+
+        public static ReadOnlySpan<byte> StopDeclarationTerminal => "?>"u8;
+
+        public static ReadOnlySpan<byte> EndTerminal => "</"u8;
+
+        public static ReadOnlySpan<byte> EmptyTerminal => "/>"u8;
         #endregion
 
         #region BOM

@@ -405,6 +405,18 @@ open question of what a miss should really mean). `GetPropertyName` pulls the ra
   right visibility. Real verification has to wait for real token-reading logic, or a deliberate
   visibility change if earlier, isolated testing of the segment-reading layer alone is wanted before
   that lands.
+- **No public `Skip()` (a la `Utf8JsonReader.Skip()`) or `ReaderOptions` to auto-skip
+  prolog/miscellaneous content (a la `XmlReaderSettings.IgnoreComments`/
+  `IgnoreProcessingInstructions`/`IgnoreWhitespace`) - deliberately deferred, beyond POC scope for
+  now.** The intended shape, if/when it's built: `Skip()` on `TokenType.Element` walks the whole
+  subtree (attributes, nested children, content) to the matching `ElementEnd`; on
+  `TokenType.Attribute` it mirrors `Utf8JsonReader.Skip()`'s `PropertyName` handling - advance to
+  read the value, then stop, since an attribute value can never itself contain markup to recurse
+  into; on anything else, a no-op. Like `Utf8JsonReader.Skip()` throwing when `IsFinalBlock` is
+  false, this can't safely walk a subtree it doesn't already know the true end of - meaning it's
+  blocked on real multi-segment support landing first, not just on being written. Priority for now
+  is getting single-segment reading of the full grammar shape correct, then segment support, then
+  expanding the typed value getters (`Utf8XmlReader.Get.cs`) - in that order.
 
 ## 6. Stability & Volatility Map
 
