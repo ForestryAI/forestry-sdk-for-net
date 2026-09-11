@@ -21,7 +21,7 @@ class of bug piecemeal.
 
 ## Phase 1 — Prolog (`ReadPrologNonTerminal`, `ReadDeclaration`)
 
-GitHub issue: #___
+GitHub issue: #20 ("Prolog read, skip, value")
 
 - Confirm the `None`→`Prolog` transition (just fixed, keyed on `readable` generally in
   `ReadPrologNonTerminal`, not declaration-specifically) is correct for all three entry paths -
