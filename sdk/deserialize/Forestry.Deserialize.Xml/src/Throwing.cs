@@ -15,8 +15,8 @@ namespace Forestry.Deserialize.Xml
         public static void ThrowXmlException(
             ref Utf8XmlReader reader, 
             ExceptionType resource, 
-            byte nextByte, 
-            ReadOnlySpan<byte> bytes
+            byte nextByte = default, 
+            ReadOnlySpan<byte> bytes = default
         )
         {
             throw GetXmlException(ref reader, resource, nextByte, bytes);
@@ -77,6 +77,9 @@ namespace Forestry.Deserialize.Xml
             string message = "";
             switch (resource)
             {
+                case ExceptionType.WhenDocumentHasNoTokens:
+                    message = Formatting.WhenDocumentHasNoTokens;
+                    break;
                 case ExceptionType.WhenNoNameAfterElementStartTerminal:
                     message = Deserialize.Formatting.Format(Formatting.WhenNoNameAfterElementStartTerminal, character);
                     break;
@@ -115,10 +118,11 @@ namespace Forestry.Deserialize.Xml
 
         #region read exception type
         /// <summary>
-        /// Internal exception types
+        /// XML exception or invalid operation exception types
         /// </summary>
         internal enum ExceptionType
         {
+            WhenDocumentHasNoTokens,
             WhenNoNameAfterElementStartTerminal
         }
         #endregion

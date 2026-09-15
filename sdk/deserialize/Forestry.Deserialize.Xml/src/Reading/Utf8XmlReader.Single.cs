@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Runtime.CompilerServices;
 
 namespace Forestry.Deserialize.Xml.Reading
 {
@@ -18,5 +19,45 @@ namespace Forestry.Deserialize.Xml.Reading
             bool isReadingCompleted,
             ReaderState readerState
         ) {}
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadSingleSegment()
+        {
+            bool advancement = false;
+
+            Value = default;
+            
+            if (!IsSegmentDrained())
+            {
+                goto Completed;
+            }
+
+            Completed:
+                return advancement;
+        }
+
+        /// <summary>
+        /// Current segment is not drained when the segment position is 
+        /// less than the size of the segment
+        /// </summary>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool IsSegmentDrained()
+        {
+            if (_segmentPosition >= (uint)_segment.Length)
+            {
+                if (IsLastSegment)
+                {
+                    // TODO: Throw when no root element
+                }
+
+                return false;
+            }
+
+            return true;
+        }
     }
 }

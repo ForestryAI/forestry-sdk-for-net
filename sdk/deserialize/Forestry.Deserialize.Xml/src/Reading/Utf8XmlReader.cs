@@ -220,7 +220,13 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <returns></returns>
         public bool Read()
         {
-            return false;
+            bool advancement = _isMultipleSegments ? ReadMultipleSegment() : ReadSingleSegment();
+            if (!advancement && _isReadingCompleted && TokenType is TokenType.None)
+            {
+                Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenDocumentHasNoTokens);
+            }
+
+            return advancement;
         }
 
         /// <summary>

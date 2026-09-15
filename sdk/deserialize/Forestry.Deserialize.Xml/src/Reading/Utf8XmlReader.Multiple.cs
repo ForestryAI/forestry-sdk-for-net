@@ -20,5 +20,10 @@ namespace Forestry.Deserialize.Xml.Reading
             ReaderState readerState
         ): this(segments.FirstSpan, isReadingCompleted, readerState)
         {}
+
+        internal bool ReadMultipleSegment()
+        {
+            return false;
+        }
     }
 }
