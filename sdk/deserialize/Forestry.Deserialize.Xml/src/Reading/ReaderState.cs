@@ -8,14 +8,9 @@ namespace Forestry.Deserialize.Xml.Reading
     /// </summary>
     public readonly struct ReaderState: IReaderState<ReaderState>
     {
-        #region debug
         internal readonly long _lineNumber;
 
         internal readonly long _linePosition;
-        #endregion
-
-        #region assertions
-        internal readonly EBNF.Document _documentNonTerminal;
         
         internal readonly TokenType _currentTokenType;
 
@@ -29,18 +24,14 @@ namespace Forestry.Deserialize.Xml.Reading
         /// storage location just to avoid touching it wasn't buying anything.
         /// </summary>
         internal readonly ElementNameStack _elementNameStack;
-        #endregion
-
-        #region options
+        
         internal readonly ReaderOptions _readerOptions;
-        #endregion
 
         public ReaderState(ReaderOptions readerOptions = default)
         {
             _lineNumber = default;
             _linePosition = default;
 
-            _documentNonTerminal = default;
             _currentTokenType = default;
             _previousTokenType = default;
             _elementNameStack = default;
@@ -56,7 +47,6 @@ namespace Forestry.Deserialize.Xml.Reading
         internal ReaderState(
             long lineNumber,
             long linePosition,
-            EBNF.Document documentNonTerminal,
             TokenType currentTokenType,
             TokenType previousTokenType,
             ElementNameStack elementNameStack,
@@ -66,7 +56,6 @@ namespace Forestry.Deserialize.Xml.Reading
             _lineNumber = lineNumber;
             _linePosition = linePosition;
 
-            _documentNonTerminal = documentNonTerminal;
             _currentTokenType = currentTokenType;
             _previousTokenType = previousTokenType;
             _elementNameStack = elementNameStack;
