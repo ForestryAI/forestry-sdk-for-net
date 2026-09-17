@@ -49,11 +49,11 @@ namespace Forestry.Deserialize.Xml.Reading
         /// Reader sourcing a byte sequence where the reader completed flag and reader 
         /// state are explicit
         /// </summary>
-        /// <param name="segments"></param>
+        /// <param name="sequence"></param>
         /// <param name="isReadingCompleted"></param>
         /// <param name="readerState"></param>
         public partial Utf8XmlReader(
-            ReadOnlySequence<byte> segments,
+            ReadOnlySequence<byte> sequence,
             bool isReadingCompleted,
             ReaderState readerState
         );
@@ -81,6 +81,16 @@ namespace Forestry.Deserialize.Xml.Reading
         /// to true meaning that reading is completed i.e. no more byte spans or byte sequences
         /// </summary>
         public readonly bool IsReadingCompleted => _isReadingCompleted;
+
+        /// <summary>
+        /// Current == last segment
+        /// </summary>
+        private bool _isLastSegment;
+
+        /// <summary>
+        /// When reading is completed and the current == last byte span in multiple segments or there is only a single segment
+        /// </summary>
+        private readonly bool IsLastReadableSegment => _isReadingCompleted && (!_isMultipleSegments || _isLastSegment);
         #endregion
 
         #region sequence
@@ -95,6 +105,11 @@ namespace Forestry.Deserialize.Xml.Reading
         private readonly ReadOnlySequence<byte> _sequence;
 
         /// <summary>
+        /// Position in the sequence starting at the first segment
+        /// </summary>
+        private int _sequencePosition;
+
+        /// <summary>
         /// Position (index) in segments including the current segment from a the byte sequence 
         /// </summary>
         private SequencePosition _currentSequencePosition;
@@ -103,16 +118,6 @@ namespace Forestry.Deserialize.Xml.Reading
         /// Next position in segments including the current segment from a the byte sequence
         /// </summary>
         private SequencePosition _nextSequencePosition;
-
-        /// <summary>
-        /// Current == last segment
-        /// </summary>
-        private bool _isLastSegment;
-
-        /// <summary>
-        /// When reading is completed and the current == last byte span in multiple segments or the byte span in a single segment
-        /// </summary>
-        private readonly bool IsLastSegment => _isReadingCompleted && (!_isMultipleSegments || _isLastSegment);
         #endregion
 
         #region state
@@ -125,7 +130,7 @@ namespace Forestry.Deserialize.Xml.Reading
             linePosition: _linePosition,
             currentTokenType: _currentTokenType,
             previousTokenType: _previousTokenType,
-            elementNameStack: _elementStack,
+            elementStack: _elementStack,
             readerOptions: _readerOptions
         );
 
@@ -160,17 +165,14 @@ namespace Forestry.Deserialize.Xml.Reading
         public long TokenPosition { get; private set; }
 
         /// <summary>
-        /// Position in the current segment including drift
+        /// Position in the current segment plus when multiple segment the positions of the previous segments
         /// </summary>
-        public readonly long Position => default;  // TODO: total bytes read together with bytes after Read calls
-
+        public readonly long Position => _sequencePosition + _segmentPosition;
 
         /// <summary>
-        /// Packed names of every currently-open element, innermost last - see
-        /// <see cref="ReaderState._elementNameStack"/> for why there's no separate single-slot
-        /// storage for a leaf any more.
+        /// 
         /// </summary>
-        private ElementNameStack _elementStack;
+        private ElementStack _elementStack;
 
         /// <summary>
         /// Depth in the element non-terminal
@@ -179,14 +181,18 @@ namespace Forestry.Deserialize.Xml.Reading
         {
             get
             {
-                int _depth = _elementStack.Depth;
-                if (TokenType is TokenType.Element or TokenType.Attribute)  // TODO: token type == value of an attribute
-                {
-                    Debug.Assert(_depth >= 1);
-                    _depth--;
-                }
+                return _elementStack.Depth;
+            }
+        }
 
-                return _depth;
+        /// <summary>
+        /// Root element exists
+        /// </summary>
+        public readonly bool RootElement
+        {
+            get
+            {
+                return _elementStack.RootElement;
             }
         }
 
@@ -220,13 +226,28 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <returns></returns>
         public bool Read()
         {
-            bool advancement = _isMultipleSegments ? ReadMultipleSegment() : ReadSingleSegment();
-            if (!advancement && _isReadingCompleted && TokenType is TokenType.None)
+            bool advancement = false;
+
+            // Unreliable value
+            Value = default;
+            ValueSequence = default;
+            
+            // Break advancement
+            if (!IsSegmentNotDrained())
             {
-                Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenDocumentHasNoTokens);
+                goto Completed;
             }
 
-            return advancement;
+            // TODO: Content ready
+
+            // TODO: Set starting terminal
+
+            // TODO: Delegate value read
+
+            // TODO: Set token
+
+            Completed:
+                return advancement;
         }
 
         /// <summary>
@@ -244,6 +265,29 @@ namespace Forestry.Deserialize.Xml.Reading
         public bool TrySkip()
         {
             return false;
+        }
+
+        /// <summary>
+        /// Current segment is not drained when the segment position is 
+        /// less than the size of the segment
+        /// </summary>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool IsSegmentNotDrained()
+        {
+            if (_segmentPosition >= (uint)_segment.Length)
+            {
+                if (IsLastReadableSegment)
+                {
+                    // TODO: Throw when no root element
+                }
+
+                return false;
+
+                
+            }
+
+            return true;
         }
     }
 }

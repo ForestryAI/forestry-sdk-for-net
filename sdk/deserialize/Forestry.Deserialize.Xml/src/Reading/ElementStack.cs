@@ -9,7 +9,7 @@ namespace Forestry.Deserialize.Xml.Reading
     /// no allocation per push. Deeper nesting falls back to <see cref="PushAllocating"/> (not yet
     /// built - depth this deep is not expected for real StanForD data).
     /// </summary>
-    internal struct ElementNameStack
+    internal struct ElementStack
     {
         /// <summary>
         /// How many ulongs a single packed name occupies - 32 bytes, per #23's accepted POC
@@ -22,7 +22,7 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <summary>
         /// Fixed number of raw ulong slots living inline in this struct - no separate heap
         /// allocation for the pool itself, safe even for a `default`-initialized
-        /// <see cref="ElementNameStack"/> (unlike a plain array field, which would come back
+        /// <see cref="ElementStack"/> (unlike a plain array field, which would come back
         /// null from default-initialization and only get allocated through an explicit
         /// constructor nothing currently calls).
         /// </summary>
@@ -33,6 +33,10 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         private int _depth;
+
+        private bool _rootElement;
+
+        public readonly bool RootElement => _rootElement;
 
         private NonAllocatingPool _nonAllocatingArray;
 
@@ -47,6 +51,11 @@ namespace Forestry.Deserialize.Xml.Reading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Push(ReadOnlySpan<byte> name)
         {
+            if (_depth == 0 && !_rootElement)
+            {
+                _rootElement = true;
+            }
+
             if (_depth < NonAllocatingMaxDepth)
             {
                 Span<ulong> pool = _nonAllocatingArray;

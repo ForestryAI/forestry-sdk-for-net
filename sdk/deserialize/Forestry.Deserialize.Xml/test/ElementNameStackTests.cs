@@ -5,7 +5,7 @@ using Xunit;
 namespace Forestry.Deserialize.Xml.Tests
 {
     /// <summary>
-    /// <see cref="ElementNameStack"/> - push/try-pop of packed element names for the WFC Element
+    /// <see cref="ElementStack"/> - push/try-pop of packed element names for the WFC Element
     /// Type Match check, backed entirely by inline (non-allocating) storage for the common,
     /// non-deeply-nested case.
     /// </summary>
@@ -15,7 +15,7 @@ namespace Forestry.Deserialize.Xml.Tests
         public void TryPop_ForASingleMatchingName_ItShould_ReturnTrueAndPop()
         {
             // Arrange
-            ElementNameStack stack = default;
+            ElementStack stack = default;
             stack.Push(Encoding.UTF8.GetBytes("Log"));
 
             // Act
@@ -32,7 +32,7 @@ namespace Forestry.Deserialize.Xml.Tests
             // Arrange - Element Type Match WFC violation: the ending tag's name doesn't match
             // the starting tag's. TryPop must not mutate the stack when it can't match - same
             // "peek, don't mutate on failure" contract as TryMatch/TrySkip.
-            ElementNameStack stack = default;
+            ElementStack stack = default;
             stack.Push(Encoding.UTF8.GetBytes("Log"));
 
             // Act
@@ -48,7 +48,7 @@ namespace Forestry.Deserialize.Xml.Tests
         public void TryPop_ForAnEmptyStack_ItShould_ReturnFalse()
         {
             // Arrange
-            ElementNameStack stack = default;
+            ElementStack stack = default;
 
             // Act
             bool popped = stack.TryPop(Encoding.UTF8.GetBytes("Log"));
@@ -61,7 +61,7 @@ namespace Forestry.Deserialize.Xml.Tests
         public void Depth_AfterPushingAndPopping_ItShould_TrackHowManyNamesAreCurrentlyOpen()
         {
             // Arrange
-            ElementNameStack stack = default;
+            ElementStack stack = default;
 
             // Act & Assert
             Assert.Equal(0, stack.Depth);
@@ -83,7 +83,7 @@ namespace Forestry.Deserialize.Xml.Tests
         public void PushThenTryPop_ForMultipleNestedNames_ItShould_PopInLastInFirstOutOrder()
         {
             // Arrange - <HarvestedProduction><Log><LogDiameter> ... nested three deep
-            ElementNameStack stack = default;
+            ElementStack stack = default;
             stack.Push(Encoding.UTF8.GetBytes("HarvestedProduction"));
             stack.Push(Encoding.UTF8.GetBytes("Log"));
             stack.Push(Encoding.UTF8.GetBytes("LogDiameter"));
@@ -100,7 +100,7 @@ namespace Forestry.Deserialize.Xml.Tests
         {
             // Arrange - regression case for the pool slicing itself: depth 0 and depth 1 must
             // land in genuinely separate slots, not overlap.
-            ElementNameStack stack = default;
+            ElementStack stack = default;
 
             // Act
             stack.Push(Encoding.UTF8.GetBytes("HarvestedProduction"));
@@ -117,7 +117,7 @@ namespace Forestry.Deserialize.Xml.Tests
             // Arrange - a name well beyond the 32-byte/4-ulong cap from #23's accepted tradeoff.
             // Two distinct names that only diverge after the cap are expected to be wrongly
             // treated as equal - that's the accepted tradeoff itself, not a bug in this test.
-            ElementNameStack stack = default;
+            ElementStack stack = default;
             string longName = new string('A', 64);
 
             // Act
@@ -131,9 +131,9 @@ namespace Forestry.Deserialize.Xml.Tests
         public void Pop_ForAnOpenElement_ItShould_ReturnTheUnpackedNameAndDecrementDepth()
         {
             // Arrange
-            ElementNameStack stack = default;
+            ElementStack stack = default;
             stack.Push(Encoding.UTF8.GetBytes("Log"));
-            byte[] buffer = new byte[ElementNameStack.PackedNameLength * 8];
+            byte[] buffer = new byte[ElementStack.PackedNameLength * 8];
 
             // Act
             int length = stack.Pop(buffer);
@@ -148,8 +148,8 @@ namespace Forestry.Deserialize.Xml.Tests
         {
             // Arrange - calling Pop with nothing open is a caller bug, not a document
             // condition, so unlike TryPop it throws rather than returning something misleading.
-            ElementNameStack stack = default;
-            byte[] buffer = new byte[ElementNameStack.PackedNameLength * 8];
+            ElementStack stack = default;
+            byte[] buffer = new byte[ElementStack.PackedNameLength * 8];
 
             // Act & Assert
             Assert.Throws<InvalidOperationException>(() => stack.Pop(buffer));

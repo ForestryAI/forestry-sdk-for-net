@@ -18,46 +18,39 @@ namespace Forestry.Deserialize.Xml.Reading
             ReadOnlySpan<byte> segment,
             bool isReadingCompleted,
             ReaderState readerState
-        ) {}
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        internal bool ReadSingleSegment()
+        )
         {
-            bool advancement = false;
+            // segment
+            _segment = segment;
+            _segmentPosition = 0;
+            TokenPosition = 0;
+            _isLastSegment = isReadingCompleted;
+            _isReadingCompleted = isReadingCompleted;
 
-            Value = default;
-            
-            if (!IsSegmentDrained())
+            // sequence
+            _sequence = default;
+            _sequencePosition = 0;
+            _isMultipleSegments = false;
+            _currentSequencePosition = default;
+            _nextSequencePosition = default;
+
+            // state
+            _linePosition = readerState._linePosition;
+            _lineNumber = readerState._lineNumber;
+            _currentTokenType = readerState._currentTokenType;
+            _previousTokenType = readerState._previousTokenType;
+            _elementStack = readerState._elementStack;
+            _readerOptions = readerState._readerOptions;
+
+            if (_readerOptions.MaxDepth <= 0)
             {
-                goto Completed;
+                _readerOptions.MaxDepth = ReaderOptions.DefaultMaxDepth;
             }
 
-            Completed:
-                return advancement;
-        }
-
-        /// <summary>
-        /// Current segment is not drained when the segment position is 
-        /// less than the size of the segment
-        /// </summary>
-        /// <returns></returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool IsSegmentDrained()
-        {
-            if (_segmentPosition >= (uint)_segment.Length)
-            {
-                if (IsLastSegment)
-                {
-                    // TODO: Throw when no root element
-                }
-
-                return false;
-            }
-
-            return true;
+            // value
+            Value = ReadOnlySpan<byte>.Empty;
+            ValueSequence = ReadOnlySequence<byte>.Empty;
+            HasValueSequence = false;
         }
     }
 }

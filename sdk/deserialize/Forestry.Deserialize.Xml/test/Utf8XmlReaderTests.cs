@@ -204,7 +204,7 @@ namespace Forestry.Deserialize.Xml.Tests
             ReaderState state = new();
 
             // Assert
-            Assert.Equal(0, state._elementNameStack.Depth);
+            Assert.Equal(0, state._elementStack.Depth);
         }
 
         [Theory]
@@ -275,7 +275,7 @@ namespace Forestry.Deserialize.Xml.Tests
             Assert.True(threw);
         }
 
-        private static ReaderState ElementPhase(ElementNameStack elementNameStack) => new(
+        private static ReaderState ElementPhase(ElementStack elementNameStack) => new(
             lineNumber: 0,
             linePosition: 0,
             documentNonTerminal: EBNF.Document.Element,
@@ -290,7 +290,7 @@ namespace Forestry.Deserialize.Xml.Tests
         {
             // Arrange - <Root>...</Root>: the stack already has "Root" open (as ReadElementName
             // would have pushed it), and the reader sits at the ending tag.
-            ElementNameStack stack = default;
+            ElementStack stack = default;
             stack.Push(Encoding.UTF8.GetBytes("Root"));
             Utf8XmlReader reader = new("</Root>"u8, isFinalSegment: true, ElementPhase(stack));
 
@@ -300,14 +300,14 @@ namespace Forestry.Deserialize.Xml.Tests
             // Assert
             Assert.True(readable);
             Assert.Equal(TokenType.ElementEnd, reader.TokenType);
-            Assert.Equal(0, reader.ReaderState._elementNameStack.Depth);
+            Assert.Equal(0, reader.ReaderState._elementStack.Depth);
         }
 
         [Fact]
         public void ReadMarkup_ForAMismatchedEndingTag_ItShould_Throw()
         {
             // Arrange - Element Type Match WFC violation: </Wrong> can't close an open "Root".
-            ElementNameStack stack = default;
+            ElementStack stack = default;
             stack.Push(Encoding.UTF8.GetBytes("Root"));
             Utf8XmlReader reader = new("</Wrong>"u8, isFinalSegment: true, ElementPhase(stack));
 
@@ -330,7 +330,7 @@ namespace Forestry.Deserialize.Xml.Tests
         {
             // Arrange - end ::= '</' Name Spacing? '>' - the Spacing? between Name and '>' is
             // legal and must be drained before the stop terminal is found.
-            ElementNameStack stack = default;
+            ElementStack stack = default;
             stack.Push(Encoding.UTF8.GetBytes("Root"));
             Utf8XmlReader reader = new("</Root  >"u8, isFinalSegment: true, ElementPhase(stack));
 
@@ -340,7 +340,7 @@ namespace Forestry.Deserialize.Xml.Tests
             // Assert
             Assert.True(readable);
             Assert.Equal(TokenType.ElementEnd, reader.TokenType);
-            Assert.Equal(0, reader.ReaderState._elementNameStack.Depth);
+            Assert.Equal(0, reader.ReaderState._elementStack.Depth);
         }
 
         [Fact]
@@ -349,7 +349,7 @@ namespace Forestry.Deserialize.Xml.Tests
             // Arrange - '</Root' with no closing '>' at all - malformed, not "not readable yet".
             // reader is a ref struct, so it can't be captured by Assert.Throws' lambda; a plain
             // try/catch is the only option here.
-            ElementNameStack stack = default;
+            ElementStack stack = default;
             stack.Push(Encoding.UTF8.GetBytes("Root"));
             Utf8XmlReader reader = new("</Root"u8, isFinalSegment: true, ElementPhase(stack));
 
@@ -372,7 +372,7 @@ namespace Forestry.Deserialize.Xml.Tests
         {
             // Arrange - <HarvestedProduction><Log>...</Log> - closing "Log" should pop only
             // "Log", leaving "HarvestedProduction" still open underneath it.
-            ElementNameStack stack = default;
+            ElementStack stack = default;
             stack.Push(Encoding.UTF8.GetBytes("HarvestedProduction"));
             stack.Push(Encoding.UTF8.GetBytes("Log"));
             Utf8XmlReader reader = new("</Log>"u8, isFinalSegment: true, ElementPhase(stack));
@@ -383,7 +383,7 @@ namespace Forestry.Deserialize.Xml.Tests
             // Assert
             Assert.True(readable);
             Assert.Equal(TokenType.ElementEnd, reader.TokenType);
-            Assert.Equal(1, reader.ReaderState._elementNameStack.Depth);
+            Assert.Equal(1, reader.ReaderState._elementStack.Depth);
         }
 
         [Fact]
@@ -418,7 +418,7 @@ namespace Forestry.Deserialize.Xml.Tests
         {
             // Arrange - <Root/>'s own closing '/>' , as if reached right after ReadElementName
             // already pushed "Root" and set TokenType.Element.
-            ElementNameStack stack = default;
+            ElementStack stack = default;
             stack.Push(Encoding.UTF8.GetBytes("Root"));
             Utf8XmlReader reader = new("/>"u8, isFinalSegment: true, ElementPhase(stack));
 
@@ -429,7 +429,7 @@ namespace Forestry.Deserialize.Xml.Tests
             Assert.True(readable);
             Assert.Equal(TokenType.ElementEnd, reader.TokenType);
             Assert.True(((ReadOnlySpan<byte>)Encoding.UTF8.GetBytes("Root")).SequenceEqual(reader.Value));
-            Assert.Equal(0, reader.ReaderState._elementNameStack.Depth);
+            Assert.Equal(0, reader.ReaderState._elementStack.Depth);
         }
 
         [Fact]
@@ -448,7 +448,7 @@ namespace Forestry.Deserialize.Xml.Tests
             Assert.True(reader.Read());
             Assert.Equal(TokenType.ElementEnd, reader.TokenType);
             Assert.True(((ReadOnlySpan<byte>)Encoding.UTF8.GetBytes("Root")).SequenceEqual(reader.Value));
-            Assert.Equal(0, reader.ReaderState._elementNameStack.Depth);
+            Assert.Equal(0, reader.ReaderState._elementStack.Depth);
         }
     }
 }
