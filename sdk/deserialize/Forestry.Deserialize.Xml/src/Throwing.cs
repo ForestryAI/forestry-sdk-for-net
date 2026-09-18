@@ -77,6 +77,12 @@ namespace Forestry.Deserialize.Xml
             string message = "";
             switch (resource)
             {
+                case ExceptionType.WhenDocumentHasNoRootElement:
+                    message = Formatting.WhenDocumentHasNoRootElement;
+                    break;
+                case ExceptionType.WhenDocumentHasElementNotEnded:
+                    message = Formatting.WhenDocumentHasElementNotEnded;
+                    break;
                 case ExceptionType.WhenDocumentHasNoTokens:
                     message = Formatting.WhenDocumentHasNoTokens;
                     break;
@@ -122,6 +128,8 @@ namespace Forestry.Deserialize.Xml
         /// </summary>
         internal enum ExceptionType
         {
+            WhenDocumentHasNoRootElement,
+            WhenDocumentHasElementNotEnded,
             WhenDocumentHasNoTokens,
             WhenNoNameAfterElementStartTerminal
         }

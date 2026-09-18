@@ -111,6 +111,27 @@ namespace Forestry.Deserialize.Xml.Reading
             int index = span.IndexOfAnyExcept(s_whiteSpace);
             return index < 0 ? span.Length : index;
         }
+
+        /// <summary>
+        /// Line feed count 
+        /// </summary>
+        /// <param name="span"></param>
+        /// <returns></returns>
+        public static (int, int) LineFeedCount(ReadOnlySpan<byte> span)
+        {
+            int lastLineFeedIndex = span.LastIndexOf(EBNF.LineFeed);
+            int lineFeedCount = 0;
+
+            if (lastLineFeedIndex >= 0)
+            {
+                lineFeedCount = 1;
+
+                span = span[..lastLineFeedIndex];
+                lineFeedCount += span.Count(EBNF.LineFeed);
+            }
+
+            return (lineFeedCount, lastLineFeedIndex);
+        }
         #endregion
     }
 }

@@ -16,13 +16,6 @@ namespace Forestry.Deserialize.Xml.Reading
 
         internal readonly TokenType _previousTokenType;
 
-        /// <summary>
-        /// Packed names of every currently-open element, innermost last - the sole record of
-        /// what's open. There's no separate single-slot fast path for a leaf: the stack's own
-        /// non-allocating pool (depth <= <see cref="ElementStack.NonAllocatingMaxDepth"/>)
-        /// already makes pushing/popping every element, leaf or not, cheap enough that a second
-        /// storage location just to avoid touching it wasn't buying anything.
-        /// </summary>
         internal readonly ElementStack _elementStack;
         
         internal readonly ReaderOptions _readerOptions;
@@ -34,6 +27,7 @@ namespace Forestry.Deserialize.Xml.Reading
 
             _currentTokenType = default;
             _previousTokenType = default;
+
             _elementStack = default;
 
             _readerOptions = readerOptions;
@@ -58,6 +52,7 @@ namespace Forestry.Deserialize.Xml.Reading
 
             _currentTokenType = currentTokenType;
             _previousTokenType = previousTokenType;
+
             _elementStack = elementStack;
 
             _readerOptions = readerOptions;

@@ -232,13 +232,32 @@ namespace Forestry.Deserialize.Xml.Reading
             Value = default;
             ValueSequence = default;
             
-            // Break advancement
-            if (!IsSegmentNotDrained())
+            // Break advancement fast when segment is drained
+            if (_isMultipleSegments ? IsMultipleSegmentDrained() : IsSingleSegmentDrained())
             {
                 goto Completed;
             }
 
+            // Skip miscellaneous spacing
+            byte character = _segment[_segmentPosition];
+            if (character == EBNF.Space)
+            {
+                if (_isMultipleSegments)
+                {
+                    SkipMultipleSpacing();
+                } else
+                {
+                    SkipSingleSpacing();
+                }
+
+                if (_isMultipleSegments ? IsMultipleSegmentDrained() : IsSingleSegmentDrained())
+                {
+                    goto Completed;
+                }
+            }
+
             // TODO: Content ready
+            SkipStartTagEndingTerminal();
 
             // TODO: Set starting terminal
 
@@ -268,26 +287,41 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// Current segment is not drained when the segment position is 
-        /// less than the size of the segment
+        /// Assert state of XML document when reading as completed 
+        /// e.g. document is malformed or reader options are violated
         /// </summary>
         /// <returns></returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool IsSegmentNotDrained()
+        private bool AssertStateWhenLastReadableSegment()
         {
-            if (_segmentPosition >= (uint)_segment.Length)
+            Debug.Assert(IsLastReadableSegment);
+
+            if (!RootElement)
             {
-                if (IsLastReadableSegment)
-                {
-                    // TODO: Throw when no root element
-                }
-
-                return false;
-
-                
+                Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenDocumentHasNoRootElement);
             }
 
+            if (Depth != 0)
+            {
+                Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenDocumentHasElementNotEnded);
+            }
+
+            // TODO: Reader option policies when comments or other accepted prolog + miscellaneous non-terminals
+
             return true;
+        }
+
+        /// <summary>
+        /// Skip the ending terminal of a start tag when not an empty element terminal
+        /// </summary>
+        /// <returns></returns>
+        private void SkipStartTagEndingTerminal()
+        {
+            byte character = _segment[_segmentPosition];
+
+            if (character == EBNF.StartTagEndingTerminal && _elementStack.HasContentNonTerminal)
+            {
+                _segmentPosition += 1;
+            }
         }
     }
 }

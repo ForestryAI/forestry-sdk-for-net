@@ -19,6 +19,8 @@ namespace Forestry.Deserialize.Xml.Reading
 
         internal const int NonAllocatingMaxDepth = 64;
 
+        private NonAllocatingPool _nonAllocatingArray;
+
         /// <summary>
         /// Fixed number of raw ulong slots living inline in this struct - no separate heap
         /// allocation for the pool itself, safe even for a `default`-initialized
@@ -32,15 +34,18 @@ namespace Forestry.Deserialize.Xml.Reading
             private ulong _element;
         }
 
-        private int _depth;
-
         private bool _rootElement;
 
         public readonly bool RootElement => _rootElement;
 
-        private NonAllocatingPool _nonAllocatingArray;
+
+        private int _depth;
 
         public readonly int Depth => _depth;
+
+        private bool _hasContentNonTerminal;
+
+        internal readonly bool HasContentNonTerminal => _hasContentNonTerminal;
 
         /// <summary>
         /// Push a raw element name onto the stack. Packs directly into the pool slot for the
@@ -66,6 +71,7 @@ namespace Forestry.Deserialize.Xml.Reading
                 PushAllocating(name);
             }
 
+            _hasContentNonTerminal = true;
             _depth++;
         }
 
@@ -131,6 +137,7 @@ namespace Forestry.Deserialize.Xml.Reading
                 throw new InvalidOperationException(); // TODO: formatting - caller responsibility violated
             }
 
+            _hasContentNonTerminal = false;
             _depth--;
 
             ReadOnlySpan<ulong> tail = _depth < NonAllocatingMaxDepth
@@ -160,6 +167,11 @@ namespace Forestry.Deserialize.Xml.Reading
         private readonly ReadOnlySpan<ulong> PeekAllocating()
         {
             throw new NotImplementedException();
+        }
+
+        internal void NegateHasContentNonTerminal()
+        {
+            _hasContentNonTerminal = !_hasContentNonTerminal;
         }
     }
 }

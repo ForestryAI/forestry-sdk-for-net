@@ -33,9 +33,9 @@ namespace Forestry.Deserialize.Xml {
         #endregion
 
         #region Terminals
-        public static ReadOnlySpan<byte> StartTerminal => "<"u8;
+        public static ReadOnlySpan<byte> StartTagStartingTerminal => "<"u8;
 
-        public static ReadOnlySpan<byte> StopTerminal => ">"u8;  // TODO: why the Stop prefix was choosen
+        public static byte StartTagEndingTerminal => (byte)'>';
 
         public static ReadOnlySpan<byte> StartDeclarationTerminal => "<?xml "u8;
 

@@ -45,17 +45,17 @@ namespace Forestry.Deserialize.Xml.Reading
                 bool isEmptyFirstSegment = _segment.Length == 0;
                 if (isEmptyFirstSegment)
                 {
-                    SequencePosition nextSequencePosition = _nextSequencePosition;
+                    SequencePosition position = _nextSequencePosition;
                     while (sequence.TryGet(ref _nextSequencePosition, out ReadOnlyMemory<byte> memory, advance: true))
                     {                        
-                        _currentSequencePosition = nextSequencePosition;
+                        _currentSequencePosition = position;
                         if (memory.Length != 0)
                         {
                             _segment = memory.Span;
                             break;
                         }
 
-                        nextSequencePosition = _nextSequencePosition;
+                        position = _nextSequencePosition;
                     }
                 }
 
@@ -79,6 +79,103 @@ namespace Forestry.Deserialize.Xml.Reading
             Value = ReadOnlySpan<byte>.Empty;
             ValueSequence = ReadOnlySequence<byte>.Empty;
             HasValueSequence = false;
+        }
+
+        /// <summary>
+        /// When the segment position exceeds the length of the current 
+        /// oor the next non-empty segment then the segment is drained
+        /// </summary>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool IsMultipleSegmentDrained()
+        {
+            if (_segmentPosition >= (uint)_segment.Length)
+            {
+                if (IsLastReadableSegment)
+                {
+                    if (!AssertStateWhenLastReadableSegment())
+                    {
+                        return true;
+                    }
+                }
+
+                if (!TrySkipEmptySegments())
+                {
+                    if (IsLastReadableSegment)
+                    {
+                        AssertStateWhenLastReadableSegment();
+                    }
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Try skip any empty segments when the sequence can be advanced and 
+        /// setting the current segment to the next non-empty
+        /// </summary>
+        /// <returns></returns>
+        private bool TrySkipEmptySegments()
+        {
+            ReadOnlyMemory<byte> memory;
+
+            while (true)
+            {
+                Debug.Assert(_currentSequencePosition.GetObject() is not null);
+
+                SequencePosition position = _currentSequencePosition;
+                _currentSequencePosition = _nextSequencePosition;
+
+                if (!_sequence.TryGet(ref _nextSequencePosition, out memory, advance: true))
+                {
+                    _currentSequencePosition = position;
+                    _isLastSegment = true;
+
+                    return false;
+                }
+
+                if (memory.Length != 0)
+                {
+                    break;
+                }
+
+                _currentSequencePosition = position;  // advancement is empty revert position back
+            }
+
+            if (_isReadingCompleted)
+            {
+                _isLastSegment = !_sequence.TryGet(ref _nextSequencePosition, out _, advance: false);
+            }
+
+            _segment = memory.Span;
+            _sequencePosition += _segmentPosition;
+            _segmentPosition = 0;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Skip any miscellaneous spacing
+        /// </summary>
+        private void SkipMultipleSpacing()
+        {
+            while (true)
+            {
+                SkipSingleSpacing();
+
+                if (_segmentPosition < _segment.Length)
+                {
+                    break;
+                }
+
+                if (!TrySkipEmptySegments())
+                {
+                    break;
+                }
+            }
         }
     }
 }

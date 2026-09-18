@@ -52,5 +52,55 @@ namespace Forestry.Deserialize.Xml.Reading
             ValueSequence = ReadOnlySequence<byte>.Empty;
             HasValueSequence = false;
         }
+
+        /// <summary>
+        /// When the segment position exceeds the length of the current 
+        /// segment then the segment is drained
+        /// </summary>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private bool IsSingleSegmentDrained()
+        {
+            if (_segmentPosition >= (uint)_segment.Length)
+            {
+                if (IsLastReadableSegment)
+                {
+                    AssertStateWhenLastReadableSegment();
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Skip any miscellaneous spacing
+        /// </summary>
+        private void SkipSingleSpacing()
+        {
+            ReadOnlySpan<byte> segment = _segment;
+            ReadOnlySpan<byte> remaining = segment.Slice(_segmentPosition);
+
+            int indexOfExceptWhiteSpace = remaining.IndexOfExceptWhiteSpace();
+            if (indexOfExceptWhiteSpace > 0)
+            {
+                (int lineFeedCount, int lastLineFeedIndex) = Utf8Reader.LineFeedCount(remaining[..indexOfExceptWhiteSpace]);
+
+                _lineNumber += lineFeedCount;
+                if (lastLineFeedIndex >= 0)
+                {
+                    _linePosition = indexOfExceptWhiteSpace - lastLineFeedIndex - 1;
+                }
+                else
+                {
+                    _linePosition += indexOfExceptWhiteSpace;
+                }
+
+                _segmentPosition += indexOfExceptWhiteSpace;
+            }
+
+            return;            
+        }
     }
 }
