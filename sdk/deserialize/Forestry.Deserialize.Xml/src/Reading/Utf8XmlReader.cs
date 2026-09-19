@@ -220,6 +220,14 @@ namespace Forestry.Deserialize.Xml.Reading
         public ReadOnlySpan<byte> Value { get; private set; }
         #endregion
 
+        #region starting terminals
+        /// <summary>
+        /// Scratch buffer for starting terminals that is transient i.e. rewritten on 
+        /// rollbacks
+        /// </summary>
+        private readonly byte[] _startingTerminals = new byte[9];
+        #endregion
+
         /// <summary>
         /// Read the value of the next token
         /// </summary>
@@ -256,14 +264,11 @@ namespace Forestry.Deserialize.Xml.Reading
                 }
             }
 
-            // TODO: Content ready
+            // Content ready
             SkipStartTagEndingTerminal();
 
-            // TODO: Set starting terminal
-
-            // TODO: Delegate value read
-
-            // TODO: Set token
+            // Read starting terminal, value and set token
+            return ReadValue();
 
             Completed:
                 return advancement;
@@ -322,6 +327,80 @@ namespace Forestry.Deserialize.Xml.Reading
             {
                 _segmentPosition += 1;
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private bool ReadValue()
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// Read starting terminal into a transient scratch pad memory
+        /// </summary>
+        /// <returns></returns>
+        private bool ReadStartingTerminal()
+        {
+            _startingTerminals.AsSpan().Clear();  // transient
+            byte character = _segment[_segmentPosition];
+
+            if (character == EBNF.StartTagStartingTerminal)
+            {
+                // miscellaneous non-terminals i.e. anywhere in markup
+                // TODO: Must have 2 or 3 characters when processing instruction or comment
+
+                if (!_elementStack.RootElement)
+                {
+                    // prolog non-terminals or first start tag i.e. root element non-terminal
+                    if (_currentTokenType == TokenType.None) // TODO: BOM + add declaration starting tag check
+                    {
+                        // TODO: Must have 4 characters == declaration non-terminal starting tag
+                    }
+
+                    // TODO: document type check
+                } else
+                {
+                    // start tag i.e. child element non-terminal when next terminal not '/' otherwise end tag
+                }
+
+                return true;
+            }
+            
+
+            if (_elementStack.Depth != 0 && _elementStack.HasContentNonTerminal && character == EBNF.Equal)
+            {
+                // value non-terminal (attribute)
+                return true;
+            }
+
+            if (_elementStack.Depth != 0 && _elementStack.HasContentNonTerminal && EBNF.IsNameStartingCharacter(character))
+            {
+                // attribute non-terminal
+                return true;
+            }
+
+            if (_elementStack.Depth != 0 && _currentTokenType == TokenType.ElementEnd && _elementStack.HasContentNonTerminal && EBNF.IsCharacterData(character))
+            {
+                // value non-terminal (character data)
+                return true;
+            }
+
+            if (_elementStack.Depth != 0 && _elementStack.HasContentNonTerminal && character == EBNF.Slash)
+            {
+                // value (empty element non-terminal)    
+                return true;
+            }
+
+            if (_elementStack.Depth != 0 && !_elementStack.HasContentNonTerminal && character == EBNF.StartTagEndingTerminal)
+            {
+                // end element (empty element non-terminal)
+                return true;
+            }
+
+            return false;
         }
     }
 }

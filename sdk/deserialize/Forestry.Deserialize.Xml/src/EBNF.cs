@@ -33,7 +33,7 @@ namespace Forestry.Deserialize.Xml {
         #endregion
 
         #region Terminals
-        public static ReadOnlySpan<byte> StartTagStartingTerminal => "<"u8;
+        public static byte StartTagStartingTerminal => (byte)'<';
 
         public static byte StartTagEndingTerminal => (byte)'>';
 
@@ -103,6 +103,13 @@ namespace Forestry.Deserialize.Xml {
             value == Hyphen ||
             value == Period ||
             (value >= (byte)'0' && value <= (byte)'9');
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static bool IsCharacterData(byte value) => false;  // TODO:
         #endregion
 
         #region Miscellaneous
