@@ -85,6 +85,20 @@ architecture, it's evidence of reading Claude's work. A mismatch against the arc
 isn't scored - it's a signal that either the task text was unclear (an architecture problem) or the
 step got rushed (a process problem), logged as a one-line note, not a grade.
 
+**Preferred concrete form, when the task has a state table (the model case): a short doc comment on
+each test shell, one per row, stating which state it represents and why that state produces its
+outcome** - instead of, or alongside, the free-form restatement above. This checks understanding row
+by row against the table rather than once for the whole design, and it becomes permanent
+documentation on the test itself rather than a logged-and-discarded note - a reviewer can mechanically
+confirm every row got one. First real use (#22's `ContentReady` shells) caught a genuine
+misunderstanding - and notably, it caught one of *Claude's*, not just the developer's: an original
+shell comment described one row as character data inside already-open content, but that row's own
+precondition (content-ready flag false) rules that out - it was actually the empty element's own
+`/>` completing. The developer's independently-written per-row summary was correct where Claude's
+inline comment wasn't, caught only because both sides put their reasoning in writing against the
+same table rather than one trusting the other's read of it. Use this form by default when a state
+table exists; the general restatement above is the fallback when it doesn't.
+
 ## Defect / change taxonomy
 
 Every test failure or test-shell edit gets exactly one of these, decided during Test-bug fix:
@@ -164,7 +178,7 @@ would make this possible later without redesigning the format first.
 
 | Task | Requirements Review (est/act) | Architecture (est/act) | Test shell (act) | Understanding (est/act) | Test review (est/act) | Coding (est/act) | Test-bug fix (est/act) | Table | Code | Test | Drift | Understanding match |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| [#22](https://github.com/ForestryAI/forestry-sdk-for-net/issues/22) Content Ready | 0 | 4/4h | 10m | - | - | -/30m | - | - | - | - | - | - |
+| [#22](https://github.com/ForestryAI/forestry-sdk-for-net/issues/22) Content Ready | 0 | 4/4h | 10m | 30m | - | -/30m | - | - | - | - | - | - |
 
 ## Prior art
 

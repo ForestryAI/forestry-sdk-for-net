@@ -117,10 +117,15 @@ namespace Forestry.Deserialize.Xml.Tests
             Assert.Equal(state._elementStack.ContentReady, reader.ReaderState._elementStack.ContentReady);
         }
 
+        /// <summary>
+        /// S0 means advancement to either the prolog or element non-terminals 
+        /// is possible i.e. Token Type == None.  The '>' character 
+        /// is ignored because the document is malformed.
+        /// </summary>
         [Fact]
         public void ContentReady_ForS0StartOfDocument_ItShould_LeaveTheCharacterForTheStartingTerminalStep()
         {
-            // Arrange - Depth 0, current token None: the very first call on a fresh document.
+            // Arrange
             ReaderState state = State(ElementStackBeforeAnyElement(), TokenType.None);
             Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
 
@@ -132,11 +137,16 @@ namespace Forestry.Deserialize.Xml.Tests
             Assert.Equal(state._elementStack.ContentReady, reader.ReaderState._elementStack.ContentReady);
         }
 
+        /// <summary>
+        /// S1 means advancement only to the prolog non-terminal when no root element 
+        /// non-terminal exists.  The '>' character is ignored because the document is malformed 
+        /// because the preceding non-terminal's own terminator was already consumed as part 
+        /// of reading it as one opaque value.
+        /// </summary>
         [Fact]
         public void ContentReady_ForS1BeforeRootWithPriorProlog_ItShould_LeaveTheCharacterForTheStartingTerminalStep()
         {
-            // Arrange - Depth 0, RootElement false, but current token isn't None - something
-            // (e.g. a comment) already read in the prolog before this call.
+            // Arrange 
             ReaderState state = State(ElementStackBeforeAnyElement(), TokenType.Comment);
             Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
 
@@ -148,14 +158,16 @@ namespace Forestry.Deserialize.Xml.Tests
             Assert.Equal(state._elementStack.ContentReady, reader.ReaderState._elementStack.ContentReady);
         }
 
+        /// <summary>
+        /// S2 means advancement after the root element in the miscellaneous non-terminal. 
+        /// The '>' character is ignored because the document is malformed 
+        /// because the preceding non-terminal's own terminator was already consumed as part 
+        /// of reading it as one opaque value.
+        /// </summary>
         [Fact]
         public void ContentReady_ForS2AfterRoot_ItShould_LeaveTheCharacterForTheStartingTerminalStep()
         {
-            // Arrange - Depth 0, RootElement true: trailing miscellaneous after the document's
-            // one element has already closed. S2's row doesn't mention the flag at all, so the
-            // assertion below checks "unchanged", not a specific hardcoded value - what that
-            // value actually is depends on ElementStack's Push/Pop semantics, which are explicitly
-            // out of #22's scope and have already moved once during this same session.
+            // Arrange
             ReaderState state = State(ElementStackAfterRootClosed(), TokenType.Comment);
             Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
 
@@ -167,27 +179,37 @@ namespace Forestry.Deserialize.Xml.Tests
             Assert.Equal(state._elementStack.ContentReady, reader.ReaderState._elementStack.ContentReady);
         }
 
+        /// <summary>
+        /// S3 means advancement to the ending terminal of a start tag.  The '>' character
+        /// with the current token == Element is an ending terminal closing the start 
+        /// tag.  The segment position advances past the '>' character setting the 
+        /// markup as content ready i.e. the element non-terminal structure is the 
+        /// start tag, content and end tag.
+        /// </summary>
         [Fact]
         public void ContentReady_ForS3AfterElementName_ItShould_SkipAndSetContentReady()
         {
-            // Arrange - <Root> : just read the element name, flag not yet set. Previous token is
-            // irrelevant to S3's own condition, left at the constructor default (None).
+            // Arrange
             ReaderState state = State(ElementStackAtDepth(1, contentReady: false), TokenType.Element);
             Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
 
             // Act
             reader.ContentReady();
 
-            // Assert - the '>' is consumed and the flag flips, in the same step (#22 "Advancing").
+            // Assert 
             Assert.Equal(1, reader.Position);
             Assert.True(reader.ReaderState._elementStack.ContentReady);
         }
 
+        /// <summary>
+        /// S4 means that the attribute non-terminal in the start tag is missing 
+        /// the attribute value non-terminal.  The '>' character is ignored because 
+        /// the document is malformed.
+        /// </summary>
         [Fact]
         public void ContentReady_ForS4AfterAttributeName_ItShould_LeaveTheCharacterForTheStartingTerminalStep()
         {
-            // Arrange - <Root attr> : malformed (an attribute name with no '=value'), but that's
-            // for the starting-terminal step to throw on later, not this one.
+            // Arrange
             ReaderState state = State(ElementStackAtDepth(1, contentReady: false), TokenType.Attribute);
             Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
 
@@ -199,10 +221,16 @@ namespace Forestry.Deserialize.Xml.Tests
             Assert.Equal(state._elementStack.ContentReady, reader.ReaderState._elementStack.ContentReady);
         }
 
+        /// <summary>
+        /// S5 means that the attribute non-terminal in the start tag is NOT missing 
+        /// the attribute value non-terminal.  The segment position advances past the '>' character setting the 
+        /// markup as content ready i.e. the element non-terminal structure is the 
+        /// start tag, content and end tag.
+        /// </summary>
         [Fact]
         public void ContentReady_ForS5AfterAttributeValue_ItShould_SkipAndSetContentReady()
         {
-            // Arrange - <Root attr="1"> : just read the attribute's value.
+            // Arrange
             ReaderState state = State(
                 ElementStackAtDepth(1, contentReady: false), TokenType.Value, previous: TokenType.Attribute);
             Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
@@ -215,14 +243,18 @@ namespace Forestry.Deserialize.Xml.Tests
             Assert.True(reader.ReaderState._elementStack.ContentReady);
         }
 
+        /// <summary>
+        /// S6 means non-terminal is likely an empty element.  The '>' character is ignored 
+        /// because following read steps are responsible for the '/>' ending terminal.
+        /// </summary>
+        /// <param name="previous"></param>
         [Theory]
         [InlineData(TokenType.Element)]
         [InlineData(TokenType.Value)]
-        public void ContentReady_ForS6AfterContentValue_ItShould_LeaveTheCharacterForTheStartingTerminalStep(
+        public void ContentReady_ForS6EmptyElementEndingTag_ItShould_LeaveTheCharacterForTheStartingTerminalStep(
             TokenType previous)
         {
-            // Arrange - <Root>text> or <Root><Child/>> : a '>' appearing as character data inside
-            // already-open content, immediately after a child element or a value.
+            // Arrange
             ReaderState state = State(ElementStackAtDepth(1, contentReady: false), TokenType.Value, previous);
             Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
 
@@ -234,11 +266,15 @@ namespace Forestry.Deserialize.Xml.Tests
             Assert.Equal(state._elementStack.ContentReady, reader.ReaderState._elementStack.ContentReady);
         }
 
+        /// <summary>
+        /// S7 means that the markup is content ready and the '>' character is likely 
+        /// character data.  The '>' character is ignored because the document is 
+        /// well-formed.
+        /// </summary>
         [Fact]
         public void ContentReady_ForS7AlreadyContentReady_ItShould_LeaveTheCharacterForTheStartingTerminalStep()
         {
-            // Arrange - flag already true: any '>' from here on is character data, not a start
-            // tag's own ending terminal.
+            // Arrange
             ReaderState state = State(ElementStackAtDepth(1, contentReady: true), TokenType.Element);
             Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
 
@@ -250,13 +286,14 @@ namespace Forestry.Deserialize.Xml.Tests
             Assert.True(reader.ReaderState._elementStack.ContentReady);
         }
 
+        /// <summary>
+        /// When no assertions are possible i.e. no state between S0 - S7 exists then 
+        /// a Debug Assert is caught. 
+        /// </summary>
         [Fact]
         public void ContentReady_ForAStateCombinationNoRowCovers_ItShould_TriggerTheDebugAssert()
         {
-            // Arrange - Depth != 0, flag false, current ElementEnd: doesn't match S3 (needs
-            // Element), S4 (needs Attribute) or S5/S6 (need Value) - and Depth != 0 rules out
-            // S0-S2, flag false rules out S7. #22: "If no state between S0 and S7 is asserted
-            // then the reader state is unreliable i.e. use a Debug Assert."
+            // Arrange
             ReaderState state = State(ElementStackAtDepth(1, contentReady: false), TokenType.ElementEnd);
             Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
 
