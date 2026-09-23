@@ -5,195 +5,22 @@ using Xunit;
 namespace Forestry.Deserialize.Xml.Tests
 {
     /// <summary>
-    /// First end-to-end coverage of <see cref="Utf8XmlReader.Read"/> - exercising the real
-    /// <see cref="Utf8XmlReader.ReadDocument"/>/<see cref="Utf8XmlReader.ReadSingleSegmentOpaqueValue"/>
-    /// path for a Declaration, not just the <see cref="Utf8Reader"/> primitives it's built from.
+    /// Coverage of <see cref="Utf8XmlReader"/>. Mostly empty as of the #20/#28 redesign - the
+    /// previous end-to-end coverage (Declaration/Comment/ProcessInstruction/Element reading via
+    /// the old ReadDocument/ReadProlog/opaque-value pipeline) tested a dispatch chain that no
+    /// longer exists: <c>Read()</c> is now drained-check -> spacing-skip -> ContentReady (#22) ->
+    /// ReadStartingTerminal/ReadValue (#17/#27) -> set token (#25), each rebuilt as its own task
+    /// rather than patched in place. Those scenarios (declaration/comment/PI round-trip, the
+    /// xml-stylesheet-vs-declaration disambiguation, multi-comment prolog, self-closing element
+    /// across two Read() calls, malformed-name/mismatched-end-tag throws) still need re-covering
+    /// once #17/#25/#27 land - removed rather than left failing, not forgotten.
+    ///
+    /// The <c>ContentReady_*</c> tests below are shells written from #22's architecture text
+    /// alone (state table S0-S7, the guard, and the Debug.Assert fall-through), before
+    /// ContentReady()'s body exists - see doc/dev/Velocity.md's Test shell phase.
     /// </summary>
     public class Utf8XmlReaderTests
     {
-        [Theory]
-        [InlineData("<?xml version=\"1.0\"?>")]
-        [InlineData("<?xml version=\"1.0\" encoding=\"utf-8\"?>")]
-        [InlineData("<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>")]
-        public void Read_ForADeclaration_ItShould_ReturnTrueAndYieldTheWholeRawDeclarationAsTheValue(
-            string declarationText)
-        {
-            // Arrange
-            byte[] source = Encoding.UTF8.GetBytes(declarationText);
-            Utf8XmlReader reader = new(source);
-
-            // Act
-            bool readable = reader.Read();
-
-            // Assert
-            Assert.True(readable);
-            Assert.Equal(TokenType.Declaration, reader.TokenType);
-            Assert.True(((ReadOnlySpan<byte>)source).SequenceEqual(reader.Value));
-        }
-
-        [Fact]
-        public void Read_ForADeclaration_ItShould_TransitionTheDocumentNonTerminalToProlog()
-        {
-            // Arrange
-            Utf8XmlReader reader = new("<?xml version=\"1.0\"?>"u8);
-
-            // Act
-            reader.Read();
-
-            // Assert
-            Assert.Equal(EBNF.Document.Prolog, reader.ReaderState._documentNonTerminal);
-        }
-
-        [Fact]
-        public void Read_ForADeclaration_ItShould_SetPreviousTokenTypeToNone()
-        {
-            // Arrange - Declaration can only ever be the very first token, so whatever came
-            // "before" it, per the reader's own bookkeeping, has to be None.
-            Utf8XmlReader reader = new("<?xml version=\"1.0\"?>"u8);
-
-            // Act
-            reader.Read();
-
-            // Assert
-            Assert.Equal(TokenType.None, reader.ReaderState._previousTokenType);
-        }
-
-        [Fact]
-        public void Read_ForADeclaration_ItShould_AdvanceLinePositionByTheFullTokenLength()
-        {
-            // Arrange - no newline anywhere in this declaration, so _linePosition should end up
-            // exactly at the token's total length: the "<?xml" TryMatch consumed *plus* everything
-            // TrySkip consumed through "?>" - not just the TrySkip portion on its own.
-            byte[] source = Encoding.UTF8.GetBytes("<?xml version=\"1.0\"?>");
-            Utf8XmlReader reader = new(source);
-
-            // Act
-            reader.Read();
-
-            // Assert
-            Assert.Equal(source.Length, reader.ReaderState._linePosition);
-        }
-
-        [Fact]
-        public void Read_ForATruncatedDeclarationOnTheFinalSegment_ItShould_Throw()
-        {
-            // Arrange - missing the closing "?>" terminal, and this is the only (final) segment,
-            // so it can never be completed no matter how much more is waited for.
-            Utf8XmlReader reader = new("<?xml version=\"1.0\""u8);
-
-            // Act & Assert - reader is a ref struct, so it can't be captured by Assert.Throws'
-            // lambda; a plain try/catch is the only option here.
-            bool threw = false;
-            try
-            {
-                reader.Read();
-            }
-            catch (InvalidOperationException)
-            {
-                threw = true;
-            }
-
-            Assert.True(threw);
-        }
-
-        [Theory]
-        [InlineData("<!--a comment-->")]
-        [InlineData("<!---->")]
-        public void Read_ForAComment_ItShould_ReturnTrueAndYieldTheWholeRawCommentAsTheValue(string commentText)
-        {
-            // Arrange
-            byte[] source = Encoding.UTF8.GetBytes(commentText);
-            Utf8XmlReader reader = new(source);
-
-            // Act
-            bool readable = reader.Read();
-
-            // Assert
-            Assert.True(readable);
-            Assert.Equal(TokenType.Comment, reader.TokenType);
-            Assert.True(((ReadOnlySpan<byte>)source).SequenceEqual(reader.Value));
-        }
-
-        [Fact]
-        public void Read_ForAProcessingInstruction_ItShould_ReturnTrueAndYieldTheWholeRawPIAsTheValue()
-        {
-            // Arrange - a target that has nothing to do with "xml"
-            byte[] source = Encoding.UTF8.GetBytes("<?target data?>");
-            Utf8XmlReader reader = new(source);
-
-            // Act
-            bool readable = reader.Read();
-
-            // Assert
-            Assert.True(readable);
-            Assert.Equal(TokenType.ProcessInstruction, reader.TokenType);
-            Assert.True(((ReadOnlySpan<byte>)source).SequenceEqual(reader.Value));
-        }
-
-        [Fact]
-        public void Read_ForAnXmlStylesheetProcessingInstruction_ItShould_NotBeMisreadAsADeclaration()
-        {
-            // Arrange - "<?xml-stylesheet ...?>" is a real, common PI (the standard way to
-            // associate an XSLT stylesheet). Its target merely *starts with* "xml" - only the
-            // exact target "xml" (case-insensitive) is reserved for the declaration, per spec.
-            // A 5-byte prefix match against "<?xml" alone can't tell these apart.
-            byte[] source = Encoding.UTF8.GetBytes("<?xml-stylesheet type=\"text/xsl\" href=\"style.xsl\"?>");
-            Utf8XmlReader reader = new(source);
-
-            // Act
-            bool readable = reader.Read();
-
-            // Assert
-            Assert.True(readable);
-            Assert.Equal(TokenType.ProcessInstruction, reader.TokenType);
-        }
-
-        [Fact]
-        public void Read_ForLeadingSpacingBeforeAnElement_ItShould_ProgressThroughToElementPhaseWithinOneCall()
-        {
-            // Arrange - no declaration, just leading whitespace before the root element. Without
-            // ReadDocument's loop also watching segment position (not just phase - spacing
-            // consumes bytes but produces no token and doesn't change _documentNonTerminal), this
-            // would look identical to "final segment, nothing ever read" and throw before ever
-            // recognizing the element start sitting right after the spaces.
-            Utf8XmlReader reader = new("   <Root/>"u8);
-
-            // Act - Read() still throws here, but only because ReadMarkup() is an unbuilt stub
-            // and genuinely can't produce the element token yet - a separate, expected gap, not
-            // a regression. What this actually verifies is that _documentNonTerminal already
-            // reached Element *before* that happens, proving spacing-then-element-detection ran
-            // within this one call rather than needing an extra round-trip.
-            try
-            {
-                reader.Read();
-            }
-            catch (InvalidOperationException)
-            {
-            }
-
-            // Assert
-            Assert.Equal(EBNF.Document.Element, reader.ReaderState._documentNonTerminal);
-        }
-
-        [Fact]
-        public void Read_ForMultipleCommentsBeforeTheRootElement_ItShould_ReadTheFirstCommentWithoutThrowing()
-        {
-            // Arrange - regression case: a "no element found yet" check placed inside ReadProlog
-            // itself once threw here, because PeekElementStartingTag() is (correctly) false right
-            // after the first comment - it's sitting on the second comment, not yet the root. That
-            // treated legitimate multi-comment prolog content as if no element would ever come, when
-            // it's simply one ReadProlog call away. The real "no element ever found" case belongs to
-            // ThrowableSegmentClosed() (data truly exhausted, final segment), not an inline check here.
-            Utf8XmlReader reader = new("<!--first--><!--second--><Root/>"u8);
-
-            // Act
-            bool readable = reader.Read();
-
-            // Assert
-            Assert.True(readable);
-            Assert.Equal(TokenType.Comment, reader.TokenType);
-        }
-
         [Fact]
         public void ReaderState_ForAFreshDefaultInstance_ItShould_HaveNothingOpen()
         {
@@ -207,248 +34,251 @@ namespace Forestry.Deserialize.Xml.Tests
             Assert.Equal(0, state._elementStack.Depth);
         }
 
-        [Theory]
-        [InlineData("<Root/>", "Root")]
-        [InlineData("<Root>", "Root")]
-        [InlineData("<Root attr=\"1\">", "Root")]
-        [InlineData("<Root >", "Root")]
-        public void Read_ForAStartingElementTag_ItShould_YieldTheElementNameAsTheValue(
-            string elementText, string expectedName)
+        // ---- ContentReady() shells, from #22 -------------------------------------------------
+        //
+        // ContentReady() is currently `private`; these assume it becomes `internal` (the "test
+        // seam" needed since Read() can't drive this step in isolation until #17 exists) - won't
+        // compile until that one-line accessibility change lands.
+        //
+        // Every reader below is built directly from an internal ReaderState so each row's exact
+        // precondition (depth, content-ready flag, current/previous token, root element) is
+        // reachable without a real document producing it - matching #22's Pre-conditions section:
+        // segment not drained, spacing already skipped, positioned right at the byte under test.
+        // A 1-byte source is enough since ContentReady() only ever looks at one byte.
+
+        /// <summary>
+        /// Builds an <see cref="ElementStack"/> at the given depth. When <paramref name="contentReady"/>
+        /// is true, reaches it via Push then TryPop of a synthetic child - TryPop is the only
+        /// existing way to observe ContentReady == true (there's no direct setter; push/pop
+        /// semantics are explicitly out of #22's scope, this only borrows an already-implemented
+        /// side effect of TryPop, not asserting anything new about it).
+        /// </summary>
+        private static ElementStack ElementStackAtDepth(int depth, bool contentReady)
         {
-            // Arrange - no space required before '>'/'/' - "<Root/>" and "<Root>" have no space
-            // anywhere in either, and still need to read a name.
-            Utf8XmlReader reader = new(Encoding.UTF8.GetBytes(elementText));
-
-            // Act
-            bool readable = reader.Read();
-
-            // Assert
-            Assert.True(readable);
-            Assert.Equal(TokenType.Element, reader.TokenType);
-            Assert.True(((ReadOnlySpan<byte>)Encoding.UTF8.GetBytes(expectedName)).SequenceEqual(reader.Value));
-        }
-
-        [Fact]
-        public void Read_ForAStartingElementTag_ItShould_LeaveSegmentPositionRightAfterTheName()
-        {
-            // Arrange
-            byte[] source = Encoding.UTF8.GetBytes("<Root/>");
-            Utf8XmlReader reader = new(source);
-
-            // Act
-            reader.Read();
-
-            // Assert - "Root" is 4 bytes, "<" is 1, so position 5 sits right on the '/'.
-            Assert.Equal(5, reader.TokenPosition + reader.Value.Length + 1);
-        }
-
-        [Fact]
-        public void Read_ForALessThanNotFollowedByAValidNameCharacter_ItShould_Throw()
-        {
-            // Arrange - malformed: '<' immediately followed by something that can't start a
-            // Name. PeekElementStartingTag() already requires a valid NameStartChar to transition
-            // Prolog -> Element in the first place, so this can't be reached through the normal
-            // Read() path from a fresh document - constructing directly in the Element phase
-            // (via ReaderState) to exercise ReadMarkup's own malformed-name throw in isolation.
-            ReaderState elementPhase = new(
-                lineNumber: 0,
-                linePosition: 0,
-                documentNonTerminal: EBNF.Document.Element,
-                currentTokenType: TokenType.None,
-                previousTokenType: TokenType.None,
-                elementNameStack: default,
-                readerOptions: default
-            );
-            Utf8XmlReader reader = new("< Root>"u8, isFinalSegment: true, elementPhase);
-
-            // Act & Assert
-            bool threw = false;
-            try
+            ElementStack stack = default;
+            for (int i = 0; i < depth; i++)
             {
-                reader.ReadElementNonTerminal();
-            }
-            catch (InvalidOperationException)
-            {
-                threw = true;
+                stack.Push(Encoding.UTF8.GetBytes($"E{i}"));
             }
 
-            Assert.True(threw);
+            if (contentReady)
+            {
+                stack.Push(Encoding.UTF8.GetBytes("Child"));
+                stack.TryPop(Encoding.UTF8.GetBytes("Child"));
+            }
+
+            return stack;
         }
 
-        private static ReaderState ElementPhase(ElementStack elementNameStack) => new(
+        /// <summary>
+        /// Depth 0, RootElement still false - the state before any element has ever been pushed
+        /// (S0/S1's shared precondition).
+        /// </summary>
+        private static ElementStack ElementStackBeforeAnyElement() => default;
+
+        /// <summary>
+        /// Depth 0, but RootElement true - the root was pushed then unconditionally popped back
+        /// closed (S2's precondition: trailing miscellaneous after the document's one element).
+        /// </summary>
+        private static ElementStack ElementStackAfterRootClosed()
+        {
+            ElementStack stack = default;
+            stack.Push(Encoding.UTF8.GetBytes("Root"));
+            stack.Pop(stackalloc byte[ElementStack.PackedNameLength * 8]);
+            return stack;
+        }
+
+        private static ReaderState State(
+            ElementStack elementStack,
+            TokenType current,
+            TokenType previous = TokenType.None) => new(
             lineNumber: 0,
             linePosition: 0,
-            documentNonTerminal: EBNF.Document.Element,
-            currentTokenType: TokenType.Element,
-            previousTokenType: TokenType.None,
-            elementNameStack: elementNameStack,
+            currentTokenType: current,
+            previousTokenType: previous,
+            elementStack: elementStack,
             readerOptions: default
         );
 
         [Fact]
-        public void ReadMarkup_ForAMatchingEndingTag_ItShould_ReturnTrueAndPopTheStack()
+        public void ContentReady_ForANonGreaterThanCharacter_ItShould_BreakFastWithoutChangingPositionOrFlag()
         {
-            // Arrange - <Root>...</Root>: the stack already has "Root" open (as ReadElementName
-            // would have pushed it), and the reader sits at the ending tag.
-            ElementStack stack = default;
-            stack.Push(Encoding.UTF8.GetBytes("Root"));
-            Utf8XmlReader reader = new("</Root>"u8, isFinalSegment: true, ElementPhase(stack));
+            // Arrange - S3's own precondition (Depth != 0, flag false, current Element), which
+            // WOULD skip-and-set if the byte were '>' - proves the guard runs before state is
+            // even consulted, not just that this particular row happens to be a no-op.
+            ReaderState state = State(ElementStackAtDepth(1, contentReady: false), TokenType.Element);
+            Utf8XmlReader reader = new("a"u8, isReadingCompleted: true, state);
 
             // Act
-            bool readable = reader.ReadElementNonTerminal();
+            reader.ContentReady();
 
             // Assert
-            Assert.True(readable);
-            Assert.Equal(TokenType.ElementEnd, reader.TokenType);
-            Assert.Equal(0, reader.ReaderState._elementStack.Depth);
+            Assert.Equal(0, reader.Position);
+            Assert.Equal(state._elementStack.ContentReady, reader.ReaderState._elementStack.ContentReady);
         }
 
         [Fact]
-        public void ReadMarkup_ForAMismatchedEndingTag_ItShould_Throw()
+        public void ContentReady_ForS0StartOfDocument_ItShould_LeaveTheCharacterForTheStartingTerminalStep()
         {
-            // Arrange - Element Type Match WFC violation: </Wrong> can't close an open "Root".
-            ElementStack stack = default;
-            stack.Push(Encoding.UTF8.GetBytes("Root"));
-            Utf8XmlReader reader = new("</Wrong>"u8, isFinalSegment: true, ElementPhase(stack));
+            // Arrange - Depth 0, current token None: the very first call on a fresh document.
+            ReaderState state = State(ElementStackBeforeAnyElement(), TokenType.None);
+            Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
 
-            // Act & Assert
+            // Act
+            reader.ContentReady();
+
+            // Assert
+            Assert.Equal(0, reader.Position);
+            Assert.Equal(state._elementStack.ContentReady, reader.ReaderState._elementStack.ContentReady);
+        }
+
+        [Fact]
+        public void ContentReady_ForS1BeforeRootWithPriorProlog_ItShould_LeaveTheCharacterForTheStartingTerminalStep()
+        {
+            // Arrange - Depth 0, RootElement false, but current token isn't None - something
+            // (e.g. a comment) already read in the prolog before this call.
+            ReaderState state = State(ElementStackBeforeAnyElement(), TokenType.Comment);
+            Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
+
+            // Act
+            reader.ContentReady();
+
+            // Assert
+            Assert.Equal(0, reader.Position);
+            Assert.Equal(state._elementStack.ContentReady, reader.ReaderState._elementStack.ContentReady);
+        }
+
+        [Fact]
+        public void ContentReady_ForS2AfterRoot_ItShould_LeaveTheCharacterForTheStartingTerminalStep()
+        {
+            // Arrange - Depth 0, RootElement true: trailing miscellaneous after the document's
+            // one element has already closed. S2's row doesn't mention the flag at all, so the
+            // assertion below checks "unchanged", not a specific hardcoded value - what that
+            // value actually is depends on ElementStack's Push/Pop semantics, which are explicitly
+            // out of #22's scope and have already moved once during this same session.
+            ReaderState state = State(ElementStackAfterRootClosed(), TokenType.Comment);
+            Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
+
+            // Act
+            reader.ContentReady();
+
+            // Assert
+            Assert.Equal(0, reader.Position);
+            Assert.Equal(state._elementStack.ContentReady, reader.ReaderState._elementStack.ContentReady);
+        }
+
+        [Fact]
+        public void ContentReady_ForS3AfterElementName_ItShould_SkipAndSetContentReady()
+        {
+            // Arrange - <Root> : just read the element name, flag not yet set. Previous token is
+            // irrelevant to S3's own condition, left at the constructor default (None).
+            ReaderState state = State(ElementStackAtDepth(1, contentReady: false), TokenType.Element);
+            Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
+
+            // Act
+            reader.ContentReady();
+
+            // Assert - the '>' is consumed and the flag flips, in the same step (#22 "Advancing").
+            Assert.Equal(1, reader.Position);
+            Assert.True(reader.ReaderState._elementStack.ContentReady);
+        }
+
+        [Fact]
+        public void ContentReady_ForS4AfterAttributeName_ItShould_LeaveTheCharacterForTheStartingTerminalStep()
+        {
+            // Arrange - <Root attr> : malformed (an attribute name with no '=value'), but that's
+            // for the starting-terminal step to throw on later, not this one.
+            ReaderState state = State(ElementStackAtDepth(1, contentReady: false), TokenType.Attribute);
+            Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
+
+            // Act
+            reader.ContentReady();
+
+            // Assert
+            Assert.Equal(0, reader.Position);
+            Assert.Equal(state._elementStack.ContentReady, reader.ReaderState._elementStack.ContentReady);
+        }
+
+        [Fact]
+        public void ContentReady_ForS5AfterAttributeValue_ItShould_SkipAndSetContentReady()
+        {
+            // Arrange - <Root attr="1"> : just read the attribute's value.
+            ReaderState state = State(
+                ElementStackAtDepth(1, contentReady: false), TokenType.Value, previous: TokenType.Attribute);
+            Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
+
+            // Act
+            reader.ContentReady();
+
+            // Assert
+            Assert.Equal(1, reader.Position);
+            Assert.True(reader.ReaderState._elementStack.ContentReady);
+        }
+
+        [Theory]
+        [InlineData(TokenType.Element)]
+        [InlineData(TokenType.Value)]
+        public void ContentReady_ForS6AfterContentValue_ItShould_LeaveTheCharacterForTheStartingTerminalStep(
+            TokenType previous)
+        {
+            // Arrange - <Root>text> or <Root><Child/>> : a '>' appearing as character data inside
+            // already-open content, immediately after a child element or a value.
+            ReaderState state = State(ElementStackAtDepth(1, contentReady: false), TokenType.Value, previous);
+            Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
+
+            // Act
+            reader.ContentReady();
+
+            // Assert
+            Assert.Equal(0, reader.Position);
+            Assert.Equal(state._elementStack.ContentReady, reader.ReaderState._elementStack.ContentReady);
+        }
+
+        [Fact]
+        public void ContentReady_ForS7AlreadyContentReady_ItShould_LeaveTheCharacterForTheStartingTerminalStep()
+        {
+            // Arrange - flag already true: any '>' from here on is character data, not a start
+            // tag's own ending terminal.
+            ReaderState state = State(ElementStackAtDepth(1, contentReady: true), TokenType.Element);
+            Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
+
+            // Act
+            reader.ContentReady();
+
+            // Assert
+            Assert.Equal(0, reader.Position);
+            Assert.True(reader.ReaderState._elementStack.ContentReady);
+        }
+
+        [Fact]
+        public void ContentReady_ForAStateCombinationNoRowCovers_ItShould_TriggerTheDebugAssert()
+        {
+            // Arrange - Depth != 0, flag false, current ElementEnd: doesn't match S3 (needs
+            // Element), S4 (needs Attribute) or S5/S6 (need Value) - and Depth != 0 rules out
+            // S0-S2, flag false rules out S7. #22: "If no state between S0 and S7 is asserted
+            // then the reader state is unreliable i.e. use a Debug Assert."
+            ReaderState state = State(ElementStackAtDepth(1, contentReady: false), TokenType.ElementEnd);
+            Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
+
+            // Act & Assert - reader is a ref struct, so it can't be captured by Assert.Throws'
+            // lambda; a plain try/catch is the only option, matching this file's existing pattern
+            // for other expected-throw cases. Catching the base Exception type, not something more
+            // specific: a failed Debug.Assert under `dotnet test` is translated to
+            // Microsoft.VisualStudio.TestPlatform.TestHost.DebugAssertException (verified
+            // empirically - it does NOT crash the whole test process the way a raw Debug.Assert
+            // failure would outside a test host), but that type is internal to the test host's
+            // own assembly and isn't accessible from here.
             bool threw = false;
             try
             {
-                reader.ReadElementNonTerminal();
+                reader.ContentReady();
             }
-            catch (InvalidOperationException)
+            catch (Exception)
             {
                 threw = true;
             }
 
             Assert.True(threw);
-        }
-
-        [Fact]
-        public void ReadEndingTerminal_ForOptionalSpacingBeforeTheStopTerminal_ItShould_ReturnTrue()
-        {
-            // Arrange - end ::= '</' Name Spacing? '>' - the Spacing? between Name and '>' is
-            // legal and must be drained before the stop terminal is found.
-            ElementStack stack = default;
-            stack.Push(Encoding.UTF8.GetBytes("Root"));
-            Utf8XmlReader reader = new("</Root  >"u8, isFinalSegment: true, ElementPhase(stack));
-
-            // Act
-            bool readable = reader.ReadElementNonTerminal();
-
-            // Assert
-            Assert.True(readable);
-            Assert.Equal(TokenType.ElementEnd, reader.TokenType);
-            Assert.Equal(0, reader.ReaderState._elementStack.Depth);
-        }
-
-        [Fact]
-        public void ReadEndingTerminal_ForAMissingStopTerminal_ItShould_Throw()
-        {
-            // Arrange - '</Root' with no closing '>' at all - malformed, not "not readable yet".
-            // reader is a ref struct, so it can't be captured by Assert.Throws' lambda; a plain
-            // try/catch is the only option here.
-            ElementStack stack = default;
-            stack.Push(Encoding.UTF8.GetBytes("Root"));
-            Utf8XmlReader reader = new("</Root"u8, isFinalSegment: true, ElementPhase(stack));
-
-            // Act & Assert
-            bool threw = false;
-            try
-            {
-                reader.ReadElementNonTerminal();
-            }
-            catch (InvalidOperationException)
-            {
-                threw = true;
-            }
-
-            Assert.True(threw);
-        }
-
-        [Fact]
-        public void ReadMarkup_ForAnEndingTagWithANestedParentStillOpen_ItShould_LeaveTheParentOnTheStack()
-        {
-            // Arrange - <HarvestedProduction><Log>...</Log> - closing "Log" should pop only
-            // "Log", leaving "HarvestedProduction" still open underneath it.
-            ElementStack stack = default;
-            stack.Push(Encoding.UTF8.GetBytes("HarvestedProduction"));
-            stack.Push(Encoding.UTF8.GetBytes("Log"));
-            Utf8XmlReader reader = new("</Log>"u8, isFinalSegment: true, ElementPhase(stack));
-
-            // Act
-            bool readable = reader.ReadElementNonTerminal();
-
-            // Assert
-            Assert.True(readable);
-            Assert.Equal(TokenType.ElementEnd, reader.TokenType);
-            Assert.Equal(1, reader.ReaderState._elementStack.Depth);
-        }
-
-        [Fact]
-        public void SkipSpacing_ForLeadingWhitespace_ItShould_ReturnTrueAndAdvancePastAllOfIt()
-        {
-            // Arrange
-            Utf8XmlReader reader = new("   <Root/>"u8);
-
-            // Act
-            bool skipped = reader.SkipSpacing();
-
-            // Assert
-            Assert.True(skipped);
-            Assert.Equal(3, reader.ReaderState._linePosition);
-        }
-
-        [Fact]
-        public void SkipSpacing_ForNoLeadingWhitespace_ItShould_ReturnFalse()
-        {
-            // Arrange
-            Utf8XmlReader reader = new("<Root/>"u8);
-
-            // Act
-            bool skipped = reader.SkipSpacing();
-
-            // Assert
-            Assert.False(skipped);
-        }
-
-        [Fact]
-        public void ReadElement_ForAnEmptyElementTag_ItShould_ReturnTrueSetElementEndAndPopTheStack()
-        {
-            // Arrange - <Root/>'s own closing '/>' , as if reached right after ReadElementName
-            // already pushed "Root" and set TokenType.Element.
-            ElementStack stack = default;
-            stack.Push(Encoding.UTF8.GetBytes("Root"));
-            Utf8XmlReader reader = new("/>"u8, isFinalSegment: true, ElementPhase(stack));
-
-            // Act
-            bool readable = reader.ReadElement();
-
-            // Assert
-            Assert.True(readable);
-            Assert.Equal(TokenType.ElementEnd, reader.TokenType);
-            Assert.True(((ReadOnlySpan<byte>)Encoding.UTF8.GetBytes("Root")).SequenceEqual(reader.Value));
-            Assert.Equal(0, reader.ReaderState._elementStack.Depth);
-        }
-
-        [Fact]
-        public void Read_ForASelfClosingRootElement_ItShould_ReadElementThenElementEndAcrossTwoCalls()
-        {
-            // Arrange - <Root/> end to end through the public Read() API: this is the first
-            // complete document shape the reader can now walk from start to finish.
-            Utf8XmlReader reader = new("<Root/>"u8);
-
-            // Act & Assert - first call: the starting tag's Name
-            Assert.True(reader.Read());
-            Assert.Equal(TokenType.Element, reader.TokenType);
-            Assert.True(((ReadOnlySpan<byte>)Encoding.UTF8.GetBytes("Root")).SequenceEqual(reader.Value));
-
-            // Act & Assert - second call: the implied close, no separate Value token in between
-            Assert.True(reader.Read());
-            Assert.Equal(TokenType.ElementEnd, reader.TokenType);
-            Assert.True(((ReadOnlySpan<byte>)Encoding.UTF8.GetBytes("Root")).SequenceEqual(reader.Value));
-            Assert.Equal(0, reader.ReaderState._elementStack.Depth);
         }
     }
 }

@@ -37,13 +37,13 @@ namespace Forestry.Deserialize.Xml {
 
         public static byte StartTagEndingTerminal => (byte)'>';
 
-        public static ReadOnlySpan<byte> StartDeclarationTerminal => "<?xml "u8;
+        public static ReadOnlySpan<byte> DeclarationStartingTerminal => "<?xml "u8;
 
-        public static ReadOnlySpan<byte> StopDeclarationTerminal => "?>"u8;
+        public static ReadOnlySpan<byte> DeclarationEndingTerminal => "?>"u8;
 
-        public static ReadOnlySpan<byte> EndTerminal => "</"u8;
+        public static ReadOnlySpan<byte> EndTagStartingTerminal => "</"u8;
 
-        public static ReadOnlySpan<byte> EmptyTerminal => "/>"u8;
+        public static ReadOnlySpan<byte> EmptyElementTagEndingTerminal => "/>"u8;
         #endregion
 
         #region BOM

@@ -265,7 +265,7 @@ namespace Forestry.Deserialize.Xml.Reading
             }
 
             // Content ready
-            SkipStartTagEndingTerminal();
+            ContentReady();
 
             // Read starting terminal, value and set token
             return ReadValue();
@@ -316,17 +316,15 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// Skip the ending terminal of a start tag when not an empty element terminal
+        /// When first character == '>' then determine if the element non-terminal 
+        /// has a content non-terminal after the start tag
         /// </summary>
         /// <returns></returns>
-        private void SkipStartTagEndingTerminal()
+        internal void ContentReady()
         {
             byte character = _segment[_segmentPosition];
 
-            if (character == EBNF.StartTagEndingTerminal && _elementStack.HasContentNonTerminal)
-            {
-                _segmentPosition += 1;
-            }
+           
         }
 
         /// <summary>
@@ -370,31 +368,31 @@ namespace Forestry.Deserialize.Xml.Reading
             }
             
 
-            if (_elementStack.Depth != 0 && _elementStack.HasContentNonTerminal && character == EBNF.Equal)
+            if (_elementStack.Depth != 0 && _elementStack.ContentReady && character == EBNF.Equal)
             {
                 // value non-terminal (attribute)
                 return true;
             }
 
-            if (_elementStack.Depth != 0 && _elementStack.HasContentNonTerminal && EBNF.IsNameStartingCharacter(character))
+            if (_elementStack.Depth != 0 && _elementStack.ContentReady && EBNF.IsNameStartingCharacter(character))
             {
                 // attribute non-terminal
                 return true;
             }
 
-            if (_elementStack.Depth != 0 && _currentTokenType == TokenType.ElementEnd && _elementStack.HasContentNonTerminal && EBNF.IsCharacterData(character))
+            if (_elementStack.Depth != 0 && _currentTokenType == TokenType.ElementEnd && _elementStack.ContentReady && EBNF.IsCharacterData(character))
             {
                 // value non-terminal (character data)
                 return true;
             }
 
-            if (_elementStack.Depth != 0 && _elementStack.HasContentNonTerminal && character == EBNF.Slash)
+            if (_elementStack.Depth != 0 && _elementStack.ContentReady && character == EBNF.Slash)
             {
                 // value (empty element non-terminal)    
                 return true;
             }
 
-            if (_elementStack.Depth != 0 && !_elementStack.HasContentNonTerminal && character == EBNF.StartTagEndingTerminal)
+            if (_elementStack.Depth != 0 && !_elementStack.ContentReady && character == EBNF.StartTagEndingTerminal)
             {
                 // end element (empty element non-terminal)
                 return true;

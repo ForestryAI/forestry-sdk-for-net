@@ -36,16 +36,21 @@ namespace Forestry.Deserialize.Xml.Reading
 
         private bool _rootElement;
 
+        /// <summary>
+        /// Root element in the XML document
+        /// </summary>
         public readonly bool RootElement => _rootElement;
-
 
         private int _depth;
 
         public readonly int Depth => _depth;
 
-        private bool _hasContentNonTerminal;
+        private bool _contentReady;
 
-        internal readonly bool HasContentNonTerminal => _hasContentNonTerminal;
+        /// <summary>
+        /// After an element non-terminal start tag is a content non-terminal 
+        /// </summary>
+        internal readonly bool ContentReady => _contentReady;
 
         /// <summary>
         /// Push a raw element name onto the stack. Packs directly into the pool slot for the
@@ -71,7 +76,7 @@ namespace Forestry.Deserialize.Xml.Reading
                 PushAllocating(name);
             }
 
-            _hasContentNonTerminal = true;
+            _contentReady = false;  // unreliable if a content non-terminal exists after a start tag
             _depth++;
         }
 
@@ -109,6 +114,7 @@ namespace Forestry.Deserialize.Xml.Reading
                 return false;
             }
 
+            _contentReady = true;  // unreliable if a content non-terminal exists before a end tag e.g. character data
             _depth = tailIndex;
             return true;
         }
@@ -137,7 +143,7 @@ namespace Forestry.Deserialize.Xml.Reading
                 throw new InvalidOperationException(); // TODO: formatting - caller responsibility violated
             }
 
-            _hasContentNonTerminal = false;
+            _contentReady = true;  // unreliable if a content non-terminal exists before a end tag e.g. character data
             _depth--;
 
             ReadOnlySpan<ulong> tail = _depth < NonAllocatingMaxDepth
@@ -169,9 +175,12 @@ namespace Forestry.Deserialize.Xml.Reading
             throw new NotImplementedException();
         }
 
-        internal void NegateHasContentNonTerminal()
+        /// <summary>
+        /// Negates (flips) the content ready flag
+        /// </summary>
+        internal void NegateContentReady()
         {
-            _hasContentNonTerminal = !_hasContentNonTerminal;
+            _contentReady = !_contentReady;
         }
     }
 }
