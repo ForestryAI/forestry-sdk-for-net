@@ -39,6 +39,12 @@ Each phase gets an **estimate** (written before the phase starts) and an **actua
 the phase was delegated to AI. Test shell is always AI for now; the others are marked Y/N per task
 so AI-assisted and unassisted phases can be compared later, not just averaged together.
 
+**Test shell is actual-only, deliberately** - no estimate is logged for it, for now. If
+architecture authoring is doing its job, any future problem in going from architecture to shells is
+expected to show up as a Table defect (the architecture was unclear), not as AI shell-writing being
+slow or unpredictable enough to need its own estimate. Revisit if that expectation turns out wrong -
+i.e. if shell creation itself starts causing churn independent of architecture quality.
+
 ## Board stages
 
 How the phases above map onto this SDK's task-tracking columns (Backlog → Ready → In Progress →
@@ -109,9 +115,14 @@ Every test failure or test-shell edit gets exactly one of these, decided during 
   not churn.
 - **Test defect** - Claude misread the architecture while writing the shell. Claude's error, logged
   separately from the developer's own time.
-- **Shell-to-assertion drift** - a test shell's assertion needed a material rewrite once real code
-  existed, without the underlying case being wrong. Distinct from a plain test defect: this is a
-  fidelity measure on the handoff from shell to real test, not a bug in any one case.
+- **Shell-to-assertion drift** - a test shell's assertion hardcoded a state change that actually
+  belongs to an external (out-of-scope) step, and that assumption broke once the external step's
+  own behavior was pinned down - not any assertion needing a rewrite. #22's example: a shell
+  asserted a specific content-ready-flag value that depended on `ElementStack.Pop`'s semantics,
+  which are explicitly out of #22's own scope; the assumption broke once `Pop` changed elsewhere,
+  not because `ContentReady()` itself was wrong. Distinct from a plain test defect (a misread of
+  the architecture under test) and from a code defect (the implementation under test being wrong) -
+  this is specifically the shell reaching outside its own step's scope.
 
 ## Metrics
 
@@ -123,24 +134,57 @@ audiences.
 - **Architecture overrun** = Architecture actual − 4h goal. Consistently positive means the 4h
   ceiling itself needs revisiting, or tasks need splitting smaller.
 - **Coding ratio** = Coding actual ÷ Architecture actual. Target ~1/4, trended across tasks.
+- **Understanding ratio** = Understanding actual ÷ Architecture actual. The same question as Coding
+  ratio, asked of the Understanding phase instead: how much of the architecture investment converts
+  into fast comprehension. #22: 15m ÷ 4h ≈ 0.06 - first data point, no target yet.
 - **Churn ratio** = (Requirements Review + Understanding + Test review + Test-bug fix) actual ÷
   Coding actual. Coding is the "should be straightforward" yardstick; this says how much friction
   sits around it. No target yet - the point of logging is to find out what normal looks like before
   setting one.
+
+**Understanding ratio's confound is sharper than the usual task-size one, right now**: whoever does
+Understanding today is usually the same person who wrote Architecture, picking it straight back up -
+fast comprehension there partly just means remembering a decision made hours earlier, not that the
+text would read clearly to someone encountering it cold. The ratio becomes a real test of
+architecture clarity under either of two conditions: two separate people (a developer reading
+someone else's finished architecture for the first time), or the same person returning to their own
+task after enough time has passed that recall genuinely isn't doing the work anymore - the
+architecture has to be understood again, not remembered. Outside those two cases, treat it as
+measuring recall speed as much as text clarity.
 
 ### Group B - development team (where does architecture-to-code friction come from?)
 
 - **Requirements share** = Table defects ÷ all defects.
 - **Testing share** = (Test defects + Shell-to-assertion drift) ÷ all defects.
 - **Learning signal** = Understanding-checkpoint mismatches ÷ tasks.
-- **AI effectiveness** = actual÷estimate ratio on AI-delegated phases compared to the same ratio on
-  developer-run phases, plus the Test defect rate specifically within Claude-written shells
-  (isolates Claude's own error rate from the architecture's clarity).
+- **AI effectiveness** = the Test defect rate specifically within Claude-written shells (Test
+  defects ÷ total shell cases), which isolates Claude's own error rate from the architecture's
+  clarity. The actual÷estimate half of this originally proposed - comparing AI-delegated phases
+  against developer-run ones - is deferred: Test shell doesn't carry an estimate (see Phases
+  above), so there's nothing to compute that ratio against right now.
 
 Group A is coarse and rolls up across tasks - it's the number that says the process is or isn't
 working. Group B is diagnostic - it says *why*, so a task's authoring or the AI workflow itself can
 be adjusted. Neither is a per-developer scorecard; see Prior art below on why that distinction
 matters once this stops being solo work.
+
+**Candidate signal, not yet a metric: Understanding actual > Coding actual, paired with a very low
+Coding ratio.** #22 (Understanding 15m vs Coding 10m; Coding ratio ~0.04, well under the
+already-small ~1/4 hypothesis) is the first data point suggesting this combination indicates real
+engagement with the architecture rather than reflexively accepting AI output. The two facts aren't
+independent evidence for the same conclusion, though: a low Coding ratio *by itself* is ambiguous -
+rubber-stamping the shells (typing whatever makes them pass without real thought) would also
+produce fast coding, so speed alone can't distinguish "fast because deeply understood" from "fast
+because barely engaged." What actually lowers rubber-stamping probability is the *pairing* - real,
+logged, non-trivial understanding time sitting right before that fast coding, which is what makes
+the low ratio something other than suspicious. Two caveats before this becomes more than an
+observation: it's a proxy for *time spent*, not the *quality* of understanding - the per-row
+checkpoint's actual content (see Understanding checkpoint above) is the direct signal, this is at
+best a cheap secondary one; and it's confounded by task size - a task as small as #22 makes a high
+Understanding-to-Coding ratio and a low Coding ratio both easy to hit regardless of engagement,
+while a large architecture with a genuinely simple implementation could show either pattern without
+meaning anything bad. Watch it, don't target it - the usual Goodhart risk applies the moment it
+becomes something to hit.
 
 ## Recording
 
@@ -178,7 +222,12 @@ would make this possible later without redesigning the format first.
 
 | Task | Requirements Review (est/act) | Architecture (est/act) | Test shell (act) | Understanding (est/act) | Test review (est/act) | Coding (est/act) | Test-bug fix (est/act) | Table | Code | Test | Drift | Understanding match |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| [#22](https://github.com/ForestryAI/forestry-sdk-for-net/issues/22) Content Ready | 0 | 4/4h | 10m | 30m | - | -/30m | - | - | - | - | - | - |
+| [#22](https://github.com/ForestryAI/forestry-sdk-for-net/issues/22) Content Ready | 0/0m | 4/4h | 10m | 30/15m | 15/5m | 30/10m | 15/5m | 0 | 3 | 1 | 1 | yes |
+
+A short retrospective on how the numbers actually felt - what was better or worse than previous
+tasks, any pattern worth watching - belongs as a closing comment on the task itself when it moves
+to Done, not duplicated here. This table is the numeric ledger; the issue is where the narrative
+goes.
 
 ## Prior art
 

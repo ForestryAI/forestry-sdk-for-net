@@ -324,7 +324,59 @@ namespace Forestry.Deserialize.Xml.Reading
         {
             byte character = _segment[_segmentPosition];
 
-           
+            if (character == EBNF.StartTagEndingTerminal)
+            {
+                if (_elementStack.Depth == 0 && _currentTokenType == TokenType.None)
+                {
+                    goto IgnoreMalformed;  // S0
+                }
+
+                if (_elementStack.Depth == 0 && (_elementStack.RootElement is false || _elementStack.RootElement is true))
+                {
+                    goto IgnoreMalformed;  // S1 || S2
+                }
+
+                if (_elementStack.Depth != 0 && _elementStack.ContentReady is false && _currentTokenType == TokenType.Element)
+                {
+                    goto Skip; // S3
+                }
+
+                if (_elementStack.Depth != 0 && _elementStack.ContentReady is false && _currentTokenType == TokenType.Attribute)
+                {
+                    goto IgnoreMalformed; // S4
+                }
+
+                if (_elementStack.Depth != 0 && _elementStack.ContentReady is false && _currentTokenType == TokenType.Value && _previousTokenType == TokenType.Attribute)
+                {
+                    goto Skip; // S5
+                }
+
+                if (_elementStack.Depth != 0 && _elementStack.ContentReady is false && _currentTokenType == TokenType.Value && (_previousTokenType == TokenType.Value || _previousTokenType == TokenType.Element))
+                {
+                    goto IgnoreWellformed; // S6
+                }
+
+                if (_elementStack.Depth != 0 && _elementStack.ContentReady is true)
+                {
+                    goto IgnoreWellformed; // S7
+                }
+
+                Debug.Assert(false, "No S0-S7 state matched - reader state is unreliable.");
+            }
+
+            // break fast when not the '>' character
+            return;
+
+            Skip:
+                _segmentPosition += 1;
+                _elementStack.NegateContentReady();
+                return;
+
+            IgnoreMalformed:
+                return;
+
+            IgnoreWellformed:
+                return;
         }
 
         /// <summary>
