@@ -304,28 +304,17 @@ namespace Forestry.Deserialize.Xml.Reading
             // Content ready
             ContentReady();
 
-            // Read starting terminal, value and set token
+            // Content ready may skip '>' (S3 or S5) draining the segment
+            if (_isMultipleSegments ? IsMultipleSegmentDrained() : IsSingleSegmentDrained())
+            {
+                goto Completed;
+            }
+
+            // Read value
             return ReadValue();
 
             Completed:
                 return advancement;
-        }
-
-        /// <summary>
-        /// Skip the next token only when the current segment is the last
-        /// </summary>
-        public void Skip()
-        {
-            
-        }
-
-        /// <summary>
-        /// Try skipping the next token otherwise rollback despite an unreliable value
-        /// </summary>
-        /// <returns></returns>
-        public bool TrySkip()
-        {
-            return false;
         }
 
         /// <summary>
