@@ -9,17 +9,18 @@ namespace Forestry.Deserialize.Xml.Tests
     /// previous end-to-end coverage (Declaration/Comment/ProcessInstruction/Element reading via
     /// the old ReadDocument/ReadProlog/opaque-value pipeline) tested a dispatch chain that no
     /// longer exists: <c>Read()</c> is now drained-check -> spacing-skip -> ContentReady (#22) ->
-    /// ReadStartingTerminal/ReadValue (#17/#27) -> set token (#25), each rebuilt as its own task
-    /// rather than patched in place. Those scenarios (declaration/comment/PI round-trip, the
-    /// xml-stylesheet-vs-declaration disambiguation, multi-comment prolog, self-closing element
-    /// across two Read() calls, malformed-name/mismatched-end-tag throws) still need re-covering
-    /// once #17/#25/#27 land - removed rather than left failing, not forgotten.
+    /// drained-check -> PeekStartingTerminal/ReadValue (#17/#27) -> set token (#25), each rebuilt
+    /// as its own task rather than patched in place. Those scenarios (declaration/comment/PI
+    /// round-trip, the xml-stylesheet-vs-declaration disambiguation, multi-comment prolog,
+    /// self-closing element across two Read() calls, malformed-name/mismatched-end-tag throws)
+    /// still need re-covering once #17/#25/#27 land - removed rather than left failing, not
+    /// forgotten.
     ///
-    /// The <c>ContentReady_*</c> tests below are shells written from #22's architecture text
-    /// alone (state table S0-S7, the guard, and the Debug.Assert fall-through), before
-    /// ContentReady()'s body exists - see doc/dev/Velocity.md's Test shell phase.
+    /// One partial file per logical step of <c>Read()</c>, named after the step's method
+    /// (<c>Utf8XmlReaderTests.ContentReady.cs</c>, <c>Utf8XmlReaderTests.PeekStartingTerminal.cs</c>).
+    /// This file holds the shared helpers and the tests of <c>Read()</c>'s own wiring.
     /// </summary>
-    public class Utf8XmlReaderTests
+    public partial class Utf8XmlReaderTests
     {
         [Fact]
         public void ReaderState_ForAFreshDefaultInstance_ItShould_HaveNothingOpen()
@@ -34,17 +35,7 @@ namespace Forestry.Deserialize.Xml.Tests
             Assert.Equal(0, state._elementStack.Depth);
         }
 
-        // ---- ContentReady() shells, from #22 -------------------------------------------------
-        //
-        // ContentReady() is currently `private`; these assume it becomes `internal` (the "test
-        // seam" needed since Read() can't drive this step in isolation until #17 exists) - won't
-        // compile until that one-line accessibility change lands.
-        //
-        // Every reader below is built directly from an internal ReaderState so each row's exact
-        // precondition (depth, content-ready flag, current/previous token, root element) is
-        // reachable without a real document producing it - matching #22's Pre-conditions section:
-        // segment not drained, spacing already skipped, positioned right at the byte under test.
-        // A 1-byte source is enough since ContentReady() only ever looks at one byte.
+        // ---- Shared helpers ------------------------------------------------------------------
 
         /// <summary>
         /// Builds an <see cref="ElementStack"/> at the given depth. When <paramref name="contentReady"/>
@@ -100,222 +91,60 @@ namespace Forestry.Deserialize.Xml.Tests
             readerOptions: default
         );
 
-        [Fact]
-        public void ContentReady_ForANonGreaterThanCharacter_ItShould_BreakFastWithoutChangingPositionOrFlag()
-        {
-            // Arrange - S3's own precondition (Depth != 0, flag false, current Element), which
-            // WOULD skip-and-set if the byte were '>' - proves the guard runs before state is
-            // even consulted, not just that this particular row happens to be a no-op.
-            ReaderState state = State(ElementStackAtDepth(1, contentReady: false), TokenType.Element);
-            Utf8XmlReader reader = new("a"u8, isReadingCompleted: true, state);
-
-            // Act
-            reader.ContentReady();
-
-            // Assert
-            Assert.Equal(0, reader.Position);
-            Assert.Equal(state._elementStack.ContentReady, reader.ReaderState._elementStack.ContentReady);
-        }
+        // ---- Read() drained check after ContentReady(), #17 pre-condition --------------------
+        //
+        // Not shells for #17's own step: these cover Read()'s wiring, fixed after #17 moved to
+        // Ready (see #17's Pre-conditions). S3 skips the '>' landing exactly at the end of the
+        // segment, which must halt Read() before the starting terminal is peeked.
 
         /// <summary>
-        /// S0 means advancement to either the prolog or element non-terminals 
-        /// is possible i.e. Token Type == None.  The '>' character 
-        /// is ignored because the document is malformed.
+        /// State S3 when asserting content ready will skip the <c>&lt;</c> character 
+        /// advancing the segment position forcing a drainage assertion to be called 
+        /// only if reading is not completed
         /// </summary>
         [Fact]
-        public void ContentReady_ForS0StartOfDocument_ItShould_LeaveTheCharacterForTheStartingTerminalStep()
-        {
-            // Arrange
-            ReaderState state = State(ElementStackBeforeAnyElement(), TokenType.None);
-            Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
-
-            // Act
-            reader.ContentReady();
-
-            // Assert
-            Assert.Equal(0, reader.Position);
-            Assert.Equal(state._elementStack.ContentReady, reader.ReaderState._elementStack.ContentReady);
-        }
-
-        /// <summary>
-        /// S1 means advancement only to the prolog non-terminal when no root element 
-        /// non-terminal exists.  The '>' character is ignored because the document is malformed 
-        /// because the preceding non-terminal's own terminator was already consumed as part 
-        /// of reading it as one opaque value.
-        /// </summary>
-        [Fact]
-        public void ContentReady_ForS1BeforeRootWithPriorProlog_ItShould_LeaveTheCharacterForTheStartingTerminalStep()
-        {
-            // Arrange 
-            ReaderState state = State(ElementStackBeforeAnyElement(), TokenType.Comment);
-            Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
-
-            // Act
-            reader.ContentReady();
-
-            // Assert
-            Assert.Equal(0, reader.Position);
-            Assert.Equal(state._elementStack.ContentReady, reader.ReaderState._elementStack.ContentReady);
-        }
-
-        /// <summary>
-        /// S2 means advancement after the root element in the miscellaneous non-terminal. 
-        /// The '>' character is ignored because the document is malformed 
-        /// because the preceding non-terminal's own terminator was already consumed as part 
-        /// of reading it as one opaque value.
-        /// </summary>
-        [Fact]
-        public void ContentReady_ForS2AfterRoot_ItShould_LeaveTheCharacterForTheStartingTerminalStep()
-        {
-            // Arrange
-            ReaderState state = State(ElementStackAfterRootClosed(), TokenType.Comment);
-            Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
-
-            // Act
-            reader.ContentReady();
-
-            // Assert
-            Assert.Equal(0, reader.Position);
-            Assert.Equal(state._elementStack.ContentReady, reader.ReaderState._elementStack.ContentReady);
-        }
-
-        /// <summary>
-        /// S3 means advancement to the ending terminal of a start tag.  The '>' character
-        /// with the current token == Element is an ending terminal closing the start 
-        /// tag.  The segment position advances past the '>' character setting the 
-        /// markup as content ready i.e. the element non-terminal structure is the 
-        /// start tag, content and end tag.
-        /// </summary>
-        [Fact]
-        public void ContentReady_ForS3AfterElementName_ItShould_SkipAndSetContentReady()
+        public void Read_ForS3DrainingTheSegmentWhenReadingNotCompleted_ItShould_ReturnFalseKeepingTheSkip()
         {
             // Arrange
             ReaderState state = State(ElementStackAtDepth(1, contentReady: false), TokenType.Element);
-            Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
+            Utf8XmlReader reader = new(">"u8, isReadingCompleted: false, state);
 
             // Act
-            reader.ContentReady();
+            bool advancement = reader.Read();
 
-            // Assert 
+            // Assert - the skipped '>' and content ready flag carry over to the next reader
+            Assert.False(advancement);
             Assert.Equal(1, reader.Position);
             Assert.True(reader.ReaderState._elementStack.ContentReady);
         }
 
         /// <summary>
-        /// S4 means that the attribute non-terminal in the start tag is missing 
-        /// the attribute value non-terminal.  The '>' character is ignored because 
-        /// the document is malformed.
+        /// State S3 when asserting content ready will skip the <c>&lt;</c> character 
+        /// advancing the segment position but unable to assert drainage assertion 
+        /// because reading is completed
         /// </summary>
         [Fact]
-        public void ContentReady_ForS4AfterAttributeName_ItShould_LeaveTheCharacterForTheStartingTerminalStep()
+        public void Read_ForS3DrainingTheSegmentWhenReadingCompleted_ItShould_ThrowElementNotEnded()
         {
             // Arrange
-            ReaderState state = State(ElementStackAtDepth(1, contentReady: false), TokenType.Attribute);
+            ReaderState state = State(ElementStackAtDepth(1, contentReady: false), TokenType.Element);
             Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
 
-            // Act
-            reader.ContentReady();
-
-            // Assert
-            Assert.Equal(0, reader.Position);
-            Assert.Equal(state._elementStack.ContentReady, reader.ReaderState._elementStack.ContentReady);
-        }
-
-        /// <summary>
-        /// S5 means that the attribute non-terminal in the start tag is NOT missing 
-        /// the attribute value non-terminal.  The segment position advances past the '>' character setting the 
-        /// markup as content ready i.e. the element non-terminal structure is the 
-        /// start tag, content and end tag.
-        /// </summary>
-        [Fact]
-        public void ContentReady_ForS5AfterAttributeValue_ItShould_SkipAndSetContentReady()
-        {
-            // Arrange
-            ReaderState state = State(
-                ElementStackAtDepth(1, contentReady: false), TokenType.Value, previous: TokenType.Attribute);
-            Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
-
-            // Act
-            reader.ContentReady();
-
-            // Assert
-            Assert.Equal(1, reader.Position);
-            Assert.True(reader.ReaderState._elementStack.ContentReady);
-        }
-
-        /// <summary>
-        /// S6 means non-terminal is likely an empty element.  The '>' character is ignored 
-        /// because following read steps are responsible for the '/>' ending terminal.
-        /// </summary>
-        /// <param name="previous"></param>
-        [Theory]
-        [InlineData(TokenType.Element)]
-        [InlineData(TokenType.Value)]
-        public void ContentReady_ForS6EmptyElementEndingTag_ItShould_LeaveTheCharacterForTheStartingTerminalStep(
-            TokenType previous)
-        {
-            // Arrange
-            ReaderState state = State(ElementStackAtDepth(1, contentReady: false), TokenType.Value, previous);
-            Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
-
-            // Act
-            reader.ContentReady();
-
-            // Assert
-            Assert.Equal(0, reader.Position);
-            Assert.Equal(state._elementStack.ContentReady, reader.ReaderState._elementStack.ContentReady);
-        }
-
-        /// <summary>
-        /// S7 means that the markup is content ready and the '>' character is likely 
-        /// character data.  The '>' character is ignored because the document is 
-        /// well-formed.
-        /// </summary>
-        [Fact]
-        public void ContentReady_ForS7AlreadyContentReady_ItShould_LeaveTheCharacterForTheStartingTerminalStep()
-        {
-            // Arrange
-            ReaderState state = State(ElementStackAtDepth(1, contentReady: true), TokenType.Element);
-            Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
-
-            // Act
-            reader.ContentReady();
-
-            // Assert
-            Assert.Equal(0, reader.Position);
-            Assert.True(reader.ReaderState._elementStack.ContentReady);
-        }
-
-        /// <summary>
-        /// When no assertions are possible i.e. no state between S0 - S7 exists then 
-        /// a Debug Assert is caught. 
-        /// </summary>
-        [Fact]
-        public void ContentReady_ForAStateCombinationNoRowCovers_ItShould_TriggerTheDebugAssert()
-        {
-            // Arrange
-            ReaderState state = State(ElementStackAtDepth(1, contentReady: false), TokenType.ElementEnd);
-            Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
-
-            // Act & Assert - reader is a ref struct, so it can't be captured by Assert.Throws'
-            // lambda; a plain try/catch is the only option, matching this file's existing pattern
-            // for other expected-throw cases. Catching the base Exception type, not something more
-            // specific: a failed Debug.Assert under `dotnet test` is translated to
-            // Microsoft.VisualStudio.TestPlatform.TestHost.DebugAssertException (verified
-            // empirically - it does NOT crash the whole test process the way a raw Debug.Assert
-            // failure would outside a test host), but that type is internal to the test host's
-            // own assembly and isn't accessible from here.
-            bool threw = false;
+            // Act & Assert - ref struct, so try/catch rather than Assert.Throws. An
+            // IndexOutOfRangeException here would mean the starting terminal was peeked past
+            // the end of the segment.
+            Exception? thrown = null;
             try
             {
-                reader.ContentReady();
+                reader.Read();
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                threw = true;
+                thrown = exception;
             }
 
-            Assert.True(threw);
+            Assert.IsType<XmlException>(thrown);
+            Assert.Contains("element not ended", thrown.Message);
         }
     }
 }
