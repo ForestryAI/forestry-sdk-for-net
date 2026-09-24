@@ -9,7 +9,7 @@ namespace Forestry.Deserialize.Xml.Reading
     public ref partial struct Utf8XmlReader
     {
         /// <summary>
-        /// Reading segment from a byte span
+        /// Reader construction from a byte span
         /// </summary>
         /// <param name="segment"></param>
         /// <param name="isReadingCompleted"></param>
@@ -29,7 +29,8 @@ namespace Forestry.Deserialize.Xml.Reading
 
             // sequence
             _sequence = default;
-            _sequencePosition = 0;
+            _isByteSequence = false;
+            _advancementPosition = 0;
             _isMultipleSegments = false;
             _currentSequencePosition = default;
             _nextSequencePosition = default;
@@ -55,7 +56,7 @@ namespace Forestry.Deserialize.Xml.Reading
 
         /// <summary>
         /// When the segment position exceeds the length of the current 
-        /// segment then the segment is drained
+        /// segment then the segment is drained halting advancement
         /// </summary>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -11,7 +11,7 @@ namespace Forestry.Deserialize.Xml.Reading
     {
         #region constructor
         /// <summary>
-        /// Reader sourcing a byte span where reading is implicitly completed 
+        /// Reader construction from a byte span where reading is implicitly completed 
         /// and the reader state is created from optional reader options
         /// </summary>
         /// <param name="segment"></param>
@@ -22,7 +22,7 @@ namespace Forestry.Deserialize.Xml.Reading
         ): this(segment, isReadingCompleted: true, new ReaderState(readerOptions)) {}
 
         /// <summary>
-        /// Reader sourcing a byte span where the reader completed flag and reader 
+        /// Reader construction from a byte span where the reader completed flag and reader 
         /// state are explicit
         /// </summary>
         /// <param name="segment"></param>
@@ -35,7 +35,7 @@ namespace Forestry.Deserialize.Xml.Reading
         ); 
 
         /// <summary>
-        /// Reader sourcing a byte sequence where reading is implicitly completed 
+        /// Reader construction from a byte sequence where reading is implicitly completed 
         /// and the reader state is created from optional reader options
         /// </summary>
         /// <param name="segments"></param>
@@ -46,7 +46,7 @@ namespace Forestry.Deserialize.Xml.Reading
         ): this(segments, isReadingCompleted: true, new ReaderState(readerOptions)) {}
 
         /// <summary>
-        /// Reader sourcing a byte sequence where the reader completed flag and reader 
+        /// Reader construction from a byte sequence where the reader completed flag and reader 
         /// state are explicit
         /// </summary>
         /// <param name="sequence"></param>
@@ -105,9 +105,15 @@ namespace Forestry.Deserialize.Xml.Reading
         private readonly ReadOnlySequence<byte> _sequence;
 
         /// <summary>
-        /// Position in the sequence starting at the first segment
+        /// Advancement position when the reader has been constructed from 
+        /// a byte sequence i.e. not set when constructed from a byte segment 
         /// </summary>
-        private int _sequencePosition;
+        private long _advancementPosition;
+
+        /// <summary>
+        /// When the reader has been constructed from a byte sequence
+        /// </summary>
+        private bool _isByteSequence;
 
         /// <summary>
         /// Position (index) in segments including the current segment from a the byte sequence 
@@ -167,7 +173,18 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <summary>
         /// Position in the current segment plus when multiple segment the positions of the previous segments
         /// </summary>
-        public readonly long Position => _sequencePosition + _segmentPosition;
+        public readonly long Position {
+            get {
+                #if DEBUG
+                if (!_isMultipleSegments)
+                {
+                    Debug.Assert(_advancementPosition == 0);
+                }
+                #endif
+
+                return _advancementPosition + _segmentPosition;
+            }
+        }
 
         /// <summary>
         /// 
@@ -222,10 +239,30 @@ namespace Forestry.Deserialize.Xml.Reading
 
         #region starting terminals
         /// <summary>
-        /// Scratch buffer for starting terminals that is transient i.e. rewritten on 
-        /// rollbacks
+        /// Largest number of characters in allowed starting terminals i.e. the
+        /// document type <c>&lt;!DOCTYPE</c>
         /// </summary>
-        private readonly byte[] _startingTerminals = new byte[9];
+        internal const int StartingTerminalsLength = 9;
+
+        /// <summary>
+        /// Fixed number of characters living inline in the reader - no heap
+        /// allocation per reader construction
+        /// </summary>
+        [InlineArray(StartingTerminalsLength)]
+        internal struct StartingTerminals
+        {
+            private byte _character;
+        }
+
+        /// <summary>
+        /// Scratch pad for starting terminals that is transient
+        /// </summary>
+        internal StartingTerminals _startingTerminals;
+
+        /// <summary>
+        /// Character count in the scratch pad
+        /// </summary>
+        internal int _startingTerminalCharacterCount;
         #endregion
 
         /// <summary>
@@ -380,77 +417,24 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// 
+        /// Peek starting terminal
         /// </summary>
         /// <returns></returns>
-        private bool ReadValue()
+        internal bool PeekStartingTerminal()
         {
             return false;
         }
 
         /// <summary>
-        /// Read starting terminal into a transient scratch pad memory
+        /// Read values
         /// </summary>
         /// <returns></returns>
-        private bool ReadStartingTerminal()
+        private bool ReadValue()
         {
-            _startingTerminals.AsSpan().Clear();  // transient
-            byte character = _segment[_segmentPosition];
+            bool advancement = PeekStartingTerminal();
 
-            if (character == EBNF.StartTagStartingTerminal)
-            {
-                // miscellaneous non-terminals i.e. anywhere in markup
-                // TODO: Must have 2 or 3 characters when processing instruction or comment
-
-                if (!_elementStack.RootElement)
-                {
-                    // prolog non-terminals or first start tag i.e. root element non-terminal
-                    if (_currentTokenType == TokenType.None) // TODO: BOM + add declaration starting tag check
-                    {
-                        // TODO: Must have 4 characters == declaration non-terminal starting tag
-                    }
-
-                    // TODO: document type check
-                } else
-                {
-                    // start tag i.e. child element non-terminal when next terminal not '/' otherwise end tag
-                }
-
-                return true;
-            }
-            
-
-            if (_elementStack.Depth != 0 && _elementStack.ContentReady && character == EBNF.Equal)
-            {
-                // value non-terminal (attribute)
-                return true;
-            }
-
-            if (_elementStack.Depth != 0 && _elementStack.ContentReady && EBNF.IsNameStartingCharacter(character))
-            {
-                // attribute non-terminal
-                return true;
-            }
-
-            if (_elementStack.Depth != 0 && _currentTokenType == TokenType.ElementEnd && _elementStack.ContentReady && EBNF.IsCharacterData(character))
-            {
-                // value non-terminal (character data)
-                return true;
-            }
-
-            if (_elementStack.Depth != 0 && _elementStack.ContentReady && character == EBNF.Slash)
-            {
-                // value (empty element non-terminal)    
-                return true;
-            }
-
-            if (_elementStack.Depth != 0 && !_elementStack.ContentReady && character == EBNF.StartTagEndingTerminal)
-            {
-                // end element (empty element non-terminal)
-                return true;
-            }
-
-            return false;
+            return advancement;
         }
+
     }
 }

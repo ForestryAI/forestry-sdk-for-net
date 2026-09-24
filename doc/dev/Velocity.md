@@ -223,6 +223,7 @@ would make this possible later without redesigning the format first.
 | Task | Requirements Review (est/act) | Architecture (est/act) | Test shell (act) | Understanding (est/act) | Test review (est/act) | Coding (est/act) | Test-bug fix (est/act) | Table | Code | Test | Drift | Understanding match |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | [#22](https://github.com/ForestryAI/forestry-sdk-for-net/issues/22) Content Ready | 0/0m | 4/4h | 10m | 30/15m | 15/5m | 30/10m | 15/5m | 0 | 3 | 1 | 1 | yes |
+| [#17](https://github.com/ForestryAI/forestry-sdk-for-net/issues/17) Peek starting terminals | 30/30m | 4/3h | 5m | | | | | | | | | |
 
 A short retrospective on how the numbers actually felt - what was better or worse than previous
 tasks, any pattern worth watching - belongs as a closing comment on the task itself when it moves

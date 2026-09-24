@@ -10,7 +10,7 @@ namespace Forestry.Deserialize.Xml.Reading
     public ref partial struct Utf8XmlReader
     {
         /// <summary>
-        /// 
+        /// Reader construction from a byte sequence
         /// </summary>
         /// <param name="sequence"></param>
         /// <param name="isReadingCompleted"></param>
@@ -30,11 +30,12 @@ namespace Forestry.Deserialize.Xml.Reading
 
             // sequence
             _sequence = sequence;
+            _isByteSequence = true;
             if (sequence.IsSingleSegment)
             {
-                _sequencePosition = 0;
+                _advancementPosition = 0;
                 _isMultipleSegments = false;
-                _currentSequencePosition = default;
+                _currentSequencePosition = sequence.Start;
                 _nextSequencePosition = default;
             } else
             {
@@ -82,9 +83,33 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// When the segment position exceeds the length of the current 
-        /// oor the next non-empty segment then the segment is drained
+        /// Sequence position offset by the current segment position only when the 
+        /// reader is constructed from a byte sequence otherwise the value is always 
+        /// the default
         /// </summary>
+        public SequencePosition SequencePosition
+        {
+            get
+            {
+                if (_isByteSequence)
+                {
+                    Debug.Assert(_currentSequencePosition.GetObject() is not null);
+                    return _sequence.GetPosition(_segmentPosition, _currentSequencePosition);
+                }
+
+                return default;
+            }
+        }
+
+        /// <summary>
+        /// When the segment position exceeds the length of the current 
+        /// or the next non-empty segment then the segment is drained 
+        /// halting advancement 
+        /// </summary>
+        /// <remarks>
+        /// A drainage assertion may advance the internal current sequence position 
+        /// and segment position at the start of the next non-empty segment
+        /// </remarks>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool IsMultipleSegmentDrained()
@@ -114,9 +139,13 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// Try skip any empty segments when the sequence can be advanced and 
-        /// setting the current segment to the next non-empty
+        /// Try skip any empty segments when the sequence allows advancement 
+        /// to the start of the next non-empty sequence
         /// </summary>
+        /// <remarks>
+        /// A drainage assertion may advance the internal current sequence position 
+        /// and segment position at the start of the next non-empty segment
+        /// </remarks>
         /// <returns></returns>
         private bool TrySkipEmptySegments()
         {
@@ -151,7 +180,7 @@ namespace Forestry.Deserialize.Xml.Reading
             }
 
             _segment = memory.Span;
-            _sequencePosition += _segmentPosition;
+            _advancementPosition += _segmentPosition;
             _segmentPosition = 0;
 
             return true;
