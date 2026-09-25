@@ -411,6 +411,89 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <returns></returns>
         internal bool PeekStartingTerminal()
         {
+            _startingTerminalCharacterCount = 0;
+
+            while (true)
+            {
+                if (_startingTerminalCharacterCount >= StartingTerminalsLength)
+                {
+                    Debug.Assert(false, "Scratch pad overflow - S1 or S2 should have been asserted.");
+                    break;  // guard: scratch pad overflow
+                }
+
+                if (PeekCharacter(_startingTerminalCharacterCount, out byte character))
+                {
+                    _startingTerminals[_startingTerminalCharacterCount] = character;
+                    _startingTerminalCharacterCount += 1; 
+
+                    ReadOnlySpan<byte> scratchPad = _startingTerminals;
+                    scratchPad = scratchPad[.._startingTerminalCharacterCount];
+
+                    // S0: a longer allowed starting terminal starts with the scratch pad
+                    bool isPrefix = false;
+                    foreach (byte[] terminal in EBNF._allowedStartingTerminals)
+                    {
+                        if (terminal.Length > scratchPad.Length && terminal.AsSpan().StartsWith(scratchPad))
+                        {
+                            isPrefix = true;
+                            break;
+                        }
+                    }
+
+                    if (!isPrefix)
+                    {
+                        return true; // S1 or S2 ignoring malformed markup
+                    }
+                } else
+                {
+                    return _isReadingCompleted; // S3, S4
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Peek the character at offset from the segment position, continuing 
+        /// into following segments of a byte sequence without advancing.
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="character"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// readonly makes the compiler reject any assignment to the reader's 
+        /// fields, enforcing #17's Peek only requirement.
+        /// </remarks>
+        private readonly bool PeekCharacter(int offset, out byte character)
+        {
+            character = default;
+            int index = _segmentPosition + offset;
+
+            if (index < (uint)_segment.Length)
+            {
+                character = _segment[index];
+                return true;
+            }
+
+            if (!_isMultipleSegments)
+            {
+                return false;
+            }
+
+            index -= _segment.Length;
+            SequencePosition position = _nextSequencePosition;
+
+            while (_sequence.TryGet(ref position, out ReadOnlyMemory<byte> memory, advance: true))
+            {
+                if (index < memory.Length)
+                {
+                    character = memory.Span[index];
+                    return true;
+                }
+
+                index -= memory.Length; // empty segments subtract 0
+            }
+
             return false;
         }
 

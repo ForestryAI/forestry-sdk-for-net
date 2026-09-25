@@ -44,6 +44,25 @@ namespace Forestry.Deserialize.Xml {
         public static ReadOnlySpan<byte> EndTagStartingTerminal => "</"u8;
 
         public static ReadOnlySpan<byte> EmptyElementTagEndingTerminal => "/>"u8;
+
+        /// <summary>
+        /// Allowed within the POC scope (#17), not the full XML grammar
+        /// </summary>
+        /// <remarks>
+        /// Ordered largest to smallest so the S0 assertion (a longer allowed starting
+        /// terminal starts with the scratch pad) usually breaks early. Order affects
+        /// only speed, not the result: S1 and S2 always check every terminal.
+        /// </remarks>
+        internal static readonly byte[][] _allowedStartingTerminals =
+        [
+            "<!DOCTYPE"u8.ToArray(),
+            "<?xml "u8.ToArray(),
+            "<!--"u8.ToArray(),
+            "<?"u8.ToArray(),
+            "</"u8.ToArray(),
+            "/>"u8.ToArray(),
+            "<"u8.ToArray(),
+        ];
         #endregion
 
         #region BOM
