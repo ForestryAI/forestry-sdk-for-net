@@ -283,22 +283,10 @@ namespace Forestry.Deserialize.Xml.Reading
                 goto Completed;
             }
 
-            // Skip miscellaneous spacing
-            byte character = _segment[_segmentPosition];
-            if (character == EBNF.Space)
+            // Skip spacing
+            if (SkipSpacing())
             {
-                if (_isMultipleSegments)
-                {
-                    SkipMultipleSpacing();
-                } else
-                {
-                    SkipSingleSpacing();
-                }
-
-                if (_isMultipleSegments ? IsMultipleSegmentDrained() : IsSingleSegmentDrained())
-                {
-                    goto Completed;
-                }
+                goto Completed;
             }
 
             // Content ready
@@ -339,6 +327,34 @@ namespace Forestry.Deserialize.Xml.Reading
             // TODO: Reader option policies when comments or other accepted prolog + miscellaneous non-terminals
 
             return true;
+        }
+
+        /// <summary>
+        /// Skip spacing
+        /// </summary>
+        /// <returns>true when skipping drained the segment(s), halting the read</returns>
+        internal bool SkipSpacing()
+        {
+            // TODO: fire depending on the current token also with line feeds, carriage returns and tabs
+
+            byte character = _segment[_segmentPosition];
+            if (character == EBNF.Space) 
+            {
+                if (_isMultipleSegments)
+                {
+                    SkipMultipleSpacing();
+                } else
+                {
+                    SkipSingleSpacing();
+                }
+
+                if (_isMultipleSegments ? IsMultipleSegmentDrained() : IsSingleSegmentDrained())
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
