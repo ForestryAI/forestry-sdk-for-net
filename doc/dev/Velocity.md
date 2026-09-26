@@ -55,7 +55,7 @@ Review → Done):
 | within Backlog | Requirements Review | Requirements Review est/act |
 | Backlog → Ready | Architecture, then Claude writes the Test shells | Architecture est/act |
 | Ready → In Progress | Understanding, using the shells already written as an aid | Understanding est/act, the checkpoint restatement |
-| within In Progress | Test review (shells → real assertions), then Coding | Test review est/act, Coding est/act |
+| within In Progress | Test review (shells → real assertions), then Coding | Test review est/act, Coding est/act, AI coding help + topic |
 | In Progress → Review | Test-bug fix - the developer (and architect, if separate) triage real test failures | Test-bug fix est/act, defect classification |
 | Review → Done | completeness gate | every column has a value → Churn ratio computed |
 
@@ -168,6 +168,36 @@ working. Group B is diagnostic - it says *why*, so a task's authoring or the AI 
 be adjusted. Neither is a per-developer scorecard; see Prior art below on why that distinction
 matters once this stops being solo work.
 
+### AI coding help (learning need)
+
+A separate metric, not part of Group A or B: how much the developer needed AI during the Coding
+phase, on a 0-10 scale, recorded together with the **topic** the help was about (e.g. `7
+ReadOnlySequence`). Where Group B asks why architecture-to-code friction happened, this asks where
+the developer's own skills ran short - the education need. #22 and #17 are the reason it exists:
+#22 was coded without help, while #17 leaned on Claude for nearly every byte sequence operation,
+and nothing else in the log showed that difference.
+
+| Value | Meaning |
+|---|---|
+| 0 | No AI help during Coding. |
+| 1-2 | AI used as a reference only - an API lookup or a syntax reminder the developer could have found in the docs. |
+| 3-4 | AI confirmed or reviewed code the developer wrote; the developer found and fixed any defects themselves. |
+| 5-6 | AI pointed out defects the developer hadn't seen; the developer understood each one and wrote the fix. |
+| 7-8 | AI diagnosed the defects and supplied fix code, which the developer applied and adjusted. |
+| 9 | AI supplied most of the implementation; the developer integrated and verified it. |
+| 10 | AI wrote the implementation; the developer only ran it. |
+
+How to read it:
+
+- **A high value with a topic is a useful result, not a bad one.** It is exactly what makes an
+  education need visible. The signal worth acting on is the same topic recurring across tasks
+  (e.g. byte sequences showing up at 6+ several times), not any single high value.
+- **Confounded by novelty.** A task on an API the developer rarely uses is expected to score higher
+  than one on familiar ground - #17's byte sequence work versus #22's single-segment logic. Compare
+  values within a topic before comparing them across tasks.
+- **Topic, not person.** Trended by topic, it shows what a team needs to learn. Trended by
+  developer, it becomes the per-developer scorecard this file warns against - see Recording below.
+
 **Candidate signal, not yet a metric: Understanding actual > Coding actual, paired with a very low
 Coding ratio.** #22 (Understanding 15m vs Coding 10m; Coding ratio ~0.04, well under the
 already-small ~1/4 hypothesis) is the first data point suggesting this combination indicates real
@@ -204,6 +234,14 @@ if the Understanding-checkpoint restatement goes boilerplate or one-line for sev
 that's the field being satisfied rather than used - worth a look back at the log, not just the next
 task's number.
 
+**Honest reporting is a question of project culture, not of this file.** Every judgment call in the
+log - defect classification, the understanding match, and above all AI coding help - depends on the
+developer reporting what actually happened, and no format can enforce that. Whether developers do
+comes down to whether the project treats a gap in skills as something to learn from or something to
+hide. If AI is going to be used to learn, the log has to be honest about where learning is needed:
+an understated AI coding help value doesn't make a developer more skilled, it only hides the topic
+they need help with.
+
 Raw per-task numbers should live in the repo, not GitHub Issues/Project fields alone - reading a
 plain-text table back is faster than paging through issue history or an API. **Open, not yet
 decided**: whether the log stays a table appended to this file, or moves to a separate
@@ -220,10 +258,11 @@ would make this possible later without redesigning the format first.
 
 ### Log
 
-| Task | Requirements Review (est/act) | Architecture (est/act) | Test shell (act) | Understanding (est/act) | Test review (est/act) | Coding (est/act) | Test-bug fix (est/act) | Table | Code | Test | Drift | Understanding match |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| [#22](https://github.com/ForestryAI/forestry-sdk-for-net/issues/22) Content Ready | 0/0m | 4/4h | 10m | 30/15m | 15/5m | 30/10m | 15/5m | 0 | 3 | 1 | 1 | yes |
-| [#17](https://github.com/ForestryAI/forestry-sdk-for-net/issues/17) Peek starting terminals | 30/30m | 4/3h | 5m | 30/5m | 15/5m | 30/45m | 15/5m | 0 | 5 | 0 | 0 | yes |
+| Task | Requirements Review (est/act) | Architecture (est/act) | Test shell (act) | Understanding (est/act) | Test review (est/act) | Coding (est/act) | Test-bug fix (est/act) | Table | Code | Test | Drift | Understanding match | AI coding help |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [#22](https://github.com/ForestryAI/forestry-sdk-for-net/issues/22) Content Ready | 0/0m | 4/4h | 10m | 30/15m | 15/5m | 30/10m | 15/5m | 0 | 3 | 1 | 1 | yes | 0 |
+| [#17](https://github.com/ForestryAI/forestry-sdk-for-net/issues/17) Peek starting terminals | 30/30m | 4/3h | 5m | 30/5m | 15/5m | 30/45m | 15/5m | 0 | 5 | 0 | 0 | yes | 8 |
+| [#27](https://github.com/ForestryAI/forestry-sdk-for-net/issues/27) Read value delegation | 15/0m | 2/3h | 5m | | | | | | | | | | |
 
 A short retrospective on how the numbers actually felt - what was better or worse than previous
 tasks, any pattern worth watching - belongs as a closing comment on the task itself when it moves

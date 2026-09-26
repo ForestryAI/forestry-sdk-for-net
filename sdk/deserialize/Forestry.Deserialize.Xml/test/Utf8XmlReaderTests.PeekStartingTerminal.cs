@@ -72,7 +72,9 @@ namespace Forestry.Deserialize.Xml.Tests
         /// Peeking continues when a longer allowed starting terminal starts with the 
         /// scratch pad, e.g. <c>&lt;</c> could still become <c>&lt;/</c> and <c>&lt;?</c> could still become <c>&lt;?xml </c>
         /// </summary>
-        /// <remarks>When reader construction is from a byte span</remarks>
+        /// <remarks>When reader construction is from a byte span.  Peeking past an allowed 
+        /// starting terminal: <c>&lt;a</c> and <c>&lt;?p</c> overshoot <c>&lt;</c> and <c>&lt;?</c> by one character, 
+        /// <c>&lt;?xml-</c> overshoots <c>&lt;?</c> by four, and <c>/a</c> matches no allowed starting terminal at all.</remarks>
         [Theory]
         [InlineData("<a>", "<a")]
         [InlineData("<?pi?>", "<?p")]
