@@ -439,6 +439,11 @@ namespace Forestry.Deserialize.Xml.Reading
 
                 if (PeekCharacter(_startingTerminalCharacterCount, out byte character))
                 {
+                    if (_startingTerminalCharacterCount == 0 && !EBNF.IsStartingTerminalsFirstCharacter(character)) 
+                    {
+                        return true;  // S5 no starting terminal begins with the first character
+                    }
+
                     _startingTerminals[_startingTerminalCharacterCount] = character;
                     _startingTerminalCharacterCount += 1; 
 
@@ -517,7 +522,7 @@ namespace Forestry.Deserialize.Xml.Reading
         /// Read values
         /// </summary>
         /// <returns></returns>
-        private bool ReadValue()
+        internal bool ReadValue()
         {
             bool advancement = PeekStartingTerminal();
 

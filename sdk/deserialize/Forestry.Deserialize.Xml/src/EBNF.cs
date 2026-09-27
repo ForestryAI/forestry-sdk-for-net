@@ -30,6 +30,16 @@ namespace Forestry.Deserialize.Xml {
         public const byte Hyphen = (byte)'-';
 
         public const byte Period = (byte)'.';
+
+        public const byte LessThan = (byte)'<';
+
+        public const byte GreaterThan = (byte)'>';
+
+        public const byte ExclamationMark = (byte)'!';
+
+        public const byte SingleQuote = (byte)'\'';
+
+        public const byte Ampersand = (byte)'&';
         #endregion
 
         #region Terminals
@@ -60,9 +70,29 @@ namespace Forestry.Deserialize.Xml {
             "<!--"u8.ToArray(),
             "<?"u8.ToArray(),
             "</"u8.ToArray(),
-            "/>"u8.ToArray(),
             "<"u8.ToArray(),
+            "'"u8.ToArray(),
+            "\""u8.ToArray()
         ];
+
+        /// <summary>
+        /// Is the character the first character of the starting terminal 
+        /// of any allowed non-terminal
+        /// </summary>
+        /// <param name="character"></param>
+        /// <returns></returns>
+        internal static bool IsStartingTerminalsFirstCharacter(byte character)
+        {
+            foreach (byte[] terminal in EBNF._allowedStartingTerminals)
+            {
+                if (terminal[0] == character)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
         #endregion
 
         #region BOM

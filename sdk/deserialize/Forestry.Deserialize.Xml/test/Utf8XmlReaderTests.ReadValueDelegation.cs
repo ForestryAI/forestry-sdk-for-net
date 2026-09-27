@@ -9,24 +9,33 @@ namespace Forestry.Deserialize.Xml.Tests
         // ---- ReadValue() delegation shells, from #27 -----------------------------------------
         //
         // The `ReadValueDelegation_*` tests below are shells written from
-        // #27's architecture text alone (context table, delegation table D0-D10, requirements),
+        // #27's architecture text alone (context table, delegation table S0-S9, requirements),
         // before delegation's body exists - see doc/dev/Velocity.md's Test shell phase.
         //
-        // Test seam - PLACEHOLDERS, not decided by the architecture, to be confirmed or renamed
-        // during Understanding. Won't compile until they exist:
-        // - `internal enum Candidate { None, Declaration, DocumentType, Comment,
-        //   ProcessingInstruction, ElementStart, EndTag, EmptyElementEnd, AttributeName,
-        //   AttributeValue, CharacterData }`, where None means the default delegate (D10)
-        // - `internal readonly Candidate DeconstructScratchPad()` - readonly makes the compiler
-        //   enforce the no side effects requirement, like PeekCharacter() does for #17
+        // Test seam - PLACEHOLDERS from Understanding, not decided by the architecture, to be
+        // confirmed or renamed (now in src/Reading/Candidate.cs):
+        // - `internal enum CandidateNonTerminal { None, Declaration, DocumentType, Comment,
+        //   ProcessingInstruction, Element, EndTag, Attribute, AttributeValue,
+        //   CharacterData }`, where None means the default delegate (S9)
+        // - `internal readonly struct Candidate` whose constructor
+        //   `Candidate(ReadOnlySpan<byte> scratchPad, ReaderState readerState)` deconstructs the
+        //   scratch pad into `CandidateNonTerminal NonTerminal` and `int StartingTerminalLength`, handed out by
+        //   `Deconstruct(out CandidateNonTerminal nonTerminal, out int startingTerminalLength)`. The starting
+        //   terminal is scratchPad[..StartingTerminalLength] and the extra is the rest. Taking
+        //   the whole ReaderState lets the struct derive the context itself, so these shells
+        //   cover that derivation too.
         // - ReadValue() becoming `internal`
         //
         // The delegates are separate backlog tasks, so no shell asserts that a delegate was
         // called; the candidate is the observable. Each reader is built from an internal
         // ReaderState so every context is reachable without a real document producing it, and
-        // the scratch pad is filled by the real PeekStartingTerminal() (#17). Straddling segments
+        // the scratch pad is filled by the real PeekStartingTerminal() (#17) before the
+        // Candidate is constructed from it. Straddling segments
         // is not repeated here: the scratch pad is already filled when delegation runs, and #17
         // covers straddling.
+        //
+        // A bare Sn is #27's delegation state; #17's peek states are always written "#17's Sn"
+        // and their test names carry no number, so the two never collide.
 
         #region helpers
         /// <summary>
@@ -55,9 +64,10 @@ namespace Forestry.Deserialize.Xml.Tests
         };
 
         /// <summary>
-        /// Peek the starting terminal of the text into the scratch pad, then deconstruct it
+        /// Peek the starting terminal of the text into the scratch pad, then construct the
+        /// candidate from the scratch pad and the reader state
         /// </summary>
-        private static Candidate Deconstruct(
+        private static Candidate PeekCandidate(
             string text,
             Context context,
             TokenType current,
@@ -66,34 +76,42 @@ namespace Forestry.Deserialize.Xml.Tests
             Utf8XmlReader reader = new(Encoding.UTF8.GetBytes(text), isReadingCompleted, ContextState(context, current));
             Assert.True(reader.PeekStartingTerminal());
 
-            return reader.DeconstructScratchPad();
+            ReadOnlySpan<byte> scratchPad = reader._startingTerminals;
+            return new Candidate(scratchPad[..reader._startingTerminalCharacterCount], reader.ReaderState);
         }
         #endregion
 
-        #region D0
+        #region S0
         /// <summary>
-        /// D0: <c>&lt;?xml</c> followed by any <c>S</c> (space, tab, CR, LF) is the declaration
+        /// S0: <c>&lt;?xml</c> followed by any <c>S</c> (space, tab, CR, LF) is the declaration
         /// only in the prolog before any token, i.e. <c>VersionInfo ::= S 'version' ...</c>
         /// </summary>
+        /// <remarks>
+        /// <c>S</c> only separates the declaration from a processing instruction.  The declaration
+        /// is an opaque value: its delegate only looks for the ending terminal <c>?&gt;</c>, so
+        /// nothing after <c>S</c> (e.g. <c>VersionInfo</c>) is ever checked.
+        /// </remarks>
         [Theory]
         [InlineData("<?xml version=\"1.0\"?>")]
         [InlineData("<?xml\tversion=\"1.0\"?>")]
         [InlineData("<?xml\rversion=\"1.0\"?>")]
         [InlineData("<?xml\nversion=\"1.0\"?>")]
-        public void ReadValueDelegation_ForD0DeclarationFirstInTheProlog_ItShould_BeADeclarationCandidate(
+        public void ReadValueDelegation_ForS0DeclarationFirstInTheProlog_ItShould_BeADeclarationCandidate(
             string text
         ) {
             // Arrange & Act
-            Candidate candidate = Deconstruct(text, Context.Prolog, TokenType.None);
+            Candidate candidate = PeekCandidate(text, Context.Prolog, TokenType.None);
 
             // Assert
-            Assert.Equal(Candidate.Declaration, candidate);
+            var (nonTerminal, startingTerminalLength) = candidate;
+            Assert.Equal(CandidateNonTerminal.Declaration, nonTerminal);
+            Assert.Equal(5, startingTerminalLength);
         }
         #endregion
 
-        #region D1
+        #region S1
         /// <summary>
-        /// D1: <c>&lt;!DOCTYPE</c> in the prolog is the document type.  Its position within the
+        /// S1: <c>&lt;!DOCTYPE</c> in the prolog is the document type.  Its position within the
         /// prolog (e.g. a second document type) is the delegate's concern.
         /// </summary>
         [Theory]
@@ -101,40 +119,44 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData(TokenType.Declaration)]
         [InlineData(TokenType.Comment)]
         [InlineData(TokenType.DocumentType)]
-        public void ReadValueDelegation_ForD1DocumentTypeInTheProlog_ItShould_BeADocumentTypeCandidate(
+        public void ReadValueDelegation_ForS1DocumentTypeInTheProlog_ItShould_BeADocumentTypeCandidate(
             TokenType current
         ) {
             // Arrange & Act
-            Candidate candidate = Deconstruct("<!DOCTYPE root>", Context.Prolog, current);
+            Candidate candidate = PeekCandidate("<!DOCTYPE root>", Context.Prolog, current);
 
             // Assert
-            Assert.Equal(Candidate.DocumentType, candidate);
+            var (nonTerminal, startingTerminalLength) = candidate;
+            Assert.Equal(CandidateNonTerminal.DocumentType, nonTerminal);
+            Assert.Equal(9, startingTerminalLength);
         }
         #endregion
 
-        #region D2
+        #region S2
         /// <summary>
-        /// D2: <c>&lt;!--</c> is a comment in the prolog, content and miscellaneous
+        /// S2: <c>&lt;!--</c> is a comment in the prolog, content and miscellaneous
         /// </summary>
         [Theory]
         [InlineData(Context.Prolog, TokenType.None)]
         [InlineData(Context.Content, TokenType.Element)]
         [InlineData(Context.Miscellaneous, TokenType.ElementEnd)]
-        public void ReadValueDelegation_ForD2Comment_ItShould_BeACommentCandidate(
+        public void ReadValueDelegation_ForS2Comment_ItShould_BeACommentCandidate(
             Context context,
             TokenType current
         ) {
             // Arrange & Act
-            Candidate candidate = Deconstruct("<!-- comment -->", context, current);
+            Candidate candidate = PeekCandidate("<!-- comment -->", context, current);
 
             // Assert
-            Assert.Equal(Candidate.Comment, candidate);
+            var (nonTerminal, startingTerminalLength) = candidate;
+            Assert.Equal(CandidateNonTerminal.Comment, nonTerminal);
+            Assert.Equal(4, startingTerminalLength);
         }
         #endregion
 
-        #region D3
+        #region S3
         /// <summary>
-        /// D3: <c>&lt;?</c> with any extra is a processing instruction in the prolog, content and
+        /// S3: <c>&lt;?</c> with any extra is a processing instruction in the prolog, content and
         /// miscellaneous, e.g. <c>xml-</c> is the start of <c>PITarget</c> and <c>&lt;?xml </c>
         /// after the first token is a PI (its reserved target is the delegate's concern)
         /// </summary>
@@ -145,22 +167,24 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData("<?xml version=\"1.0\"?>", Context.Prolog, TokenType.Comment)]
         [InlineData("<?pi?>", Context.Content, TokenType.Element)]
         [InlineData("<?pi?>", Context.Miscellaneous, TokenType.ElementEnd)]
-        public void ReadValueDelegation_ForD3ProcessingInstruction_ItShould_BeAProcessingInstructionCandidate(
+        public void ReadValueDelegation_ForS3ProcessingInstruction_ItShould_BeAProcessingInstructionCandidate(
             string text,
             Context context,
             TokenType current
         ) {
             // Arrange & Act
-            Candidate candidate = Deconstruct(text, context, current);
+            Candidate candidate = PeekCandidate(text, context, current);
 
             // Assert
-            Assert.Equal(Candidate.ProcessingInstruction, candidate);
+            var (nonTerminal, startingTerminalLength) = candidate;
+            Assert.Equal(CandidateNonTerminal.ProcessingInstruction, nonTerminal);
+            Assert.Equal(2, startingTerminalLength);
         }
         #endregion
 
-        #region D4
+        #region S4
         /// <summary>
-        /// D4: <c>&lt;</c> with a <c>NameStartChar</c> extra is an element start in the prolog
+        /// S4: <c>&lt;</c> with a <c>NameStartChar</c> extra is an element in the prolog
         /// (the root) and content
         /// </summary>
         [Theory]
@@ -168,101 +192,96 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData("<_a/>", Context.Prolog, TokenType.Comment)]
         [InlineData("<:a>", Context.Content, TokenType.Element)]
         [InlineData("<A>", Context.Content, TokenType.Value)]
-        public void ReadValueDelegation_ForD4ElementStart_ItShould_BeAnElementStartCandidate(
+        public void ReadValueDelegation_ForS4Element_ItShould_BeAnElementCandidate(
             string text,
             Context context,
             TokenType current
         ) {
             // Arrange & Act
-            Candidate candidate = Deconstruct(text, context, current);
+            Candidate candidate = PeekCandidate(text, context, current);
 
             // Assert
-            Assert.Equal(Candidate.ElementStart, candidate);
+            var (nonTerminal, startingTerminalLength) = candidate;
+            Assert.Equal(CandidateNonTerminal.Element, nonTerminal);
+            Assert.Equal(1, startingTerminalLength);
         }
         #endregion
 
-        #region D5
+        #region S5
         /// <summary>
-        /// D5: <c>&lt;/</c> in content is an end tag
+        /// S5: <c>&lt;/</c> in content is an end tag
         /// </summary>
         [Theory]
         [InlineData(TokenType.Element)]
         [InlineData(TokenType.Value)]
         [InlineData(TokenType.ElementEnd)]
-        public void ReadValueDelegation_ForD5EndTagInContent_ItShould_BeAnEndTagCandidate(
+        public void ReadValueDelegation_ForS5EndTagInContent_ItShould_BeAnEndTagCandidate(
             TokenType current
         ) {
             // Arrange & Act
-            Candidate candidate = Deconstruct("</a>", Context.Content, current);
+            Candidate candidate = PeekCandidate("</a>", Context.Content, current);
 
             // Assert
-            Assert.Equal(Candidate.EndTag, candidate);
+            var (nonTerminal, startingTerminalLength) = candidate;
+            Assert.Equal(CandidateNonTerminal.EndTag, nonTerminal);
+            Assert.Equal(2, startingTerminalLength);
         }
         #endregion
 
-        #region D6
+        #region S6
         /// <summary>
-        /// D6: <c>/&gt;</c> in a start tag is the empty element end
-        /// </summary>
-        [Theory]
-        [InlineData(TokenType.Element)]
-        [InlineData(TokenType.Value)]
-        public void ReadValueDelegation_ForD6EmptyElementEndInAStartTag_ItShould_BeAnEmptyElementEndCandidate(
-            TokenType current
-        ) {
-            // Arrange & Act
-            Candidate candidate = Deconstruct("/>", Context.StartTag, current);
-
-            // Assert
-            Assert.Equal(Candidate.EmptyElementEnd, candidate);
-        }
-        #endregion
-
-        #region D7
-        /// <summary>
-        /// D7: a <c>NameStartChar</c> in a start tag is an attribute name, with no starting
-        /// terminal i.e. the whole scratch pad is extra
+        /// S6: an empty scratch pad (#25) in a start tag is an attribute, which has no starting
+        /// terminal.  The steps before delegation consume every other well-formed character
+        /// (spacing, <c>&gt;</c>, <c>Eq</c> and <c>/&gt;</c>), so an attribute is the only
+        /// well-formed possibility.
         /// </summary>
         [Theory]
         [InlineData("b=\"1\"", TokenType.Element)]
         [InlineData("_b=\"1\"", TokenType.Value)]
         [InlineData(":b=\"1\"", TokenType.Element)]
-        public void ReadValueDelegation_ForD7AttributeNameInAStartTag_ItShould_BeAnAttributeNameCandidate(
+        [InlineData("=\"1\"", TokenType.Attribute)]  // malformed, the attribute delegate throws
+        [InlineData("/x", TokenType.Element)]          // malformed, the attribute delegate throws
+        [InlineData("/>", TokenType.Element)]          // consumed before delegation by the /> step
+        public void ReadValueDelegation_ForS6AttributeInAStartTag_ItShould_BeAnAttributeCandidate(
             string text,
             TokenType current
         ) {
             // Arrange & Act
-            Candidate candidate = Deconstruct(text, Context.StartTag, current);
+            Candidate candidate = PeekCandidate(text, Context.StartTag, current);
 
             // Assert
-            Assert.Equal(Candidate.AttributeName, candidate);
+            var (nonTerminal, startingTerminalLength) = candidate;
+            Assert.Equal(CandidateNonTerminal.Attribute, nonTerminal);
+            Assert.Equal(0, startingTerminalLength);
         }
         #endregion
 
-        #region D8
+        #region S7
         /// <summary>
-        /// D8: a quote in a start tag is <c>AttValue</c>'s starting terminal, reached after the
-        /// skip equal step (separate backlog task) has skipped <c>Eq</c>
+        /// S7: a quote in a start tag is <c>AttValue</c>'s starting terminal, reached after the
+        /// Skip Delimiting Terminals step (separate backlog task) has skipped <c>Eq</c>
         /// </summary>
         [Theory]
         [InlineData("\"1\"")]
         [InlineData("'1'")]
-        public void ReadValueDelegation_ForD8AttributeValueInAStartTag_ItShould_BeAnAttributeValueCandidate(
+        public void ReadValueDelegation_ForS7AttributeValueInAStartTag_ItShould_BeAnAttributeValueCandidate(
             string text
         ) {
             // Arrange & Act
-            Candidate candidate = Deconstruct(text, Context.StartTag, TokenType.Attribute);
+            Candidate candidate = PeekCandidate(text, Context.StartTag, TokenType.Attribute);
 
             // Assert
-            Assert.Equal(Candidate.AttributeValue, candidate);
+            var (nonTerminal, startingTerminalLength) = candidate;
+            Assert.Equal(CandidateNonTerminal.AttributeValue, nonTerminal);
+            Assert.Equal(1, startingTerminalLength);
         }
         #endregion
 
-        #region D9
+        #region S8
         /// <summary>
-        /// D9: in content anything not starting with <c>&lt;</c> or <c>&amp;</c> is character
-        /// data, i.e. <c>CharData ::= [^&lt;&amp;]*</c>, including <c>/&gt;</c> which is only an
-        /// empty element end in a start tag
+        /// S8: in content an empty scratch pad (#25) or a quote is character data, which has no
+        /// starting terminal.  <c>&amp;</c> also leaves an empty scratch pad: the character data
+        /// delegate rejects it, i.e. <c>CharData ::= [^&lt;&amp;]*</c>.
         /// </summary>
         [Theory]
         [InlineData("a")]
@@ -271,48 +290,52 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData("/>")]
         [InlineData("=")]
         [InlineData("\"")]
-        public void ReadValueDelegation_ForD9CharacterDataInContent_ItShould_BeACharacterDataCandidate(
+        [InlineData("'")]
+        [InlineData("&amp;")]  // malformed, the character data delegate throws
+        public void ReadValueDelegation_ForS8CharacterDataInContent_ItShould_BeACharacterDataCandidate(
             string text
         ) {
             // Arrange & Act
-            Candidate candidate = Deconstruct(text, Context.Content, TokenType.Element);
+            Candidate candidate = PeekCandidate(text, Context.Content, TokenType.Element);
 
             // Assert
-            Assert.Equal(Candidate.CharacterData, candidate);
+            var (nonTerminal, startingTerminalLength) = candidate;
+            Assert.Equal(CandidateNonTerminal.CharacterData, nonTerminal);
+            Assert.Equal(0, startingTerminalLength);
         }
         #endregion
 
-        #region D10
+        #region S9
         /// <summary>
-        /// D10: no candidate in the context goes to the default delegate, which decides whether
+        /// S9: no candidate in the context goes to the default delegate, which decides whether
         /// the markup is malformed - delegation does not
         /// </summary>
         [Theory]
         [InlineData("<!Dx", Context.Prolog, TokenType.None)]
         [InlineData("<!-x", Context.Content, TokenType.Element)]
         [InlineData("<![CDATA[x]]>", Context.Content, TokenType.Element)]
-        [InlineData("&amp;", Context.Content, TokenType.Element)]
         [InlineData("a", Context.Prolog, TokenType.None)]
         [InlineData("</a>", Context.Prolog, TokenType.None)]
         [InlineData("<a/>", Context.Miscellaneous, TokenType.ElementEnd)]
         [InlineData("</a>", Context.Miscellaneous, TokenType.ElementEnd)]
         [InlineData("<!DOCTYPE root>", Context.Content, TokenType.Element)]
         [InlineData("<!DOCTYPE root>", Context.Miscellaneous, TokenType.ElementEnd)]
-        [InlineData("=\"1\"", Context.StartTag, TokenType.Attribute)]
         [InlineData("<!-- comment -->", Context.StartTag, TokenType.Element)]
         [InlineData("<?pi?>", Context.StartTag, TokenType.Element)]
         [InlineData("<a>", Context.StartTag, TokenType.Element)]
         [InlineData("/>", Context.Prolog, TokenType.None)]
-        public void ReadValueDelegation_ForD10NoCandidateInTheContext_ItShould_BeTheDefaultCandidate(
+        [InlineData("\"1\"", Context.Prolog, TokenType.None)]
+        [InlineData("a", Context.Miscellaneous, TokenType.ElementEnd)]
+        public void ReadValueDelegation_ForS9NoCandidateInTheContext_ItShould_BeTheDefaultCandidate(
             string text,
             Context context,
             TokenType current
         ) {
             // Arrange & Act
-            Candidate candidate = Deconstruct(text, context, current);
+            Candidate candidate = PeekCandidate(text, context, current);
 
             // Assert
-            Assert.Equal(Candidate.None, candidate);
+            Assert.Equal(CandidateNonTerminal.None, candidate.NonTerminal);
         }
         #endregion
 
@@ -322,28 +345,26 @@ namespace Forestry.Deserialize.Xml.Tests
         /// the delegate they reach finds that no more markup will follow
         /// </summary>
         /// <remarks>
-        /// The expected candidate is passed by name: Candidate is internal and can't be a
-        /// parameter of a public theory
+        /// The expected candidate non-terminal is passed by name: CandidateNonTerminal is internal and can't be
+        /// a parameter of a public theory
         /// </remarks>
         [Theory]
-        [InlineData("<", Context.Prolog, TokenType.None, nameof(Candidate.None))]
-        [InlineData("<!", Context.Prolog, TokenType.None, nameof(Candidate.None))]
-        [InlineData("<!DOCTYP", Context.Prolog, TokenType.None, nameof(Candidate.None))]
-        [InlineData("<!-", Context.Content, TokenType.Element, nameof(Candidate.None))]
-        [InlineData("<?xml", Context.Prolog, TokenType.None, nameof(Candidate.ProcessingInstruction))]
-        [InlineData("/", Context.Content, TokenType.Element, nameof(Candidate.CharacterData))]
-        [InlineData("/", Context.StartTag, TokenType.Element, nameof(Candidate.None))]
-        public void ReadValueDelegation_ForS4PartialScratchPadWhenReadingIsCompleted_ItShould_GoThroughTheSameTable(
+        [InlineData("<", Context.Prolog, TokenType.None, nameof(CandidateNonTerminal.None))]
+        [InlineData("<!", Context.Prolog, TokenType.None, nameof(CandidateNonTerminal.None))]
+        [InlineData("<!DOCTYP", Context.Prolog, TokenType.None, nameof(CandidateNonTerminal.None))]
+        [InlineData("<!-", Context.Content, TokenType.Element, nameof(CandidateNonTerminal.None))]
+        [InlineData("<?xml", Context.Prolog, TokenType.None, nameof(CandidateNonTerminal.ProcessingInstruction))]
+        public void ReadValueDelegation_ForAPartialScratchPadWhenReadingIsCompleted_ItShould_GoThroughTheSameTable(
             string text,
             Context context,
             TokenType current,
             string expected
         ) {
             // Arrange & Act
-            Candidate candidate = Deconstruct(text, context, current, isReadingCompleted: true);
+            Candidate candidate = PeekCandidate(text, context, current, isReadingCompleted: true);
 
             // Assert
-            Assert.Equal(expected, candidate.ToString());
+            Assert.Equal(expected, candidate.NonTerminal.ToString());
         }
         #endregion
 
@@ -356,8 +377,7 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData("<", Context.Prolog, TokenType.None)]
         [InlineData("<!DOC", Context.Prolog, TokenType.None)]
         [InlineData("<?xml", Context.Prolog, TokenType.None)]
-        [InlineData("/", Context.StartTag, TokenType.Element)]
-        public void ReadValueDelegation_ForS3IncompleteScratchPadWhenReadingIsNotCompleted_ItShould_BreakFastReturningFalse(
+        public void ReadValueDelegation_ForAnIncompleteScratchPadWhenReadingIsNotCompleted_ItShould_BreakFastReturningFalse(
             string text,
             Context context,
             TokenType current
@@ -376,14 +396,18 @@ namespace Forestry.Deserialize.Xml.Tests
 
         #region No side effects
         /// <summary>
-        /// Deconstruction has no side effects on the reader's local fields, including the
-        /// reader state, and leaves the scratch pad as peeked
+        /// Constructing the candidate has no side effects on the reader's local fields, including
+        /// the reader state, and leaves the scratch pad as peeked
         /// </summary>
+        /// <remarks>
+        /// Mostly true by construction - the candidate only reads a span and a copy of the reader
+        /// state - but it keeps the requirement visible once ReadValue() constructs it
+        /// </remarks>
         [Theory]
-        [InlineData("<?xml version=\"1.0\"?>", Context.Prolog, TokenType.None)]  // D0
-        [InlineData("<a>", Context.Content, TokenType.Element)]                  // D4
-        [InlineData("\"1\"", Context.StartTag, TokenType.Attribute)]             // D8
-        [InlineData("<!Dx", Context.Prolog, TokenType.None)]                     // D10
+        [InlineData("<?xml version=\"1.0\"?>", Context.Prolog, TokenType.None)]  // S0
+        [InlineData("<a>", Context.Content, TokenType.Element)]                  // S4
+        [InlineData("\"1\"", Context.StartTag, TokenType.Attribute)]             // S7
+        [InlineData("<!Dx", Context.Prolog, TokenType.None)]                     // S9
         public void ReadValueDelegation_ForAnyRow_ItShould_LeavePositionReaderStateAndScratchPadUnchanged(
             string text,
             Context context,
@@ -396,7 +420,8 @@ namespace Forestry.Deserialize.Xml.Tests
             string scratchPad = ScratchPad(ref reader);
 
             // Act
-            reader.DeconstructScratchPad();
+            ReadOnlySpan<byte> peeked = reader._startingTerminals;
+            _ = new Candidate(peeked[..reader._startingTerminalCharacterCount], reader.ReaderState);
 
             // Assert
             Assert.Equal(0, reader.Position);

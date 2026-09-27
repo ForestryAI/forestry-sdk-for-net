@@ -262,7 +262,8 @@ would make this possible later without redesigning the format first.
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | [#22](https://github.com/ForestryAI/forestry-sdk-for-net/issues/22) Content Ready | 0/0m | 4/4h | 10m | 30/15m | 15/5m | 30/10m | 15/5m | 0 | 3 | 1 | 1 | yes | 0 |
 | [#17](https://github.com/ForestryAI/forestry-sdk-for-net/issues/17) Peek starting terminals | 30/30m | 4/3h | 5m | 30/5m | 15/5m | 30/45m | 15/5m | 0 | 5 | 0 | 0 | yes | 8 |
-| [#27](https://github.com/ForestryAI/forestry-sdk-for-net/issues/27) Read value delegation | 15/0m | 2/3h | 5m | | | | | | | | | | |
+| [#27](https://github.com/ForestryAI/forestry-sdk-for-net/issues/27) Read value delegation | 15/0m | 2/3h | 5m | 30/45m | | | | | | | | | |
+| [#25](https://github.com/ForestryAI/forestry-sdk-for-net/issues/25) Ending terminal when peek start terminals | 15/15m | 15/10m | 5m | 30/30m | 5/5m | 30/30m | 5/5m | 1 | 0 | 0 | 0 | yes | 4 |
 
 A short retrospective on how the numbers actually felt - what was better or worse than previous
 tasks, any pattern worth watching - belongs as a closing comment on the task itself when it moves

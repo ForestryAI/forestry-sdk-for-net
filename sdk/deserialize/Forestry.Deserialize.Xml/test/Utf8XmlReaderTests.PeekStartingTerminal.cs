@@ -22,6 +22,13 @@ namespace Forestry.Deserialize.Xml.Tests
         // The scratch pad is only asserted on rows returning true. On S3 (false) the scratch pad
         // is transient and the caller expands the bytes, so its contents are not part of the
         // contract.
+        //
+        // Bug #25 shells: `/>` is an ending terminal and no longer an allowed starting terminal,
+        // the quotes `"` and `'` are added as the starting terminals of an attribute value, and
+        // the new S5 leaves the scratch pad empty when the first character is not the first
+        // character of any allowed starting terminal. Every scratch pad therefore either begins
+        // with the first character of an allowed starting terminal or is empty. S2 now only
+        // applies to an overshoot after S0.
 
         #region helpers
         private sealed class Segment : ReadOnlySequenceSegment<byte>
@@ -74,12 +81,11 @@ namespace Forestry.Deserialize.Xml.Tests
         /// </summary>
         /// <remarks>When reader construction is from a byte span.  Peeking past an allowed 
         /// starting terminal: <c>&lt;a</c> and <c>&lt;?p</c> overshoot <c>&lt;</c> and <c>&lt;?</c> by one character, 
-        /// <c>&lt;?xml-</c> overshoots <c>&lt;?</c> by four, and <c>/a</c> matches no allowed starting terminal at all.</remarks>
+        /// <c>&lt;?xml-</c> overshoots <c>&lt;?</c> by four.</remarks>
         [Theory]
         [InlineData("<a>", "<a")]
         [InlineData("<?pi?>", "<?p")]
         [InlineData("<?xml-stylesheet?>", "<?xml-")]
-        [InlineData("/a", "/a")]
         public void PeekStartingTerminal_ForS0PrefixOfALongerTerminal_ItShould_PeekTheNextCharacter(
             string text, 
             string expected
@@ -104,7 +110,6 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData(new[] { "<", "a>" }, "<a")]
         [InlineData(new[] { "<?", "pi?>" }, "<?p")]
         [InlineData(new[] { "<?x", "ml-", "stylesheet?>" }, "<?xml-")]
-        [InlineData(new[] { "/", "", "a" }, "/a")]
         public void PeekStartingTerminal_ForS0PrefixOfALongerTerminalStraddlingSegments_ItShould_PeekTheNextCharacter(
             string[] parts, string expected)
         {
@@ -127,11 +132,12 @@ namespace Forestry.Deserialize.Xml.Tests
         /// </summary>
         /// <remarks>When reader construction is from a byte span</remarks>
         [Theory]
-        [InlineData("<!DOCTYPE root>", "<!DOCTYPE")]
-        [InlineData("<?xml version=\"1.0\"?>", "<?xml ")]
-        [InlineData("<!-- comment -->", "<!--")]
-        [InlineData("</root>", "</")]
-        [InlineData("/>", "/>")]
+        //[InlineData("<!DOCTYPE root>", "<!DOCTYPE")]
+        //[InlineData("<?xml version=\"1.0\"?>", "<?xml ")]
+        //[InlineData("<!-- comment -->", "<!--")]
+        //[InlineData("</root>", "</")]
+        [InlineData("\"1\"", "\"")]
+        //[InlineData("'1'", "'")]
         public void PeekStartingTerminal_ForS1AllowedStartingTerminal_ItShould_BreakReturningTrue(
             string text, string expected)
         {
@@ -156,8 +162,8 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData(new[] { "<?xml", " version=\"1.0\"?>" }, "<?xml ")]
         [InlineData(new[] { "<", "!", "-", "- comment -->" }, "<!--")]
         [InlineData(new[] { "<", "", "/root>" }, "</")]
-        [InlineData(new[] { "/", ">" }, "/>")]
-        [InlineData(new[] { "", "/>" }, "/>")]
+        [InlineData(new[] { "", "\"1\"" }, "\"")]
+        [InlineData(new[] { "'", "1'" }, "'")]
         public void PeekStartingTerminal_ForS1AllowedStartingTerminalStraddlingSegments_ItShould_BreakReturningTrue(
             string[] parts, string expected)
         {
@@ -176,15 +182,11 @@ namespace Forestry.Deserialize.Xml.Tests
         #region S2
         /// <summary>
         /// Peeking returns true when the contents of the scratch pad does 
-        /// not match any starting terminal quietly ignoring potential malformed documents
+        /// not match any starting terminal quietly ignoring potential malformed documents,
+        /// only reachable after S0 i.e. an overshoot (#25)
         /// </summary>
         /// <remarks>When reader construction is from a byte span</remarks>
         [Theory]
-        [InlineData("a", "a")]
-        [InlineData("=\"1\"", "=")]
-        [InlineData("\"1\"", "\"")]
-        [InlineData(">", ">")]
-        [InlineData("&amp;", "&")]
         [InlineData("<a/>", "<a")]
         [InlineData("<![CDATA[x]]>", "<![")]
         [InlineData("<!Dx", "<!Dx")]
@@ -205,7 +207,8 @@ namespace Forestry.Deserialize.Xml.Tests
 
         /// <summary>
         /// Peeking returns true when the contents of the scratch pad does 
-        /// not match any starting terminal quietly ignoring potential malformed documents
+        /// not match any starting terminal quietly ignoring potential malformed documents,
+        /// only reachable after S0 i.e. an overshoot (#25)
         /// </summary>
         /// <remarks>When reader construction is from a byte sequence</remarks>
         [Theory]
@@ -240,7 +243,6 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData("<!DOCTYP")]
         [InlineData("<?xml")]
         [InlineData("<!-")]
-        [InlineData("/")]
         public void PeekStartingTerminal_ForS3NextCharacterNotAvailableAndReadingNotCompleted_ItShould_BreakReturningFalse(
             string text)
         {
@@ -263,7 +265,6 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData([new[] { "<", "!" }])]
         [InlineData([new[] { "<!DOC", "TYP" }])]
         [InlineData([new[] { "<?", "x", "ml" }])]
-        [InlineData([new[] { "/", "" }])]
         public void PeekStartingTerminal_ForS3NextCharacterNotAvailableAndReadingNotCompletedStraddlingSegments_ItShould_BreakReturningFalse(
             string[] parts)
         {
@@ -290,7 +291,6 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData("<!DOCTYP")]
         [InlineData("<?xml")]
         [InlineData("<!-")]
-        [InlineData("/")]
         public void PeekStartingTerminal_ForS4NextCharacterNotAvailableAndReadingCompleted_ItShould_BreakReturningTrue(
             string text)
         {
@@ -314,7 +314,6 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData(new[] { "<", "!" }, "<!")]
         [InlineData(new[] { "<!DOC", "TYP" }, "<!DOCTYP")]
         [InlineData(new[] { "<?", "x", "ml" }, "<?xml")]
-        [InlineData(new[] { "/", "" }, "/")]
         public void PeekStartingTerminal_ForS4NextCharacterNotAvailableAndReadingCompletedStraddlingSegments_ItShould_BreakReturningTrue(
             string[] parts, string expected)
         {
@@ -330,6 +329,80 @@ namespace Forestry.Deserialize.Xml.Tests
         }
         #endregion
 
+        #region S5
+        /// <summary>
+        /// Peeking breaks fast returning true with an empty scratch pad when the first character
+        /// is not the first character of any allowed starting terminal (#25), e.g. the ending
+        /// terminal <c>/&gt;</c>
+        /// </summary>
+        /// <remarks>When reader construction is from a byte span</remarks>
+        [Theory]
+        [InlineData("a")]
+        [InlineData("=\"1\"")]
+        [InlineData(">")]
+        [InlineData("/")]
+        [InlineData("/a")]
+        [InlineData("/>")]
+        [InlineData("&amp;")]
+        public void PeekStartingTerminal_ForS5FirstCharacterStartsNoAllowedStartingTerminal_ItShould_BreakReturningTrueWithAnEmptyScratchPad(
+            string text)
+        {
+            // Arrange
+            Utf8XmlReader reader = SpanReader(text, isReadingCompleted: true);
+
+            // Act
+            bool peeked = reader.PeekStartingTerminal();
+
+            // Assert
+            Assert.True(peeked);
+            Assert.Equal("", ScratchPad(ref reader));
+        }
+
+        /// <summary>
+        /// Peeking breaks fast returning true with an empty scratch pad when the first character
+        /// is not the first character of any allowed starting terminal (#25)
+        /// </summary>
+        /// <remarks>When reader construction is from a byte sequence</remarks>
+        [Theory]
+        [InlineData([new[] { "", "a" }])]
+        [InlineData([new[] { "/", ">" }])]
+        [InlineData([new[] { "", "", "/>" }])]
+        public void PeekStartingTerminal_ForS5FirstCharacterStartsNoAllowedStartingTerminalStraddlingSegments_ItShould_BreakReturningTrueWithAnEmptyScratchPad(
+            string[] parts)
+        {
+            // Arrange
+            Utf8XmlReader reader = SequenceReader(parts, isReadingCompleted: true);
+
+            // Act
+            bool peeked = reader.PeekStartingTerminal();
+
+            // Assert
+            Assert.True(peeked);
+            Assert.Equal("", ScratchPad(ref reader));
+        }
+
+        /// <summary>
+        /// S5 does not halt: nothing is recorded so there is nothing to expand, even when the
+        /// first character is the last one available and reading has not completed (#25)
+        /// </summary>
+        [Theory]
+        [InlineData("/")]
+        [InlineData("a")]
+        public void PeekStartingTerminal_ForS5WhenReadingIsNotCompleted_ItShould_StillBreakReturningTrueWithAnEmptyScratchPad(
+            string text)
+        {
+            // Arrange
+            Utf8XmlReader reader = SpanReader(text, isReadingCompleted: false);
+
+            // Act
+            bool peeked = reader.PeekStartingTerminal();
+
+            // Assert
+            Assert.True(peeked);
+            Assert.Equal("", ScratchPad(ref reader));
+        }
+        #endregion
+
         #region requirements
         /// <summary>
         /// Requirement peek only: Position and Sequence Position are unchanged for every row,
@@ -340,6 +413,7 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData(new[] { "<!", "", "-x" }, true)]          // S2
         [InlineData(new[] { "<!DOC", "TYP" }, false)]         // S3
         [InlineData(new[] { "<!DOC", "TYP" }, true)]          // S4
+        [InlineData(new[] { "", "/>" }, true)]                // S5
         public void PeekStartingTerminal_ForAnyRowStraddlingSegments_ItShould_LeavePositionAndSequencePositionUnchanged(
             string[] parts, bool isReadingCompleted)
         {
@@ -364,6 +438,7 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData("<a>", true)]               // S2
         [InlineData("<!DOCTYP", false)]         // S3
         [InlineData("<!DOCTYP", true)]          // S4
+        [InlineData("/>", true)]                // S5
         public void PeekStartingTerminal_ForAnyRow_ItShould_LeavePositionUnchanged(
             string text, bool isReadingCompleted)
         {
