@@ -524,9 +524,36 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <returns></returns>
         internal bool ReadValue()
         {
-            bool advancement = PeekStartingTerminal();
+            if (!PeekStartingTerminal()) return false;
 
-            return advancement;
+            switch (new CandidateNonTerminal(_startingTerminals[.._startingTerminalCharacterCount], in _elementStack, _currentTokenType).NonTerminal)
+            {
+                case NonTerminal.Declaration:
+                    throw new NotImplementedException();
+                case NonTerminal.DocumentType:
+                    throw new NotImplementedException();
+                case NonTerminal.Comment:
+                    throw new NotImplementedException();
+                case NonTerminal.ProcessingInstruction:
+                    throw new NotImplementedException();
+                case NonTerminal.StartTag:
+                    throw new NotImplementedException();
+                case NonTerminal.EndTag:
+                    throw new NotImplementedException();
+                case NonTerminal.Attribute:
+                    throw new NotImplementedException();
+                case NonTerminal.AttributeValue:
+                    throw new NotImplementedException();
+                case NonTerminal.CharacterData:
+                    throw new NotImplementedException();
+                case NonTerminal.None:
+                    throw new NotImplementedException();
+                default:
+                    string message = "Candidate non-terminal likely added without read value delegation";
+
+                    Debug.Assert(false, message);
+                    throw new InvalidOperationException(message);
+            }
         }
 
     }

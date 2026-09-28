@@ -3,9 +3,9 @@ using static Forestry.Deserialize.Xml.EBNF;
 namespace Forestry.Deserialize.Xml.Reading
 {
     /// <summary>
-    /// Candidate non-terminal that a read value delegate can operate on (#27)
+    /// CandidateNonTerminal non-terminal that a read value delegate can operate on (#27)
     /// </summary>
-    internal enum CandidateNonTerminal : byte
+    internal enum NonTerminal : byte
     {
         /// <summary>
         /// No candidate in the context, delegated to the default delegate (S9)
@@ -33,10 +33,11 @@ namespace Forestry.Deserialize.Xml.Reading
         ProcessingInstruction = (byte)4,
 
         /// <summary>
-        /// <c>element</c>, whether <c>STag content ETag</c> or <c>EmptyElemTag</c> is the
-        /// delegate's concern
+        /// <c>Start Tag</c> breaks from the EBNF XML grammar because the element and empty 
+        /// element non-terminals both begin with the same sequence of terminals and 
+        /// non-terminals equal to the start tag non-terminal
         /// </summary>
-        Element = (byte)5,
+        StartTag = (byte)5,
 
         /// <summary>
         /// <c>ETag</c>
@@ -79,29 +80,35 @@ namespace Forestry.Deserialize.Xml.Reading
     /// well-formed possibility; anything else is malformed and left to the delegate.
     /// </para>
     /// </remarks>
-    internal readonly struct Candidate
+    internal readonly struct CandidateNonTerminal
     {
         /// <summary>
-        /// Candidate non-terminal
+        /// CandidateNonTerminal non-terminal
         /// </summary>
-        public CandidateNonTerminal NonTerminal { get; }
-
-        /// <summary>
-        /// Characters in the scratch pad belonging to the candidate's starting terminal
-        /// </summary>
-        public int StartingTerminalLength { get; }
+        public NonTerminal NonTerminal { get; }
 
         /// <summary>
         /// Deconstruct the scratch pad and the reader state into a candidate
         /// </summary>
         /// <param name="scratchPad">Characters peeked into the scratch pad</param>
-        /// <param name="readerState">Reader state the context is derived from</param>
-        public Candidate(ReadOnlySpan<byte> scratchPad, ReaderState readerState)
+        /// <param name="elementStack">Element stack the context is derived from</param>
+        /// <param name="currentTokenType">Current token, separating a declaration from a processing instruction</param>
+        /// <remarks>
+        /// Only the reader state the deconstruction needs is passed, never the whole
+        /// <see cref="ReaderState"/>: the reader's <c>ReaderState</c> property builds a new
+        /// reader state on every call, copying the element stack's inline names (about 2 KB),
+        /// which read delegation would pay on every read.  The element stack is passed by
+        /// <c>in</c>, i.e. a read-only reference to the reader's own field, and the members read
+        /// from it (<see cref="ElementStack.Depth"/>, <see cref="ElementStack.RootElement"/> and
+        /// <see cref="ElementStack.ContentReady"/>) are <c>readonly</c>, so the compiler makes no
+        /// defensive copies of it either.  Keep any member added to that list <c>readonly</c>.
+        /// </remarks>
+        public CandidateNonTerminal(ReadOnlySpan<byte> scratchPad, in ElementStack elementStack, TokenType currentTokenType)
         {
             // Context derived from the reader state (#27's context table)
-            int depth = readerState._elementStack.Depth;
-            bool rootElement = readerState._elementStack.RootElement;
-            bool contentReady = readerState._elementStack.ContentReady;
+            int depth = elementStack.Depth;
+            bool rootElement = elementStack.RootElement;
+            bool contentReady = elementStack.ContentReady;
 
             bool prolog = depth == 0 && !rootElement;
             bool startTag = depth != 0 && !contentReady;
@@ -109,67 +116,66 @@ namespace Forestry.Deserialize.Xml.Reading
             bool miscellaneous = depth == 0 && rootElement;
 
             // Ordered assertions, the first match wins
-            (NonTerminal, StartingTerminalLength) = scratchPad switch
+            NonTerminal = scratchPad switch
             {
                 // S0
                 [LessThan, QuestionMark, (byte)'x', (byte)'m', (byte)'l', Space or Tab or CarriageReturn or LineFeed, ..]
-                    when prolog && readerState._currentTokenType == TokenType.None
-                    => (CandidateNonTerminal.Declaration, 5),
+                    when prolog && currentTokenType == TokenType.None
+                    => NonTerminal.Declaration,
 
                 // S1
                 [LessThan, ExclamationMark, (byte)'D', (byte)'O', (byte)'C', (byte)'T', (byte)'Y', (byte)'P', (byte)'E', ..]
                     when prolog
-                    => (CandidateNonTerminal.DocumentType, 9),
+                    => NonTerminal.DocumentType,
 
                 // S2
                 [LessThan, ExclamationMark, Hyphen, Hyphen, ..]
                     when prolog || content || miscellaneous
-                    => (CandidateNonTerminal.Comment, 4),
+                    => NonTerminal.Comment,
 
                 // S3
                 [LessThan, QuestionMark, ..]
                     when prolog || content || miscellaneous
-                    => (CandidateNonTerminal.ProcessingInstruction, 2),
+                    => NonTerminal.ProcessingInstruction,
 
                 // S4
                 [LessThan, var character, ..]
                     when (prolog || content) && IsNameStartingCharacter(character)
-                    => (CandidateNonTerminal.Element, 1),
+                    => NonTerminal.StartTag,
 
                 // S5
                 [LessThan, Slash, ..]
                     when content
-                    => (CandidateNonTerminal.EndTag, 2),
+                    => NonTerminal.EndTag,
 
                 // S6
                 []
                     when startTag
-                    => (CandidateNonTerminal.Attribute, 0),
+                    => NonTerminal.Attribute,
 
                 // S7
                 [DoubleQuote or SingleQuote, ..]
                     when startTag
-                    => (CandidateNonTerminal.AttributeValue, 1),
+                    => NonTerminal.AttributeValue,
 
                 // S8
                 [] or [DoubleQuote or SingleQuote, ..]
                     when content
-                    => (CandidateNonTerminal.CharacterData, 0),
+                    => NonTerminal.CharacterData,
 
                 // S9
-                _ => (CandidateNonTerminal.None, 0),
+                _ => NonTerminal.None,
             };
         }
 
         /// <summary>
-        /// Deconstruct into the candidate non-terminal and its starting terminal length
+        /// Deconstruct into the candidate non-terminal
         /// </summary>
         /// <param name="nonTerminal"></param>
         /// <param name="startingTerminalLength"></param>
-        public void Deconstruct(out CandidateNonTerminal nonTerminal, out int startingTerminalLength)
+        public void Deconstruct(out NonTerminal nonTerminal)
         {
             nonTerminal = NonTerminal;
-            startingTerminalLength = StartingTerminalLength;
         }
     }
 }

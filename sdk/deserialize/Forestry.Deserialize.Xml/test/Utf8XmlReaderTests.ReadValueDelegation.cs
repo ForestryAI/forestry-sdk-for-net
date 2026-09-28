@@ -12,25 +12,23 @@ namespace Forestry.Deserialize.Xml.Tests
         // #27's architecture text alone (context table, delegation table S0-S9, requirements),
         // before delegation's body exists - see doc/dev/Velocity.md's Test shell phase.
         //
-        // Test seam - PLACEHOLDERS from Understanding, not decided by the architecture, to be
-        // confirmed or renamed (now in src/Reading/Candidate.cs):
-        // - `internal enum CandidateNonTerminal { None, Declaration, DocumentType, Comment,
-        //   ProcessingInstruction, Element, EndTag, Attribute, AttributeValue,
-        //   CharacterData }`, where None means the default delegate (S9)
-        // - `internal readonly struct Candidate` whose constructor
-        //   `Candidate(ReadOnlySpan<byte> scratchPad, ReaderState readerState)` deconstructs the
-        //   scratch pad into `CandidateNonTerminal NonTerminal` and `int StartingTerminalLength`, handed out by
-        //   `Deconstruct(out CandidateNonTerminal nonTerminal, out int startingTerminalLength)`. The starting
-        //   terminal is scratchPad[..StartingTerminalLength] and the extra is the rest. Taking
-        //   the whole ReaderState lets the struct derive the context itself, so these shells
-        //   cover that derivation too.
+        // Test seam, settled during Understanding (src/Reading/CandidateNonTerminal.cs):
+        // - `internal enum NonTerminal { None, Declaration, DocumentType, Comment,
+        //   ProcessingInstruction, StartTag, EndTag, Attribute, AttributeValue, CharacterData }`,
+        //   where None means the default delegate (S9) and StartTag is a known break from the
+        //   EBNF (an empty element begins exactly like a start tag)
+        // - `internal readonly struct CandidateNonTerminal` whose constructor
+        //   `CandidateNonTerminal(ReadOnlySpan<byte> scratchPad, in ElementStack elementStack,
+        //   TokenType currentTokenType)` deconstructs the scratch pad into `NonTerminal
+        //   NonTerminal`. Taking the element stack lets the struct derive the context itself, so
+        //   these shells cover that derivation too.
         // - ReadValue() becoming `internal`
         //
         // The delegates are separate backlog tasks, so no shell asserts that a delegate was
         // called; the candidate is the observable. Each reader is built from an internal
         // ReaderState so every context is reachable without a real document producing it, and
         // the scratch pad is filled by the real PeekStartingTerminal() (#17) before the
-        // Candidate is constructed from it. Straddling segments
+        // CandidateNonTerminal is constructed from it. Straddling segments
         // is not repeated here: the scratch pad is already filled when delegation runs, and #17
         // covers straddling.
         //
@@ -67,17 +65,18 @@ namespace Forestry.Deserialize.Xml.Tests
         /// Peek the starting terminal of the text into the scratch pad, then construct the
         /// candidate from the scratch pad and the reader state
         /// </summary>
-        private static Candidate PeekCandidate(
+        private static CandidateNonTerminal PeekCandidate(
             string text,
             Context context,
             TokenType current,
             bool isReadingCompleted = true
         ) {
-            Utf8XmlReader reader = new(Encoding.UTF8.GetBytes(text), isReadingCompleted, ContextState(context, current));
+            ReaderState state = ContextState(context, current);
+            Utf8XmlReader reader = new(Encoding.UTF8.GetBytes(text), isReadingCompleted, state);
             Assert.True(reader.PeekStartingTerminal());
 
             ReadOnlySpan<byte> scratchPad = reader._startingTerminals;
-            return new Candidate(scratchPad[..reader._startingTerminalCharacterCount], reader.ReaderState);
+            return new CandidateNonTerminal(scratchPad[..reader._startingTerminalCharacterCount], in state._elementStack, state._currentTokenType);
         }
         #endregion
 
@@ -100,12 +99,10 @@ namespace Forestry.Deserialize.Xml.Tests
             string text
         ) {
             // Arrange & Act
-            Candidate candidate = PeekCandidate(text, Context.Prolog, TokenType.None);
+            CandidateNonTerminal candidate = PeekCandidate(text, Context.Prolog, TokenType.None);
 
             // Assert
-            var (nonTerminal, startingTerminalLength) = candidate;
-            Assert.Equal(CandidateNonTerminal.Declaration, nonTerminal);
-            Assert.Equal(5, startingTerminalLength);
+            Assert.Equal(NonTerminal.Declaration, candidate.NonTerminal);
         }
         #endregion
 
@@ -123,12 +120,10 @@ namespace Forestry.Deserialize.Xml.Tests
             TokenType current
         ) {
             // Arrange & Act
-            Candidate candidate = PeekCandidate("<!DOCTYPE root>", Context.Prolog, current);
+            CandidateNonTerminal candidate = PeekCandidate("<!DOCTYPE root>", Context.Prolog, current);
 
             // Assert
-            var (nonTerminal, startingTerminalLength) = candidate;
-            Assert.Equal(CandidateNonTerminal.DocumentType, nonTerminal);
-            Assert.Equal(9, startingTerminalLength);
+            Assert.Equal(NonTerminal.DocumentType, candidate.NonTerminal);
         }
         #endregion
 
@@ -145,12 +140,10 @@ namespace Forestry.Deserialize.Xml.Tests
             TokenType current
         ) {
             // Arrange & Act
-            Candidate candidate = PeekCandidate("<!-- comment -->", context, current);
+            CandidateNonTerminal candidate = PeekCandidate("<!-- comment -->", context, current);
 
             // Assert
-            var (nonTerminal, startingTerminalLength) = candidate;
-            Assert.Equal(CandidateNonTerminal.Comment, nonTerminal);
-            Assert.Equal(4, startingTerminalLength);
+            Assert.Equal(NonTerminal.Comment, candidate.NonTerminal);
         }
         #endregion
 
@@ -173,37 +166,34 @@ namespace Forestry.Deserialize.Xml.Tests
             TokenType current
         ) {
             // Arrange & Act
-            Candidate candidate = PeekCandidate(text, context, current);
+            CandidateNonTerminal candidate = PeekCandidate(text, context, current);
 
             // Assert
-            var (nonTerminal, startingTerminalLength) = candidate;
-            Assert.Equal(CandidateNonTerminal.ProcessingInstruction, nonTerminal);
-            Assert.Equal(2, startingTerminalLength);
+            Assert.Equal(NonTerminal.ProcessingInstruction, candidate.NonTerminal);
         }
         #endregion
 
         #region S4
         /// <summary>
-        /// S4: <c>&lt;</c> with a <c>NameStartChar</c> extra is an element in the prolog
-        /// (the root) and content
+        /// S4: <c>&lt;</c> with a <c>NameStartChar</c> extra is a start tag in the prolog
+        /// (the root) and content, including an empty element, which begins exactly like a
+        /// start tag (a known break from the EBNF)
         /// </summary>
         [Theory]
         [InlineData("<a>", Context.Prolog, TokenType.None)]
         [InlineData("<_a/>", Context.Prolog, TokenType.Comment)]
         [InlineData("<:a>", Context.Content, TokenType.Element)]
         [InlineData("<A>", Context.Content, TokenType.Value)]
-        public void ReadValueDelegation_ForS4Element_ItShould_BeAnElementCandidate(
+        public void ReadValueDelegation_ForS4StartTag_ItShould_BeAStartTagCandidate(
             string text,
             Context context,
             TokenType current
         ) {
             // Arrange & Act
-            Candidate candidate = PeekCandidate(text, context, current);
+            CandidateNonTerminal candidate = PeekCandidate(text, context, current);
 
             // Assert
-            var (nonTerminal, startingTerminalLength) = candidate;
-            Assert.Equal(CandidateNonTerminal.Element, nonTerminal);
-            Assert.Equal(1, startingTerminalLength);
+            Assert.Equal(NonTerminal.StartTag, candidate.NonTerminal);
         }
         #endregion
 
@@ -219,12 +209,10 @@ namespace Forestry.Deserialize.Xml.Tests
             TokenType current
         ) {
             // Arrange & Act
-            Candidate candidate = PeekCandidate("</a>", Context.Content, current);
+            CandidateNonTerminal candidate = PeekCandidate("</a>", Context.Content, current);
 
             // Assert
-            var (nonTerminal, startingTerminalLength) = candidate;
-            Assert.Equal(CandidateNonTerminal.EndTag, nonTerminal);
-            Assert.Equal(2, startingTerminalLength);
+            Assert.Equal(NonTerminal.EndTag, candidate.NonTerminal);
         }
         #endregion
 
@@ -247,12 +235,10 @@ namespace Forestry.Deserialize.Xml.Tests
             TokenType current
         ) {
             // Arrange & Act
-            Candidate candidate = PeekCandidate(text, Context.StartTag, current);
+            CandidateNonTerminal candidate = PeekCandidate(text, Context.StartTag, current);
 
             // Assert
-            var (nonTerminal, startingTerminalLength) = candidate;
-            Assert.Equal(CandidateNonTerminal.Attribute, nonTerminal);
-            Assert.Equal(0, startingTerminalLength);
+            Assert.Equal(NonTerminal.Attribute, candidate.NonTerminal);
         }
         #endregion
 
@@ -268,12 +254,10 @@ namespace Forestry.Deserialize.Xml.Tests
             string text
         ) {
             // Arrange & Act
-            Candidate candidate = PeekCandidate(text, Context.StartTag, TokenType.Attribute);
+            CandidateNonTerminal candidate = PeekCandidate(text, Context.StartTag, TokenType.Attribute);
 
             // Assert
-            var (nonTerminal, startingTerminalLength) = candidate;
-            Assert.Equal(CandidateNonTerminal.AttributeValue, nonTerminal);
-            Assert.Equal(1, startingTerminalLength);
+            Assert.Equal(NonTerminal.AttributeValue, candidate.NonTerminal);
         }
         #endregion
 
@@ -296,12 +280,10 @@ namespace Forestry.Deserialize.Xml.Tests
             string text
         ) {
             // Arrange & Act
-            Candidate candidate = PeekCandidate(text, Context.Content, TokenType.Element);
+            CandidateNonTerminal candidate = PeekCandidate(text, Context.Content, TokenType.Element);
 
             // Assert
-            var (nonTerminal, startingTerminalLength) = candidate;
-            Assert.Equal(CandidateNonTerminal.CharacterData, nonTerminal);
-            Assert.Equal(0, startingTerminalLength);
+            Assert.Equal(NonTerminal.CharacterData, candidate.NonTerminal);
         }
         #endregion
 
@@ -332,10 +314,10 @@ namespace Forestry.Deserialize.Xml.Tests
             TokenType current
         ) {
             // Arrange & Act
-            Candidate candidate = PeekCandidate(text, context, current);
+            CandidateNonTerminal candidate = PeekCandidate(text, context, current);
 
             // Assert
-            Assert.Equal(CandidateNonTerminal.None, candidate.NonTerminal);
+            Assert.Equal(NonTerminal.None, candidate.NonTerminal);
         }
         #endregion
 
@@ -345,15 +327,15 @@ namespace Forestry.Deserialize.Xml.Tests
         /// the delegate they reach finds that no more markup will follow
         /// </summary>
         /// <remarks>
-        /// The expected candidate non-terminal is passed by name: CandidateNonTerminal is internal and can't be
+        /// The expected candidate non-terminal is passed by name: NonTerminal is internal and can't be
         /// a parameter of a public theory
         /// </remarks>
         [Theory]
-        [InlineData("<", Context.Prolog, TokenType.None, nameof(CandidateNonTerminal.None))]
-        [InlineData("<!", Context.Prolog, TokenType.None, nameof(CandidateNonTerminal.None))]
-        [InlineData("<!DOCTYP", Context.Prolog, TokenType.None, nameof(CandidateNonTerminal.None))]
-        [InlineData("<!-", Context.Content, TokenType.Element, nameof(CandidateNonTerminal.None))]
-        [InlineData("<?xml", Context.Prolog, TokenType.None, nameof(CandidateNonTerminal.ProcessingInstruction))]
+        [InlineData("<", Context.Prolog, TokenType.None, nameof(NonTerminal.None))]
+        [InlineData("<!", Context.Prolog, TokenType.None, nameof(NonTerminal.None))]
+        [InlineData("<!DOCTYP", Context.Prolog, TokenType.None, nameof(NonTerminal.None))]
+        [InlineData("<!-", Context.Content, TokenType.Element, nameof(NonTerminal.None))]
+        [InlineData("<?xml", Context.Prolog, TokenType.None, nameof(NonTerminal.ProcessingInstruction))]
         public void ReadValueDelegation_ForAPartialScratchPadWhenReadingIsCompleted_ItShould_GoThroughTheSameTable(
             string text,
             Context context,
@@ -361,7 +343,7 @@ namespace Forestry.Deserialize.Xml.Tests
             string expected
         ) {
             // Arrange & Act
-            Candidate candidate = PeekCandidate(text, context, current, isReadingCompleted: true);
+            CandidateNonTerminal candidate = PeekCandidate(text, context, current, isReadingCompleted: true);
 
             // Assert
             Assert.Equal(expected, candidate.NonTerminal.ToString());
@@ -421,7 +403,7 @@ namespace Forestry.Deserialize.Xml.Tests
 
             // Act
             ReadOnlySpan<byte> peeked = reader._startingTerminals;
-            _ = new Candidate(peeked[..reader._startingTerminalCharacterCount], reader.ReaderState);
+            _ = new CandidateNonTerminal(peeked[..reader._startingTerminalCharacterCount], in state._elementStack, state._currentTokenType);
 
             // Assert
             Assert.Equal(0, reader.Position);
