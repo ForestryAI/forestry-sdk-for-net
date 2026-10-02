@@ -206,6 +206,7 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData("<!-- comment -->", 0, 16)]
         [InlineData("<!-- a\nb -->", 1, 5)]
         [InlineData("<?pi\n\ndata?>", 2, 6)]
+        [InlineData("<?xml\nversion=\"1.0\"?>", 1, 15)]  // #36: the line feed right after the 5 character starting terminal
         public void ReadOpaqueValue_ForS2_ItShould_AdvanceTheLineNumberAndLinePosition(
             string text,
             long expectedLineNumber,

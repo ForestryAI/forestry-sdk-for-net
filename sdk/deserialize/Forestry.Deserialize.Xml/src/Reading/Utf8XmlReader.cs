@@ -468,10 +468,12 @@ namespace Forestry.Deserialize.Xml.Reading
                         }
                     }
 
-                    if (!isPrefix)
+                    if (!isPrefix && !scratchPad.SequenceEqual(EBNF.DeclarationStartingTerminal))  // Note: == operator only works when pointing to the same memory
                     {
-                        return true; // S1 or S2 ignoring malformed markup
+                        return true; // S1.A or S2 ignoring malformed markup
                     }
+
+                    // S1.b (<?xml) continues to append the next character
                 } else
                 {
                     return _isReadingCompleted; // S3, S4

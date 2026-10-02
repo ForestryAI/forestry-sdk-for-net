@@ -29,6 +29,13 @@ namespace Forestry.Deserialize.Xml.Tests
         // character of any allowed starting terminal. Every scratch pad therefore either begins
         // with the first character of an allowed starting terminal or is empty. S2 now only
         // applies to an overshoot after S0.
+        //
+        // Bug #36 shells: the declaration's starting terminal is `<?xml` (5 characters, the
+        // following spacing belongs to the version non-terminal). S1 splits into S1.a (an
+        // allowed starting terminal other than `<?xml`: break returning true) and S1.b (`<?xml`:
+        // continue, so the next character is appended and the following pass breaks with S2,
+        // or with S3/S4 when no character is available). Rows that reached `<?xml` moved from
+        // S0 and S1 to S1.b; their expected scratch pads are unchanged.
 
         #region helpers
         private sealed class Segment : ReadOnlySequenceSegment<byte>
@@ -77,15 +84,14 @@ namespace Forestry.Deserialize.Xml.Tests
         #region S0
         /// <summary>
         /// Peeking continues when a longer allowed starting terminal starts with the 
-        /// scratch pad, e.g. <c>&lt;</c> could still become <c>&lt;/</c> and <c>&lt;?</c> could still become <c>&lt;?xml </c>
+        /// scratch pad, e.g. <c>&lt;</c> could still become <c>&lt;/</c> and <c>&lt;?</c> could still become <c>&lt;?xml</c>
         /// </summary>
         /// <remarks>When reader construction is from a byte span.  Peeking past an allowed 
         /// starting terminal: <c>&lt;a</c> and <c>&lt;?p</c> overshoot <c>&lt;</c> and <c>&lt;?</c> by one character, 
-        /// <c>&lt;?xml-</c> overshoots <c>&lt;?</c> by four.</remarks>
+        /// see S1.b for <c>&lt;?xml</c>.</remarks>
         [Theory]
         [InlineData("<a>", "<a")]
         [InlineData("<?pi?>", "<?p")]
-        [InlineData("<?xml-stylesheet?>", "<?xml-")]
         public void PeekStartingTerminal_ForS0PrefixOfALongerTerminal_ItShould_PeekTheNextCharacter(
             string text, 
             string expected
@@ -103,13 +109,12 @@ namespace Forestry.Deserialize.Xml.Tests
 
         /// <summary>
         /// Peeking continues when a longer allowed starting terminal starts with the 
-        /// scratch pad, e.g. <c>&lt;</c> could still become <c>&lt;/</c> and <c>&lt;?</c> could still become <c>&lt;?xml </c>
+        /// scratch pad, e.g. <c>&lt;</c> could still become <c>&lt;/</c> and <c>&lt;?</c> could still become <c>&lt;?xml</c>
         /// </summary>
         /// <remarks>When reader construction is from a byte sequence</remarks>
         [Theory]
         [InlineData(new[] { "<", "a>" }, "<a")]
         [InlineData(new[] { "<?", "pi?>" }, "<?p")]
-        [InlineData(new[] { "<?x", "ml-", "stylesheet?>" }, "<?xml-")]
         public void PeekStartingTerminal_ForS0PrefixOfALongerTerminalStraddlingSegments_ItShould_PeekTheNextCharacter(
             string[] parts, string expected)
         {
@@ -125,19 +130,18 @@ namespace Forestry.Deserialize.Xml.Tests
         }
         #endregion
 
-        #region S1
+        #region S1.a
         /// <summary>
-        /// Peeking breaks fast returning true when the contents of the scratch pad matches a 
-        /// starting terminal
+        /// S1.a: peeking breaks fast returning true when the contents of the scratch pad matches 
+        /// an allowed starting terminal other than the declaration's <c>&lt;?xml</c> (#36)
         /// </summary>
         /// <remarks>When reader construction is from a byte span</remarks>
         [Theory]
-        //[InlineData("<!DOCTYPE root>", "<!DOCTYPE")]
-        //[InlineData("<?xml version=\"1.0\"?>", "<?xml ")]
-        //[InlineData("<!-- comment -->", "<!--")]
-        //[InlineData("</root>", "</")]
+        [InlineData("<!DOCTYPE root>", "<!DOCTYPE")]
+        [InlineData("<!-- comment -->", "<!--")]
+        [InlineData("</root>", "</")]
         [InlineData("\"1\"", "\"")]
-        //[InlineData("'1'", "'")]
+        [InlineData("'1'", "'")]
         public void PeekStartingTerminal_ForS1AllowedStartingTerminal_ItShould_BreakReturningTrue(
             string text, string expected)
         {
@@ -153,18 +157,71 @@ namespace Forestry.Deserialize.Xml.Tests
         }
 
         /// <summary>
-        /// Peeking breaks fast returning true when the contents of the scratch pad matches a 
-        /// starting terminal
+        /// S1.a: peeking breaks fast returning true when the contents of the scratch pad matches 
+        /// an allowed starting terminal other than the declaration's <c>&lt;?xml</c> (#36)
         /// </summary>
         /// <remarks>When reader construction is from a byte sequence</remarks>
         [Theory]
         [InlineData(new[] { "<!DOC", "TYPE root>" }, "<!DOCTYPE")]
-        [InlineData(new[] { "<?xml", " version=\"1.0\"?>" }, "<?xml ")]
         [InlineData(new[] { "<", "!", "-", "- comment -->" }, "<!--")]
         [InlineData(new[] { "<", "", "/root>" }, "</")]
         [InlineData(new[] { "", "\"1\"" }, "\"")]
         [InlineData(new[] { "'", "1'" }, "'")]
         public void PeekStartingTerminal_ForS1AllowedStartingTerminalStraddlingSegments_ItShould_BreakReturningTrue(
+            string[] parts, string expected)
+        {
+            // Arrange
+            Utf8XmlReader reader = SequenceReader(parts, isReadingCompleted: true);
+
+            // Act
+            bool peeked = reader.PeekStartingTerminal();
+
+            // Assert
+            Assert.True(peeked);
+            Assert.Equal(expected, ScratchPad(ref reader));
+        }
+        #endregion
+
+        #region S1.b
+        /// <summary>
+        /// S1.b: the scratch pad equals the declaration's starting terminal <c>&lt;?xml</c>, so
+        /// peeking continues and appends the next character, which the following pass breaks on
+        /// with S2 (#36).  The extra character is all a candidate needs to tell a declaration
+        /// (spacing) from a processing instruction (anything else).
+        /// </summary>
+        /// <remarks>When reader construction is from a byte span</remarks>
+        [Theory]
+        [InlineData("<?xml version=\"1.0\"?>", "<?xml ")]
+        [InlineData("<?xml\tversion=\"1.0\"?>", "<?xml\t")]
+        [InlineData("<?xml\rversion=\"1.0\"?>", "<?xml\r")]
+        [InlineData("<?xml\nversion=\"1.0\"?>", "<?xml\n")]
+        [InlineData("<?xml-stylesheet?>", "<?xml-")]
+        [InlineData("<?xml?>", "<?xml?")]
+        [InlineData("<?xmlx?>", "<?xmlx")]
+        public void PeekStartingTerminal_ForS1bDeclarationStartingTerminal_ItShould_PeekTheNextCharacter(
+            string text, string expected)
+        {
+            // Arrange
+            Utf8XmlReader reader = SpanReader(text, isReadingCompleted: true);
+
+            // Act
+            bool peeked = reader.PeekStartingTerminal();
+
+            // Assert
+            Assert.True(peeked);
+            Assert.Equal(expected, ScratchPad(ref reader));
+        }
+
+        /// <summary>
+        /// S1.b: the next character after <c>&lt;?xml</c> may be in a following segment (#36)
+        /// </summary>
+        /// <remarks>When reader construction is from a byte sequence</remarks>
+        [Theory]
+        [InlineData(new[] { "<?xml", " version=\"1.0\"?>" }, "<?xml ")]
+        [InlineData(new[] { "<?xml", "", "\nversion=\"1.0\"?>" }, "<?xml\n")]
+        [InlineData(new[] { "<?x", "ml-", "stylesheet?>" }, "<?xml-")]
+        [InlineData(new[] { "<?xm", "l", "?>" }, "<?xml?")]
+        public void PeekStartingTerminal_ForS1bDeclarationStartingTerminalStraddlingSegments_ItShould_PeekTheNextCharacter(
             string[] parts, string expected)
         {
             // Arrange
