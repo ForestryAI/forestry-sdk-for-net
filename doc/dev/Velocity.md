@@ -36,8 +36,22 @@ should be straightforward. Churn is the cost of the requirements and architectur
 that job; Coding is what a well-specified, well-architected task should mostly cost.
 
 Each phase gets an **estimate** (written before the phase starts) and an **actual**, plus whether
-the phase was delegated to AI. Test shell is always AI for now; the others are marked Y/N per task
-so AI-assisted and unassisted phases can be compared later, not just averaged together.
+the phase was delegated to AI, so AI-assisted and unassisted phases can be compared later, not just
+averaged together.
+
+**The AI marker** - `(AI)` after a phase's time in the log, e.g. `15/10m (AI)`:
+
+- **When**: AI produced most of the phase's output (text, table or code) and the developer
+  reviewed, decided and integrated it. AI answering questions or reviewing the developer's own work
+  does not count. No marker means the developer produced the output.
+- **Test shell never carries it** - it is always AI, so the marker would say nothing.
+- **Coding carries it exactly when AI coding help is 9 or 10** (see AI coding help below: "AI
+  supplied most of the implementation"), so the two can never disagree. AI coding help is the finer
+  scale; the marker only makes the same fact visible in the cell the ratios are computed from.
+- **Why it matters**: a ratio built on an `(AI)` phase measures AI-assisted work and is not compared
+  directly with unassisted tasks. #25 is the example: its Architecture (10m) was drafted by Claude,
+  so its Coding and Understanding ratios of 3.0 say nothing about the developer's own architecture
+  speed.
 
 **Test shell is actual-only, deliberately** - no estimate is logged for it, for now. If
 architecture authoring is doing its job, any future problem in going from architecture to shells is
@@ -107,7 +121,10 @@ table exists; the general restatement above is the fallback when it doesn't.
 
 ## Defect / change taxonomy
 
-Every test failure or test-shell edit gets exactly one of these, decided during Test-bug fix:
+Every test failure or test-shell edit gets exactly one of these, decided during Test-bug fix.
+**A defect is one distinct cause, not one failing test case**: when a single change fixes several
+failing cases (e.g. one wrong exception type failing 17 rows), it is logged as one defect. The log's
+Table, Code, Test and Drift columns count causes.
 
 - **Table defect** - the architecture itself is wrong or silent about the case. Counts against the
   Architecture phase, not Coding - the thing this process exists to drive toward zero.
@@ -176,6 +193,11 @@ ReadOnlySequence`). Where Group B asks why architecture-to-code friction happene
 the developer's own skills ran short - the education need. #22 and #17 are the reason it exists:
 #22 was coded without help, while #17 leaned on Claude for nearly every byte sequence operation,
 and nothing else in the log showed that difference.
+
+**In the log** the cell is the value, a space and the topic, e.g. `9 SequenceReader / byte
+sequences`. Only `0` stands alone. A value without a topic can't show a recurring learning need,
+which is the whole point of the metric. A value of 9 or 10 also puts the AI marker on Coding (see
+Phases above).
 
 | Value | Meaning |
 |---|---|
@@ -261,9 +283,10 @@ would make this possible later without redesigning the format first.
 | Task | Requirements Review (est/act) | Architecture (est/act) | Test shell (act) | Understanding (est/act) | Test review (est/act) | Coding (est/act) | Test-bug fix (est/act) | Table | Code | Test | Drift | Understanding match | AI coding help |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | [#22](https://github.com/ForestryAI/forestry-sdk-for-net/issues/22) Content Ready | 0/0m | 4/4h | 10m | 30/15m | 15/5m | 30/10m | 15/5m | 0 | 3 | 1 | 1 | yes | 0 |
-| [#17](https://github.com/ForestryAI/forestry-sdk-for-net/issues/17) Peek starting terminals | 30/30m | 4/3h | 5m | 30/5m | 15/5m | 30/45m | 15/5m | 0 | 5 | 0 | 0 | yes | 8 |
-| [#27](https://github.com/ForestryAI/forestry-sdk-for-net/issues/27) Read value delegation | 15/15m | 2/3h | 5m | 30/45m | 15/5m | 30/50m | 5/5m | 0 | 1 | 1 | 0 | yes | 1 |
-| [#25](https://github.com/ForestryAI/forestry-sdk-for-net/issues/25) Ending terminal when peek start terminals | 15/15m | 15/10m | 5m | 30/30m | 5/5m | 30/30m | 5/5m | 1 | 0 | 0 | 0 | yes | 4 |
+| [#17](https://github.com/ForestryAI/forestry-sdk-for-net/issues/17) Peek starting terminals | 30/30m | 4/3h | 5m | 30/5m | 15/5m | 30/45m | 15/5m | 0 | 5 | 0 | 0 | yes | 8 byte sequences |
+| [#27](https://github.com/ForestryAI/forestry-sdk-for-net/issues/27) Read value delegation | 15/15m | 2/3h | 5m | 30/45m | 15/5m | 30/50m (AI) | 5/5m | 0 | 1 | 1 | 0 | yes | 9 pattern matching |
+| [#25](https://github.com/ForestryAI/forestry-sdk-for-net/issues/25) Ending terminal when peek start terminals | 15/15m | 15/10m (AI) | 5m | 30/30m | 5/5m | 30/30m | 5/5m | 1 | 0 | 0 | 0 | yes | 4 loop efficiency |
+| [#24](https://github.com/ForestryAI/forestry-sdk-for-net/issues/24) Read opaque value | 30/30m | 3/3h | 5m | 30/15m | 5/5m | 45/60m (AI) | 5/5m | 1 | 9 | 0 | 0 | yes | 9 SequenceReader / byte sequences |
 
 A short retrospective on how the numbers actually felt - what was better or worse than previous
 tasks, any pattern worth watching - belongs as a closing comment on the task itself when it moves

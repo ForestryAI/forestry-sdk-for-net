@@ -83,11 +83,23 @@ namespace Forestry.Deserialize.Xml
                 case ExceptionType.WhenDocumentHasElementNotEnded:
                     message = Formatting.WhenDocumentHasElementNotEnded;
                     break;
-                case ExceptionType.WhenDocumentHasNoTokens:
-                    message = Formatting.WhenDocumentHasNoTokens;
+                case ExceptionType.WhenDocumentHasNoNextToken:
+                    message = Formatting.WhenDocumentHasNoNextToken;
                     break;
                 case ExceptionType.WhenNoNameAfterElementStartTerminal:
                     message = Deserialize.Formatting.Format(Formatting.WhenNoNameAfterElementStartTerminal, character);
+                    break;
+                case ExceptionType.WhenEndingTerminalMissing:
+                    message = Deserialize.Formatting.Format(Formatting.WhenEndingTerminalMissing, characters);
+                    break;
+                case ExceptionType.WhenDocumentTypeRepeated:
+                    message = Formatting.WhenDocumentTypeRepeated;
+                    break;
+                case ExceptionType.WhenDeclarationNotFirst:
+                    message = Formatting.WhenDeclarationNotFirst;
+                    break;
+                case ExceptionType.WhenProcessingInstructionTargetMalformed:
+                    message = Formatting.WhenProcessingInstructionTargetMalformed;
                     break;
                 default:
                     break;
@@ -130,8 +142,12 @@ namespace Forestry.Deserialize.Xml
         {
             WhenDocumentHasNoRootElement,
             WhenDocumentHasElementNotEnded,
-            WhenDocumentHasNoTokens,
-            WhenNoNameAfterElementStartTerminal
+            WhenDocumentHasNoNextToken,
+            WhenNoNameAfterElementStartTerminal,
+            WhenEndingTerminalMissing,
+            WhenDocumentTypeRepeated,
+            WhenDeclarationNotFirst,
+            WhenProcessingInstructionTargetMalformed
         }
         #endregion
     }

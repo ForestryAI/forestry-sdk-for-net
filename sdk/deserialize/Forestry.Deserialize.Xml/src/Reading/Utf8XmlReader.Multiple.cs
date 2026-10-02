@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
@@ -66,6 +67,7 @@ namespace Forestry.Deserialize.Xml.Reading
             // state
             _linePosition = readerState._linePosition;
             _lineNumber = readerState._lineNumber;
+            _documentType = readerState._documentType;
             _currentTokenType = readerState._currentTokenType;
             _previousTokenType = readerState._previousTokenType;
             _elementStack = readerState._elementStack;
@@ -205,6 +207,149 @@ namespace Forestry.Deserialize.Xml.Reading
                     break;
                 }
             }
+        }
+
+        /// <summary>
+        /// Read opaque value from first character in the starting terminal 
+        /// to the last character in the ending terminal
+        /// </summary>
+        /// <remarks>
+        /// S2 - set previous and current token
+        /// S3 - rollback
+        /// S4 - throw malformed
+        /// </remarks>
+        /// <returns></returns>
+        private bool ReadMultipleOpaqueValue(
+            ReadOnlySpan<byte> startingTerminal, 
+            ReadOnlySpan<byte> endingTerminal,
+            TokenType tokenType
+        ) {
+            bool advancement = IgnoreMultipleOpaqueValue(startingTerminal, endingTerminal, true);
+
+            if (advancement)
+            {
+                _previousTokenType = _currentTokenType;
+                _currentTokenType = tokenType;
+            }
+
+            return advancement;
+        }
+
+        /// <summary>
+        /// Ignore opaque value advances from first character in the starting terminal 
+        /// to the last character in the ending terminal and defaults to not setting 
+        /// the value
+        /// </summary>
+        /// <remarks>
+        /// S3 - rollback
+        /// S4 - throw malformed
+        /// </remarks>
+        /// <param name="startingTerminal"></param>
+        /// <param name="endingTerminal"></param>
+        /// <param name="setValue"></param>
+        /// <returns></returns>
+        private bool IgnoreMultipleOpaqueValue(
+            ReadOnlySpan<byte> startingTerminal, 
+            ReadOnlySpan<byte> endingTerminal,
+            bool setValue = false
+        ) {
+            // Local sequence-reader variable starting at the current sequence position elimating the need to rollback
+            ReadOnlySequence<byte> sequence = _sequence.Slice(SequencePosition);
+            SequenceReader<byte> sequenceReader = new(sequence);
+
+            bool hasOpaqueValue = sequenceReader.Remaining >= startingTerminal.Length;
+            if (hasOpaqueValue)
+            {
+                sequenceReader.Advance(startingTerminal.Length);
+                hasOpaqueValue = sequenceReader.TryReadTo(out ReadOnlySequence<byte> _, endingTerminal, advancePastDelimiter: true);
+            }
+
+            if (!hasOpaqueValue)
+            {
+                if (_isReadingCompleted)
+                {
+                    Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenEndingTerminalMissing, bytes: endingTerminal);  // S4
+                }
+
+                return false;  // S3: Break fast without advancement (i.e. simulating rollback)
+            }
+
+            // S2: set position(s), line number + position, and value
+            ReadOnlySequence<byte> value = sequence.Slice(0, sequenceReader.Consumed);
+
+            foreach (ReadOnlyMemory<byte> memory in value)
+            {
+                AdvanceLineTracking(memory.Span);
+            }
+
+            AdvanceMultipleSegments(value.Length);
+
+            if (setValue)
+            {
+                if (value.IsSingleSegment)
+                {
+                    Value = value.FirstSpan;
+                    ValueSequence = ReadOnlySequence<byte>.Empty;
+                    HasValueSequence = false;
+                } else
+                {
+                    Value = [];
+                    ValueSequence = value;
+                    HasValueSequence = true;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Advance the segment position by a count of bytes, moving into following
+        /// non-empty segments the same way a drainage assertion does
+        /// </summary>
+        /// <param name="count"></param>
+        private void AdvanceMultipleSegments(long count)
+        {
+            while (true)
+            {
+                int available = _segment.Length - _segmentPosition;
+                if (count <= available)
+                {
+                    _segmentPosition += (int)count;
+                    return;
+                }
+
+                count -= available;
+                _segmentPosition = _segment.Length;
+
+                bool skipped = TrySkipEmptySegments();
+                Debug.Assert(skipped, "Advancing past the end of the byte sequence - the count was found by searching it.");
+                if (!skipped)
+                {
+                    return;
+                }
+            }
+        }
+
+        /// <summary>
+        /// PI target conditions (S5 + S6) on a value byte sequence, scanning segment by
+        /// segment since the target may straddle segments
+        /// </summary>
+        /// <returns></returns>
+        private bool IsMultipleProcessingInstructionMalformed()
+        {
+            ProcessingInstructionTarget target = default;
+
+            foreach (ReadOnlyMemory<byte> memory in ValueSequence.Slice(EBNF.ProcessingInstructionStartingTerminal.Length))
+            {
+                TerminalDeclaration evaluation = target.EvaluateTerminalDeclaration(memory.Span);
+                if (evaluation != TerminalDeclaration.Continue)
+                {
+                    return evaluation != TerminalDeclaration.WellFormed;
+                }
+            }
+
+            Debug.Assert(false, "The value ends with the ending terminal ?> so the scan always ends.");
+            return true;
         }
     }
 }

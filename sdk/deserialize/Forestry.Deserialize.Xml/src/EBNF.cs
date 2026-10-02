@@ -43,17 +43,43 @@ namespace Forestry.Deserialize.Xml {
         #endregion
 
         #region Terminals
-        public static byte StartTagStartingTerminal => (byte)'<';
-
-        public static byte StartTagEndingTerminal => (byte)'>';
-
         public static ReadOnlySpan<byte> DeclarationStartingTerminal => "<?xml "u8;
 
         public static ReadOnlySpan<byte> DeclarationEndingTerminal => "?>"u8;
 
+        public static ReadOnlySpan<byte> DocumentTypeStartingTerminal => "<!DOCTYPE"u8;
+
+        public static ReadOnlySpan<byte> DocumentTypeEndingTerminal => ">"u8;
+
+        public static ReadOnlySpan<byte> CommentStartingTerminal => "<!--"u8;
+
+        public static ReadOnlySpan<byte> CommentEndingTerminal => "-->"u8;
+
+        public static ReadOnlySpan<byte> ProcessingInstructionStartingTerminal => "<?"u8;
+
+        public static ReadOnlySpan<byte> ProcessingInstructionEndingTerminal => "?>"u8;
+
+        public static ReadOnlySpan<byte> StartTagStartingTerminal => "<"u8;
+
+        public static byte StartTagEndingTerminal => (byte)'>';
+
         public static ReadOnlySpan<byte> EndTagStartingTerminal => "</"u8;
 
         public static ReadOnlySpan<byte> EmptyElementTagEndingTerminal => "/>"u8;
+
+        public readonly ref struct AttributeValueStartingTerminals
+        {
+            public ReadOnlySpan<byte> DoubleQuote { get; }
+            public ReadOnlySpan<byte> SingleQuote { get; }
+
+            public AttributeValueStartingTerminals(ReadOnlySpan<byte> doubleQuote, ReadOnlySpan<byte> singleQuote)
+            {
+                DoubleQuote = doubleQuote;
+                SingleQuote = singleQuote;
+            }
+        }
+
+        public static AttributeValueStartingTerminals AttributeValueStartingTerminal => new("\""u8, "'"u8);
 
         /// <summary>
         /// Allowed within the POC scope (#17), not the full XML grammar
@@ -65,14 +91,14 @@ namespace Forestry.Deserialize.Xml {
         /// </remarks>
         internal static readonly byte[][] _allowedStartingTerminals =
         [
-            "<!DOCTYPE"u8.ToArray(),
-            "<?xml "u8.ToArray(),
-            "<!--"u8.ToArray(),
-            "<?"u8.ToArray(),
-            "</"u8.ToArray(),
-            "<"u8.ToArray(),
-            "'"u8.ToArray(),
-            "\""u8.ToArray()
+            DocumentTypeStartingTerminal.ToArray(),
+            DeclarationStartingTerminal.ToArray(),
+            CommentStartingTerminal.ToArray(),
+            ProcessingInstructionStartingTerminal.ToArray(),
+            EndTagStartingTerminal.ToArray(),
+            StartTagStartingTerminal.ToArray(),
+            AttributeValueStartingTerminal.SingleQuote.ToArray(),
+            AttributeValueStartingTerminal.DoubleQuote.ToArray()
         ];
 
         /// <summary>

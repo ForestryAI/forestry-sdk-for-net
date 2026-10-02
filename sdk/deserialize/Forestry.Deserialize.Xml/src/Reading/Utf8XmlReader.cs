@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
@@ -134,6 +135,7 @@ namespace Forestry.Deserialize.Xml.Reading
         public readonly ReaderState ReaderState => new(
             lineNumber: _lineNumber,
             linePosition: _linePosition,
+            documentType: _documentType,
             currentTokenType: _currentTokenType,
             previousTokenType: _previousTokenType,
             elementStack: _elementStack,
@@ -149,6 +151,11 @@ namespace Forestry.Deserialize.Xml.Reading
         /// Document line position i.e. left to right
         /// </summary>
         private long _linePosition;
+
+        /// <summary>
+        /// Advancement past a document type non-terminal
+        /// </summary>
+        private bool _documentType;
 
         /// <summary>
         /// Mutable current token type
@@ -529,13 +536,13 @@ namespace Forestry.Deserialize.Xml.Reading
             switch (new CandidateNonTerminal(_startingTerminals[.._startingTerminalCharacterCount], in _elementStack, _currentTokenType).NonTerminal)
             {
                 case NonTerminal.Declaration:
-                    throw new NotImplementedException();
+                    return ReadDeclaration();
                 case NonTerminal.DocumentType:
-                    throw new NotImplementedException();
+                    return ReadDocumentType();
                 case NonTerminal.Comment:
-                    throw new NotImplementedException();
+                    return ReadComment();
                 case NonTerminal.ProcessingInstruction:
-                    throw new NotImplementedException();
+                    return ReadProcessingInstruction();
                 case NonTerminal.StartTag:
                     throw new NotImplementedException();
                 case NonTerminal.EndTag:
@@ -556,5 +563,161 @@ namespace Forestry.Deserialize.Xml.Reading
             }
         }
 
+        /// <summary>
+        /// Read opaque value from declaration non-terminal
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadDeclaration()
+        {
+            if (_lineNumber != 0 || _linePosition != 0) {
+                Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenDeclarationNotFirst);
+            }
+
+            return _isMultipleSegments ?
+                ReadMultipleOpaqueValue(EBNF.DeclarationStartingTerminal, EBNF.DeclarationEndingTerminal, TokenType.Declaration) : 
+                ReadSingleOpaqueValue(EBNF.DeclarationStartingTerminal, EBNF.DeclarationEndingTerminal, TokenType.Declaration);
+        }
+
+        /// <summary>
+        /// Read opaque value from document type non-terminal
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadDocumentType()
+        {
+            if (_documentType)
+            {
+                Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenDocumentTypeRepeated);
+            }
+            
+            bool advancement =  _isMultipleSegments ?
+                ReadMultipleOpaqueValue(EBNF.DocumentTypeStartingTerminal, EBNF.DocumentTypeEndingTerminal, TokenType.DocumentType) : 
+                ReadSingleOpaqueValue(EBNF.DocumentTypeStartingTerminal, EBNF.DocumentTypeEndingTerminal, TokenType.DocumentType);
+
+            if (advancement)
+            {
+                _documentType = true;
+            }
+
+            return advancement;
+        }
+
+        /// <summary>
+        /// Read opaque value from comment non-terminal
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadComment() => _isMultipleSegments ?
+                ReadMultipleOpaqueValue(EBNF.CommentStartingTerminal, EBNF.CommentEndingTerminal, TokenType.Comment) : 
+                ReadSingleOpaqueValue(EBNF.CommentStartingTerminal, EBNF.CommentEndingTerminal, TokenType.Comment);
+
+        /// <summary>
+        /// Read opaque value from processing instruction non-terminal
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadProcessingInstruction()
+        {
+            bool advancement = _isMultipleSegments ?
+                ReadMultipleOpaqueValue(EBNF.ProcessingInstructionStartingTerminal, EBNF.ProcessingInstructionEndingTerminal, TokenType.ProcessInstruction) : 
+                ReadSingleOpaqueValue(EBNF.ProcessingInstructionStartingTerminal, EBNF.ProcessingInstructionEndingTerminal, TokenType.ProcessInstruction);
+
+            if (advancement)
+            {
+                if (HasValueSequence ? IsMultipleProcessingInstructionMalformed() : IsSingleProcessingInstructionMalformed())
+                {
+                    Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenProcessingInstructionTargetMalformed);
+                }
+            }
+
+            return advancement;
+        }
+
+        /// <summary>
+        /// Terminal declaration either well-formed, malformed or continue 
+        /// where continue means more characters are required to evaluate 
+        /// if the terminal is well-formed
+        /// </summary>
+        private enum TerminalDeclaration : byte
+        {
+            /// <summary>
+            /// More characters are needed, e.g. the next segment of a value sequence
+            /// </summary>
+            Continue,
+            WellFormed,
+            Malformed,
+        }
+
+        /// <summary>
+        /// Scans a PI target (S5 + S6) in a single loop, one character at a time, carrying
+        /// its state across the segments of a value sequence
+        /// </summary>
+        /// <remarks>
+        /// S5: the target is a <c>Name</c> (a <c>NameStartChar</c> then zero or more
+        /// <c>NameChar</c>) followed by spacing or the ending terminal <c>?&gt;</c>.  S6: the
+        /// target does not equal <c>xml</c> in any case, tracked while scanning so no second
+        /// pass is needed.  <c>?</c> is never a <c>NameChar</c>, so stopping at the first
+        /// <c>?</c> never cuts a well-formed target short.
+        /// </remarks>
+        private struct ProcessingInstructionTarget
+        {
+            /// <summary>
+            /// Characters scanned in the target
+            /// </summary>
+            private int _length;
+
+            /// <summary>
+            /// The target scanned so far equals the start of <c>xml</c> in any case
+            /// </summary>
+            private bool _isXml;
+
+            /// <summary>
+            /// The target ended on <c>?</c> so the next character must be <c>&gt;</c>
+            /// </summary>
+            private bool _isEndingTerminal;
+
+            /// <summary>
+            /// Evaluate the character terminals after the starting terminal <c>&lt;?</c>
+            /// </summary>
+            /// <param name="characters"></param>
+            /// <returns></returns>
+            internal TerminalDeclaration EvaluateTerminalDeclaration(ReadOnlySpan<byte> characters)
+            {
+                foreach (byte character in characters)
+                {
+                    if (_isEndingTerminal)
+                    {
+                        return character == EBNF.GreaterThan ? TerminalDeclaration.WellFormed : TerminalDeclaration.Malformed;  // S5
+                    }
+
+                    if (character is EBNF.Space or EBNF.Tab or EBNF.CarriageReturn or EBNF.LineFeed or EBNF.QuestionMark)
+                    {
+                        if (_length == 0 || (_isXml && _length == 3))
+                        {
+                            return TerminalDeclaration.Malformed;  // S5 empty target, S6
+                        }
+
+                        if (character != EBNF.QuestionMark)
+                        {
+                            return TerminalDeclaration.WellFormed;
+                        }
+
+                        _isEndingTerminal = true;
+                        continue;
+                    }
+
+                    if (_length == 0 ? !EBNF.IsNameStartingCharacter(character) : !EBNF.IsNameCharacter(character))
+                    {
+                        return TerminalDeclaration.Malformed;  // S5
+                    }
+
+                    // ASCII letters only differ by the 0x20 bit in case, and only 'X'/'x',
+                    // 'M'/'m' and 'L'/'l' match "xml" with that bit set
+                    _isXml = _length < 3
+                        && (_length == 0 || _isXml)
+                        && (byte)(character | 0x20) == "xml"u8[_length];
+                    _length++;
+                }
+
+                return TerminalDeclaration.Continue;
+            }
+        }
     }
 }

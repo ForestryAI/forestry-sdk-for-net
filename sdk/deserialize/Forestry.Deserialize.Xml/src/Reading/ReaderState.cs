@@ -11,6 +11,8 @@ namespace Forestry.Deserialize.Xml.Reading
         internal readonly long _lineNumber;
 
         internal readonly long _linePosition;
+
+        internal readonly bool _documentType;
         
         internal readonly TokenType _currentTokenType;
 
@@ -19,11 +21,12 @@ namespace Forestry.Deserialize.Xml.Reading
         internal readonly ElementStack _elementStack;
         
         internal readonly ReaderOptions _readerOptions;
-
+        
         public ReaderState(ReaderOptions readerOptions = default)
         {
             _lineNumber = default;
             _linePosition = default;
+            _documentType = false;
 
             _currentTokenType = default;
             _previousTokenType = default;
@@ -41,6 +44,7 @@ namespace Forestry.Deserialize.Xml.Reading
         internal ReaderState(
             long lineNumber,
             long linePosition,
+            bool documentType,
             TokenType currentTokenType,
             TokenType previousTokenType,
             ElementStack elementStack,
@@ -49,6 +53,7 @@ namespace Forestry.Deserialize.Xml.Reading
         {
             _lineNumber = lineNumber;
             _linePosition = linePosition;
+            _documentType = documentType;
 
             _currentTokenType = currentTokenType;
             _previousTokenType = previousTokenType;

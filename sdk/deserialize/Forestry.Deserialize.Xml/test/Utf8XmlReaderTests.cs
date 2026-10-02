@@ -85,6 +85,7 @@ namespace Forestry.Deserialize.Xml.Tests
             TokenType previous = TokenType.None) => new(
             lineNumber: 0,
             linePosition: 0,
+            documentType: false,
             currentTokenType: current,
             previousTokenType: previous,
             elementStack: elementStack,
@@ -144,7 +145,7 @@ namespace Forestry.Deserialize.Xml.Tests
             }
 
             Assert.IsType<XmlException>(thrown);
-            Assert.Contains("element not ended", thrown.Message);
+            Assert.Contains("without an ending terminal or end tag for an element non-terminal", thrown.Message);
         }
     }
 }
