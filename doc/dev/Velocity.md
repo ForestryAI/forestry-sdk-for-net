@@ -288,6 +288,7 @@ would make this possible later without redesigning the format first.
 | [#25](https://github.com/ForestryAI/forestry-sdk-for-net/issues/25) Ending terminal when peek start terminals | 15/15m | 15/10m (AI) | 5m | 30/30m | 5/5m | 30/30m | 5/5m | 1 | 0 | 0 | 0 | yes | 4 loop efficiency |
 | [#24](https://github.com/ForestryAI/forestry-sdk-for-net/issues/24) Read opaque value | 30/30m | 3/3h | 5m | 30/15m | 5/5m | 45/60m (AI) | 5/5m | 1 | 9 | 0 | 0 | yes | 9 SequenceReader / byte sequences |
 | [#36](https://github.com/ForestryAI/forestry-sdk-for-net/issues/36) Peeking Declaration | 10/10m | 20/45m | 5m | 5/5m | 5/5m | 5/5m | 5/5m | 1 | 1 | 0 | 0 | yes | 1 span equality |
+| [#34](https://github.com/ForestryAI/forestry-sdk-for-net/issues/34) Skip spacing only starts on a space character | 10/10m | 20/30m | 5m | 10/10m | 5/5m | 30/20m | 5/0m | 0 | 1 | 0 | 0 | yes | 9 spacing character data |
 
 A short retrospective on how the numbers actually felt - what was better or worse than previous
 tasks, any pattern worth watching - belongs as a closing comment on the task itself when it moves

@@ -337,16 +337,17 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// Skip spacing
+        /// Skip spacing returning true when draining the segment(s) and halting the read
+        /// along with trying to ingore character data that is only spacing (default)
         /// </summary>
-        /// <returns>true when skipping drained the segment(s), halting the read</returns>
         internal bool SkipSpacing()
         {
-            // TODO: fire depending on the current token also with line feeds, carriage returns and tabs
-
             byte character = _segment[_segmentPosition];
-            if (character == EBNF.Space) 
-            {
+            if (!(character == EBNF.Space || character == EBNF.Tab || character == EBNF.LineFeed || character == EBNF.CarriageReturn)) {
+                return false;  // S0: nothing to skip
+            }
+
+            if (_elementStack.ContentReady is false || _elementStack.Depth == 0) { // S1: prolog, miscellanous or start tag
                 if (_isMultipleSegments)
                 {
                     SkipMultipleSpacing();
@@ -359,6 +360,64 @@ namespace Forestry.Deserialize.Xml.Reading
                 {
                     return true;
                 }
+            } else
+            {
+                // S2: spacing may be character data when content ready and not past the root element.
+                // Search for the first non-spacing character without advancing (simulated rollback)
+                bool hasNonSpacing;
+                byte nonSpacing = default;
+
+                if (_isMultipleSegments)
+                {
+                    SequenceReader<byte> sequenceReader = new(_sequence.Slice(SequencePosition));
+                    sequenceReader.AdvancePastAny(" \t\r\n"u8);
+                    hasNonSpacing = sequenceReader.TryPeek(out nonSpacing);
+                } else
+                {
+                    ReadOnlySpan<byte> remaining = _segment[_segmentPosition..];
+                    int index = remaining.IndexOfExceptWhiteSpace();
+                    hasNonSpacing = index < remaining.Length;
+                    if (hasNonSpacing)
+                    {
+                        nonSpacing = remaining[index];
+                    }
+                }
+
+                if (hasNonSpacing)
+                {
+                    if (nonSpacing != EBNF.LessThan)
+                    {
+                        return false;  // S4: the spacing belongs to character data, skip nothing
+                    }
+
+                    // S3: character data that is only spacing is ignored, skip it with line tracking
+                    if (_isMultipleSegments)
+                    {
+                        SkipMultipleSpacing();
+                    } else
+                    {
+                        SkipSingleSpacing();
+                    }
+
+                    return false;
+                }
+
+                if (!_isReadingCompleted)
+                {
+                    return true;  // S5: undecided, skip nothing and halt so the caller expands the segment(s)
+                }
+
+                // S6: only spacing left and no more segment(s), skip it draining the segment(s) which
+                // asserts the reader state i.e. an element not ended
+                if (_isMultipleSegments)
+                {
+                    SkipMultipleSpacing();
+                } else
+                {
+                    SkipSingleSpacing();
+                }
+
+                return _isMultipleSegments ? IsMultipleSegmentDrained() : IsSingleSegmentDrained();
             }
 
             return false;
