@@ -692,16 +692,14 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// Terminal declaration either well-formed, malformed or continue 
-        /// where continue means more characters are required to evaluate 
-        /// if the terminal is well-formed
+        /// One malformed markup makes the whole document malformed
         /// </summary>
-        private enum TerminalDeclaration : byte
+        private enum MarkupState : byte
         {
             /// <summary>
-            /// More characters are needed, e.g. the next segment of a value sequence
+            /// Neither well-formed nor malformed, the context decides usage
             /// </summary>
-            Continue,
+            Unknown,
             WellFormed,
             Malformed,
         }
@@ -739,25 +737,25 @@ namespace Forestry.Deserialize.Xml.Reading
             /// </summary>
             /// <param name="characters"></param>
             /// <returns></returns>
-            internal TerminalDeclaration EvaluateTerminalDeclaration(ReadOnlySpan<byte> characters)
+            internal MarkupState Evaluate(ReadOnlySpan<byte> characters)
             {
                 foreach (byte character in characters)
                 {
                     if (_isEndingTerminal)
                     {
-                        return character == EBNF.GreaterThan ? TerminalDeclaration.WellFormed : TerminalDeclaration.Malformed;  // S5
+                        return character == EBNF.GreaterThan ? MarkupState.WellFormed : MarkupState.Malformed;  // S5
                     }
 
                     if (character is EBNF.Space or EBNF.Tab or EBNF.CarriageReturn or EBNF.LineFeed or EBNF.QuestionMark)
                     {
                         if (_length == 0 || (_isXml && _length == 3))
                         {
-                            return TerminalDeclaration.Malformed;  // S5 empty target, S6
+                            return MarkupState.Malformed;  // S5 empty target, S6
                         }
 
                         if (character != EBNF.QuestionMark)
                         {
-                            return TerminalDeclaration.WellFormed;
+                            return MarkupState.WellFormed;
                         }
 
                         _isEndingTerminal = true;
@@ -766,7 +764,7 @@ namespace Forestry.Deserialize.Xml.Reading
 
                     if (_length == 0 ? !EBNF.IsNameStartingCharacter(character) : !EBNF.IsNameCharacter(character))
                     {
-                        return TerminalDeclaration.Malformed;  // S5
+                        return MarkupState.Malformed;  // S5
                     }
 
                     // ASCII letters only differ by the 0x20 bit in case, and only 'X'/'x',
@@ -777,7 +775,7 @@ namespace Forestry.Deserialize.Xml.Reading
                     _length++;
                 }
 
-                return TerminalDeclaration.Continue;
+                return MarkupState.Unknown;
             }
         }
     }

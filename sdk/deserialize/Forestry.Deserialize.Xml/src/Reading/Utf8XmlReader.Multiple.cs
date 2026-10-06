@@ -341,10 +341,10 @@ namespace Forestry.Deserialize.Xml.Reading
 
             foreach (ReadOnlyMemory<byte> memory in ValueSequence.Slice(EBNF.ProcessingInstructionStartingTerminal.Length))
             {
-                TerminalDeclaration evaluation = target.EvaluateTerminalDeclaration(memory.Span);
-                if (evaluation != TerminalDeclaration.Continue)
+                MarkupState evaluation = target.Evaluate(memory.Span);
+                if (evaluation != MarkupState.Unknown)
                 {
-                    return evaluation != TerminalDeclaration.WellFormed;
+                    return evaluation != MarkupState.WellFormed;
                 }
             }
 

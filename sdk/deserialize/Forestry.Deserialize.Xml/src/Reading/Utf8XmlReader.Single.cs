@@ -210,10 +210,10 @@ namespace Forestry.Deserialize.Xml.Reading
         private bool IsSingleProcessingInstructionMalformed()
         {
             ProcessingInstructionTarget target = default;
-            TerminalDeclaration evaluation = target.EvaluateTerminalDeclaration(Value[EBNF.ProcessingInstructionStartingTerminal.Length..]);
+            MarkupState evaluation = target.Evaluate(Value[EBNF.ProcessingInstructionStartingTerminal.Length..]);
 
-            Debug.Assert(evaluation != TerminalDeclaration.Continue, "The value ends with the ending terminal ?> so the scan always ends.");
-            return evaluation != TerminalDeclaration.WellFormed;
+            Debug.Assert(evaluation != MarkupState.Unknown, "The value ends with the ending terminal ?> so the scan always ends.");
+            return evaluation != MarkupState.WellFormed;
         }
     }
 }
