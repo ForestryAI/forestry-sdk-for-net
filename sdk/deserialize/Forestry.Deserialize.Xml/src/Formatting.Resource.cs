@@ -18,6 +18,10 @@ namespace Forestry.Deserialize.Xml
         internal static string WhenDeclarationNotFirst => Deserialize.Formatting.GetResourceString(nameof(WhenDeclarationNotFirst), @"Malformed markup: the declaration is not the first characters in the document");
 
         internal static string WhenProcessingInstructionTargetMalformed => Deserialize.Formatting.GetResourceString(nameof(WhenProcessingInstructionTargetMalformed), @"Malformed markup: the processing instruction target is not a name, or is 'xml' in any case");
+
+        internal static string WhenNameUnsupportedCharacter => Deserialize.Formatting.GetResourceString(nameof(WhenNameUnsupportedCharacter), @"Malformed name non-terminal contains an unsupported character {0}");
+
+        internal static string WhenNameMalformed => Deserialize.Formatting.GetResourceString(nameof(WhenNameMalformed), @"Malformed name non-terminal characters {0}");
         #endregion
 
         #region invalid operation exception

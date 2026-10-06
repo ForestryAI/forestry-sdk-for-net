@@ -101,6 +101,12 @@ namespace Forestry.Deserialize.Xml
                 case ExceptionType.WhenProcessingInstructionTargetMalformed:
                     message = Formatting.WhenProcessingInstructionTargetMalformed;
                     break;
+                case ExceptionType.WhenNameUnsupportedCharacter:
+                    message = message = Deserialize.Formatting.Format(Formatting.WhenNameUnsupportedCharacter, character);
+                    break;
+                case ExceptionType.WhenNameMalformed:
+                    message = message = Deserialize.Formatting.Format(Formatting.WhenNameMalformed, characters);
+                    break;
                 default:
                     break;
             }
@@ -147,7 +153,9 @@ namespace Forestry.Deserialize.Xml
             WhenEndingTerminalMissing,
             WhenDocumentTypeRepeated,
             WhenDeclarationNotFirst,
-            WhenProcessingInstructionTargetMalformed
+            WhenProcessingInstructionTargetMalformed,
+            WhenNameUnsupportedCharacter,
+            WhenNameMalformed
         }
         #endregion
     }

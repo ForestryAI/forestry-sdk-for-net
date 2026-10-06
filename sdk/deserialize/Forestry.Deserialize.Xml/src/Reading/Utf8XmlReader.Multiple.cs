@@ -351,5 +351,38 @@ namespace Forestry.Deserialize.Xml.Reading
             Debug.Assert(false, "The value ends with the ending terminal ?> so the scan always ends.");
             return true;
         }
+
+        /// <summary>
+        /// Evaluates a name non-terminal markup state across multiple segments, continuing to
+        /// the next segment while the markup state is unknown
+        /// </summary>
+        /// <remarks>
+        /// The first character is the first byte of the name, not the first segment: no name
+        /// characters counted yet, since the sequence can start with empty segments
+        /// </remarks>
+        /// <param name="nameLength"></param>
+        /// <param name="unsupportedCharacter"></param>
+        /// <returns></returns>
+        private MarkupState EvaluateMultipleNameNonTerminalMarkup(
+            out int nameLength,
+            out bool unsupportedCharacter
+        )
+        {
+            nameLength = 0;
+            unsupportedCharacter = false;
+
+            foreach (ReadOnlyMemory<byte> memory in _sequence.Slice(SequencePosition))
+            {
+                MarkupState markupState = EvaluateNameNonTerminalMarkup(memory.Span, isFirstCharacter: nameLength == 0, out int segmentNameLength, out unsupportedCharacter);
+                nameLength += segmentNameLength;
+
+                if (markupState != MarkupState.Unknown)
+                {
+                    return markupState;
+                }
+            }
+
+            return MarkupState.Unknown;
+        }
     }
 }

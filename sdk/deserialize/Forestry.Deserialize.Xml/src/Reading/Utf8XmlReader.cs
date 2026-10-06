@@ -2,6 +2,7 @@ using System.Buffers;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Forestry.Deserialize.Xml.Reading
 {
@@ -692,9 +693,85 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadName()
+        {
+            MarkupState value = _isMultipleSegments ?
+                EvaluateMultipleNameNonTerminalMarkup(out int nameLength, out bool unsupportedCharacter) :
+                EvaluateNameNonTerminalMarkup(_segment[_segmentPosition..], isFirstCharacter: true, out nameLength, out unsupportedCharacter);
+
+            switch (value)
+            {                
+                case MarkupState.WellFormed:
+                    Advancement(ref this, nameLength); // S4 
+                    return true; 
+                case MarkupState.Malformed:
+                    if (unsupportedCharacter) // S5 else S6
+                    {
+                        Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenNameUnsupportedCharacter);
+                    } else
+                    {
+                        Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenNameMalformed);
+                    }
+                    break;
+                case MarkupState.Unknown:
+                    if (!_isReadingCompleted) // S7
+                    {
+                        return false; // simulate rollback without advancement
+                    }
+                    if (nameLength > 0) // S8
+                    {
+                        Advancement(ref this, nameLength);
+                        return true;
+                    }
+                    
+                    Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenNameMalformed); // S9
+                    break;
+                default:
+                    Debug.Assert(false, "The name non-terminal evaluation returned an unexpected value.");
+                    break;
+            }
+
+            static void Advancement(ref Utf8XmlReader reader, int nameLength)
+            {
+                if (reader._isMultipleSegments)
+                {
+                    ReadOnlySequence<byte> value = reader._sequence.Slice(reader.SequencePosition, nameLength);
+
+                    if (value.IsSingleSegment)
+                    {
+                        reader.Value = value.FirstSpan;
+                        reader.ValueSequence = ReadOnlySequence<byte>.Empty;
+                        reader.HasValueSequence = false;
+                    }
+                    else
+                    {
+                        reader.Value = [];
+                        reader.ValueSequence = value;
+                        reader.HasValueSequence = true;
+                    }
+
+                    reader.AdvanceMultipleSegments(nameLength);
+                } else
+                {
+                    reader.Value = reader._segment[reader._segmentPosition..(reader._segmentPosition + nameLength)];
+                    reader.ValueSequence = ReadOnlySequence<byte>.Empty;
+                    reader.HasValueSequence = false;
+                    reader._segmentPosition += nameLength;
+                }
+
+                reader._linePosition += nameLength;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// One malformed markup makes the whole document malformed
         /// </summary>
-        private enum MarkupState : byte
+        internal enum MarkupState : byte
         {
             /// <summary>
             /// Neither well-formed nor malformed, the context decides usage
@@ -702,6 +779,51 @@ namespace Forestry.Deserialize.Xml.Reading
             Unknown,
             WellFormed,
             Malformed,
+        }
+
+        /// <summary>
+        /// Evaluates a name non-terminal markup state
+        /// </summary>
+        /// <param name="characters"></param>
+        /// <param name="isFirstCharacter"></param>
+        /// <param name="nameLength"></param>
+        /// <param name="unsupportedCharacter"></param>
+        /// <returns></returns>
+        internal static MarkupState EvaluateNameNonTerminalMarkup(
+            ReadOnlySpan<byte> characters,
+            bool isFirstCharacter,
+            out int nameLength,
+            out bool unsupportedCharacter
+        ) {
+            static bool IsUnsupportedCharacterGuard(byte value) => value >= 0x80;
+
+            for (int characterIndex = 0; characterIndex < characters.Length; characterIndex++)
+            {
+                if (IsUnsupportedCharacterGuard(characters[characterIndex]))
+                {
+                    nameLength = 0;
+                    unsupportedCharacter = true;
+                    return MarkupState.Malformed;  // S0
+                }
+
+                if (isFirstCharacter && characterIndex == 0 && !EBNF.IsNameStartingCharacter(characters[characterIndex]))
+                {
+                    nameLength = 0;
+                    unsupportedCharacter = false;
+                    return MarkupState.Malformed;  // S1
+                }
+
+                if (!EBNF.IsNameCharacter(characters[characterIndex]))
+                {
+                    nameLength = characterIndex;
+                    unsupportedCharacter = false;
+                    return MarkupState.WellFormed;  // S2 (fall through from S1)
+                }
+            }
+
+            nameLength = characters.Length;
+            unsupportedCharacter = false;
+            return MarkupState.Unknown;  // S3            
         }
 
         /// <summary>
