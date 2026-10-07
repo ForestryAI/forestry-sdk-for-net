@@ -1,8 +1,6 @@
 using System.Buffers;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace Forestry.Deserialize.Xml.Reading
 {
@@ -606,7 +604,7 @@ namespace Forestry.Deserialize.Xml.Reading
                 case NonTerminal.ProcessingInstruction:
                     return ReadProcessingInstruction();
                 case NonTerminal.StartTag:
-                    throw new NotImplementedException();
+                    return ReadStartTag();
                 case NonTerminal.EndTag:
                     throw new NotImplementedException();
                 case NonTerminal.Attribute:
@@ -693,7 +691,8 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// 
+        /// Read name has a simulated rollback when false and a committed advancement 
+        /// when true
         /// </summary>
         /// <returns></returns>
         internal bool ReadName()
@@ -766,6 +765,45 @@ namespace Forestry.Deserialize.Xml.Reading
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Read the start tag's starting terminal < and name, shared by 
+        /// element and empty element non-terminals; simulated rollback when false.
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadStartTag()
+        {
+            Debug.Assert(_segment[_segmentPosition] == EBNF.LessThan, "The first character of a start tag is the starting terminal '<'.");
+
+            _segmentPosition += 1;
+            _linePosition += 1;
+
+            if (!ReadName()) // S0
+            {
+                _segmentPosition -= 1;
+                _linePosition -= 1;
+                return false;
+            }
+
+            // S1: propagate exceptions
+
+            if (HasValueSequence) // S3
+            {
+                Span<byte> name = stackalloc byte[ElementStack.PackedNameLength * 8];
+
+                int length = (int)Math.Min(ValueSequence.Length, name.Length); // S4
+                ValueSequence.Slice(0, length).CopyTo(name);
+                _elementStack.Push(name[..length]);
+            } else // S2
+            {
+                _elementStack.Push(Value);
+            }
+
+            _previousTokenType = _currentTokenType;
+            _currentTokenType = TokenType.Element;
+
+            return true;  // S2-S5
         }
 
         /// <summary>
