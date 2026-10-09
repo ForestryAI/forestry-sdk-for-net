@@ -24,6 +24,10 @@ namespace Forestry.Deserialize.Xml
         internal static string WhenNameMalformed => Deserialize.Formatting.GetResourceString(nameof(WhenNameMalformed), @"Malformed name non-terminal characters {0}");
 
         internal static string WhenEmptyElementEndingTerminalMalformed => Deserialize.Formatting.GetResourceString(nameof(WhenEmptyElementEndingTerminalMalformed), @"Malformed markup: character {0} is not a greater than character");
+
+        internal static string WhenAttributeMissingValue => Deserialize.Formatting.GetResourceString(nameof(WhenAttributeMissingValue), @"Malformed markup: attribute {0} is missing a value non-terminal");
+
+        internal static string WhenSpacingMissingBeforeAttribute => Deserialize.Formatting.GetResourceString(nameof(WhenSpacingMissingBeforeAttribute), @"Malformed markup: spacing is missing before attribute {0}");
         #endregion
 
         #region invalid operation exception

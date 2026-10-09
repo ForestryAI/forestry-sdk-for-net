@@ -119,23 +119,23 @@ namespace Forestry.Deserialize.Xml.Tests
         }
 
         /// <summary>
-        /// S4 means that the attribute non-terminal in the start tag is missing 
-        /// the attribute value non-terminal.  The '>' character is ignored because 
-        /// the document is malformed.
+        /// S4 means that the attribute non-terminal in the start tag is missing
+        /// the attribute value non-terminal.  Changed by #40 from ignoring the '>'
+        /// character to throwing: a dangling attribute name means the attribute
+        /// value is missing.
         /// </summary>
         [Fact]
-        public void ContentReady_ForS4AfterAttributeName_ItShould_LeaveTheCharacterForTheStartingTerminalStep()
+        public void ContentReady_ForS4AfterAttributeName_ItShould_ThrowAttributeValueMissing()
         {
             // Arrange
             ReaderState state = State(ElementStackAtDepth(1, contentReady: false), TokenType.Attribute);
             Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, state);
 
             // Act
-            reader.ContentReady();
+            Exception? thrown = ContentReadyThrown(ref reader);
 
             // Assert
-            Assert.Equal(0, reader.Position);
-            Assert.Equal(state._elementStack.ContentReady, reader.ReaderState._elementStack.ContentReady);
+            Assert.IsType<XmlException>(thrown);
         }
 
         /// <summary>

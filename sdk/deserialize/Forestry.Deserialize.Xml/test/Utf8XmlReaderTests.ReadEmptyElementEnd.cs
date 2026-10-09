@@ -52,6 +52,7 @@ namespace Forestry.Deserialize.Xml.Tests
         private static ReaderState NestedStartTagState(TokenType current, long linePosition = 0) => new(
             lineNumber: 0,
             linePosition: linePosition,
+            hasSkippedSpacingInStartTag: false,
             currentTokenType: current,
             previousTokenType: TokenType.None,
             elementStack: ElementStackAtDepth(2, contentReady: false),

@@ -40,6 +40,7 @@ namespace Forestry.Deserialize.Xml.Reading
             _linePosition = readerState._linePosition;
             _lineNumber = readerState._lineNumber;
             _documentType = readerState._documentType;
+            _hasSkippedSpacingInStartTag = readerState._hasSkippedSpacingInStartTag;
             _currentTokenType = readerState._currentTokenType;
             _previousTokenType = readerState._previousTokenType;
             _elementStack = readerState._elementStack;

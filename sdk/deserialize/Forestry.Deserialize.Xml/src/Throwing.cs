@@ -110,6 +110,12 @@ namespace Forestry.Deserialize.Xml
                 case ExceptionType.WhenEmptyElementEndingTerminalMalformed:
                     message = Deserialize.Formatting.Format(Formatting.WhenEmptyElementEndingTerminalMalformed, character);
                     break;
+                case ExceptionType.WhenAttributeMissingValue:
+                    message = Deserialize.Formatting.Format(Formatting.WhenAttributeMissingValue, characters);
+                    break;
+                case ExceptionType.WhenSpacingMissingBeforeAttribute:
+                    message = Deserialize.Formatting.Format(Formatting.WhenSpacingMissingBeforeAttribute, characters);
+                    break;
                 default:
                     break;
             }
@@ -159,7 +165,9 @@ namespace Forestry.Deserialize.Xml
             WhenProcessingInstructionTargetMalformed,
             WhenNameUnsupportedCharacter,
             WhenNameMalformed,
-            WhenEmptyElementEndingTerminalMalformed
+            WhenEmptyElementEndingTerminalMalformed,
+            WhenAttributeMissingValue,
+            WhenSpacingMissingBeforeAttribute
         }
         #endregion
     }

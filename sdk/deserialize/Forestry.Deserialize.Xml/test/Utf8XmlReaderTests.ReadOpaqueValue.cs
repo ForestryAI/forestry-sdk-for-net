@@ -44,6 +44,7 @@ namespace Forestry.Deserialize.Xml.Tests
         ) => new(
             lineNumber: lineNumber,
             linePosition: linePosition,
+            hasSkippedSpacingInStartTag: false,
             currentTokenType: current,
             previousTokenType: TokenType.None,
             elementStack: context switch

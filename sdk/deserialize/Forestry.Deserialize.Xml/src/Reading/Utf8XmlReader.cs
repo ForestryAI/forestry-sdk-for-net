@@ -135,6 +135,7 @@ namespace Forestry.Deserialize.Xml.Reading
             lineNumber: _lineNumber,
             linePosition: _linePosition,
             documentType: _documentType,
+            hasSkippedSpacingInStartTag: _hasSkippedSpacingInStartTag,
             currentTokenType: _currentTokenType,
             previousTokenType: _previousTokenType,
             elementStack: _elementStack,
@@ -155,6 +156,11 @@ namespace Forestry.Deserialize.Xml.Reading
         /// Advancement past a document type non-terminal
         /// </summary>
         private bool _documentType;
+
+        /// <summary>
+        /// When spacing has been skipped while inside a start tag
+        /// </summary>
+        private bool _hasSkippedSpacingInStartTag;
 
         /// <summary>
         /// Mutable current token type
@@ -316,6 +322,10 @@ namespace Forestry.Deserialize.Xml.Reading
                     SkipSingleSpacing();
                 }
 
+                if (_elementStack.Depth != 0 && _elementStack.ContentReady is false) {
+                    _hasSkippedSpacingInStartTag = true;  // S1.a (only start tag)
+                }
+
                 if (_isMultipleSegments ? IsMultipleSegmentDrained() : IsSingleSegmentDrained())
                 {
                     return true;
@@ -331,11 +341,13 @@ namespace Forestry.Deserialize.Xml.Reading
                 {
                     SequenceReader<byte> sequenceReader = new(_sequence.Slice(SequencePosition));
                     sequenceReader.AdvancePastAny(" \t\r\n"u8);
+
                     hasNonSpacing = sequenceReader.TryPeek(out nonSpacing);
                 } else
                 {
                     ReadOnlySpan<byte> remaining = _segment[_segmentPosition..];
                     int index = remaining.IndexOfExceptWhiteSpace();
+
                     hasNonSpacing = index < remaining.Length;
                     if (hasNonSpacing)
                     {
@@ -560,7 +572,7 @@ namespace Forestry.Deserialize.Xml.Reading
 
                 if (_elementStack.Depth != 0 && _elementStack.ContentReady is false && _currentTokenType == TokenType.Attribute)
                 {
-                    goto IgnoreMalformed; // S4
+                    Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenAttributeMissingValue); // S4
                 }
 
                 if (_elementStack.Depth != 0 && _elementStack.ContentReady is false && _currentTokenType == TokenType.Value && _previousTokenType == TokenType.Attribute)
@@ -587,6 +599,8 @@ namespace Forestry.Deserialize.Xml.Reading
             Skip:
                 _segmentPosition += 1;
                 _elementStack.NegateContentReady();
+
+                _hasSkippedSpacingInStartTag = false;
                 return;
 
             IgnoreMalformed:
@@ -632,6 +646,11 @@ namespace Forestry.Deserialize.Xml.Reading
                 Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenEmptyElementEndingTerminalMalformed);  // S4
             }
 
+            if (_currentTokenType == TokenType.Attribute)
+            {
+                Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenAttributeMissingValue);  // S5.a
+            }
+
             _previousTokenType = _currentTokenType;
             _currentTokenType = TokenType.ElementEnd;
             _elementStack.Pop(stackalloc byte[ElementStack.PackedNameLength * 8]);
@@ -646,8 +665,9 @@ namespace Forestry.Deserialize.Xml.Reading
             }
             
             _linePosition += 2;
+            _hasSkippedSpacingInStartTag = false; // S5.b
 
-            return true; // S5
+            return true; 
         }
 
         /// <summary>
@@ -674,7 +694,7 @@ namespace Forestry.Deserialize.Xml.Reading
                 case NonTerminal.EndTag:
                     throw new NotImplementedException();
                 case NonTerminal.Attribute:
-                    throw new NotImplementedException();
+                    return ReadAttribute();
                 case NonTerminal.AttributeValue:
                     throw new NotImplementedException();
                 case NonTerminal.CharacterData:
@@ -872,6 +892,29 @@ namespace Forestry.Deserialize.Xml.Reading
             return true;  // S2-S5
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadAttribute()
+        {
+            if (!_hasSkippedSpacingInStartTag)
+            {
+                Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenSpacingMissingBeforeAttribute); // S0
+            }
+
+            if (!ReadName()) // S1 + S2
+            {
+                return false;
+            }
+
+            // S3 + S4 + S5
+            _hasSkippedSpacingInStartTag = false;
+            _previousTokenType = _currentTokenType;
+            _currentTokenType = TokenType.Attribute;
+
+            return true;
+        }
         #endregion
 
         #region markup state

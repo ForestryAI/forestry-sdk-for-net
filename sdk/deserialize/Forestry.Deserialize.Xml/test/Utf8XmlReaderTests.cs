@@ -86,6 +86,7 @@ namespace Forestry.Deserialize.Xml.Tests
             lineNumber: 0,
             linePosition: 0,
             documentType: false,
+            hasSkippedSpacingInStartTag: false,
             currentTokenType: current,
             previousTokenType: previous,
             elementStack: elementStack,

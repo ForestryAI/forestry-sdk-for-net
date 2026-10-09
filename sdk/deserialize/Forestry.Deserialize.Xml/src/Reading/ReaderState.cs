@@ -21,12 +21,15 @@ namespace Forestry.Deserialize.Xml.Reading
         internal readonly ElementStack _elementStack;
         
         internal readonly ReaderOptions _readerOptions;
+
+        internal readonly bool _hasSkippedSpacingInStartTag;
         
         public ReaderState(ReaderOptions readerOptions = default)
         {
             _lineNumber = default;
             _linePosition = default;
             _documentType = false;
+            _hasSkippedSpacingInStartTag = false;
 
             _currentTokenType = default;
             _previousTokenType = default;
@@ -45,6 +48,7 @@ namespace Forestry.Deserialize.Xml.Reading
             long lineNumber,
             long linePosition,
             bool documentType,
+            bool hasSkippedSpacingInStartTag,
             TokenType currentTokenType,
             TokenType previousTokenType,
             ElementStack elementStack,
@@ -54,6 +58,8 @@ namespace Forestry.Deserialize.Xml.Reading
             _lineNumber = lineNumber;
             _linePosition = linePosition;
             _documentType = documentType;
+
+            _hasSkippedSpacingInStartTag = hasSkippedSpacingInStartTag;
 
             _currentTokenType = currentTokenType;
             _previousTokenType = previousTokenType;
