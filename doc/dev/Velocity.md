@@ -293,6 +293,7 @@ would make this possible later without redesigning the format first.
 | [#38](https://github.com/ForestryAI/forestry-sdk-for-net/issues/38) Read name across segments | 30/30m | 60/60m | 5m | 5/0m | 5/10m | 20/60m | 5/10m | 0 | 5 | 1 | 0 | yes | 8 byte sequences |
 | [#37](https://github.com/ForestryAI/forestry-sdk-for-net/issues/37) Read start tag | 60/60m (AI) | 60/60m (AI) | 5m | 5/0m | 5/0m | 20/5m (AI) | 5/10m | 0 | 0 | 0 | 0 | yes | 4 stack allocation |
 | [#35](https://github.com/ForestryAI/forestry-sdk-for-net/issues/35) Read ending terminal for empty elements | 20/20m | 30/30m | 5m | 5/0m | 5/0m | 10/5m | 5/5m (AI) | 0 | 4 | 0 | 0 | yes | 7 straddling advancement |
+| [#40](https://github.com/ForestryAI/forestry-sdk-for-net/issues/40) Read attribute | 20/60m (AI) | 30/90m (AI) | 5m | 5/5m | 5/10m | 15/15m | 5/5m | 0 | 1 | 1 | 0 | yes | 5 reader state plumbing |
 
 A short retrospective on how the numbers actually felt - what was better or worse than previous
 tasks, any pattern worth watching - belongs as a closing comment on the task itself when it moves

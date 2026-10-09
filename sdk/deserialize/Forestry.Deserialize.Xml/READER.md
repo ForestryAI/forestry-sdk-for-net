@@ -17,9 +17,9 @@ cycle (returns `false`: the caller expands the segment(s) and calls again), prod
 |---|---|---|---|---|
 | 0 | Reset | – | `Value` and `ValueSequence` are cleared | continue |
 | 1 | Drained? | – | Nothing left at the reader position | halt; on the last readable segment, throw if there is no root element or an element is not ended |
-| 2 | Skip spacing | #34 | Outside content: skip all spacing. In content: skip only spacing-only character data (next non-spacing is `<`) | continue; halt when drained or undecided |
-| 3 | Content ready | #22 | `>` after an Element (S3) or an attribute's Value (S5): skip it, content ready = true | continue (never a token) |
-| 4 | Empty element end | #35 | `/>` in a start tag: pop the element stack | continue (not `/`); **ElementEnd** token; halt when `/` is the last byte; throw when malformed |
+| 2 | Skip spacing | #34, #40 | Outside content: skip all spacing. In content: skip only spacing-only character data (next non-spacing is `<`). In a start tag: record that spacing was skipped (the spacing flag) | continue; halt when drained or undecided |
+| 3 | Content ready | #22, #40 | `>` after an Element (S3) or an attribute's Value (S5): skip it, content ready = true, clear the spacing flag | continue (never a token); throw after an attribute name (S4) |
+| 4 | Empty element end | #35, #40 | `/>` in a start tag: pop the element stack, clear the spacing flag | continue (not `/`); **ElementEnd** token; halt when `/` is the last byte; throw when malformed or after an attribute name (S5.a) |
 | 5 | Drained? | – | Step 3 may have skipped `>` as the last byte | halt |
 | 6 | Peek starting terminal | #17, #25, #36 | Fill the scratch pad with a starting terminal (+ overshoot), or leave it empty | continue; halt when the pad is incomplete and reading is not completed |
 | 7 | Candidate | #27 | Scratch pad + context → one candidate non-terminal | always continue (no side effects) |
@@ -51,7 +51,7 @@ contentReady` (#34).
 | S3 | Prolog, Content, Misc | `<?` | ProcessingInstruction | `ReadProcessingInstruction` | built #24 |
 | S4 | Prolog, Content | `<` + name starting character | StartTag | `ReadStartTag` | built #37 |
 | S5 | Content | `</` | EndTag | – | not built |
-| S6 | Start tag | empty | Attribute | – | #40 in progress |
+| S6 | Start tag | empty | Attribute | `ReadAttribute` | built #40 |
 | S7 | Start tag | `"` or `'` | AttributeValue | – | not built |
 | S8 | Content | empty, `"` or `'` | CharacterData | – | not built |
 | S9 | anything else | – | None (default delegate) | – | not built |
@@ -64,7 +64,7 @@ the Attribute candidate.
 
 | Step | Issue | Where | Why it matters |
 |---|---|---|---|
-| Skip `=` (delimiting terminals) | #32 | before peek | Until built, the `=` after an attribute name reaches the Attribute candidate and throws |
+| Skip `=` (delimiting terminals) | #32 | **before skip spacing**, current token Attribute | Until built, the `=` after an attribute name reaches the Attribute candidate and throws. Throws when the next non-spacing character isn't `=`, which makes content ready S4 and empty element S5.a unreachable |
 | Ignore optional non-terminals | #33 | before peek | Reader options (comments, etc.); a skip step, never a delegate |
 | Skip BOM | #31 | start of document | Not part of the grammar; no line tracking |
 
@@ -116,11 +116,33 @@ the Attribute candidate.
 18. **Spacing in content may be character data.** Spacing-only character data is skipped by
     default; a reader option later (#34).
 
+### Attributes
+19. **An attribute needs spacing before it**, but spacing is skipped before the candidate sees
+    the pad. Skip spacing records it in the start tag (`_hasSkippedSpacingInStartTag`, carried in
+    `ReaderState` and copied by both constructors). The attribute delegate throws when it's not
+    set, and clears it on success; `>` and `/>` clear it when closing the start tag (#40).
+20. **A dangling attribute name throws "attribute value missing"** at both ending terminals:
+    content ready S4 (`<a b>`) and empty element S5.a (`<a b/>`, checked after `/>` is peeked)
+    (#40).
+21. **The attribute delegate checks the spacing flag before reading the name**, and its
+    candidate never checks the first character, so #38's malformed first character is
+    reachable here (`<a 1="x">`), unlike in the start tag (#40).
+
+### Reader state
+22. **A new `ReaderState` field touches six places**: the `ReaderState` field, its public
+    constructor (default value) and its internal constructor (parameter); the reader's own field
+    and its `ReaderState` property; and **both** reader constructors, `Utf8XmlReader.Single.cs`
+    and `Utf8XmlReader.Multiple.cs`, which copy it from the state. Missing the constructor copy
+    loses the field whenever a reader is reconstructed, i.e. on every piped segment (#24's
+    `_documentType`, #40's spacing flag). Test helpers that build a `ReaderState` by named
+    arguments need the new argument too.
+
 ### Decided, not built yet
-- **Content ready S4 throws** (`>` right after an attribute name, e.g. `<a b>`), instead of
-  ignoring it (2026-10-08, for #40).
-- **Spacing is required before an attribute.** Skip spacing records that it skipped; how the
-  check is done is still open in #40.
+- **#32 runs before skip spacing** when the current token is Attribute, so it owns the spacing
+  around `=`. Otherwise that spacing would set the spacing flag and let `<a b ="1"c="2">` through
+  (#40).
+- **The attribute value delegate is not built.** Until it is (and #32), no attribute is read past
+  its name.
 - **`/>`'s ElementEnd has an empty `Value`.** Exposing the popped name needs storage in the
   reader; revisit later (#35).
 
