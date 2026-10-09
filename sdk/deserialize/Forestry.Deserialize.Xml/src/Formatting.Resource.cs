@@ -22,6 +22,8 @@ namespace Forestry.Deserialize.Xml
         internal static string WhenNameUnsupportedCharacter => Deserialize.Formatting.GetResourceString(nameof(WhenNameUnsupportedCharacter), @"Malformed name non-terminal contains an unsupported character {0}");
 
         internal static string WhenNameMalformed => Deserialize.Formatting.GetResourceString(nameof(WhenNameMalformed), @"Malformed name non-terminal characters {0}");
+
+        internal static string WhenEmptyElementEndingTerminalMalformed => Deserialize.Formatting.GetResourceString(nameof(WhenEmptyElementEndingTerminalMalformed), @"Malformed markup: character {0} is not a greater than character");
         #endregion
 
         #region invalid operation exception

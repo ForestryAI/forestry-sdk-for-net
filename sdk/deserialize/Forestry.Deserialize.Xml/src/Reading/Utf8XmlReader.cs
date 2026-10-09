@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 namespace Forestry.Deserialize.Xml.Reading
 {
     /// <summary>
-    /// Public constructors, properties and methods
+    /// Utf8XmlReader read delegation
     /// </summary>
     public ref partial struct Utf8XmlReader
     {
@@ -271,46 +271,7 @@ namespace Forestry.Deserialize.Xml.Reading
         internal int _startingTerminalCharacterCount;
         #endregion
 
-        /// <summary>
-        /// Read the value of the next token
-        /// </summary>
-        /// <returns></returns>
-        public bool Read()
-        {
-            bool advancement = false;
-
-            // Unreliable value
-            Value = default;
-            ValueSequence = default;
-            
-            // Break advancement fast when segment is drained
-            if (_isMultipleSegments ? IsMultipleSegmentDrained() : IsSingleSegmentDrained())
-            {
-                goto Completed;
-            }
-
-            // Skip spacing
-            if (SkipSpacing())
-            {
-                goto Completed;
-            }
-
-            // Content ready
-            ContentReady();
-
-            // Content ready may skip '>' (S3 or S5) draining the segment
-            if (_isMultipleSegments ? IsMultipleSegmentDrained() : IsSingleSegmentDrained())
-            {
-                goto Completed;
-            }
-
-            // Read value
-            return ReadValue();
-
-            Completed:
-                return advancement;
-        }
-
+        #region skipping, peeking, draining
         /// <summary>
         /// Assert state of XML document when reading as completed 
         /// e.g. document is malformed or reader options are violated
@@ -423,70 +384,6 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// When first character == '>' then determine if the element non-terminal 
-        /// has a content non-terminal after the start tag
-        /// </summary>
-        /// <returns></returns>
-        internal void ContentReady()
-        {
-            byte character = _segment[_segmentPosition];
-
-            if (character == EBNF.StartTagEndingTerminal)
-            {
-                if (_elementStack.Depth == 0 && _currentTokenType == TokenType.None)
-                {
-                    goto IgnoreMalformed;  // S0
-                }
-
-                if (_elementStack.Depth == 0 && (_elementStack.RootElement is false || _elementStack.RootElement is true))
-                {
-                    goto IgnoreMalformed;  // S1 || S2
-                }
-
-                if (_elementStack.Depth != 0 && _elementStack.ContentReady is false && _currentTokenType == TokenType.Element)
-                {
-                    goto Skip; // S3
-                }
-
-                if (_elementStack.Depth != 0 && _elementStack.ContentReady is false && _currentTokenType == TokenType.Attribute)
-                {
-                    goto IgnoreMalformed; // S4
-                }
-
-                if (_elementStack.Depth != 0 && _elementStack.ContentReady is false && _currentTokenType == TokenType.Value && _previousTokenType == TokenType.Attribute)
-                {
-                    goto Skip; // S5
-                }
-
-                if (_elementStack.Depth != 0 && _elementStack.ContentReady is false && _currentTokenType == TokenType.Value && (_previousTokenType == TokenType.Value || _previousTokenType == TokenType.Element))
-                {
-                    goto IgnoreWellformed; // S6
-                }
-
-                if (_elementStack.Depth != 0 && _elementStack.ContentReady is true)
-                {
-                    goto IgnoreWellformed; // S7
-                }
-
-                Debug.Assert(false, "No S0-S7 state matched - reader state is unreliable.");
-            }
-
-            // break fast when not the '>' character
-            return;
-
-            Skip:
-                _segmentPosition += 1;
-                _elementStack.NegateContentReady();
-                return;
-
-            IgnoreMalformed:
-                return;
-
-            IgnoreWellformed:
-                return;
-        }
-
-        /// <summary>
         /// Peek starting terminal
         /// </summary>
         /// <returns></returns>
@@ -584,9 +481,178 @@ namespace Forestry.Deserialize.Xml.Reading
 
             return false;
         }
+        #endregion
+
+        #region read delegation
+        /// <summary>
+        /// Read the value of the next token
+        /// </summary>
+        /// <returns></returns>
+        public bool Read()
+        {
+            bool advancement = false;
+
+            // Unreliable value
+            Value = default;
+            ValueSequence = default;
+            
+            // Break advancement fast when segment is drained
+            if (_isMultipleSegments ? IsMultipleSegmentDrained() : IsSingleSegmentDrained())
+            {
+                goto Completed;
+            }
+
+            // Skip spacing
+            if (SkipSpacing())
+            {
+                goto Completed;
+            }
+
+            // Content ready
+            ContentReady();
+
+            // Empty element ending terminal
+            bool? hasEmptyElementEndingTerminal = TryReadEmptyElementEndingTerminal();
+            if (hasEmptyElementEndingTerminal is not null)
+            {
+                advancement = hasEmptyElementEndingTerminal.Value;
+                goto Completed;
+            }
+
+            // Content ready may skip '>' (S3 or S5) draining the segment
+            if (_isMultipleSegments ? IsMultipleSegmentDrained() : IsSingleSegmentDrained())
+            {
+                goto Completed;
+            }
+
+            // Read value
+            return ReadValue();
+
+            Completed:
+                return advancement;
+        }
 
         /// <summary>
-        /// Read values
+        /// When first character == '>' then determine if the element non-terminal 
+        /// has a content non-terminal after the start tag
+        /// </summary>
+        /// <returns></returns>
+        internal void ContentReady()
+        {
+            byte character = _segment[_segmentPosition];
+
+            if (character == EBNF.StartTagEndingTerminal)
+            {
+                if (_elementStack.Depth == 0 && _currentTokenType == TokenType.None)
+                {
+                    goto IgnoreMalformed;  // S0
+                }
+
+                if (_elementStack.Depth == 0 && (_elementStack.RootElement is false || _elementStack.RootElement is true))
+                {
+                    goto IgnoreMalformed;  // S1 || S2
+                }
+
+                if (_elementStack.Depth != 0 && _elementStack.ContentReady is false && _currentTokenType == TokenType.Element)
+                {
+                    goto Skip; // S3
+                }
+
+                if (_elementStack.Depth != 0 && _elementStack.ContentReady is false && _currentTokenType == TokenType.Attribute)
+                {
+                    goto IgnoreMalformed; // S4
+                }
+
+                if (_elementStack.Depth != 0 && _elementStack.ContentReady is false && _currentTokenType == TokenType.Value && _previousTokenType == TokenType.Attribute)
+                {
+                    goto Skip; // S5
+                }
+
+                if (_elementStack.Depth != 0 && _elementStack.ContentReady is false && _currentTokenType == TokenType.Value && (_previousTokenType == TokenType.Value || _previousTokenType == TokenType.Element))
+                {
+                    goto IgnoreWellformed; // S6
+                }
+
+                if (_elementStack.Depth != 0 && _elementStack.ContentReady is true)
+                {
+                    goto IgnoreWellformed; // S7
+                }
+
+                Debug.Assert(false, "No S0-S7 state matched - reader state is unreliable.");
+            }
+
+            // break fast when not the '>' character
+            return;
+
+            Skip:
+                _segmentPosition += 1;
+                _elementStack.NegateContentReady();
+                return;
+
+            IgnoreMalformed:
+                return;
+
+            IgnoreWellformed:
+                return;
+        }
+
+        /// <summary>
+        /// Try reading the ending terminal of an empty element when the current character is 
+        /// not '/' return null else then assert:
+        /// - advancement past the '/>' characters then return false
+        /// - '/' is the last assessible character and reading is not completed then return true
+        /// - '>' not immediately after the '/' character then throw malformed
+        /// - '/' is the last assessible character and reading is completed then throw malformed
+        /// </summary>
+        /// <returns></returns>
+        internal bool? TryReadEmptyElementEndingTerminal()
+        {
+            if (_elementStack.ContentReady || _elementStack.Depth == 0) // S0
+            {
+                return null;
+            }
+
+            if (_segment[_segmentPosition] != EBNF.Slash) // S1
+            {
+                return null;
+            }
+
+            if (!PeekCharacter(1, out byte character))
+            {
+                if (!_isReadingCompleted) // S2
+                {
+                    return false;
+                }
+
+                Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenEndingTerminalMissing);  // S3
+            }
+
+            if (character != EBNF.StartTagEndingTerminal) 
+            {
+                Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenEmptyElementEndingTerminalMalformed);  // S4
+            }
+
+            _previousTokenType = _currentTokenType;
+            _currentTokenType = TokenType.ElementEnd;
+            _elementStack.Pop(stackalloc byte[ElementStack.PackedNameLength * 8]);
+
+            if (_isMultipleSegments)
+            {
+                AdvanceMultipleSegments(2);
+            }
+            else
+            {
+                _segmentPosition += 2;
+            }
+            
+            _linePosition += 2;
+
+            return true; // S5
+        }
+
+        /// <summary>
+        /// Read values by peeking for a starting terminal and if one exists then 
+        /// get a candidate non-terminal to delegate reading
         /// </summary>
         /// <returns></returns>
         internal bool ReadValue()
@@ -806,6 +872,9 @@ namespace Forestry.Deserialize.Xml.Reading
             return true;  // S2-S5
         }
 
+        #endregion
+
+        #region markup state
         /// <summary>
         /// One malformed markup makes the whole document malformed
         /// </summary>
@@ -938,5 +1007,6 @@ namespace Forestry.Deserialize.Xml.Reading
                 return MarkupState.Unknown;
             }
         }
+        #endregion
     }
 }
