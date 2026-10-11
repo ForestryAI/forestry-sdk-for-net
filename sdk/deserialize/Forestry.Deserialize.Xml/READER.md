@@ -136,8 +136,18 @@ the Attribute candidate.
     loses the field whenever a reader is reconstructed, i.e. on every piped segment (#24's
     `_documentType`, #40's spacing flag). Test helpers that build a `ReaderState` by named
     arguments need the new argument too.
+23. **`Value` lives for one `Read()` only.** Step 0 clears `Value` and `ValueSequence`, so a
+    later cycle sees the previous token's type but not its value (e.g. the attribute name when
+    #41's guard throws after `=`, the popped name on `/>`). Anything needed across cycles must be
+    stored in the reader (a `ReaderState` field, rule 22) or left out (#35, #41).
 
 ### Decided, not built yet
+- **A value expected after `=` is the attribute delegate's check, not the candidate's.** In
+  `<a b=1>` the `1` is an empty pad, so the candidate stays Attribute (rule 5; #27: "ordering
+  within a context is the delegate's concern"). The delegate throws "attribute value missing" when
+  the current token is already Attribute, **before** the spacing flag check. Bug #41 (#40's miss),
+  built after #32; #32 does not check the quote. The attribute name is not in `Value` by then
+  (rule 23).
 - **#32 runs before skip spacing** when the current token is Attribute, so it owns the spacing
   around `=`. Otherwise that spacing would set the spacing flag and let `<a b ="1"c="2">` through
   (#40).

@@ -289,16 +289,25 @@ namespace Forestry.Deserialize.Xml.Reading
 
             if (!RootElement)
             {
-                Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenDocumentHasNoRootElement);
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Incomplete, Throwing.Markup.RootElement);
             }
 
             if (Depth != 0)
             {
-                Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenDocumentHasElementNotEnded);
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Incomplete, Throwing.Markup.Element);
             }
 
             // TODO: Reader option policies when comments or other accepted prolog + miscellaneous non-terminals
 
+            return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        internal bool SkipDelimiter()
+        {
             return true;
         }
 
@@ -572,7 +581,7 @@ namespace Forestry.Deserialize.Xml.Reading
 
                 if (_elementStack.Depth != 0 && _elementStack.ContentReady is false && _currentTokenType == TokenType.Attribute)
                 {
-                    Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenAttributeMissingValue); // S4
+                    Throwing.ThrowXmlException(ref this, Throwing.Category.Expected, Throwing.Markup.AttributeValue); // S4
                 }
 
                 if (_elementStack.Depth != 0 && _elementStack.ContentReady is false && _currentTokenType == TokenType.Value && _previousTokenType == TokenType.Attribute)
@@ -638,17 +647,17 @@ namespace Forestry.Deserialize.Xml.Reading
                     return false;
                 }
 
-                Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenEndingTerminalMissing);  // S3
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Incomplete, Throwing.Markup.EndingTerminal, bytes: EBNF.EmptyElementTagEndingTerminal);  // S3
             }
 
             if (character != EBNF.StartTagEndingTerminal) 
             {
-                Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenEmptyElementEndingTerminalMalformed);  // S4
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Expected, Throwing.Markup.EmptyElementEndingTerminal, foundByte: character);  // S4
             }
 
             if (_currentTokenType == TokenType.Attribute)
             {
-                Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenAttributeMissingValue);  // S5.a
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Expected, Throwing.Markup.AttributeValue);  // S5.a
             }
 
             _previousTokenType = _currentTokenType;
@@ -716,7 +725,7 @@ namespace Forestry.Deserialize.Xml.Reading
         internal bool ReadDeclaration()
         {
             if (_lineNumber != 0 || _linePosition != 0) {
-                Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenDeclarationNotFirst);
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Order, Throwing.Markup.Declaration);
             }
 
             return _isMultipleSegments ?
@@ -732,7 +741,7 @@ namespace Forestry.Deserialize.Xml.Reading
         {
             if (_documentType)
             {
-                Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenDocumentTypeRepeated);
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Order, Throwing.Markup.DocumentType);
             }
             
             bool advancement =  _isMultipleSegments ?
@@ -769,7 +778,7 @@ namespace Forestry.Deserialize.Xml.Reading
             {
                 if (HasValueSequence ? IsMultipleProcessingInstructionMalformed() : IsSingleProcessingInstructionMalformed())
                 {
-                    Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenProcessingInstructionTargetMalformed);
+                    Throwing.ThrowXmlException(ref this, Throwing.Category.Name, Throwing.Markup.ProcessingInstructionTarget);
                 }
             }
 
@@ -795,10 +804,10 @@ namespace Forestry.Deserialize.Xml.Reading
                 case MarkupState.Malformed:
                     if (unsupportedCharacter) // S5 else S6
                     {
-                        Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenNameUnsupportedCharacter);
+                        Throwing.ThrowUnsupportedNameCharacter(ref this);
                     } else
                     {
-                        Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenNameMalformed);
+                        Throwing.ThrowXmlException(ref this, Throwing.Category.Name, Throwing.Markup.Name);
                     }
                     break;
                 case MarkupState.Unknown:
@@ -812,7 +821,7 @@ namespace Forestry.Deserialize.Xml.Reading
                         return true;
                     }
                     
-                    Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenNameMalformed); // S9
+                    Throwing.ThrowXmlException(ref this, Throwing.Category.Name, Throwing.Markup.Name); // S9
                     break;
                 default:
                     Debug.Assert(false, "The name non-terminal evaluation returned an unexpected value.");
@@ -900,7 +909,7 @@ namespace Forestry.Deserialize.Xml.Reading
         {
             if (!_hasSkippedSpacingInStartTag)
             {
-                Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenSpacingMissingBeforeAttribute); // S0
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Expected, Throwing.Markup.Spacing); // S0
             }
 
             if (!ReadName()) // S1 + S2

@@ -9,6 +9,16 @@ namespace Forestry.Deserialize.Xml
     public class XmlException: Exception
     {
         /// <summary>
+        /// XML exception category
+        /// </summary>
+        public string? Category { get; internal set; }
+
+        /// <summary>
+        /// XML exception markup
+        /// </summary>
+        public string? Markup { get; internal set; }
+
+        /// <summary>
         /// Line number when the exception was thrown
         /// </summary>
         public long? LineNumber { get; internal set; }
@@ -17,11 +27,6 @@ namespace Forestry.Deserialize.Xml
         /// Line position i.e. byte count when the exception was thrown
         /// </summary>
         public long? LinePosition { get; internal set; }
-
-        /// <summary>
-        /// XML path where the exception was thrown
-        /// </summary>
-        public string? Path { get; internal set; }
 
         /// <summary>
         /// Overrides getting the message from the constructor or if not set from 
@@ -68,57 +73,46 @@ namespace Forestry.Deserialize.Xml
         /// All optional properties and preserving the stack-trace with the inner exception
         /// </summary>
         /// <param name="message"></param>
-        /// <param name="path"></param>
+        /// <param name="category"></param>
+        /// <param name="markup"></param>
         /// <param name="lineNumber"></param>
         /// <param name="linePosition"></param>
         /// <param name="innerException"></param>
         public XmlException(
             string? message, 
-            string? path, 
+            string? category, 
+            string? markup,
             long? lineNumber, 
             long? linePosition, 
             Exception? innerException
         ) : base(message, innerException)
         {
             _message = message;
+            Category = category;
+            Markup = markup;
             LineNumber = lineNumber;
-            LinePosition = linePosition;
-            Path = path;
-        }
-
-        /// <summary>
-        /// All optional properties starting the stack trace from the throw
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="path"></param>
-        /// <param name="lineNumber"></param>
-        /// <param name="linePosition"></param>
-        public XmlException(
-            string? message, 
-            string? path,
-            long? lineNumber, 
-            long? linePosition
-        ) : base(message)
-        {
-            _message = message;
-            LineNumber = lineNumber;
-            LinePosition = linePosition;
-            Path = path;
+            LinePosition = linePosition;            
         }
 
         /// <summary>
         /// All optional properties except path starting the stack trace from the throw
         /// </summary>
         /// <param name="message"></param>
+        /// <param name="category"></param>
+        /// <param name="markup"></param>
         /// <param name="lineNumber"></param>
         /// <param name="linePosition"></param>
         public XmlException(
             string? message, 
+            string? category,
+            string? markup,
             long? lineNumber, 
             long? linePosition
         ) : base(message)
         {
             _message = message;
+            Category = category;
+            Markup = markup;
             LineNumber = lineNumber;
             LinePosition = linePosition;
         }

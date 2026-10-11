@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -6,20 +7,44 @@ using Forestry.Deserialize.Xml.Reading;
 namespace Forestry.Deserialize.Xml
 {
     /// <summary>
-    /// Formats different exception types
+    /// Formats XML exceptions from a category (why) and a markup (what)
     /// </summary>
     internal static partial class Throwing
     {
         #region xml exception
+        /// <summary>
+        /// Throw malformed markup, the optional found byte is formatted by the Expected
+        /// category and the optional bytes by the Incomplete and Name categories
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="category"></param>
+        /// <param name="markup"></param>
+        /// <param name="foundByte"></param>
+        /// <param name="bytes"></param>
         [DoesNotReturn]
         public static void ThrowXmlException(
-            ref Utf8XmlReader reader, 
-            ExceptionType resource, 
-            byte nextByte = default, 
+            ref Utf8XmlReader reader,
+            Category category,
+            Markup markup,
+            byte? foundByte = null,
             ReadOnlySpan<byte> bytes = default
         )
         {
-            throw GetXmlException(ref reader, resource, nextByte, bytes);
+            throw GetXmlException(ref reader, category, markup, foundByte, bytes);
+        }
+
+        /// <summary>
+        /// Temporary throw for markup the POC does not support, outside the category and
+        /// markup pair until the unsupported exception is designed
+        /// </summary>
+        /// <param name="reader"></param>
+        [DoesNotReturn]
+        public static void ThrowUnsupportedNameCharacter(ref Utf8XmlReader reader)
+        {
+            string message = Formatting.WhenNameUnsupportedCharacter;
+            (long lineNumber, long linePosition) = GetPosition(ref reader);
+
+            throw new XmlException(message + GetPositionMessage(lineNumber, linePosition), null, null, lineNumber, linePosition);
         }
         #endregion
 
@@ -33,98 +58,80 @@ namespace Forestry.Deserialize.Xml
 
         #region exception formatting
         /// <summary>
-        /// Sets the line number and line position from the reader state while 
-        /// the message is crated from a <see cref="ExceptionType"/>
+        /// Sets the category, markup, line number and line position (1-based) while the
+        /// message is created from the category template
         /// </summary>
         /// <param name="reader"></param>
-        /// <param name="resource"></param>
-        /// <param name="nextByte"></param>
+        /// <param name="category"></param>
+        /// <param name="markup"></param>
+        /// <param name="foundByte"></param>
         /// <param name="bytes"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static XmlException GetXmlException(
-            ref Utf8XmlReader reader, 
-            ExceptionType resource, 
-            byte nextByte, 
+            ref Utf8XmlReader reader,
+            Category category,
+            Markup markup,
+            byte? foundByte,
             ReadOnlySpan<byte> bytes
         ) {
-            string message = GetExceptionType(ref reader, resource, nextByte, Encoding.UTF8.GetString(bytes));
+            (long lineNumber, long linePosition) = GetPosition(ref reader);
+            string message = GetMessage(category, markup, foundByte, bytes) + GetPositionMessage(lineNumber, linePosition);
 
-            long lineNumber = reader.ReaderState._lineNumber;
-            long linePosition = reader.ReaderState._linePosition;
-
-            message += $" LineNumber: {lineNumber} | LinePosition: {linePosition}.";
-            return new XmlException(message, lineNumber, linePosition);
+            return new XmlException(message, category.ToString(), markup.ToString(), lineNumber, linePosition);
         }
 
         /// <summary>
-        /// Get <see cref="ExceptionType"/> as a string
+        /// One template per category filled with the markup and the optional part: a template
+        /// only formats an argument the throw site passes
+        /// </summary>
+        /// <param name="category"></param>
+        /// <param name="markup"></param>
+        /// <param name="foundByte"></param>
+        /// <param name="bytes"></param>
+        /// <returns></returns>
+        private static string GetMessage(
+            Category category,
+            Markup markup,
+            byte? foundByte,
+            ReadOnlySpan<byte> bytes
+        ) {
+            string optional = category switch
+            {
+                Category.Expected when foundByte is byte found => $" found {ToString(found)}",
+                Category.Incomplete or Category.Name when !bytes.IsEmpty => $" ({Encoding.UTF8.GetString(bytes)})",
+                _ => "",
+            };
+
+            string template = category switch
+            {
+                Category.Incomplete => Formatting.Incomplete,
+                Category.Expected => Formatting.Expected,
+                Category.Name => Formatting.Name,
+                Category.Order => Formatting.Order,
+                Category.Unique => Formatting.Unique,
+                _ => throw new UnreachableException(),
+            };
+
+            return Deserialize.Formatting.Format(template, markup.ToString(), optional);
+        }
+
+        /// <summary>
+        /// Line number and line position are 0-based in the reader, 1-based in exceptions
         /// </summary>
         /// <param name="reader"></param>
-        /// <param name="resource"></param>
-        /// <param name="nextByte"></param>
-        /// <param name="characters"></param>
         /// <returns></returns>
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static string GetExceptionType(
-            ref Utf8XmlReader reader, 
-            ExceptionType resource, 
-            byte nextByte, 
-            string characters
-        ) {
-            string character = ToString(nextByte);
-
-            string message = "";
-            switch (resource)
-            {
-                case ExceptionType.WhenDocumentHasNoRootElement:
-                    message = Formatting.WhenDocumentHasNoRootElement;
-                    break;
-                case ExceptionType.WhenDocumentHasElementNotEnded:
-                    message = Formatting.WhenDocumentHasElementNotEnded;
-                    break;
-                case ExceptionType.WhenDocumentHasNoNextToken:
-                    message = Formatting.WhenDocumentHasNoNextToken;
-                    break;
-                case ExceptionType.WhenNoNameAfterElementStartTerminal:
-                    message = Deserialize.Formatting.Format(Formatting.WhenNoNameAfterElementStartTerminal, character);
-                    break;
-                case ExceptionType.WhenEndingTerminalMissing:
-                    message = Deserialize.Formatting.Format(Formatting.WhenEndingTerminalMissing, characters);
-                    break;
-                case ExceptionType.WhenDocumentTypeRepeated:
-                    message = Formatting.WhenDocumentTypeRepeated;
-                    break;
-                case ExceptionType.WhenDeclarationNotFirst:
-                    message = Formatting.WhenDeclarationNotFirst;
-                    break;
-                case ExceptionType.WhenProcessingInstructionTargetMalformed:
-                    message = Formatting.WhenProcessingInstructionTargetMalformed;
-                    break;
-                case ExceptionType.WhenNameUnsupportedCharacter:
-                    message = Deserialize.Formatting.Format(Formatting.WhenNameUnsupportedCharacter, character);
-                    break;
-                case ExceptionType.WhenNameMalformed:
-                    message = Deserialize.Formatting.Format(Formatting.WhenNameMalformed, characters);
-                    break;
-                case ExceptionType.WhenEmptyElementEndingTerminalMalformed:
-                    message = Deserialize.Formatting.Format(Formatting.WhenEmptyElementEndingTerminalMalformed, character);
-                    break;
-                case ExceptionType.WhenAttributeMissingValue:
-                    message = Deserialize.Formatting.Format(Formatting.WhenAttributeMissingValue, characters);
-                    break;
-                case ExceptionType.WhenSpacingMissingBeforeAttribute:
-                    message = Deserialize.Formatting.Format(Formatting.WhenSpacingMissingBeforeAttribute, characters);
-                    break;
-                default:
-                    break;
-            }
-
-            return message;
+        private static (long, long) GetPosition(ref Utf8XmlReader reader)
+        {
+            ReaderState readerState = reader.ReaderState;
+            return (readerState._lineNumber + 1, readerState._linePosition + 1);
         }
 
+        private static string GetPositionMessage(long lineNumber, long linePosition) =>
+            $" at line {lineNumber}, position {linePosition}.";
+
         /// <summary>
-        /// Return the byte value as a char string when it is a string 
+        /// Return the byte value as a char string when it is a string
         /// otherwise char data = "0x{value:X2}
         /// </summary>
         /// <param name="value"></param>
@@ -136,7 +143,7 @@ namespace Forestry.Deserialize.Xml
         }
 
         /// <summary>
-        /// Byte value is an ASCII character when greater or equal to a space and less than a 
+        /// Byte value is an ASCII character when greater or equal to a space and less than a
         /// delete i.e. invalid or non‑text means anything ASCII printable:
         /// - Whitespace
         /// - A-Z uppercase, a-z lowercase
@@ -149,25 +156,53 @@ namespace Forestry.Deserialize.Xml
         private static bool IsString(byte value) => value is >= 0x20 and < 0x7F;
         #endregion
 
-        #region read exception type
+        #region category and markup
         /// <summary>
-        /// XML exception or invalid operation exception types
+        /// Why markup is malformed, a broad container for most EBNF problems
         /// </summary>
-        internal enum ExceptionType
+        internal enum Category
         {
-            WhenDocumentHasNoRootElement,
-            WhenDocumentHasElementNotEnded,
-            WhenDocumentHasNoNextToken,
-            WhenNoNameAfterElementStartTerminal,
-            WhenEndingTerminalMissing,
-            WhenDocumentTypeRepeated,
-            WhenDeclarationNotFirst,
-            WhenProcessingInstructionTargetMalformed,
-            WhenNameUnsupportedCharacter,
-            WhenNameMalformed,
-            WhenEmptyElementEndingTerminalMalformed,
-            WhenAttributeMissingValue,
-            WhenSpacingMissingBeforeAttribute
+            /// <summary>
+            /// The bytes ended first
+            /// </summary>
+            Incomplete,
+
+            /// <summary>
+            /// Wrong byte at a known point
+            /// </summary>
+            Expected,
+
+            /// <summary>
+            /// Naming rules, and start and end tag names not matching
+            /// </summary>
+            Name,
+
+            /// <summary>
+            /// Position in the document
+            /// </summary>
+            Order,
+
+            /// <summary>
+            /// Duplicates
+            /// </summary>
+            Unique
+        }
+
+        /// <summary>
+        /// What is malformed, the terminal or non-terminal behind the exception
+        /// </summary>
+        internal enum Markup
+        {
+            Declaration,
+            DocumentType,
+            ProcessingInstructionTarget,
+            RootElement,
+            Element,
+            EndingTerminal,
+            EmptyElementEndingTerminal,
+            Name,
+            AttributeValue,
+            Spacing
         }
         #endregion
     }

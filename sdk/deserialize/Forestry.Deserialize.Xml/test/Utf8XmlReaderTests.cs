@@ -145,8 +145,7 @@ namespace Forestry.Deserialize.Xml.Tests
                 thrown = exception;
             }
 
-            Assert.IsType<XmlException>(thrown);
-            Assert.Contains("without an ending terminal or end tag for an element non-terminal", thrown.Message);
+            AssertXmlException(thrown, Throwing.Category.Incomplete, Throwing.Markup.Element);
         }
     }
 }

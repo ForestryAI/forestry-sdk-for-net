@@ -268,7 +268,7 @@ namespace Forestry.Deserialize.Xml.Reading
             {
                 if (_isReadingCompleted)
                 {
-                    Throwing.ThrowXmlException(ref this, Throwing.ExceptionType.WhenEndingTerminalMissing, bytes: endingTerminal);  // S4
+                    Throwing.ThrowXmlException(ref this, Throwing.Category.Incomplete, Throwing.Markup.EndingTerminal, bytes: endingTerminal);  // S4
                 }
 
                 return false;  // S3: Break fast without advancement (i.e. simulating rollback)
