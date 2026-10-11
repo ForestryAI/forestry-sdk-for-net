@@ -141,6 +141,18 @@ the Attribute candidate.
     #41's guard throws after `=`, the popped name on `/>`). Anything needed across cycles must be
     stored in the reader (a `ReaderState` field, rule 22) or left out (#35, #41).
 
+### Exceptions
+24. **An exception is a category (why) + a markup (what).** `Throwing.Category` picks the
+    message template; the markup only fills it. Pass a found byte (Expected) or bytes
+    (Incomplete, Name) only when the message should show them (#42).
+25. **A throw site reports the offending byte by passing an offset**: the number of bytes from
+    the committed position to that byte. The exception walks those bytes with the reading line
+    rules (`Utf8Reader.Track`, rule 17) and never commits. Incomplete passes `RemainingLength`
+    (end of the data); an opaque value missing its ending terminal passes 0 (its start) (#43).
+26. **Every check runs before its step commits.** The offset can't point backwards, so a check
+    after the commit would report the end of what was committed, not the offending byte (#43,
+    e.g. the processing instruction target).
+
 ### Decided, not built yet
 - **A value expected after `=` is the attribute delegate's check, not the candidate's.** In
   `<a b=1>` the `1` is an empty pad, so the candidate stays Attribute (rule 5; #27: "ordering

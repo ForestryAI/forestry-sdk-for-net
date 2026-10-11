@@ -224,7 +224,7 @@ namespace Forestry.Deserialize.Xml.Reading
             ReadOnlySpan<byte> endingTerminal,
             TokenType tokenType
         ) {
-            bool advancement = IgnoreMultipleOpaqueValue(startingTerminal, endingTerminal, true);
+            bool advancement = IgnoreMultipleOpaqueValue(startingTerminal, endingTerminal, true, tokenType == TokenType.ProcessInstruction);
 
             if (advancement)
             {
@@ -247,11 +247,13 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <param name="startingTerminal"></param>
         /// <param name="endingTerminal"></param>
         /// <param name="setValue"></param>
+        /// <param name="isProcessingInstruction">check the target (S5 + S6) before committing</param>
         /// <returns></returns>
         private bool IgnoreMultipleOpaqueValue(
-            ReadOnlySpan<byte> startingTerminal, 
+            ReadOnlySpan<byte> startingTerminal,
             ReadOnlySpan<byte> endingTerminal,
-            bool setValue = false
+            bool setValue = false,
+            bool isProcessingInstruction = false
         ) {
             // Local sequence-reader variable starting at the current sequence position elimating the need to rollback
             ReadOnlySequence<byte> sequence = _sequence.Slice(SequencePosition);
@@ -276,6 +278,11 @@ namespace Forestry.Deserialize.Xml.Reading
 
             // S2: set position(s), line number + position, and value
             ReadOnlySequence<byte> value = sequence.Slice(0, sequenceReader.Consumed);
+
+            if (isProcessingInstruction)
+            {
+                ThrowWhenMultipleProcessingInstructionMalformed(value, startingTerminal.Length);
+            }
 
             foreach (ReadOnlyMemory<byte> memory in value)
             {
@@ -332,24 +339,29 @@ namespace Forestry.Deserialize.Xml.Reading
 
         /// <summary>
         /// PI target conditions (S5 + S6) on a value byte sequence, scanning segment by
-        /// segment since the target may straddle segments
+        /// segment since the target may straddle segments, before the value is committed
         /// </summary>
-        /// <returns></returns>
-        private bool IsMultipleProcessingInstructionMalformed()
+        /// <param name="value"></param>
+        /// <param name="startingTerminalLength"></param>
+        private void ThrowWhenMultipleProcessingInstructionMalformed(ReadOnlySequence<byte> value, int startingTerminalLength)
         {
             ProcessingInstructionTarget target = default;
 
-            foreach (ReadOnlyMemory<byte> memory in ValueSequence.Slice(EBNF.ProcessingInstructionStartingTerminal.Length))
+            foreach (ReadOnlyMemory<byte> memory in value.Slice(startingTerminalLength))
             {
                 MarkupState evaluation = target.Evaluate(memory.Span);
-                if (evaluation != MarkupState.Unknown)
+                if (evaluation == MarkupState.WellFormed)
                 {
-                    return evaluation != MarkupState.WellFormed;
+                    return;
+                }
+
+                if (evaluation == MarkupState.Malformed)
+                {
+                    Throwing.ThrowXmlException(ref this, Throwing.Category.Name, Throwing.Markup.ProcessingInstructionTarget, offset: startingTerminalLength + target.OffendingIndex);  // S5 + S6
                 }
             }
 
             Debug.Assert(false, "The value ends with the ending terminal ?> so the scan always ends.");
-            return true;
         }
 
         /// <summary>

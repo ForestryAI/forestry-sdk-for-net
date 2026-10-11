@@ -113,24 +113,21 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// Line feed count 
+        /// Line number and line position after the bytes, the line rules every caller shares
+        /// (reading and exception positions): only a line feed ends a line, restarting the
+        /// line position, every other byte (carriage return included) adds one to it
         /// </summary>
-        /// <param name="span"></param>
+        /// <param name="lineNumber"></param>
+        /// <param name="linePosition"></param>
+        /// <param name="bytes"></param>
         /// <returns></returns>
-        public static (int, int) LineFeedCount(ReadOnlySpan<byte> span)
+        public static (long, long) Track(long lineNumber, long linePosition, ReadOnlySpan<byte> bytes)
         {
-            int lastLineFeedIndex = span.LastIndexOf(EBNF.LineFeed);
-            int lineFeedCount = 0;
+            (int lineFeedCount, int lastLineFeedIndex) = LineFeeds(bytes);
 
-            if (lastLineFeedIndex >= 0)
-            {
-                lineFeedCount = 1;
-
-                span = span[..lastLineFeedIndex];
-                lineFeedCount += span.Count(EBNF.LineFeed);
-            }
-
-            return (lineFeedCount, lastLineFeedIndex);
+            return lineFeedCount > 0
+                ? (lineNumber + lineFeedCount, bytes.Length - lastLineFeedIndex - 1)
+                : (lineNumber, linePosition + bytes.Length);
         }
         #endregion
     }

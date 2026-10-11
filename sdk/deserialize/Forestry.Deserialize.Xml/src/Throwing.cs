@@ -21,16 +21,18 @@ namespace Forestry.Deserialize.Xml
         /// <param name="markup"></param>
         /// <param name="foundByte"></param>
         /// <param name="bytes"></param>
+        /// <param name="offset">bytes from the committed position to the offending byte (#43)</param>
         [DoesNotReturn]
         public static void ThrowXmlException(
             ref Utf8XmlReader reader,
             Category category,
             Markup markup,
             byte? foundByte = null,
-            ReadOnlySpan<byte> bytes = default
+            ReadOnlySpan<byte> bytes = default,
+            long offset = 0
         )
         {
-            throw GetXmlException(ref reader, category, markup, foundByte, bytes);
+            throw GetXmlException(ref reader, category, markup, foundByte, bytes, offset);
         }
 
         /// <summary>
@@ -38,11 +40,12 @@ namespace Forestry.Deserialize.Xml
         /// markup pair until the unsupported exception is designed
         /// </summary>
         /// <param name="reader"></param>
+        /// <param name="offset">bytes from the committed position to the unsupported byte (#43)</param>
         [DoesNotReturn]
-        public static void ThrowUnsupportedNameCharacter(ref Utf8XmlReader reader)
+        public static void ThrowUnsupportedNameCharacter(ref Utf8XmlReader reader, long offset)
         {
             string message = Formatting.WhenNameUnsupportedCharacter;
-            (long lineNumber, long linePosition) = GetPosition(ref reader);
+            (long lineNumber, long linePosition) = GetPosition(ref reader, offset);
 
             throw new XmlException(message + GetPositionMessage(lineNumber, linePosition), null, null, lineNumber, linePosition);
         }
@@ -66,6 +69,7 @@ namespace Forestry.Deserialize.Xml
         /// <param name="markup"></param>
         /// <param name="foundByte"></param>
         /// <param name="bytes"></param>
+        /// <param name="offset">bytes from the committed position to the offending byte (#43)</param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static XmlException GetXmlException(
@@ -73,9 +77,10 @@ namespace Forestry.Deserialize.Xml
             Category category,
             Markup markup,
             byte? foundByte,
-            ReadOnlySpan<byte> bytes
+            ReadOnlySpan<byte> bytes,
+            long offset = 0
         ) {
-            (long lineNumber, long linePosition) = GetPosition(ref reader);
+            (long lineNumber, long linePosition) = GetPosition(ref reader, offset);
             string message = GetMessage(category, markup, foundByte, bytes) + GetPositionMessage(lineNumber, linePosition);
 
             return new XmlException(message, category.ToString(), markup.ToString(), lineNumber, linePosition);
@@ -117,14 +122,16 @@ namespace Forestry.Deserialize.Xml
         }
 
         /// <summary>
-        /// Line number and line position are 0-based in the reader, 1-based in exceptions
+        /// Line number and line position of the offending byte, walked from the committed
+        /// position without committing (#43): 0-based in the reader, 1-based in exceptions
         /// </summary>
         /// <param name="reader"></param>
+        /// <param name="offset"></param>
         /// <returns></returns>
-        private static (long, long) GetPosition(ref Utf8XmlReader reader)
+        private static (long, long) GetPosition(ref Utf8XmlReader reader, long offset)
         {
-            ReaderState readerState = reader.ReaderState;
-            return (readerState._lineNumber + 1, readerState._linePosition + 1);
+            (long lineNumber, long linePosition) = reader.GetLineTrackingAt(offset);
+            return (lineNumber + 1, linePosition + 1);
         }
 
         private static string GetPositionMessage(long lineNumber, long linePosition) =>

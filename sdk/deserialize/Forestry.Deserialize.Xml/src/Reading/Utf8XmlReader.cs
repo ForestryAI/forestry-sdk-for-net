@@ -90,6 +90,44 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <summary>
         /// When reading is completed and the current == last byte span in multiple segments or there is only a single segment
         /// </summary>
+        /// <summary>
+        /// Bytes left from the committed position to the end of the data, the offset an
+        /// Incomplete exception reports (#43)
+        /// </summary>
+        internal long RemainingLength => _isMultipleSegments
+            ? _sequence.Slice(SequencePosition).Length
+            : _segment.Length - _segmentPosition;
+
+        /// <summary>
+        /// Line number and line position (0-based) of the byte an offset ahead of the
+        /// committed position, walking the bytes in between with the same line rules as
+        /// reading. Nothing is committed (#43)
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        internal (long, long) GetLineTrackingAt(long offset)
+        {
+            long lineNumber = _lineNumber;
+            long linePosition = _linePosition;
+
+            if (offset == 0)
+            {
+                return (lineNumber, linePosition);
+            }
+
+            if (_isMultipleSegments)
+            {
+                foreach (ReadOnlyMemory<byte> memory in _sequence.Slice(SequencePosition, offset))
+                {
+                    (lineNumber, linePosition) = Utf8Reader.Track(lineNumber, linePosition, memory.Span);
+                }
+
+                return (lineNumber, linePosition);
+            }
+
+            return Utf8Reader.Track(lineNumber, linePosition, _segment.Slice(_segmentPosition, (int)offset));
+        }
+
         private readonly bool IsLastReadableSegment => _isReadingCompleted && (!_isMultipleSegments || _isLastSegment);
         #endregion
 
@@ -289,12 +327,12 @@ namespace Forestry.Deserialize.Xml.Reading
 
             if (!RootElement)
             {
-                Throwing.ThrowXmlException(ref this, Throwing.Category.Incomplete, Throwing.Markup.RootElement);
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Incomplete, Throwing.Markup.RootElement, offset: RemainingLength);
             }
 
             if (Depth != 0)
             {
-                Throwing.ThrowXmlException(ref this, Throwing.Category.Incomplete, Throwing.Markup.Element);
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Incomplete, Throwing.Markup.Element, offset: RemainingLength);
             }
 
             // TODO: Reader option policies when comments or other accepted prolog + miscellaneous non-terminals
@@ -647,12 +685,12 @@ namespace Forestry.Deserialize.Xml.Reading
                     return false;
                 }
 
-                Throwing.ThrowXmlException(ref this, Throwing.Category.Incomplete, Throwing.Markup.EndingTerminal, bytes: EBNF.EmptyElementTagEndingTerminal);  // S3
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Incomplete, Throwing.Markup.EndingTerminal, bytes: EBNF.EmptyElementTagEndingTerminal, offset: RemainingLength);  // S3
             }
 
             if (character != EBNF.StartTagEndingTerminal) 
             {
-                Throwing.ThrowXmlException(ref this, Throwing.Category.Expected, Throwing.Markup.EmptyElementEndingTerminal, foundByte: character);  // S4
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Expected, Throwing.Markup.EmptyElementEndingTerminal, foundByte: character, offset: 1);  // S4
             }
 
             if (_currentTokenType == TokenType.Attribute)
@@ -768,22 +806,12 @@ namespace Forestry.Deserialize.Xml.Reading
         /// Read opaque value from processing instruction non-terminal
         /// </summary>
         /// <returns></returns>
-        internal bool ReadProcessingInstruction()
-        {
-            bool advancement = _isMultipleSegments ?
-                ReadMultipleOpaqueValue(EBNF.ProcessingInstructionStartingTerminal, EBNF.ProcessingInstructionEndingTerminal, TokenType.ProcessInstruction) : 
+        /// <remarks>
+        /// The target (S5 + S6) is checked before the value is committed (#43)
+        /// </remarks>
+        internal bool ReadProcessingInstruction() => _isMultipleSegments ?
+                ReadMultipleOpaqueValue(EBNF.ProcessingInstructionStartingTerminal, EBNF.ProcessingInstructionEndingTerminal, TokenType.ProcessInstruction) :
                 ReadSingleOpaqueValue(EBNF.ProcessingInstructionStartingTerminal, EBNF.ProcessingInstructionEndingTerminal, TokenType.ProcessInstruction);
-
-            if (advancement)
-            {
-                if (HasValueSequence ? IsMultipleProcessingInstructionMalformed() : IsSingleProcessingInstructionMalformed())
-                {
-                    Throwing.ThrowXmlException(ref this, Throwing.Category.Name, Throwing.Markup.ProcessingInstructionTarget);
-                }
-            }
-
-            return advancement;
-        }
 
         /// <summary>
         /// Read name has a simulated rollback when false and a committed advancement 
@@ -804,10 +832,10 @@ namespace Forestry.Deserialize.Xml.Reading
                 case MarkupState.Malformed:
                     if (unsupportedCharacter) // S5 else S6
                     {
-                        Throwing.ThrowUnsupportedNameCharacter(ref this);
+                        Throwing.ThrowUnsupportedNameCharacter(ref this, offset: nameLength);
                     } else
                     {
-                        Throwing.ThrowXmlException(ref this, Throwing.Category.Name, Throwing.Markup.Name);
+                        Throwing.ThrowXmlException(ref this, Throwing.Category.Name, Throwing.Markup.Name, offset: nameLength);
                     }
                     break;
                 case MarkupState.Unknown:
@@ -821,7 +849,7 @@ namespace Forestry.Deserialize.Xml.Reading
                         return true;
                     }
                     
-                    Throwing.ThrowXmlException(ref this, Throwing.Category.Name, Throwing.Markup.Name); // S9
+                    Throwing.ThrowXmlException(ref this, Throwing.Category.Name, Throwing.Markup.Name, offset: RemainingLength); // S9
                     break;
                 default:
                     Debug.Assert(false, "The name non-terminal evaluation returned an unexpected value.");
@@ -960,7 +988,7 @@ namespace Forestry.Deserialize.Xml.Reading
             {
                 if (IsUnsupportedCharacterGuard(characters[characterIndex]))
                 {
-                    nameLength = 0;
+                    nameLength = characterIndex;
                     unsupportedCharacter = true;
                     return MarkupState.Malformed;  // S0
                 }
@@ -1014,6 +1042,17 @@ namespace Forestry.Deserialize.Xml.Reading
             private bool _isEndingTerminal;
 
             /// <summary>
+            /// Characters scanned after the starting terminal, across segments
+            /// </summary>
+            private int _scanned;
+
+            /// <summary>
+            /// Index after the starting terminal of the offending character when malformed:
+            /// the target's start when it equals <c>xml</c> (S6)
+            /// </summary>
+            internal int OffendingIndex { get; private set; }
+
+            /// <summary>
             /// Evaluate the character terminals after the starting terminal <c>&lt;?</c>
             /// </summary>
             /// <param name="characters"></param>
@@ -1022,6 +1061,8 @@ namespace Forestry.Deserialize.Xml.Reading
             {
                 foreach (byte character in characters)
                 {
+                    OffendingIndex = _scanned++;
+
                     if (_isEndingTerminal)
                     {
                         return character == EBNF.GreaterThan ? MarkupState.WellFormed : MarkupState.Malformed;  // S5
@@ -1029,9 +1070,15 @@ namespace Forestry.Deserialize.Xml.Reading
 
                     if (character is EBNF.Space or EBNF.Tab or EBNF.CarriageReturn or EBNF.LineFeed or EBNF.QuestionMark)
                     {
-                        if (_length == 0 || (_isXml && _length == 3))
+                        if (_length == 0)
                         {
-                            return MarkupState.Malformed;  // S5 empty target, S6
+                            return MarkupState.Malformed;  // S5 empty target
+                        }
+
+                        if (_isXml && _length == 3)
+                        {
+                            OffendingIndex = 0;
+                            return MarkupState.Malformed;  // S6
                         }
 
                         if (character != EBNF.QuestionMark)

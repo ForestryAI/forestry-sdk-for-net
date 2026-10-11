@@ -89,18 +89,7 @@ namespace Forestry.Deserialize.Xml.Reading
             int indexOfExceptWhiteSpace = remaining.IndexOfExceptWhiteSpace();
             if (indexOfExceptWhiteSpace > 0)
             {
-                (int lineFeedCount, int lastLineFeedIndex) = Utf8Reader.LineFeedCount(remaining[..indexOfExceptWhiteSpace]);
-
-                _lineNumber += lineFeedCount;
-                if (lastLineFeedIndex >= 0)
-                {
-                    _linePosition = indexOfExceptWhiteSpace - lastLineFeedIndex - 1;
-                }
-                else
-                {
-                    _linePosition += indexOfExceptWhiteSpace;
-                }
-
+                AdvanceLineTracking(remaining[..indexOfExceptWhiteSpace]);
                 _segmentPosition += indexOfExceptWhiteSpace;
             }
 
@@ -122,7 +111,7 @@ namespace Forestry.Deserialize.Xml.Reading
             ReadOnlySpan<byte> endingTerminal,
             TokenType tokenType
         ) {
-            bool advancement = IgnoreSingleOpaqueValue(startingTerminal, endingTerminal, true);
+            bool advancement = IgnoreSingleOpaqueValue(startingTerminal, endingTerminal, true, tokenType == TokenType.ProcessInstruction);
 
             if (advancement)
             {
@@ -145,11 +134,13 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <param name="startingTerminal"></param>
         /// <param name="endingTerminal"></param>
         /// <param name="setValue"></param>
+        /// <param name="isProcessingInstruction">check the target (S5 + S6) before committing</param>
         /// <returns></returns>
         private bool IgnoreSingleOpaqueValue(
             ReadOnlySpan<byte> startingTerminal, 
             ReadOnlySpan<byte> endingTerminal,
-            bool setValue = false
+            bool setValue = false,
+            bool isProcessingInstruction = false
         ) {
             // Local sliced segment variable starting from the current position elimating the need to rollback
             ReadOnlySpan<byte> segment = _segment[_segmentPosition..];
@@ -169,6 +160,18 @@ namespace Forestry.Deserialize.Xml.Reading
 
             // S2: set position, line number + position, and value
             ReadOnlySpan<byte> value = segment[..(startingTerminal.Length + endingTerminalIndex + endingTerminal.Length)];
+
+            if (isProcessingInstruction)
+            {
+                ProcessingInstructionTarget target = default;
+                MarkupState evaluation = target.Evaluate(value[startingTerminal.Length..]);
+
+                Debug.Assert(evaluation != MarkupState.Unknown, "The value ends with the ending terminal ?> so the scan always ends.");
+                if (evaluation != MarkupState.WellFormed)
+                {
+                    Throwing.ThrowXmlException(ref this, Throwing.Category.Name, Throwing.Markup.ProcessingInstructionTarget, offset: startingTerminal.Length + target.OffendingIndex);  // S5 + S6
+                }
+            }
 
             AdvanceLineTracking(value);
             _segmentPosition += value.Length;
@@ -190,30 +193,7 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <param name="characters"></param>
         private void AdvanceLineTracking(ReadOnlySpan<byte> characters)
         {
-            (int lineFeedCount, int lastLineFeedIndex) = Utf8Reader.LineFeedCount(characters);
-
-            if (lineFeedCount > 0)
-            {
-                _lineNumber += lineFeedCount;
-                _linePosition = characters.Length - lastLineFeedIndex - 1;
-            }
-            else
-            {
-                _linePosition += characters.Length;
-            }
-        }
-
-        /// <summary>
-        /// PI target conditions (S5 + S6) on a value byte span
-        /// </summary>
-        /// <returns></returns>
-        private bool IsSingleProcessingInstructionMalformed()
-        {
-            ProcessingInstructionTarget target = default;
-            MarkupState evaluation = target.Evaluate(Value[EBNF.ProcessingInstructionStartingTerminal.Length..]);
-
-            Debug.Assert(evaluation != MarkupState.Unknown, "The value ends with the ending terminal ?> so the scan always ends.");
-            return evaluation != MarkupState.WellFormed;
+            (_lineNumber, _linePosition) = Utf8Reader.Track(_lineNumber, _linePosition, characters);
         }
     }
 }
