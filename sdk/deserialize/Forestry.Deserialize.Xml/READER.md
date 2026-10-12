@@ -17,13 +17,14 @@ cycle (returns `false`: the caller expands the segment(s) and calls again), prod
 |---|---|---|---|---|
 | 0 | Reset | – | `Value` and `ValueSequence` are cleared | continue |
 | 1 | Drained? | – | Nothing left at the reader position | halt; on the last readable segment, throw if there is no root element or an element is not ended |
-| 2 | Skip spacing | #34, #40 | Outside content: skip all spacing. In content: skip only spacing-only character data (next non-spacing is `<`). In a start tag: record that spacing was skipped (the spacing flag) | continue; halt when drained or undecided |
-| 3 | Content ready | #22, #40 | `>` after an Element (S3) or an attribute's Value (S5): skip it, content ready = true, clear the spacing flag | continue (never a token); throw after an attribute name (S4) |
-| 4 | Empty element end | #35, #40 | `/>` in a start tag: pop the element stack, clear the spacing flag | continue (not `/`); **ElementEnd** token; halt when `/` is the last byte; throw when malformed or after an attribute name (S5.a) |
-| 5 | Drained? | – | Step 3 may have skipped `>` as the last byte | halt |
-| 6 | Peek starting terminal | #17, #25, #36 | Fill the scratch pad with a starting terminal (+ overshoot), or leave it empty | continue; halt when the pad is incomplete and reading is not completed |
-| 7 | Candidate | #27 | Scratch pad + context → one candidate non-terminal | always continue (no side effects) |
-| 8 | Delegate | per candidate | Read the candidate from the reader position | token, halt (simulated rollback) or throw |
+| 2 | Skip delimiter | #32 | After an attribute name (current token Attribute): skip the whole equals non-terminal `S? '=' S?` up to the first non-spacing byte after `=`, which is not checked. Peeks first, commits only when all of it is there; never sets the spacing flag | continue (skipped, or no delimiter applies); halt when undecided, nothing committed; throw when the first non-spacing byte isn't `=` (Expected), or undecided with reading completed (Incomplete) |
+| 3 | Skip spacing | #34, #40 | Outside content: skip all spacing. In content: skip only spacing-only character data (next non-spacing is `<`). In a start tag: record that spacing was skipped (the spacing flag) | continue; halt when drained or undecided |
+| 4 | Content ready | #22, #40 | `>` after an Element (S3) or an attribute's Value (S5): skip it, content ready = true, clear the spacing flag | continue (never a token); throw after an attribute name (S4, unreachable since #32) |
+| 5 | Empty element end | #35, #40 | `/>` in a start tag: pop the element stack, clear the spacing flag | continue (not `/`); **ElementEnd** token; halt when `/` is the last byte; throw when malformed or after an attribute name (S5.a, unreachable since #32) |
+| 6 | Drained? | – | Step 4 may have skipped `>` as the last byte | halt |
+| 7 | Peek starting terminal | #17, #25, #36 | Fill the scratch pad with a starting terminal (+ overshoot), or leave it empty | continue; halt when the pad is incomplete and reading is not completed |
+| 8 | Candidate | #27 | Scratch pad + context → one candidate non-terminal | always continue (no side effects) |
+| 9 | Delegate | per candidate | Read the candidate from the reader position | token, halt (simulated rollback) or throw |
 
 ### Context
 
@@ -64,7 +65,6 @@ the Attribute candidate.
 
 | Step | Issue | Where | Why it matters |
 |---|---|---|---|
-| Skip `=` (delimiting terminals) | #32 | **before skip spacing**, current token Attribute | Until built, the `=` after an attribute name reaches the Attribute candidate and throws. Throws when the next non-spacing character isn't `=`, which makes content ready S4 and empty element S5.a unreachable |
 | Ignore optional non-terminals | #33 | before peek | Reader options (comments, etc.); a skip step, never a delegate |
 | Skip BOM | #31 | start of document | Not part of the grammar; no line tracking |
 
@@ -100,8 +100,15 @@ the Attribute candidate.
 10. **Delegates never consume trailing spacing.** The next cycle's skip spacing does (#24).
 11. **Once delegated, a candidate always produces a token.** Ignoring something (comments by
     reader option) is a skip step before delegation (#24, #33).
-12. **Skip steps return `true` when they drained the segment(s)** (halting), like skip spacing
-    (#27, #34).
+12. **Skip steps return `true` to continue and `false` to halt** (drained or undecided), so
+    `false` means halt everywhere in the pipeline, as for `Read()`, the delegates and the peek.
+    `Read()` jumps to its `Halted` label. Before #32, skip spacing returned `true` to halt
+    (#27, #34, #32).
+
+    **A step that continues leaves the reader on a readable byte**, never at the end of a
+    segment: the next step indexes `_segment[_segmentPosition]`. With multiple segments that means
+    finishing a commit with `SkipMultipleSpacing()` (or `TrySkipEmptySegments()`) even when there
+    is nothing to skip, e.g. after an `=` that is a segment's last byte (#32's M1).
 
 ### Markup, names, positions
 13. **One malformed markup makes the document malformed.** `MarkupState` is Unknown /
@@ -112,7 +119,9 @@ the Attribute candidate.
 16. **Element names are compared on their first 32 bytes.** A `ValueSequence` name is copied to a
     32-byte `stackalloc` before pushing (#37, #23).
 17. **Line and position are 0-based internally, 1-based in exceptions.** Line position counts
-    bytes, not characters (#24, bug #30).
+    bytes, not characters (#24, bug #30). Only a line feed ends a line; a carriage return adds one
+    to the position like any other byte, so `\r\n` is one line end (`Utf8Reader.Track`). A lone
+    `\r` is **not** a line end, unlike XML 1.0 §2.11: a known gap, harmless for `\r\n` files.
 18. **Spacing in content may be character data.** Spacing-only character data is skipped by
     default; a reader option later (#34).
 
@@ -121,9 +130,15 @@ the Attribute candidate.
     the pad. Skip spacing records it in the start tag (`_hasSkippedSpacingInStartTag`, carried in
     `ReaderState` and copied by both constructors). The attribute delegate throws when it's not
     set, and clears it on success; `>` and `/>` clear it when closing the start tag (#40).
-20. **A dangling attribute name throws "attribute value missing"** at both ending terminals:
-    content ready S4 (`<a b>`) and empty element S5.a (`<a b/>`, checked after `/>` is peeked)
-    (#40).
+
+    **Skip delimiter owns the spacing around `=`** (`Eq ::= S? '=' S?`) and runs before skip
+    spacing, so that spacing never sets the spacing flag and `<a b ="1"c="2">` still throws at
+    `c`. It peeks with `TryPeekNonSpacing` (offsets only, no line tracking), then commits with
+    `SkipSingleSpacing()` / `SkipMultipleSpacing()`, which track lines but don't set the flag.
+    Never `SkipSpacing()` (#32).
+20. **A dangling attribute name throws in skip delimiter**, as an expected `=` (`<a b>`, `<a b/>`),
+    before either ending terminal is reached. #40's checks at content ready S4 and empty element
+    S5.a are kept but unreachable (#40, #32).
 21. **The attribute delegate checks the spacing flag before reading the name**, and its
     candidate never checks the first character, so #38's malformed first character is
     reachable here (`<a 1="x">`), unlike in the start tag (#40).
@@ -160,11 +175,8 @@ the Attribute candidate.
   the current token is already Attribute, **before** the spacing flag check. Bug #41 (#40's miss),
   built after #32; #32 does not check the quote. The attribute name is not in `Value` by then
   (rule 23).
-- **#32 runs before skip spacing** when the current token is Attribute, so it owns the spacing
-  around `=`. Otherwise that spacing would set the spacing flag and let `<a b ="1"c="2">` through
-  (#40).
-- **The attribute value delegate is not built.** Until it is (and #32), no attribute is read past
-  its name.
+- **The attribute value delegate is not built.** Until it is, no attribute is read past the
+  equals non-terminal; the candidate after `=` is AttributeValue (S7) when the byte is a quote.
 - **`/>`'s ElementEnd has an empty `Value`.** Exposing the popped name needs storage in the
   reader; revisit later (#35).
 

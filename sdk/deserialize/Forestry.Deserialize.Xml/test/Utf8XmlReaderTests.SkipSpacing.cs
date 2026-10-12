@@ -12,8 +12,8 @@ namespace Forestry.Deserialize.Xml.Tests
         // break fast S0-S2, spacing-only character data S3-S6), before the change exists - see
         // doc/dev/Velocity.md's Test shell phase.
         //
-        // SkipSpacing() returns true when it halts the read (drained or undecided) and false
-        // otherwise. Spacing is space, tab, carriage return and line feed. Content is depth != 0
+        // SkipSpacing() returns false when it halts the read (drained or undecided) and true to
+        // continue (#32). Spacing is space, tab, carriage return and line feed. Content is depth != 0
         // and content ready, as in #27's context table. Line tracking is asserted on the reader
         // state (0-based); only line feeds start a new line.
         //
@@ -48,7 +48,7 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData("<a/>", Context.Prolog, TokenType.None)]
         [InlineData("text", Context.Content, TokenType.Element)]
         [InlineData("<b/>", Context.Content, TokenType.Element)]
-        public void SkipSpacing_ForS0NotSpacing_ItShould_BreakFastReturningFalse(
+        public void SkipSpacing_ForS0NotSpacing_ItShould_BreakFastReturningTrue(
             string text,
             Context context,
             TokenType current
@@ -57,10 +57,10 @@ namespace Forestry.Deserialize.Xml.Tests
             Utf8XmlReader reader = new(Encoding.UTF8.GetBytes(text), isReadingCompleted: true, ContextState(context, current));
 
             // Act
-            bool halted = reader.SkipSpacing();
+            bool continued = reader.SkipSpacing();
 
             // Assert
-            Assert.False(halted);
+            Assert.True(continued);
             Assert.Equal(0, reader.Position);
             Assert.Equal(0, reader.ReaderState._lineNumber);
             Assert.Equal(0, reader.ReaderState._linePosition);
@@ -93,10 +93,10 @@ namespace Forestry.Deserialize.Xml.Tests
             Utf8XmlReader reader = new(Encoding.UTF8.GetBytes(text), isReadingCompleted: true, ContextState(context, current));
 
             // Act
-            bool halted = reader.SkipSpacing();
+            bool continued = reader.SkipSpacing();
 
             // Assert
-            Assert.False(halted);
+            Assert.True(continued);
             Assert.Equal(expectedPosition, reader.Position);
             Assert.Equal(expectedLineNumber, reader.ReaderState._lineNumber);
             Assert.Equal(expectedLinePosition, reader.ReaderState._linePosition);
@@ -119,10 +119,10 @@ namespace Forestry.Deserialize.Xml.Tests
             Utf8XmlReader reader = new(Sequence(parts), isReadingCompleted: true, ContextState(Context.Prolog, TokenType.None));
 
             // Act
-            bool halted = reader.SkipSpacing();
+            bool continued = reader.SkipSpacing();
 
             // Assert
-            Assert.False(halted);
+            Assert.True(continued);
             Assert.Equal(expectedPosition, reader.Position);
             Assert.Equal(expectedLineNumber, reader.ReaderState._lineNumber);
             Assert.Equal(expectedLinePosition, reader.ReaderState._linePosition);
@@ -141,10 +141,10 @@ namespace Forestry.Deserialize.Xml.Tests
             Utf8XmlReader reader = new("\n<!-- c -->"u8, isReadingCompleted: true, state);
 
             // Act
-            bool halted = reader.SkipSpacing();
+            bool continued = reader.SkipSpacing();
 
             // Assert
-            Assert.False(halted);
+            Assert.True(continued);
             Assert.Equal(1, reader.Position);
             Assert.Equal(1, reader.ReaderState._lineNumber);
         }
@@ -155,7 +155,7 @@ namespace Forestry.Deserialize.Xml.Tests
         [Theory]
         [InlineData("  ", Context.Prolog, TokenType.None, false)]
         [InlineData("\n ", Context.Miscellaneous, TokenType.ElementEnd, true)]
-        public void SkipSpacing_ForS1Drained_ItShould_ReturnTrue(
+        public void SkipSpacing_ForS1Drained_ItShould_ReturnFalse(
             string text,
             Context context,
             TokenType current,
@@ -165,10 +165,10 @@ namespace Forestry.Deserialize.Xml.Tests
             Utf8XmlReader reader = new(Encoding.UTF8.GetBytes(text), isReadingCompleted, ContextState(context, current));
 
             // Act
-            bool halted = reader.SkipSpacing();
+            bool continued = reader.SkipSpacing();
 
             // Assert
-            Assert.True(halted);
+            Assert.False(continued);
             Assert.Equal(text.Length, reader.Position);
         }
         #endregion
@@ -192,10 +192,10 @@ namespace Forestry.Deserialize.Xml.Tests
             Utf8XmlReader reader = new(Encoding.UTF8.GetBytes(text), isReadingCompleted: true, ContextState(Context.Content, TokenType.Element));
 
             // Act
-            bool halted = reader.SkipSpacing();
+            bool continued = reader.SkipSpacing();
 
             // Assert
-            Assert.False(halted);
+            Assert.True(continued);
             Assert.Equal(expectedPosition, reader.Position);
             Assert.Equal(expectedLineNumber, reader.ReaderState._lineNumber);
             Assert.Equal(expectedLinePosition, reader.ReaderState._linePosition);
@@ -218,10 +218,10 @@ namespace Forestry.Deserialize.Xml.Tests
             Utf8XmlReader reader = new(Sequence(parts), isReadingCompleted: true, ContextState(Context.Content, TokenType.Element));
 
             // Act
-            bool halted = reader.SkipSpacing();
+            bool continued = reader.SkipSpacing();
 
             // Assert
-            Assert.False(halted);
+            Assert.True(continued);
             Assert.Equal(expectedPosition, reader.Position);
             Assert.Equal(expectedLineNumber, reader.ReaderState._lineNumber);
             Assert.Equal(expectedLinePosition, reader.ReaderState._linePosition);
@@ -244,10 +244,10 @@ namespace Forestry.Deserialize.Xml.Tests
             Utf8XmlReader reader = new(Encoding.UTF8.GetBytes(text), isReadingCompleted: true, ContextState(Context.Content, TokenType.Element));
 
             // Act
-            bool halted = reader.SkipSpacing();
+            bool continued = reader.SkipSpacing();
 
             // Assert
-            Assert.False(halted);
+            Assert.True(continued);
             Assert.Equal(0, reader.Position);
             Assert.Equal(0, reader.ReaderState._lineNumber);
             Assert.Equal(0, reader.ReaderState._linePosition);
@@ -267,10 +267,10 @@ namespace Forestry.Deserialize.Xml.Tests
             SequencePosition sequencePosition = reader.SequencePosition;
 
             // Act
-            bool halted = reader.SkipSpacing();
+            bool continued = reader.SkipSpacing();
 
             // Assert
-            Assert.False(halted);
+            Assert.True(continued);
             Assert.Equal(0, reader.Position);
             Assert.Equal(sequencePosition, reader.SequencePosition);
             Assert.Equal(0, reader.ReaderState._lineNumber);
@@ -283,16 +283,16 @@ namespace Forestry.Deserialize.Xml.Tests
         /// is only spacing can't be decided yet: nothing is skipped and the read halts
         /// </summary>
         [Fact]
-        public void SkipSpacing_ForS5UndecidedInContent_ItShould_SkipNothingReturningTrue()
+        public void SkipSpacing_ForS5UndecidedInContent_ItShould_SkipNothingReturningFalse()
         {
             // Arrange
             Utf8XmlReader reader = new("\n   "u8, isReadingCompleted: false, ContextState(Context.Content, TokenType.Element));
 
             // Act
-            bool halted = reader.SkipSpacing();
+            bool continued = reader.SkipSpacing();
 
             // Assert
-            Assert.True(halted);
+            Assert.False(continued);
             Assert.Equal(0, reader.Position);
             Assert.Equal(0, reader.ReaderState._lineNumber);
             Assert.Equal(0, reader.ReaderState._linePosition);
@@ -304,7 +304,7 @@ namespace Forestry.Deserialize.Xml.Tests
         [Theory]
         [InlineData([new[] { "\n ", "  " }])]
         [InlineData([new[] { "\n", "", " " }])]
-        public void SkipSpacing_ForS5UndecidedInContentStraddlingSegments_ItShould_SkipNothingReturningTrue(
+        public void SkipSpacing_ForS5UndecidedInContentStraddlingSegments_ItShould_SkipNothingReturningFalse(
             string[] parts
         ) {
             // Arrange
@@ -312,10 +312,10 @@ namespace Forestry.Deserialize.Xml.Tests
             SequencePosition sequencePosition = reader.SequencePosition;
 
             // Act
-            bool halted = reader.SkipSpacing();
+            bool continued = reader.SkipSpacing();
 
             // Assert
-            Assert.True(halted);
+            Assert.False(continued);
             Assert.Equal(0, reader.Position);
             Assert.Equal(sequencePosition, reader.SequencePosition);
             Assert.Equal(0, reader.ReaderState._lineNumber);
@@ -330,7 +330,7 @@ namespace Forestry.Deserialize.Xml.Tests
         /// <remarks>
         /// Draining with reading completed runs the existing state assertion, and depth != 0
         /// means the element was never ended: the missing end tag is reported here as the
-        /// element-not-ended XML exception rather than by returning true
+        /// element-not-ended XML exception rather than by returning false
         /// </remarks>
         [Fact]
         public void SkipSpacing_ForS6OnlySpacingLeftInContentWhenReadingIsCompleted_ItShould_ThrowElementNotEnded()

@@ -11,7 +11,7 @@ namespace Forestry.Deserialize.Xml {
 
         public const byte Space = (byte)' ';
 
-        public const byte Equal = (byte)'=';
+        public const byte EqualsSign = (byte)'=';
 
         public const byte DoubleQuote = (byte)'"';
 

@@ -109,10 +109,10 @@ namespace Forestry.Deserialize.Xml.Tests
             Utf8XmlReader reader = new(Encoding.UTF8.GetBytes(text), isReadingCompleted: true, StartTagState(current, hasSkippedSpacingInStartTag: false, previous));
 
             // Act
-            bool halted = reader.SkipSpacing();
+            bool continued = reader.SkipSpacing();
 
             // Assert
-            Assert.False(halted);
+            Assert.True(continued);
             Assert.True(reader.ReaderState._hasSkippedSpacingInStartTag);
         }
 
@@ -123,17 +123,17 @@ namespace Forestry.Deserialize.Xml.Tests
         [Theory]
         [InlineData(" ")]
         [InlineData("\n  ")]
-        public void ReadAttribute_ForSkipSpacingS1aDrained_ItShould_SetTheFlagReturningTrue(
+        public void ReadAttribute_ForSkipSpacingS1aDrained_ItShould_SetTheFlagReturningFalse(
             string text
         ) {
             // Arrange
             Utf8XmlReader reader = new(Encoding.UTF8.GetBytes(text), isReadingCompleted: false, StartTagState(TokenType.Element, hasSkippedSpacingInStartTag: false));
 
             // Act
-            bool halted = reader.SkipSpacing();
+            bool continued = reader.SkipSpacing();
 
             // Assert
-            Assert.True(halted);
+            Assert.False(continued);
             Assert.True(reader.ReaderState._hasSkippedSpacingInStartTag);
         }
 

@@ -209,6 +209,7 @@ namespace Forestry.Deserialize.Xml
             EmptyElementEndingTerminal,
             Name,
             AttributeValue,
+            EqualsSignTerminal,
             Spacing
         }
         #endregion

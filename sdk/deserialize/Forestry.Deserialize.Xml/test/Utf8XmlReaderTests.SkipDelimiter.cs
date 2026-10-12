@@ -199,16 +199,19 @@ namespace Forestry.Deserialize.Xml.Tests
         /// <c>&lt;a b "1"&gt;</c>)
         /// </summary>
         [Theory]
-        [InlineData(">", true)]
-        [InlineData("/>", true)]
-        [InlineData(" c=\"1\">", true)]
-        [InlineData(" \"1\">", true)]
-        [InlineData("\n>", true)]
-        [InlineData(">", false)]
-        [InlineData(" /", false)]
-        public void SkipDelimiter_ForS4NotEquals_ItShould_ThrowCommittingNothing(
+        [InlineData(">", true, 1, 1)]
+        [InlineData("/>", true, 1, 1)]
+        [InlineData(" c=\"1\">", true, 1, 2)]
+        [InlineData(" \"1\">", true, 1, 2)]
+        [InlineData("\n>", true, 2, 1)]
+        [InlineData("\r\n\t/>", true, 2, 2)]
+        [InlineData(">", false, 1, 1)]
+        [InlineData(" /", false, 1, 2)]
+        public void SkipDelimiter_ForS4NotEquals_ItShould_ThrowAtTheOffendingByteCommittingNothing(
             string text,
-            bool isReadingCompleted
+            bool isReadingCompleted,
+            long expectedLineNumber,
+            long expectedLinePosition
         ) {
             // Arrange
             Utf8XmlReader reader = new(Encoding.UTF8.GetBytes(text), isReadingCompleted, StartTagState(TokenType.Attribute, hasSkippedSpacingInStartTag: false, TokenType.Element));
@@ -217,7 +220,51 @@ namespace Forestry.Deserialize.Xml.Tests
             Exception? thrown = SkipDelimiterThrown(ref reader);
 
             // Assert
-            Assert.IsType<XmlException>(thrown);
+            AssertXmlExceptionAt(thrown, expectedLineNumber, expectedLinePosition);
+            AssertNothingCommitted(ref reader);
+        }
+
+        /// <summary>
+        /// S4: the reported position continues from where the attribute name ended
+        /// (<c>&lt;Stem Key&gt;</c> after <c>Key</c>)
+        /// </summary>
+        [Fact]
+        public void SkipDelimiter_ForS4AfterLinePosition_ItShould_ThrowAfterTheAttributeName()
+        {
+            // Arrange
+            Utf8XmlReader reader = new(">"u8, isReadingCompleted: true, StartTagState(TokenType.Attribute, hasSkippedSpacingInStartTag: false, TokenType.Element, linePosition: 9));
+
+            // Act
+            Exception? thrown = SkipDelimiterThrown(ref reader);
+
+            // Assert
+            AssertXmlExceptionAt(thrown, 1, 10);
+            AssertNothingCommitted(ref reader, linePositionBefore: 9);
+        }
+
+        /// <summary>
+        /// S4 straddling segments: the offset walks the segments (empty ones included) with line
+        /// tracking
+        /// </summary>
+        [Theory]
+        [InlineData(new[] { " ", "\n", ">" }, 2, 1)]
+        [InlineData(new[] { " ", "", "c=\"1\">" }, 1, 2)]
+        [InlineData(new[] { "\n ", " ", "/>" }, 2, 3)]
+        public void SkipDelimiter_ForS4NotEqualsStraddlingSegments_ItShould_ThrowAtTheOffendingByte(
+            string[] parts,
+            long expectedLineNumber,
+            long expectedLinePosition
+        ) {
+            // Arrange
+            Utf8XmlReader reader = new(Sequence(parts), isReadingCompleted: true, StartTagState(TokenType.Attribute, hasSkippedSpacingInStartTag: false, TokenType.Element));
+
+            // Act
+            Exception? thrown = SkipDelimiterThrown(ref reader);
+
+            // Assert
+            AssertXmlExceptionAt(thrown, expectedLineNumber, expectedLinePosition);
+            Assert.Equal(Throwing.Category.Expected.ToString(), ((XmlException)thrown!).Category);
+            Assert.Equal(Throwing.Markup.EqualsSignTerminal.ToString(), ((XmlException)thrown!).Markup);
             AssertNothingCommitted(ref reader);
         }
         #endregion
@@ -303,6 +350,92 @@ namespace Forestry.Deserialize.Xml.Tests
             Assert.Equal(expectedLineNumber, reader.ReaderState._lineNumber);
             Assert.Equal(expectedLinePosition, reader.ReaderState._linePosition);
             Assert.False(reader.ReaderState._hasSkippedSpacingInStartTag);
+        }
+
+        /// <summary>
+        /// S1 and S2 across segments: the spacing before <c>=</c> (S1) or after it (S2) is read
+        /// past, alone or together, whichever segment it is in. Skip spacing runs next in the
+        /// read cycle and indexes the byte at the reader position, so the reader must not be left
+        /// at the end of a segment (e.g. after an <c>=</c> that is a segment's last byte).
+        /// </summary>
+        [Theory]
+        [InlineData(new[] { "  ", "=\"1\">" }, 3, 0, 3)]             // S1 only, spacing in its own segment
+        [InlineData(new[] { " ", " ", "=\"1\">" }, 3, 0, 3)]         // S1 only, spacing over two segments
+        [InlineData(new[] { "=", "  \"1\">" }, 3, 0, 3)]             // S2 only, = is the last byte of a segment
+        [InlineData(new[] { "=", " ", "", "\"1\">" }, 2, 0, 2)]      // S2 only, spacing in its own segment
+        [InlineData(new[] { " ", "=", "", " ", "\"1\">" }, 3, 0, 3)] // S1 and S2, each in its own segment
+        [InlineData(new[] { "\r\n", "=", "\r\n", "\"1\">" }, 5, 2, 0)] // S1 and S2 with carriage returns
+        [InlineData(new[] { "=", "\"1\">" }, 1, 0, 1)]               // neither, = is the last byte of a segment
+        public void SkipDelimiter_ForS1S2StraddlingSegments_ItShould_ReadPastTheSpacing(
+            string[] parts,
+            long expectedPosition,
+            long expectedLineNumber,
+            long expectedLinePosition
+        ) {
+            // Arrange
+            Utf8XmlReader reader = new(Sequence(parts), isReadingCompleted: true, StartTagState(TokenType.Attribute, hasSkippedSpacingInStartTag: false, TokenType.Element));
+
+            // Act
+            bool continued = reader.SkipDelimiter();
+            bool spacing = reader.SkipSpacing();
+
+            // Assert
+            Assert.True(continued);
+            Assert.True(spacing);
+            Assert.Equal(expectedPosition, reader.Position);
+            Assert.Equal(expectedLineNumber, reader.ReaderState._lineNumber);
+            Assert.Equal(expectedLinePosition, reader.ReaderState._linePosition);
+            Assert.False(reader.ReaderState._hasSkippedSpacingInStartTag);
+        }
+
+        /// <summary>
+        /// S7, S9: <c>=</c> is the final byte of the sequence (the sequence reader is at its end
+        /// after <c>=</c>, trailing empty segments included), so the read halts when reading is
+        /// not completed
+        /// </summary>
+        [Theory]
+        [InlineData([new[] { "=" }])]
+        [InlineData([new[] { " ", "=" }])]
+        [InlineData([new[] { "=", "" }])]
+        [InlineData([new[] { " =", "", "" }])]
+        public void SkipDelimiter_ForEqualsFinalByteOfTheSequence_ItShould_HaltCommittingNothing(
+            string[] parts
+        ) {
+            // Arrange
+            Utf8XmlReader reader = new(Sequence(parts), isReadingCompleted: false, StartTagState(TokenType.Attribute, hasSkippedSpacingInStartTag: false, TokenType.Element));
+            SequencePosition sequencePosition = reader.SequencePosition;
+
+            // Act
+            bool continued = reader.SkipDelimiter();
+
+            // Assert
+            Assert.False(continued);
+            Assert.Equal(sequencePosition, reader.SequencePosition);
+            AssertNothingCommitted(ref reader);
+        }
+
+        /// <summary>
+        /// S9: <c>=</c> is the final byte of the sequence and reading is completed, so the
+        /// element is incomplete, reported at the end of the data
+        /// </summary>
+        [Theory]
+        [InlineData(new[] { "=" }, 1, 2)]
+        [InlineData(new[] { "=", "", "" }, 1, 2)]
+        [InlineData(new[] { " ", "\n", "=" }, 2, 2)]
+        public void SkipDelimiter_ForEqualsFinalByteOfTheSequenceReadingCompleted_ItShould_ThrowAtTheEnd(
+            string[] parts,
+            long expectedLineNumber,
+            long expectedLinePosition
+        ) {
+            // Arrange
+            Utf8XmlReader reader = new(Sequence(parts), isReadingCompleted: true, StartTagState(TokenType.Attribute, hasSkippedSpacingInStartTag: false, TokenType.Element));
+
+            // Act
+            Exception? thrown = SkipDelimiterThrown(ref reader);
+
+            // Assert
+            AssertXmlExceptionAt(thrown, expectedLineNumber, expectedLinePosition);
+            Assert.Equal(Throwing.Category.Incomplete.ToString(), ((XmlException)thrown!).Category);
         }
 
         /// <summary>

@@ -341,23 +341,77 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// 
+        /// Skip delimiter returning true to continue (i.e. delimiter or nothing skipped) or 
+        /// false when reading is halted
         /// </summary>
         /// <returns></returns>
         internal bool SkipDelimiter()
         {
+            if (_currentTokenType == TokenType.Attribute)
+            {
+                return SkipEqualsDelimiter();
+            }
+
             return true;
         }
 
         /// <summary>
-        /// Skip spacing returning true when draining the segment(s) and halting the read
-        /// along with trying to ingore character data that is only spacing (default)
+        /// Skip equals delimiter between the attribute name non-terminal and 
+        /// the attribute value non-terminal
+        /// </summary>
+        /// <returns></returns>
+        internal bool SkipEqualsDelimiter()
+        {
+            Debug.Assert(_currentTokenType == TokenType.Attribute, "The equals delimiter is only valid between the attribute name and attribute value non-terminals.");
+            
+            if (!TryPeekNonSpacing(offset: 0, out byte delimiter, out long beforeBytesConsumed))
+            {
+                goto Undecided;  // S5
+            }
+
+            if (delimiter != EBNF.EqualsSign)
+            {
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Expected, Throwing.Markup.EqualsSignTerminal, foundByte: delimiter, offset: beforeBytesConsumed);  // S4
+            }
+
+            if (!TryPeekNonSpacing(beforeBytesConsumed + 1, out _, out _))
+            {
+                goto Undecided;  // S7, S8
+            }
+            
+            goto Read;  // S0, S1, S2, S3
+
+            Undecided:
+                if (!_isReadingCompleted)
+                {
+                    return false;
+                }
+
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Incomplete, Throwing.Markup.Element, offset: RemainingLength);  // S6, S9
+                return false;
+
+            Read:
+                if (beforeBytesConsumed != 0) {
+                    if (_isMultipleSegments) SkipMultipleSpacing(); else SkipSingleSpacing(); // S1
+                }
+
+                _segmentPosition += 1;
+                _linePosition += 1;
+
+                if (_isMultipleSegments) SkipMultipleSpacing(); else SkipSingleSpacing(); // S2
+         
+                return true;
+        }
+
+        /// <summary>
+        /// Skip spacing returning true to continue (i.e. spacing or nothing skipped) or 
+        /// false when reading is halted
         /// </summary>
         internal bool SkipSpacing()
         {
             byte character = _segment[_segmentPosition];
             if (!(character == EBNF.Space || character == EBNF.Tab || character == EBNF.LineFeed || character == EBNF.CarriageReturn)) {
-                return false;  // S0: nothing to skip
+                return true;  // S0: nothing to skip
             }
 
             if (_elementStack.ContentReady is false || _elementStack.Depth == 0) { // S1: prolog, miscellanous or start tag
@@ -375,7 +429,7 @@ namespace Forestry.Deserialize.Xml.Reading
 
                 if (_isMultipleSegments ? IsMultipleSegmentDrained() : IsSingleSegmentDrained())
                 {
-                    return true;
+                    return false;
                 }
             } else
             {
@@ -406,7 +460,7 @@ namespace Forestry.Deserialize.Xml.Reading
                 {
                     if (nonSpacing != EBNF.LessThan)
                     {
-                        return false;  // S4: the spacing belongs to character data, skip nothing
+                        return true;  // S4: the spacing belongs to character data, skip nothing
                     }
 
                     // S3: character data that is only spacing is ignored, skip it with line tracking
@@ -418,12 +472,12 @@ namespace Forestry.Deserialize.Xml.Reading
                         SkipSingleSpacing();
                     }
 
-                    return false;
+                    return true;
                 }
 
                 if (!_isReadingCompleted)
                 {
-                    return true;  // S5: undecided, skip nothing and halt so the caller expands the segment(s)
+                    return false;  // S5: undecided, skip nothing and halt so the caller expands the segment(s)
                 }
 
                 // S6: only spacing left and no more segment(s), skip it draining the segment(s) which
@@ -436,10 +490,13 @@ namespace Forestry.Deserialize.Xml.Reading
                     SkipSingleSpacing();
                 }
 
-                return _isMultipleSegments ? IsMultipleSegmentDrained() : IsSingleSegmentDrained();
+                if (_isMultipleSegments ? IsMultipleSegmentDrained() : IsSingleSegmentDrained())
+                {
+                    return false;
+                }
             }
 
-            return false;
+            return true;
         }
 
         /// <summary>
@@ -540,6 +597,39 @@ namespace Forestry.Deserialize.Xml.Reading
 
             return false;
         }
+
+        /// <summary>
+        /// Peek the first non-spacing byte at or after the offset without advancing
+        /// </summary>
+        private bool TryPeekNonSpacing(
+            long offset, 
+            out byte character, 
+            out long index
+        ) {
+            character = default;
+
+            if (_isMultipleSegments)
+            {
+                SequenceReader<byte> sequenceReader = new(_sequence.Slice(SequencePosition));
+                sequenceReader.Advance(offset);
+                sequenceReader.AdvancePastAny(" \t\r\n"u8);
+
+                index = sequenceReader.Consumed;
+                return !sequenceReader.End && sequenceReader.TryPeek(out character);
+            }
+
+            ReadOnlySpan<byte> remaining = _segment[(_segmentPosition + (int)offset)..];
+            int nonSpacing = remaining.IndexOfExceptWhiteSpace();
+
+            index = offset + nonSpacing;
+            if (nonSpacing < remaining.Length)
+            {
+                character = remaining[nonSpacing];
+                return true;
+            }
+
+            return false;
+        }
         #endregion
 
         #region read delegation
@@ -558,13 +648,19 @@ namespace Forestry.Deserialize.Xml.Reading
             // Break advancement fast when segment is drained
             if (_isMultipleSegments ? IsMultipleSegmentDrained() : IsSingleSegmentDrained())
             {
-                goto Completed;
+                goto Halted;
+            }
+
+            // Skip delimiters (potentially bounded by spacing)
+            if (!SkipDelimiter())
+            {
+                goto Halted;
             }
 
             // Skip spacing
-            if (SkipSpacing())
+            if (!SkipSpacing())
             {
-                goto Completed;
+                goto Halted;
             }
 
             // Content ready
@@ -586,6 +682,9 @@ namespace Forestry.Deserialize.Xml.Reading
 
             // Read value
             return ReadValue();
+
+            Halted:
+                return false;
 
             Completed:
                 return advancement;
