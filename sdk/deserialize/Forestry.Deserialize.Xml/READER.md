@@ -17,10 +17,10 @@ cycle (returns `false`: the caller expands the segment(s) and calls again), prod
 |---|---|---|---|---|
 | 0 | Reset | – | `Value` and `ValueSequence` are cleared | continue |
 | 1 | Drained? | – | Nothing left at the reader position | halt; on the last readable segment, throw if there is no root element or an element is not ended |
-| 2 | Skip delimiter | #32 | After an attribute name (current token Attribute): skip the whole equals non-terminal `S? '=' S?` up to the first non-spacing byte after `=`, which is not checked. Peeks first, commits only when all of it is there; never sets the spacing flag | continue (skipped, or no delimiter applies); halt when undecided, nothing committed; throw when the first non-spacing byte isn't `=` (Expected), or undecided with reading completed (Incomplete) |
+| 2 | Skip delimiter | #32, #45 | After an attribute name (current token Attribute) and unless the equals flag is set: skip the whole equals non-terminal `S? '=' S?` up to the first non-spacing byte after `=`, which is not checked. Peeks first, commits only when all of it is there, then sets the equals flag; never sets the spacing flag | continue (skipped, or no delimiter applies); halt when undecided, nothing committed; throw when the first non-spacing byte isn't `=` (Expected), or undecided with reading completed (Incomplete) |
 | 3 | Skip spacing | #34, #40 | Outside content: skip all spacing. In content: skip only spacing-only character data (next non-spacing is `<`). In a start tag: record that spacing was skipped (the spacing flag) | continue; halt when drained or undecided |
-| 4 | Content ready | #22, #40 | `>` after an Element (S3) or an attribute's Value (S5): skip it, content ready = true, clear the spacing flag | continue (never a token); throw after an attribute name (S4, unreachable since #32) |
-| 5 | Empty element end | #35, #40 | `/>` in a start tag: pop the element stack, clear the spacing flag | continue (not `/`); **ElementEnd** token; halt when `/` is the last byte; throw when malformed or after an attribute name (S5.a, unreachable since #32) |
+| 4 | Content ready | #22, #40 | `>` after an Element (S3) or an attribute's Value (S5): skip it, content ready = true, clear the spacing flag | continue (never a token); throw after an attribute name (S4: `<a b=>`, reached after `=` is skipped) |
+| 5 | Empty element end | #35, #40 | `/>` in a start tag: pop the element stack, clear the spacing flag | continue (not `/`); **ElementEnd** token; halt when `/` is the last byte; throw when malformed or after an attribute name (S5.a: `<a b=/>`, reached after `=` is skipped) |
 | 6 | Drained? | – | Step 4 may have skipped `>` as the last byte | halt |
 | 7 | Peek starting terminal | #17, #25, #36 | Fill the scratch pad with a starting terminal (+ overshoot), or leave it empty | continue; halt when the pad is incomplete and reading is not completed |
 | 8 | Candidate | #27 | Scratch pad + context → one candidate non-terminal | always continue (no side effects) |
@@ -53,7 +53,7 @@ contentReady` (#34).
 | S4 | Prolog, Content | `<` + name starting character | StartTag | `ReadStartTag` | built #37 |
 | S5 | Content | `</` | EndTag | – | not built |
 | S6 | Start tag | empty | Attribute | `ReadAttribute` | built #40 |
-| S7 | Start tag | `"` or `'` | AttributeValue | – | not built |
+| S7 | Start tag | `"` or `'` | AttributeValue | `ReadAttributeValue` | built #44 |
 | S8 | Content | empty, `"` or `'` | CharacterData | – | not built |
 | S9 | anything else | – | None (default delegate) | – | not built |
 
@@ -138,10 +138,25 @@ the Attribute candidate.
     Never `SkipSpacing()` (#32).
 20. **A dangling attribute name throws in skip delimiter**, as an expected `=` (`<a b>`, `<a b/>`),
     before either ending terminal is reached. #40's checks at content ready S4 and empty element
-    S5.a are kept but unreachable (#40, #32).
+    S5.a throw "attribute value missing" when `=` was skipped but no literal follows (`<a b=>`,
+    `<a b=/>`) (#40, #32, #45).
 21. **The attribute delegate checks the spacing flag before reading the name**, and its
     candidate never checks the first character, so #38's malformed first character is
     reachable here (`<a 1="x">`), unlike in the start tag (#40).
+
+    **A skipped `=` is recorded in `_hasSkippedAttributeDelimiter`** (the equals flag): skip
+    equals sets it when it commits, skip delimiter continues at once while it is set, and the
+    attribute value delegate clears it when it produces the Value. Without it, a value that halts
+    after `=` was committed in the same cycle makes the next reader expect `=` again
+    (`<a b="1|0"/>`) (#45).
+
+    **A literal's string is any bytes up to the matching quote except `<`, `&` and control bytes**
+    other than tab, line feed and carriage return; the other quote kind is content. Bytes
+    ≥ 0x80 pass unchecked (no UTF-8 validation, no ASCII rule as for names), and `Value` is the
+    raw bytes between the quotes: not normalized, unlike XML 1.0 §3.3.3. `&` starts a reference,
+    well-formed but unsupported in the POC; until the unsupported exception is designed it throws
+    Expected (#44). The starting quote is guaranteed by candidate S7 (a `Debug.Assert`); the
+    current token is not, so a value without an attribute name throws (`<a "1">`, #44's G0).
 
 ### Reader state
 22. **A new `ReaderState` field touches six places**: the `ReaderState` field, its public
@@ -149,7 +164,7 @@ the Attribute candidate.
     and its `ReaderState` property; and **both** reader constructors, `Utf8XmlReader.Single.cs`
     and `Utf8XmlReader.Multiple.cs`, which copy it from the state. Missing the constructor copy
     loses the field whenever a reader is reconstructed, i.e. on every piped segment (#24's
-    `_documentType`, #40's spacing flag). Test helpers that build a `ReaderState` by named
+    `_documentType`, #40's spacing flag, #45's equals flag). Test helpers that build a `ReaderState` by named
     arguments need the new argument too.
 23. **`Value` lives for one `Read()` only.** Step 0 clears `Value` and `ValueSequence`, so a
     later cycle sees the previous token's type but not its value (e.g. the attribute name when
@@ -172,11 +187,11 @@ the Attribute candidate.
 - **A value expected after `=` is the attribute delegate's check, not the candidate's.** In
   `<a b=1>` the `1` is an empty pad, so the candidate stays Attribute (rule 5; #27: "ordering
   within a context is the delegate's concern"). The delegate throws "attribute value missing" when
-  the current token is already Attribute, **before** the spacing flag check. Bug #41 (#40's miss),
-  built after #32; #32 does not check the quote. The attribute name is not in `Value` by then
-  (rule 23).
-- **The attribute value delegate is not built.** Until it is, no attribute is read past the
-  equals non-terminal; the candidate after `=` is AttributeValue (S7) when the byte is a quote.
+  the equals flag is set and the current token is Attribute, **before** the spacing flag check.
+  Bug #41 (#40's miss); #32 does not check the quote. The attribute name is not in `Value` by
+  then (rule 23).
+- **The unsupported exception is not designed** (#43). `&` in a literal (#44) and a non-ASCII
+  name byte (#38) are its two users so far.
 - **`/>`'s ElementEnd has an empty `Value`.** Exposing the popped name needs storage in the
   reader; revisit later (#35).
 
