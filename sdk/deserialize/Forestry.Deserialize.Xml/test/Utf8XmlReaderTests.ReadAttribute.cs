@@ -39,12 +39,14 @@ namespace Forestry.Deserialize.Xml.Tests
             bool hasSkippedSpacingInStartTag,
             TokenType previous = TokenType.None,
             int depth = 1,
-            long linePosition = 0
+            long linePosition = 0,
+            bool hasSkippedAttributeDelimiter = false
         ) => new(
             lineNumber: 0,
             linePosition: linePosition,
             documentType: false,
             hasSkippedSpacingInStartTag: hasSkippedSpacingInStartTag,
+            hasSkippedAttributeDelimiter: hasSkippedAttributeDelimiter,
             currentTokenType: current,
             previousTokenType: previous,
             elementStack: ElementStackAtDepth(depth, contentReady: false),

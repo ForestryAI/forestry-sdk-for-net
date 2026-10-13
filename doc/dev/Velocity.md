@@ -295,6 +295,7 @@ would make this possible later without redesigning the format first.
 | [#35](https://github.com/ForestryAI/forestry-sdk-for-net/issues/35) Read ending terminal for empty elements | 20/20m | 30/30m | 5m | 5/0m | 5/0m | 10/5m | 5/5m (AI) | 0 | 4 | 0 | 0 | yes | 7 straddling advancement |
 | [#40](https://github.com/ForestryAI/forestry-sdk-for-net/issues/40) Read attribute | 20/60m (AI) | 30/90m (AI) | 5m | 5/5m | 5/10m | 15/15m | 5/5m | 0 | 1 | 1 | 0 | yes | 5 reader state plumbing |
 | [#32](https://github.com/ForestryAI/forestry-sdk-for-net/issues/32) Skip delimiting equals | 20/30m (AI) | 30/60m (AI) | 5m | 5/15m | 10/10m | 15/30m (AI) | 5/0m | 1 | 3 | 0 | 0 | yes | 9 coding structure |
+| [#44](https://github.com/ForestryAI/forestry-sdk-for-net/issues/44) Read attribute value | 20/30m (AI) | 30/60m (AI) | 5m | 5/5m | 5/5m | 30/45m (AI) | 5/10m | 1 | 1 | 1 | 0 | yes | 9 delegate plumbing |
 
 A short retrospective on how the numbers actually felt - what was better or worse than previous
 tasks, any pattern worth watching - belongs as a closing comment on the task itself when it moves

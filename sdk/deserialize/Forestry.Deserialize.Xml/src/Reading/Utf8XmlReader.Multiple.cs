@@ -68,6 +68,7 @@ namespace Forestry.Deserialize.Xml.Reading
             _lineNumber = readerState._lineNumber;
             _documentType = readerState._documentType;
             _hasSkippedSpacingInStartTag = readerState._hasSkippedSpacingInStartTag;
+            _hasSkippedAttributeDelimiter = readerState._hasSkippedAttributeDelimiter;
             _currentTokenType = readerState._currentTokenType;
             _previousTokenType = readerState._previousTokenType;
             _elementStack = readerState._elementStack;
@@ -387,6 +388,38 @@ namespace Forestry.Deserialize.Xml.Reading
             {
                 MarkupState markupState = EvaluateNameNonTerminalMarkup(memory.Span, isFirstCharacter: nameLength == 0, out int segmentNameLength, out unsupportedCharacter);
                 nameLength += segmentNameLength;
+
+                if (markupState != MarkupState.Unknown)
+                {
+                    return markupState;
+                }
+            }
+
+            return MarkupState.Unknown;
+        }
+
+        /// <summary>
+        /// Evaluates a literal non-terminal markup state across multiple segments, continuing to
+        /// the next segment while the markup state is unknown
+        /// </summary>
+        /// <param name="quote"></param>
+        /// <param name="literalLength"></param>
+        /// <param name="unsupportedCharacter"></param>
+        /// <returns></returns>
+        private MarkupState EvaluateMultipleLiteralMarkup(
+            byte quote,
+            out int literalLength,
+            out bool unsupportedCharacter
+        )
+        {
+            literalLength = 0;
+            unsupportedCharacter = false;
+
+            // The string starts after the starting quote
+            foreach (ReadOnlyMemory<byte> memory in _sequence.Slice(SequencePosition).Slice(1))
+            {
+                MarkupState markupState = EvaluateLiteralMarkup(memory.Span, quote: quote, out int segmentLiteralLength, out unsupportedCharacter);
+                literalLength += segmentLiteralLength;
 
                 if (markupState != MarkupState.Unknown)
                 {

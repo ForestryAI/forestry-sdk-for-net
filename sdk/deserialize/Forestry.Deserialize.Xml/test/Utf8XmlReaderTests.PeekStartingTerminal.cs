@@ -65,6 +65,26 @@ namespace Forestry.Deserialize.Xml.Tests
             return new ReadOnlySequence<byte>(first, 0, last, last.Memory.Length);
         }
 
+        /// <summary>
+        /// The text encoded as UTF-8 once, then split into segments at byte offsets, so a split
+        /// can fall inside a multi-byte character; a repeated offset gives an empty segment
+        /// </summary>
+        private static ReadOnlySequence<byte> SequenceSplitAt(string text, params int[] byteOffsets)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(text);
+
+            Segment first = new(bytes.AsMemory(0, byteOffsets.Length > 0 ? byteOffsets[0] : bytes.Length));
+            Segment last = first;
+            for (int i = 0; i < byteOffsets.Length; i++)
+            {
+                int start = byteOffsets[i];
+                int end = i + 1 < byteOffsets.Length ? byteOffsets[i + 1] : bytes.Length;
+                last = last.Append(bytes.AsMemory(start, end - start));
+            }
+
+            return new ReadOnlySequence<byte>(first, 0, last, last.Memory.Length);
+        }
+
         private static Utf8XmlReader SpanReader(string text, bool isReadingCompleted) =>
             new(Encoding.UTF8.GetBytes(text), isReadingCompleted, new ReaderState());
 

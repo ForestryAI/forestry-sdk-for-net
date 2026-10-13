@@ -174,6 +174,7 @@ namespace Forestry.Deserialize.Xml.Reading
             linePosition: _linePosition,
             documentType: _documentType,
             hasSkippedSpacingInStartTag: _hasSkippedSpacingInStartTag,
+            hasSkippedAttributeDelimiter: _hasSkippedAttributeDelimiter,
             currentTokenType: _currentTokenType,
             previousTokenType: _previousTokenType,
             elementStack: _elementStack,
@@ -199,6 +200,11 @@ namespace Forestry.Deserialize.Xml.Reading
         /// When spacing has been skipped while inside a start tag
         /// </summary>
         private bool _hasSkippedSpacingInStartTag;
+
+        /// <summary>
+        /// When attribute delimiter has been skipped and the curren token == Attribute
+        /// </summary>
+        private bool _hasSkippedAttributeDelimiter;
 
         /// <summary>
         /// Mutable current token type
@@ -363,6 +369,11 @@ namespace Forestry.Deserialize.Xml.Reading
         internal bool SkipEqualsDelimiter()
         {
             Debug.Assert(_currentTokenType == TokenType.Attribute, "The equals delimiter is only valid between the attribute name and attribute value non-terminals.");
+
+            if (_hasSkippedAttributeDelimiter)
+            {
+                return true;
+            }
             
             if (!TryPeekNonSpacing(offset: 0, out byte delimiter, out long beforeBytesConsumed))
             {
@@ -397,6 +408,7 @@ namespace Forestry.Deserialize.Xml.Reading
 
                 _segmentPosition += 1;
                 _linePosition += 1;
+                _hasSkippedAttributeDelimiter = true;
 
                 if (_isMultipleSegments) SkipMultipleSpacing(); else SkipSingleSpacing(); // S2
          
@@ -842,7 +854,7 @@ namespace Forestry.Deserialize.Xml.Reading
                 case NonTerminal.Attribute:
                     return ReadAttribute();
                 case NonTerminal.AttributeValue:
-                    throw new NotImplementedException();
+                    return ReadAttributeValue();
                 case NonTerminal.CharacterData:
                     throw new NotImplementedException();
                 case NonTerminal.None:
@@ -1029,7 +1041,8 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// 
+        /// Read attribute name non-terminal starting with a spacing non-terminal 
+        /// before the name non-terminal
         /// </summary>
         /// <returns></returns>
         internal bool ReadAttribute()
@@ -1050,6 +1063,101 @@ namespace Forestry.Deserialize.Xml.Reading
             _currentTokenType = TokenType.Attribute;
 
             return true;
+        }
+
+        /// <summary>
+        /// Read attribute value non-terminal which is a literal
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadAttributeValue()
+        {
+            if (_currentTokenType != TokenType.Attribute)
+            {
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Expected, Throwing.Markup.AttributeValue);
+            }
+
+            byte quote = _segment[_segmentPosition];
+            Debug.Assert(quote == EBNF.DoubleQuote || quote == EBNF.SingleQuote, "Candidate S7 guarantees the starting quote.");
+
+            MarkupState value = _isMultipleSegments ?
+                EvaluateMultipleLiteralMarkup(quote: quote, out int literalLength, out bool unsupportedCharacter) :
+                EvaluateLiteralMarkup(_segment[(_segmentPosition + 1)..], quote: quote, out literalLength, out unsupportedCharacter);
+
+            // The offending byte or the ending quote is after the starting quote
+            int offset = 1 + literalLength;
+
+            switch (value)
+            {
+                case MarkupState.WellFormed:
+                    Advancement(ref this, literalLength);  // S0-S5, S9
+                    return true;
+                case MarkupState.Malformed:
+                    PeekCharacter(offset, out byte found);
+                    if (unsupportedCharacter)
+                    {
+                        // TODO: unsupported exception not designed yet (#43), a reference is well-formed
+                        Throwing.ThrowXmlException(ref this, Throwing.Category.Expected, Throwing.Markup.AttributeValue, foundByte: found, offset: offset);  // S7
+                    }
+
+                    Throwing.ThrowXmlException(ref this, Throwing.Category.Expected, Throwing.Markup.AttributeValue, foundByte: found, offset: offset);  // S6, S8
+                    break;
+                case MarkupState.Unknown:
+                    if (!_isReadingCompleted)
+                    {
+                        return false;  // S11: simulate rollback without advancement
+                    }
+
+                    Throwing.ThrowXmlException(ref this, Throwing.Category.Incomplete, Throwing.Markup.AttributeValue, offset: RemainingLength);  // S12
+                    break;
+                default:
+                    Debug.Assert(false, "The literal evaluation returned an unexpected value.");
+                    break;
+            }
+
+            // Value is the string between the quotes, the reader advances past the ending quote
+            static void Advancement(ref Utf8XmlReader reader, int literalLength)
+            {
+                if (reader._isMultipleSegments)
+                {
+                    ReadOnlySequence<byte> value = reader._sequence.Slice(reader.SequencePosition).Slice(1, literalLength);
+
+                    if (value.IsSingleSegment)
+                    {
+                        reader.Value = value.FirstSpan;
+                        reader.ValueSequence = ReadOnlySequence<byte>.Empty;
+                        reader.HasValueSequence = false;
+                    }
+                    else
+                    {
+                        reader.Value = [];
+                        reader.ValueSequence = value;
+                        reader.HasValueSequence = true;
+                    }
+                } else
+                {
+                    reader.Value = reader._segment[(reader._segmentPosition + 1)..(reader._segmentPosition + 1 + literalLength)];
+                    reader.ValueSequence = ReadOnlySequence<byte>.Empty;
+                    reader.HasValueSequence = false;
+                }
+
+                // Line tracking over both quotes and the string (line feeds are allowed), before advancing
+                (reader._lineNumber, reader._linePosition) = reader.GetLineTrackingAt(literalLength + 2);
+
+                if (reader._isMultipleSegments)
+                {
+                    reader.AdvanceMultipleSegments(literalLength + 2);
+                } else
+                {
+                    reader._segmentPosition += literalLength + 2;
+                }
+
+                reader._hasSkippedAttributeDelimiter = false;
+
+                reader._previousTokenType = reader._currentTokenType;
+                reader._currentTokenType = TokenType.Value;
+            }
+
+            return false;
         }
         #endregion
 
@@ -1110,6 +1218,58 @@ namespace Forestry.Deserialize.Xml.Reading
             nameLength = characters.Length;
             unsupportedCharacter = false;
             return MarkupState.Unknown;  // S3            
+        }
+
+        /// <summary>
+        /// Evaluates markup state for literals where the following are 
+        /// malformed characters:
+        ///  - control bytes except tabs, line feeds and carriage returns
+        ///  - ampersand (references)
+        ///  - less than
+        /// 
+        /// The only well-formed markup is by reaching the same quote byte character
+        /// </summary>
+        /// <param name="characters"></param>
+        /// <param name="quote"></param>
+        /// <param name="literalLength"></param>
+        /// <param name="unsupportedCharacter"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// Logic could be faster with static search values if the character byte 
+        /// array is larger than 16–32 bytes
+        /// </remarks>
+        internal static MarkupState EvaluateLiteralMarkup(
+            ReadOnlySpan<byte> characters,
+            byte quote,
+            out int literalLength,
+            out bool unsupportedCharacter
+        ) {
+            unsupportedCharacter = false;
+
+            for (literalLength = 0; literalLength < characters.Length; literalLength++)
+            {
+                byte character = characters[literalLength];
+
+                if (character == quote)
+                {
+                    return MarkupState.WellFormed;  // ending quote
+                }
+
+                switch (character)
+                {
+                    case EBNF.LessThan:
+                        return MarkupState.Malformed;  // S6
+                    case EBNF.Ampersand:
+                        unsupportedCharacter = true;
+                        return MarkupState.Malformed;  // S7, a reference
+                    case EBNF.Tab or EBNF.LineFeed or EBNF.CarriageReturn:
+                        continue;
+                    case < 0x20:
+                        return MarkupState.Malformed;  // S8, a control byte except tabs, line feeds or carriage returns
+                }
+            }
+
+            return MarkupState.Unknown;  // no ending quote in this span
         }
 
         /// <summary>
