@@ -1047,6 +1047,13 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <returns></returns>
         internal bool ReadAttribute()
         {
+            // Guard (#41): the equals non-terminal was skipped (#45) but no literal follows, e.g. <a b=1/>.
+            // Before S0 so the right exception is thrown; reads no bytes, so it never halts.
+            if (_currentTokenType == TokenType.Attribute && _hasSkippedAttributeDelimiter)
+            {
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Expected, Throwing.Markup.AttributeValue);
+            }
+
             if (!_hasSkippedSpacingInStartTag)
             {
                 Throwing.ThrowXmlException(ref this, Throwing.Category.Expected, Throwing.Markup.Spacing); // S0

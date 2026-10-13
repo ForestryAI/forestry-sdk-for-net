@@ -150,6 +150,12 @@ the Attribute candidate.
     after `=` was committed in the same cycle makes the next reader expect `=` again
     (`<a b="1|0"/>`) (#45).
 
+    **A value expected after `=` is the attribute delegate's check, not the candidate's.** In
+    `<a b=1/>` the `1` is an empty pad, so the candidate stays Attribute (rule 5). The delegate's
+    guard throws "attribute value missing" when the current token is Attribute and the equals flag
+    is set, **before** the spacing check; it reads no bytes, so it reports the byte after `=` and
+    never halts. The attribute name is not in `Value` by then (rule 23) (#41).
+
     **A literal's string is any bytes up to the matching quote except `<`, `&` and control bytes**
     other than tab, line feed and carriage return; the other quote kind is content. Bytes
     ≥ 0x80 pass unchecked (no UTF-8 validation, no ASCII rule as for names), and `Value` is the
@@ -184,12 +190,6 @@ the Attribute candidate.
     e.g. the processing instruction target).
 
 ### Decided, not built yet
-- **A value expected after `=` is the attribute delegate's check, not the candidate's.** In
-  `<a b=1>` the `1` is an empty pad, so the candidate stays Attribute (rule 5; #27: "ordering
-  within a context is the delegate's concern"). The delegate throws "attribute value missing" when
-  the equals flag is set and the current token is Attribute, **before** the spacing flag check.
-  Bug #41 (#40's miss); #32 does not check the quote. The attribute name is not in `Value` by
-  then (rule 23).
 - **The unsupported exception is not designed** (#43). `&` in a literal (#44) and a non-ASCII
   name byte (#38) are its two users so far.
 - **`/>`'s ElementEnd has an empty `Value`.** Exposing the popped name needs storage in the

@@ -297,6 +297,7 @@ would make this possible later without redesigning the format first.
 | [#32](https://github.com/ForestryAI/forestry-sdk-for-net/issues/32) Skip delimiting equals | 20/30m (AI) | 30/60m (AI) | 5m | 5/15m | 10/10m | 15/30m (AI) | 5/0m | 1 | 3 | 0 | 0 | yes | 9 coding structure |
 | [#44](https://github.com/ForestryAI/forestry-sdk-for-net/issues/44) Read attribute value | 20/30m (AI) | 30/60m (AI) | 5m | 5/5m | 5/5m | 30/45m (AI) | 5/10m | 1 | 1 | 1 | 0 | yes | 9 delegate plumbing |
 | [#45](https:/github.com/ForestryAI/forestry-sdk-for-net/issues/45) Skipped equals lost when the attribute value halts | 15/15m (AI) | 15/15m (AI) | 5m | 5/5m | 5/5m | 15/15m (AI) | 5/5m | 0 | 0 | 0 | 0 | yes | 6 architecture flow |
+| [#41](https:/github.com/ForestryAI/forestry-sdk-for-net/issues/41) Empty pad guard read attribute delegate | 15/15m (AI) | 15/15m (AI) | 5m | 5/0m | 5/0m | 15/15m (AI) | 5/0m | 0 | 0 | 0 | 0 | yes | 10 coding |
 
 A short retrospective on how the numbers actually felt - what was better or worse than previous
 tasks, any pattern worth watching - belongs as a closing comment on the task itself when it moves
