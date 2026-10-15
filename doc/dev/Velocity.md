@@ -220,6 +220,25 @@ How to read it:
 - **Topic, not person.** Trended by topic, it shows what a team needs to learn. Trended by
   developer, it becomes the per-developer scorecard this file warns against - see Recording below.
 
+**Hints before solutions (from #47 on).** #40 to #46 drifted into AI doing most of every phase:
+Requirements Review and Architecture carry the AI marker on all six tasks, AI coding help sits at
+9-10 on four of them, and Understanding was 0m on the last two (#41, #46). The developer's own words
+in #46: "running blind". The log showed the drift, which is what it exists for. The response is a
+working rule, not a new metric:
+
+- **Design and code get hints.** AI points at the place to look - the settled rule, the existing
+  function or pattern to reuse, the state or row a design misses, the line a defect sits on and
+  what kind of defect it is - and stops there. The developer writes the decision or the code.
+- **The developer asks to escalate.** "Show me" turns a hint into a solution for that one item,
+  so a hint never stalls a task. An escalated item is what moves AI coding help up the scale, so
+  it stays honest without changing its definition (hints are 3-6, solutions 7-10).
+- **Memory aids are not rationed.** The per-task context brief, `READER.md` and settled-rule
+  lookups compensate for recall, not for skill, so AI keeps giving them in full.
+- **Test shells and documentation stay AI work**, as before (see Phases).
+
+Expect Coding actuals and Understanding to rise again. That is the point, not a regression: the
+ratios from #40 to #46 measured AI-assisted work and are not the baseline to compare against.
+
 **Candidate signal, not yet a metric: Understanding actual > Coding actual, paired with a very low
 Coding ratio.** #22 (Understanding 15m vs Coding 10m; Coding ratio ~0.04, well under the
 already-small ~1/4 hypothesis) is the first data point suggesting this combination indicates real
@@ -296,8 +315,9 @@ would make this possible later without redesigning the format first.
 | [#40](https://github.com/ForestryAI/forestry-sdk-for-net/issues/40) Read attribute | 20/60m (AI) | 30/90m (AI) | 5m | 5/5m | 5/10m | 15/15m | 5/5m | 0 | 1 | 1 | 0 | yes | 5 reader state plumbing |
 | [#32](https://github.com/ForestryAI/forestry-sdk-for-net/issues/32) Skip delimiting equals | 20/30m (AI) | 30/60m (AI) | 5m | 5/15m | 10/10m | 15/30m (AI) | 5/0m | 1 | 3 | 0 | 0 | yes | 9 coding structure |
 | [#44](https://github.com/ForestryAI/forestry-sdk-for-net/issues/44) Read attribute value | 20/30m (AI) | 30/60m (AI) | 5m | 5/5m | 5/5m | 30/45m (AI) | 5/10m | 1 | 1 | 1 | 0 | yes | 9 delegate plumbing |
-| [#45](https:/github.com/ForestryAI/forestry-sdk-for-net/issues/45) Skipped equals lost when the attribute value halts | 15/15m (AI) | 15/15m (AI) | 5m | 5/5m | 5/5m | 15/15m (AI) | 5/5m | 0 | 0 | 0 | 0 | yes | 6 architecture flow |
-| [#41](https:/github.com/ForestryAI/forestry-sdk-for-net/issues/41) Empty pad guard read attribute delegate | 15/15m (AI) | 15/15m (AI) | 5m | 5/0m | 5/0m | 15/15m (AI) | 5/0m | 0 | 0 | 0 | 0 | yes | 10 coding |
+| [#45](https://github.com/ForestryAI/forestry-sdk-for-net/issues/45) Skipped equals lost when the attribute value halts | 15/15m (AI) | 15/15m (AI) | 5m | 5/5m | 5/5m | 15/15m (AI) | 5/5m | 0 | 0 | 0 | 0 | yes | 6 architecture flow |
+| [#41](https://github.com/ForestryAI/forestry-sdk-for-net/issues/41) Empty pad guard read attribute delegate | 15/15m (AI) | 15/15m (AI) | 5m | 5/0m | 5/0m | 15/15m (AI) | 5/0m | 0 | 0 | 0 | 0 | yes | 10 coding |
+| [#46](https://github.com/ForestryAI/forestry-sdk-for-net/issues/46) Refactor name and literal markup state | 15/15m (AI) | 60/60m (AI) | 5m | 5/0m | 5/0m | 30/20m (AI) | 5/0m | 0 | 2 | 1 | 0 | yes | 9 integrated and verified |
 
 A short retrospective on how the numbers actually felt - what was better or worse than previous
 tasks, any pattern worth watching - belongs as a closing comment on the task itself when it moves

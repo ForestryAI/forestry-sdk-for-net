@@ -366,60 +366,27 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// Evaluates a name non-terminal markup state across multiple segments, continuing to
+        /// Evaluates a markup state across multiple segments, continuing to
         /// the next segment while the markup state is unknown
         /// </summary>
-        /// <remarks>
-        /// The first character is the first byte of the name, not the first segment: no name
-        /// characters counted yet, since the sequence can start with empty segments
-        /// </remarks>
-        /// <param name="nameLength"></param>
+        /// <param name="markup"></param>
+        /// <param name="length"></param>
         /// <param name="unsupportedCharacter"></param>
         /// <returns></returns>
-        private MarkupState EvaluateMultipleNameNonTerminalMarkup(
-            out int nameLength,
+        private MarkupState EvaluateMultipleMarkup<T>(
+            ref T markup,
+            out int length,
             out bool unsupportedCharacter
-        )
+        ) where T: struct, IMarkup
         {
-            nameLength = 0;
+            length = 0;
             unsupportedCharacter = false;
 
-            foreach (ReadOnlyMemory<byte> memory in _sequence.Slice(SequencePosition))
+            // The markup starts after its starting terminal, e.g. a literal's starting quote
+            foreach (ReadOnlyMemory<byte> memory in _sequence.Slice(SequencePosition).Slice(markup.StartingTerminalLength))
             {
-                MarkupState markupState = EvaluateNameNonTerminalMarkup(memory.Span, isFirstCharacter: nameLength == 0, out int segmentNameLength, out unsupportedCharacter);
-                nameLength += segmentNameLength;
-
-                if (markupState != MarkupState.Unknown)
-                {
-                    return markupState;
-                }
-            }
-
-            return MarkupState.Unknown;
-        }
-
-        /// <summary>
-        /// Evaluates a literal non-terminal markup state across multiple segments, continuing to
-        /// the next segment while the markup state is unknown
-        /// </summary>
-        /// <param name="quote"></param>
-        /// <param name="literalLength"></param>
-        /// <param name="unsupportedCharacter"></param>
-        /// <returns></returns>
-        private MarkupState EvaluateMultipleLiteralMarkup(
-            byte quote,
-            out int literalLength,
-            out bool unsupportedCharacter
-        )
-        {
-            literalLength = 0;
-            unsupportedCharacter = false;
-
-            // The string starts after the starting quote
-            foreach (ReadOnlyMemory<byte> memory in _sequence.Slice(SequencePosition).Slice(1))
-            {
-                MarkupState markupState = EvaluateLiteralMarkup(memory.Span, quote: quote, out int segmentLiteralLength, out unsupportedCharacter);
-                literalLength += segmentLiteralLength;
+                MarkupState markupState = markup.Evaluate(memory.Span, out int segmentLength, out unsupportedCharacter);
+                length += segmentLength;
 
                 if (markupState != MarkupState.Unknown)
                 {

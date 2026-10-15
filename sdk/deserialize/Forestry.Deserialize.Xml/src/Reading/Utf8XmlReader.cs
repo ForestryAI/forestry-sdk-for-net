@@ -931,15 +931,16 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <returns></returns>
         internal bool ReadName()
         {
+            NameMarkup markup = new() {};
             MarkupState value = _isMultipleSegments ?
-                EvaluateMultipleNameNonTerminalMarkup(out int nameLength, out bool unsupportedCharacter) :
+                EvaluateMultipleMarkup<NameMarkup>(ref markup, out int nameLength, out bool unsupportedCharacter) :
                 EvaluateNameNonTerminalMarkup(_segment[_segmentPosition..], isFirstCharacter: true, out nameLength, out unsupportedCharacter);
 
             switch (value)
             {                
                 case MarkupState.WellFormed:
-                    Advancement(ref this, nameLength); // S4 
-                    return true; 
+                    AdvanceValue(ref this, startingTerminalLength: 0, valueLength: nameLength, consumedLength: nameLength, lineTracking: true); // S4 
+                    return true;
                 case MarkupState.Malformed:
                     if (unsupportedCharacter) // S5 else S6
                     {
@@ -956,7 +957,7 @@ namespace Forestry.Deserialize.Xml.Reading
                     }
                     if (nameLength > 0) // S8
                     {
-                        Advancement(ref this, nameLength);
+                        AdvanceValue(ref this, startingTerminalLength: 0, valueLength: nameLength, consumedLength: nameLength, lineTracking: true);
                         return true;
                     }
                     
@@ -965,37 +966,6 @@ namespace Forestry.Deserialize.Xml.Reading
                 default:
                     Debug.Assert(false, "The name non-terminal evaluation returned an unexpected value.");
                     break;
-            }
-
-            static void Advancement(ref Utf8XmlReader reader, int nameLength)
-            {
-                if (reader._isMultipleSegments)
-                {
-                    ReadOnlySequence<byte> value = reader._sequence.Slice(reader.SequencePosition, nameLength);
-
-                    if (value.IsSingleSegment)
-                    {
-                        reader.Value = value.FirstSpan;
-                        reader.ValueSequence = ReadOnlySequence<byte>.Empty;
-                        reader.HasValueSequence = false;
-                    }
-                    else
-                    {
-                        reader.Value = [];
-                        reader.ValueSequence = value;
-                        reader.HasValueSequence = true;
-                    }
-
-                    reader.AdvanceMultipleSegments(nameLength);
-                } else
-                {
-                    reader.Value = reader._segment[reader._segmentPosition..(reader._segmentPosition + nameLength)];
-                    reader.ValueSequence = ReadOnlySequence<byte>.Empty;
-                    reader.HasValueSequence = false;
-                    reader._segmentPosition += nameLength;
-                }
-
-                reader._linePosition += nameLength;
             }
 
             return false;
@@ -1086,9 +1056,10 @@ namespace Forestry.Deserialize.Xml.Reading
             byte quote = _segment[_segmentPosition];
             Debug.Assert(quote == EBNF.DoubleQuote || quote == EBNF.SingleQuote, "Candidate S7 guarantees the starting quote.");
 
+            LiteralMarkup markup = new() { Quote = quote };
             MarkupState value = _isMultipleSegments ?
-                EvaluateMultipleLiteralMarkup(quote: quote, out int literalLength, out bool unsupportedCharacter) :
-                EvaluateLiteralMarkup(_segment[(_segmentPosition + 1)..], quote: quote, out literalLength, out unsupportedCharacter);
+                EvaluateMultipleMarkup<LiteralMarkup>(ref markup, out int literalLength, out bool unsupportedCharacter) :
+                EvaluateLiteralNonTerminalMarkup(_segment[(_segmentPosition + 1)..], quote: quote, out literalLength, out unsupportedCharacter);
 
             // The offending byte or the ending quote is after the starting quote
             int offset = 1 + literalLength;
@@ -1096,8 +1067,8 @@ namespace Forestry.Deserialize.Xml.Reading
             switch (value)
             {
                 case MarkupState.WellFormed:
-                    Advancement(ref this, literalLength);  // S0-S5, S9
-                    return true;
+                    AdvanceValue(ref this, startingTerminalLength: 1, valueLength: literalLength, consumedLength: literalLength + 2, lineTracking: false);  // S0-S5, S9
+                    goto Completed;
                 case MarkupState.Malformed:
                     PeekCharacter(offset, out byte found);
                     if (unsupportedCharacter)
@@ -1121,50 +1092,75 @@ namespace Forestry.Deserialize.Xml.Reading
                     break;
             }
 
-            // Value is the string between the quotes, the reader advances past the ending quote
-            static void Advancement(ref Utf8XmlReader reader, int literalLength)
-            {
-                if (reader._isMultipleSegments)
-                {
-                    ReadOnlySequence<byte> value = reader._sequence.Slice(reader.SequencePosition).Slice(1, literalLength);
+            return false;
 
-                    if (value.IsSingleSegment)
-                    {
-                        reader.Value = value.FirstSpan;
-                        reader.ValueSequence = ReadOnlySequence<byte>.Empty;
-                        reader.HasValueSequence = false;
-                    }
-                    else
-                    {
-                        reader.Value = [];
-                        reader.ValueSequence = value;
-                        reader.HasValueSequence = true;
-                    }
-                } else
+            Completed:
+                _hasSkippedAttributeDelimiter = false;
+
+                _previousTokenType = _currentTokenType;
+                _currentTokenType = TokenType.Value;
+
+                return true;            
+        }
+
+        /// <summary>
+        /// Read value
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="startingTerminalLength"></param>
+        /// <param name="valueLength"></param>
+        /// <param name="consumedLength"></param>
+        /// <param name="lineTracking"></param>
+        static void AdvanceValue(
+            ref Utf8XmlReader reader, 
+            int startingTerminalLength,
+            int valueLength,
+            int consumedLength,
+            bool lineTracking
+        )
+        {
+            if (reader._isMultipleSegments)
+            {
+                ReadOnlySequence<byte> value = reader._sequence.Slice(reader.SequencePosition).Slice(startingTerminalLength, valueLength);
+
+                if (value.IsSingleSegment)
                 {
-                    reader.Value = reader._segment[(reader._segmentPosition + 1)..(reader._segmentPosition + 1 + literalLength)];
+                    reader.Value = value.FirstSpan;
                     reader.ValueSequence = ReadOnlySequence<byte>.Empty;
                     reader.HasValueSequence = false;
                 }
-
-                // Line tracking over both quotes and the string (line feeds are allowed), before advancing
-                (reader._lineNumber, reader._linePosition) = reader.GetLineTrackingAt(literalLength + 2);
-
-                if (reader._isMultipleSegments)
+                else
                 {
-                    reader.AdvanceMultipleSegments(literalLength + 2);
-                } else
-                {
-                    reader._segmentPosition += literalLength + 2;
+                    reader.Value = [];
+                    reader.ValueSequence = value;
+                    reader.HasValueSequence = true;
                 }
+            } else
+            {
+                int start = reader._segmentPosition + startingTerminalLength;
 
-                reader._hasSkippedAttributeDelimiter = false;
-
-                reader._previousTokenType = reader._currentTokenType;
-                reader._currentTokenType = TokenType.Value;
+                reader.Value = reader._segment[start..(start + valueLength)];
+                reader.ValueSequence = ReadOnlySequence<byte>.Empty;
+                reader.HasValueSequence = false;
             }
 
-            return false;
+            // Line tracking before advancing: either the value has no line feeds (names) so the line
+            // position adds the value length, or the consumed bytes are walked (literals)
+            if (lineTracking)
+            {
+                reader._linePosition += valueLength;
+            } else
+            {
+                (reader._lineNumber, reader._linePosition) = reader.GetLineTrackingAt(consumedLength);
+            }
+
+            if (reader._isMultipleSegments)
+            {
+                reader.AdvanceMultipleSegments(consumedLength);
+            } else
+            {
+                reader._segmentPosition += consumedLength;
+            }
         }
         #endregion
 
@@ -1245,7 +1241,7 @@ namespace Forestry.Deserialize.Xml.Reading
         /// Logic could be faster with static search values if the character byte 
         /// array is larger than 16–32 bytes
         /// </remarks>
-        internal static MarkupState EvaluateLiteralMarkup(
+        internal static MarkupState EvaluateLiteralNonTerminalMarkup(
             ReadOnlySpan<byte> characters,
             byte quote,
             out int literalLength,
@@ -1371,6 +1367,37 @@ namespace Forestry.Deserialize.Xml.Reading
 
                 return MarkupState.Unknown;
             }
+        }
+
+        private struct NameMarkup: IMarkup
+        {
+            private bool _hasNameCharacter;
+
+            public readonly int StartingTerminalLength => 0;           
+
+            public MarkupState Evaluate(ReadOnlySpan<byte> characters, out int length, out bool unsupportedCharacter)
+            {
+                MarkupState markupState = EvaluateNameNonTerminalMarkup(characters, isFirstCharacter: !_hasNameCharacter, out length, out unsupportedCharacter);
+                _hasNameCharacter |= length > 0;
+                return markupState;
+            }
+        }
+
+        private struct LiteralMarkup: IMarkup
+        {
+            public byte Quote;
+
+            public readonly int StartingTerminalLength => 1;
+
+            public MarkupState Evaluate(ReadOnlySpan<byte> characters, out int length, out bool unsupportedCharacter) =>
+                EvaluateLiteralNonTerminalMarkup(characters, Quote, out length, out unsupportedCharacter);
+            }
+
+        private interface IMarkup
+        {
+            int StartingTerminalLength { get; }
+
+            MarkupState Evaluate(ReadOnlySpan<byte> characters, out int length, out bool unsupportedCharacter);
         }
         #endregion
     }

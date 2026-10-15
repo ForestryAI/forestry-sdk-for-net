@@ -260,6 +260,9 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData(new[] { "Stem", "", "Key>" }, "StemKey")]
         [InlineData(new[] { "S", "te", "mKey b=\"1\"" }, "StemKey")]
         [InlineData(new[] { "", "St", "emKey>" }, "StemKey")]
+        [InlineData(new[] { "a", "1>" }, "a1")]
+        [InlineData(new[] { "Stem", "", "-Key>" }, "Stem-Key")]
+        [InlineData(new[] { "Stem", ".1>" }, "Stem.1")]
         public void ReadName_ForS4WellFormedStraddlingSegments_ItShould_SetAValueSequence(
             string[] parts,
             string expectedName
