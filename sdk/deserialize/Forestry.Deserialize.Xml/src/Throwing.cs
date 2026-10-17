@@ -205,6 +205,7 @@ namespace Forestry.Deserialize.Xml
             ProcessingInstructionTarget,
             RootElement,
             Element,
+            EndTag,
             EndingTerminal,
             EmptyElementEndingTerminal,
             Name,

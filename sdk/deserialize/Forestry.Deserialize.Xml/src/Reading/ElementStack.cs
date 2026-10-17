@@ -81,6 +81,38 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="tailIndex"></param>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryPeek(ReadOnlySpan<byte> name, out int tailIndex)
+        {
+            if (_depth == 0)
+            {
+                tailIndex = 0;
+                return false;
+            }
+
+            tailIndex = _depth - 1;
+
+            Span<ulong> packedName = stackalloc ulong[PackedNameLength];
+            name.Pack(packedName);
+
+            ReadOnlySpan<ulong> tail = tailIndex < NonAllocatingMaxDepth
+                ? ((Span<ulong>)_nonAllocatingArray).Slice(tailIndex * PackedNameLength, PackedNameLength)
+                : PeekAllocating();
+
+            if (!tail.SequenceEqual(packedName))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Try pop the most recently pushed name, matching it against <paramref name="name"/> -
         /// the Element Type Match WFC (an ending tag's name must match its starting tag's).
         /// Peeks before mutating anything: packs <paramref name="name"/> and compares it against
@@ -95,28 +127,17 @@ namespace Forestry.Deserialize.Xml.Reading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryPop(ReadOnlySpan<byte> name)
         {
-            if (_depth == 0)
+            if (TryPeek(name, out int tailIndex))
             {
-                return false;
+                goto Completed;
             }
 
-            int tailIndex = _depth - 1;
+            return false;
 
-            Span<ulong> packedName = stackalloc ulong[PackedNameLength];
-            name.Pack(packedName);
-
-            ReadOnlySpan<ulong> tail = tailIndex < NonAllocatingMaxDepth
-                ? ((Span<ulong>)_nonAllocatingArray).Slice(tailIndex * PackedNameLength, PackedNameLength)
-                : PeekAllocating();
-
-            if (!tail.SequenceEqual(packedName))
-            {
-                return false;
-            }
-
-            _contentReady = true;  // unreliable if a content non-terminal exists before a end tag e.g. character data
-            _depth = tailIndex;
-            return true;
+            Completed:
+                _contentReady = true;  // unreliable if a content non-terminal exists before a end tag e.g. character data
+                _depth = tailIndex;
+                return true;
         }
 
         /// <summary>

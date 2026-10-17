@@ -850,7 +850,7 @@ namespace Forestry.Deserialize.Xml.Reading
                 case NonTerminal.StartTag:
                     return ReadStartTag();
                 case NonTerminal.EndTag:
-                    throw new NotImplementedException();
+                    return ReadEndTag();
                 case NonTerminal.Attribute:
                     return ReadAttribute();
                 case NonTerminal.AttributeValue:
@@ -931,9 +931,9 @@ namespace Forestry.Deserialize.Xml.Reading
         /// <returns></returns>
         internal bool ReadName()
         {
-            NameMarkup markup = new() {};
+            NameMarkup markup = new();
             MarkupState value = _isMultipleSegments ?
-                EvaluateMultipleMarkup<NameMarkup>(ref markup, out int nameLength, out bool unsupportedCharacter) :
+                EvaluateMultipleMarkup(ref markup, out int nameLength, out bool unsupportedCharacter) :
                 EvaluateNameNonTerminalMarkup(_segment[_segmentPosition..], isFirstCharacter: true, out nameLength, out unsupportedCharacter);
 
             switch (value)
@@ -1008,6 +1008,97 @@ namespace Forestry.Deserialize.Xml.Reading
             _currentTokenType = TokenType.Element;
 
             return true;  // S2-S5
+        }
+
+        /// <summary>
+        /// Read the end tag's starting terminal &lt;/, name, optional spacing and ending terminal
+        /// &gt;. Everything is evaluated before anything is committed (simulated rollback when
+        /// false): the name, the ending terminal after only spacing, and the name against the top
+        /// of the element stack. Then the name is popped and the reader advanced past &gt;.
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadEndTag()
+        {
+            const int startingTerminalLength = 2;
+
+            // Evaluate the name non-terminal after the starting terminal
+            NameMarkup markup = new() { StartingTerminalLength = startingTerminalLength };
+            MarkupState value = _isMultipleSegments ?
+                EvaluateMultipleMarkup(ref markup, out int nameLength, out bool unsupportedCharacter) :
+                EvaluateNameNonTerminalMarkup(_segment[(_segmentPosition + startingTerminalLength)..], isFirstCharacter: true, out nameLength, out unsupportedCharacter);
+
+            switch (value)
+            {
+                case MarkupState.WellFormed:
+                    break;
+                case MarkupState.Malformed:  // S6-S8, S16 malformed whether or not reading is completed
+                    if (unsupportedCharacter)
+                    {
+                        Throwing.ThrowUnsupportedNameCharacter(ref this, offset: startingTerminalLength + nameLength);
+                    }
+                    Throwing.ThrowXmlException(ref this, Throwing.Category.Name, Throwing.Markup.Name, offset: startingTerminalLength + nameLength);
+                    break;
+                case MarkupState.Unknown:
+                    if (!_isReadingCompleted) // S9
+                    {
+                        return false;
+                    }
+                    Throwing.ThrowXmlException(ref this, Throwing.Category.Incomplete, Throwing.Markup.EndTag, offset: RemainingLength);  // S10
+                    break;
+            }
+
+            // Evaluate only optional spacing then the ending terminal, index is the offset of the first non-spacing byte
+            if (!TryPeekNonSpacing(startingTerminalLength + nameLength, out byte character, out long index))
+            {
+                if (!_isReadingCompleted) // S13
+                {
+                    return false;
+                }
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Incomplete, Throwing.Markup.EndTag, offset: RemainingLength);  // S14
+            }
+
+            if (character != EBNF.GreaterThan) // S11, S12, S16, S17
+            {
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Expected, Throwing.Markup.EndingTerminal, foundByte: character, offset: index);
+            }
+
+            // Evaluate the name against the top of the element stack, a contiguous copy capped at the packed length when straddling (rule 16)
+            Span<byte> copy = stackalloc byte[ElementStack.PackedNameLength * 8];
+            scoped ReadOnlySpan<byte> name;
+            if (_isMultipleSegments)
+            {
+                ReadOnlySequence<byte> sequence = _sequence.Slice(SequencePosition).Slice(startingTerminalLength, nameLength);
+                if (sequence.IsSingleSegment)
+                {
+                    name = sequence.FirstSpan;
+                }
+                else
+                {
+                    int length = (int)Math.Min(sequence.Length, copy.Length);
+                    sequence.Slice(0, length).CopyTo(copy);
+                    name = copy[..length];
+                }
+            }
+            else
+            {
+                name = _segment.Slice(_segmentPosition + startingTerminalLength, nameLength);
+            }
+
+            if (!_elementStack.TryPeek(name, out _)) // S15
+            {
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Name, Throwing.Markup.EndTag, offset: startingTerminalLength);
+            }
+
+            // Commit: pop, value, line tracking (spacing may hold line feeds), positions past the ending terminal, tokens
+            bool popped = _elementStack.TryPop(name);
+            Debug.Assert(popped, "The name was peeked on the element stack before popping.");
+
+            AdvanceValue(ref this, startingTerminalLength: startingTerminalLength, valueLength: nameLength, consumedLength: (int)index + 1, lineTracking: false);
+
+            _previousTokenType = _currentTokenType;
+            _currentTokenType = TokenType.ElementEnd;
+
+            return true;
         }
 
         /// <summary>
@@ -1373,7 +1464,13 @@ namespace Forestry.Deserialize.Xml.Reading
         {
             private bool _hasNameCharacter;
 
-            public readonly int StartingTerminalLength => 0;           
+            public int StartingTerminalLength
+            {
+                get;
+                init {
+                    field = value > 0 ? value : throw new InvalidOperationException();
+                }
+            }           
 
             public MarkupState Evaluate(ReadOnlySpan<byte> characters, out int length, out bool unsupportedCharacter)
             {
