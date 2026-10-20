@@ -1,50 +1,84 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# Forestry Deserialize Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### C0. Media-agnostic deserialization
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+- **Rule**: The deserialization package (Forestry.Deserialize) MUST NOT reference any media
+  (XML, JSON, ...). Media syntax (paths, conditions, media-specific dimensions, attributes)
+  lives in the media package.
+- **Rationale**: The media is stripped out to unify the storage model for storage designed for
+  analytics and high write throughput.
+- **Checked by**: The deserialization project has no reference to a media package; review.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### C1. Low memory
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+- **Rule**: Users MUST be able to keep memory low by forward reading and piping media to storage.
+  Memory held by user choice (e.g. reference lookups) may grow.
+- **Rationale**: Multi-GB StanForD files.
+- **Checked by**: A test reading a small and a large document, holding nothing by choice,
+  compares memory.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### C2. Forward-only, async at the edge
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+- **Rule**: Reading MUST be forward-only. Awaiting happens only when buffering; the walk itself
+  is synchronous.
+- **Rationale**: Each Deserializer reads one document. Waiting for data never blocks a thread, so
+  a host can read many documents at once without needing many threads. Readers work over byte
+  sequences from a pipe (a single byte span isn't practical): segments roll through, keeping CPU,
+  cache and memory use low and easing GC pressure, and performance is predictable for both small
+  and very large media.
+- **Checked by**: Review of the public API and the walk.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### C3. Real data
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+- **Rule**: Behavior MUST be verified against real StanForD samples, not assumed.
+  StanForD-specific behavior is an edge case (hook), never the general rule.
+- **Rationale**: Assumptions about StanForD have been wrong before.
+- **Checked by**: At least one test per feature uses a real sample. Other tests use whichever
+  media is easiest to execute (e.g. JSON via `Utf8JsonReader` until the XML reader has path and
+  getters).
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### C4. Tests as assertions
+
+- **Rule**: Each feature's behavior MUST be stated as assertion rows, and each row MUST have a
+  test.
+- **Rationale**: Same as the XML reader's way of working.
+- **Checked by**: Every row maps to a test.
+
+### C5. Design ownership
+
+- **Rule**: Design decisions are the developer's, made in discussion with the AI assistant. The
+  AI assistant proposes options and consequences, and never decides alone.
+- **Rationale**: (a) This is a test of spec-driven development; (b) ideas still mainly come from
+  humans.
+- **Checked by**: Design/clarification tasks are closed by the developer.
+
+### C6. Working example first
+
+- **Rule**: A working end-to-end example (StanForD file → rows) MUST come before performance
+  work. Performance is then measured, not assumed.
+- **Rationale**: Performance matters, but a working example matters more right now.
+- **Checked by**: Plan/task order; performance tasks only after the example works.
+
+## Additional Constraints
+
+- **A0**: Targets net9 and net10.
+- **A1**: No third-party NuGet dependencies in the deserialization package.
+- **A2**: Readers MUST read forward over byte sequences without allocating per value, keeping
+  CPU, GC pressure and memory low and predictable regardless of document size. System.Xml's
+  `XmlReader` doesn't meet this: it decodes to UTF-16, allocates a string per value, and reads
+  from a `Stream` that can block (C2). XML goes through the package's own reader.
+- **A3**: Builds follow the SDK's shared engineering (`Directory.Build.props`, `eng/`,
+  `doc/dev/`), referenced, not copied, including CI/CD.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+- **G0**: The spec-kit markdown is the source of truth and MUST NOT diverge from the code. Board
+  features, tasks and bugs (GitHub Project or Azure DevOps) are motivators for moving forward:
+  they may diverge from the truth, the spec-kit markdown may not.
+- **G1**: Changing a principle is a deliberate amendment (versioned, dated, with a reason).
+  Versions follow MAJOR (principle removed or redefined), MINOR (principle or section added),
+  PATCH (wording only).
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-20
