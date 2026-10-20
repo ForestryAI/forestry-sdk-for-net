@@ -22,9 +22,10 @@ cycle (returns `false`: the caller expands the segment(s) and calls again), prod
 | 4 | Content ready | #22, #40 | `>` after an Element (S3) or an attribute's Value (S5): skip it, content ready = true, clear the spacing flag | continue (never a token); throw after an attribute name (S4: `<a b=>`, reached after `=` is skipped) |
 | 5 | Empty element end | #35, #40 | `/>` in a start tag: pop the element stack, clear the spacing flag | continue (not `/`); **ElementEnd** token; halt when `/` is the last byte; throw when malformed or after an attribute name (S5.a: `<a b=/>`, reached after `=` is skipped) |
 | 6 | Drained? | – | Step 4 may have skipped `>` as the last byte | halt |
-| 7 | Peek starting terminal | #17, #25, #36 | Fill the scratch pad with a starting terminal (+ overshoot), or leave it empty | continue; halt when the pad is incomplete and reading is not completed |
-| 8 | Candidate | #27 | Scratch pad + context → one candidate non-terminal | always continue (no side effects) |
-| 9 | Delegate | per candidate | Read the candidate from the reader position | token, halt (simulated rollback) or throw |
+| 7 | Skip spacing-only text | #48 | Only in the cycle where step 4 skipped the start tag's `>` (current token Element, or Value after Attribute): peek past spacing with `TryPeekNonSpacing`; when the next byte is `<`, skip the spacing with `SkipSingleSpacing()` / `SkipMultipleSpacing()` (never sets the spacing flag). Spacing followed by text is left alone, it starts the text | continue; halt when the spacing runs to the end, nothing skipped; throw Incomplete (CharacterData) when that happens with reading completed |
+| 8 | Peek starting terminal | #17, #25, #36 | Fill the scratch pad with a starting terminal (+ overshoot), or leave it empty | continue; halt when the pad is incomplete and reading is not completed |
+| 9 | Candidate | #27 | Scratch pad + context → one candidate non-terminal | always continue (no side effects) |
+| 10 | Delegate | per candidate | Read the candidate from the reader position | token, halt (simulated rollback) or throw |
 
 ### Context
 
@@ -51,11 +52,11 @@ contentReady` (#34).
 | S2 | Prolog, Content, Misc | `<!--` | Comment | `ReadComment` | built #24 |
 | S3 | Prolog, Content, Misc | `<?` | ProcessingInstruction | `ReadProcessingInstruction` | built #24 |
 | S4 | Prolog, Content | `<` + name starting character | StartTag | `ReadStartTag` | built #37 |
-| S5 | Content | `</` | EndTag | – | not built |
+| S5 | Content | `</` | EndTag | `ReadEndTag` | built #47 |
 | S6 | Start tag | empty | Attribute | `ReadAttribute` | built #40 |
 | S7 | Start tag | `"` or `'` | AttributeValue | `ReadAttributeValue` | built #44 |
-| S8 | Content | empty, `"` or `'` | CharacterData | – | not built |
-| S9 | anything else | – | None (default delegate) | – | not built |
+| S8 | Content | empty, `"` or `'` | CharacterData | `ReadContentCharacterData` | built #48 |
+| S9 | anything else | – | None (default delegate) | `ReadNone` | throws a generic malformed exception (#48), specific explanations are a later task |
 
 An **empty** scratch pad means "no starting terminal starts here". It does **not** mean a name
 starts here. In a start tag every non-starting-terminal byte (`a`, `1`, `=`, `/`, `>`) reaches
@@ -125,6 +126,22 @@ the Attribute candidate.
 18. **Spacing in content may be character data.** Spacing-only character data is skipped by
     default; a reader option later (#34).
 
+    **Indentation never produces a Value token** (#48). Skip spacing (step 3) runs before
+    content ready (step 4), so in the cycle that skips a start tag's `>` the spacing after it is
+    left to step 7, which applies the same rule. Text keeps its spacing at both ends:
+    `<a>
+  A<b/>` gives the Value `
+  A`, `<a>A
+<b/>` gives `A
+`.
+
+    **Character data ends at `<` or `&`** and is the raw bytes before it: control bytes other
+    than tab, line feed and carriage return are malformed, every other byte (quotes, `>`, bytes
+    ≥ 0x80) is plain text, as in literals (rule 21). `&` starts a reference, unsupported in the
+    POC: the text before it is a Value token, then the next cycle starts at `&` (an empty pad,
+    so character data again) and the delegate throws Expected for its length 0 with the
+    unsupported flag. `]]>` is not checked.
+
 ### Attributes
 19. **An attribute needs spacing before it**, but spacing is skipped before the candidate sees
     the pad. Skip spacing records it in the start tag (`_hasSkippedSpacingInStartTag`, carried in
@@ -177,6 +194,11 @@ the Attribute candidate.
     #41's guard throws after `=`, the popped name on `/>`). Anything needed across cycles must be
     stored in the reader (a `ReaderState` field, rule 22) or left out (#35, #41).
 
+    **A value ending exactly at a segment's end is a `Value`, not a `ValueSequence`.** The
+    sequence slice's end position is then the start of the next segment, so `IsSingleSegment`
+    is false although every byte is in the first span; `AdvanceValue` checks the first span's
+    length too (#48's M1).
+
 ### Exceptions
 24. **An exception is a category (why) + a markup (what).** `Throwing.Category` picks the
     message template; the markup only fills it. Pass a found byte (Expected) or bytes
@@ -190,8 +212,13 @@ the Attribute candidate.
     e.g. the processing instruction target).
 
 ### Decided, not built yet
-- **The unsupported exception is not designed** (#43). `&` in a literal (#44) and a non-ASCII
-  name byte (#38) are its two users so far.
+- **The unsupported exception is not designed** (#43). `&` in a literal (#44), `&` in
+  character data (#48) and a non-ASCII name byte (#38) are its users so far.
+- **Candidate None throws one generic malformed exception** (#48): `Throwing.ThrowUnexpectedMarkup`
+  ("… starts no markup allowed here"), an `XmlException` without category or markup, like the
+  unsupported name throw. Its cases (second root, text or an end tag outside the root, a document
+  type after the prolog, `<` without a name, markup inside a start tag, a BOM until #31) need
+  specific category + markup explanations (rule 24) in their own task.
 - **`/>`'s ElementEnd has an empty `Value`.** Exposing the popped name needs storage in the
   reader; revisit later (#35).
 

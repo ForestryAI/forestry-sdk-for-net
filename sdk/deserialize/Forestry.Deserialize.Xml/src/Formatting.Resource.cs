@@ -12,6 +12,8 @@ namespace Forestry.Deserialize.Xml
         internal static string Order => Deserialize.Formatting.GetResourceString(nameof(Order), @"Malformed markup: {0}{1} is out of order");
 
         internal static string Unique => Deserialize.Formatting.GetResourceString(nameof(Unique), @"Malformed markup: {0}{1} is repeated");
+
+        internal static string Unexpected => Deserialize.Formatting.GetResourceString(nameof(Unexpected), @"Malformed markup: {0} starts no markup allowed here");
         #endregion
 
         #region unsupported

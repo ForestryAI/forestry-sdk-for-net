@@ -692,6 +692,12 @@ namespace Forestry.Deserialize.Xml.Reading
                 goto Completed;
             }
 
+            // Skip spacing only character data after the start tag's '>'
+            if (!SkipSpacingOnlyCharacterData())
+            {
+                goto Halted;
+            }
+
             // Read value
             return ReadValue();
 
@@ -703,7 +709,46 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
-        /// When first character == '>' then determine if the element non-terminal 
+        /// Skip spacing only character data in the read cycle where content ready
+        /// skipped the start tag's '>', returning true to continue (i.e. spacing or
+        /// nothing skipped) or false when reading is halted
+        /// </summary>
+        /// <remarks>
+        /// Later read cycles in content skip spacing only character data in
+        /// <see cref="SkipSpacing"/> before content ready
+        /// </remarks>
+        /// <returns></returns>
+        internal bool SkipSpacingOnlyCharacterData()
+        {
+            bool isAfterStartTag = _currentTokenType == TokenType.Element
+                || (_currentTokenType == TokenType.Value && _previousTokenType == TokenType.Attribute);
+
+            if (!(_elementStack.ContentReady && _elementStack.Depth != 0 && isAfterStartTag))
+            {
+                return true;  // not right after a start tag
+            }
+
+            if (!TryPeekNonSpacing(offset: 0, out byte character, out long index))
+            {
+                if (!_isReadingCompleted)
+                {
+                    return false;  // undecided, nothing skipped
+                }
+
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Incomplete, Throwing.Markup.CharacterData, offset: RemainingLength);
+            }
+
+            if (index != 0 && character == EBNF.LessThan)
+            {
+                // Never SkipSpacing() which would set the spacing flag
+                if (_isMultipleSegments) SkipMultipleSpacing(); else SkipSingleSpacing();
+            }
+
+            return true;  // spacing only skipped, or spacing starting text left alone
+        }
+
+        /// <summary>
+        /// When first character == '>' then determine if the element non-terminal
         /// has a content non-terminal after the start tag
         /// </summary>
         /// <returns></returns>
@@ -856,9 +901,9 @@ namespace Forestry.Deserialize.Xml.Reading
                 case NonTerminal.AttributeValue:
                     return ReadAttributeValue();
                 case NonTerminal.CharacterData:
-                    throw new NotImplementedException();
+                    return ReadContentCharacterData();
                 case NonTerminal.None:
-                    throw new NotImplementedException();
+                    return ReadNone();
                 default:
                     string message = "Candidate non-terminal likely added without read value delegation";
 
@@ -1102,6 +1147,70 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
+        /// The default delegate when the scratch pad starts no candidate non-terminal
+        /// allowed in the context, always malformed
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadNone()
+        {
+            // TODO: a specific malformed explanation per context and scratch pad (new task)
+            Throwing.ThrowUnexpectedMarkup(ref this, _segment[_segmentPosition]);
+            return false;
+        }
+
+        /// <summary>
+        /// Read character data in content up to the next markup (less than) or
+        /// reference (ampersand)
+        /// </summary>
+        /// <returns></returns>
+        internal bool ReadContentCharacterData()
+        {
+            CharacterDataMarkup markup = new();
+            MarkupState value = _isMultipleSegments ?
+                EvaluateMultipleMarkup(ref markup, out int length, out bool unsupportedCharacter) :
+                EvaluateCharacterDataNonTerminalMarkup(_segment[_segmentPosition..], out length, out unsupportedCharacter);
+
+            switch (value)
+            {
+                case MarkupState.WellFormed:
+                    if (length == 0)
+                    {
+                        // Only an ampersand at the reader position, the text before it was the previous token
+                        Debug.Assert(unsupportedCharacter, "Candidate S8 never starts character data at a less than.");
+
+                        // TODO: unsupported exception not designed yet (#43), a reference is well-formed
+                        Throwing.ThrowXmlException(ref this, Throwing.Category.Expected, Throwing.Markup.CharacterData, foundByte: EBNF.Ampersand);  // S1
+                    }
+
+                    AdvanceValue(ref this, startingTerminalLength: 0, valueLength: length, consumedLength: length, lineTracking: false);  // S0, S2, S6, S7
+                    goto Completed;
+                case MarkupState.Malformed:
+                    PeekCharacter(length, out byte found);
+                    Throwing.ThrowXmlException(ref this, Throwing.Category.Expected, Throwing.Markup.CharacterData, foundByte: found, offset: length);  // S3
+                    break;
+                case MarkupState.Unknown:
+                    if (!_isReadingCompleted)
+                    {
+                        return false;  // S4: simulate rollback without advancement
+                    }
+
+                    Throwing.ThrowXmlException(ref this, Throwing.Category.Incomplete, Throwing.Markup.CharacterData, offset: RemainingLength);  // S5
+                    break;
+                default:
+                    Debug.Assert(false, "The character data evaluation returned an unexpected value.");
+                    break;
+            }
+
+            return false;
+
+            Completed:
+                _previousTokenType = _currentTokenType;
+                _currentTokenType = TokenType.Value;
+
+                return true;
+        }
+
+        /// <summary>
         /// Read attribute name non-terminal starting with a spacing non-terminal 
         /// before the name non-terminal
         /// </summary>
@@ -1214,7 +1323,9 @@ namespace Forestry.Deserialize.Xml.Reading
             {
                 ReadOnlySequence<byte> value = reader._sequence.Slice(reader.SequencePosition).Slice(startingTerminalLength, valueLength);
 
-                if (value.IsSingleSegment)
+                // A value ending exactly at a segment's end isn't a single segment (its end
+                // position is the start of the next segment) though its bytes are all first
+                if (value.IsSingleSegment || value.FirstSpan.Length == valueLength)
                 {
                     reader.Value = value.FirstSpan;
                     reader.ValueSequence = ReadOnlySequence<byte>.Empty;
@@ -1367,6 +1478,44 @@ namespace Forestry.Deserialize.Xml.Reading
         }
 
         /// <summary>
+        /// Evaluates markup state for character data where the following are
+        /// malformed characters:
+        ///  - control bytes except tabs, line feeds and carriage returns
+        ///
+        /// The ampersand (an unsupported reference) and the less than (markup) are
+        /// well-formed, ending the character data.  Every other byte is plain text.
+        /// </summary>
+        /// <param name="characters"></param>
+        /// <param name="length"></param>
+        /// <param name="unsupportedCharacter"></param>
+        /// <returns></returns>
+        internal static MarkupState EvaluateCharacterDataNonTerminalMarkup(
+            ReadOnlySpan<byte> characters,
+            out int length,
+            out bool unsupportedCharacter
+        ) {
+            unsupportedCharacter = false;
+
+            for (length = 0; length < characters.Length; length++)
+            {
+                switch (characters[length])
+                {
+                    case EBNF.LessThan:
+                        return MarkupState.WellFormed;  // markup
+                    case EBNF.Ampersand:
+                        unsupportedCharacter = true;
+                        return MarkupState.WellFormed;  // a reference
+                    case EBNF.Tab or EBNF.LineFeed or EBNF.CarriageReturn:
+                        continue;
+                    case < 0x20:
+                        return MarkupState.Malformed;  // a control byte except tabs, line feeds or carriage returns
+                }
+            }
+
+            return MarkupState.Unknown;  // no markup in this span
+        }
+
+        /// <summary>
         /// Scans a PI target (S5 + S6) in a single loop, one character at a time, carrying
         /// its state across the segments of a value sequence
         /// </summary>
@@ -1489,6 +1638,17 @@ namespace Forestry.Deserialize.Xml.Reading
             public MarkupState Evaluate(ReadOnlySpan<byte> characters, out int length, out bool unsupportedCharacter) =>
                 EvaluateLiteralNonTerminalMarkup(characters, Quote, out length, out unsupportedCharacter);
             }
+
+        private struct CharacterDataMarkup: IMarkup
+        {
+            /// <summary>
+            /// Character data has no starting terminal, a quote in the scratch pad is content
+            /// </summary>
+            public readonly int StartingTerminalLength => 0;
+
+            public MarkupState Evaluate(ReadOnlySpan<byte> characters, out int length, out bool unsupportedCharacter) =>
+                EvaluateCharacterDataNonTerminalMarkup(characters, out length, out unsupportedCharacter);
+        }
 
         private interface IMarkup
         {

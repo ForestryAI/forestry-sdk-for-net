@@ -49,6 +49,22 @@ namespace Forestry.Deserialize.Xml
 
             throw new XmlException(message + GetPositionMessage(lineNumber, linePosition), null, null, lineNumber, linePosition);
         }
+
+        /// <summary>
+        /// Temporary throw for a candidate non-terminal of None, outside the category and
+        /// markup pair until each context and scratch pad gets a specific explanation
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="foundByte">the first byte at the reader position</param>
+        /// <param name="offset">bytes from the committed position to the found byte (#43)</param>
+        [DoesNotReturn]
+        public static void ThrowUnexpectedMarkup(ref Utf8XmlReader reader, byte foundByte, long offset = 0)
+        {
+            string message = Deserialize.Formatting.Format(Formatting.Unexpected, ToString(foundByte));
+            (long lineNumber, long linePosition) = GetPosition(ref reader, offset);
+
+            throw new XmlException(message + GetPositionMessage(lineNumber, linePosition), null, null, lineNumber, linePosition);
+        }
         #endregion
 
         #region invalid operation
@@ -210,6 +226,7 @@ namespace Forestry.Deserialize.Xml
             EmptyElementEndingTerminal,
             Name,
             AttributeValue,
+            CharacterData,
             EqualsSignTerminal,
             Spacing
         }

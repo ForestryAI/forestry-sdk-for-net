@@ -318,6 +318,7 @@ would make this possible later without redesigning the format first.
 | [#45](https://github.com/ForestryAI/forestry-sdk-for-net/issues/45) Skipped equals lost when the attribute value halts | 15/15m (AI) | 15/15m (AI) | 5m | 5/5m | 5/5m | 15/15m (AI) | 5/5m | 0 | 0 | 0 | 0 | yes | 6 architecture flow |
 | [#41](https://github.com/ForestryAI/forestry-sdk-for-net/issues/41) Empty pad guard read attribute delegate | 15/15m (AI) | 15/15m (AI) | 5m | 5/0m | 5/0m | 15/15m (AI) | 5/0m | 0 | 0 | 0 | 0 | yes | 10 coding |
 | [#46](https://github.com/ForestryAI/forestry-sdk-for-net/issues/46) Refactor name and literal markup state | 15/15m (AI) | 60/60m (AI) | 5m | 5/0m | 5/0m | 30/20m (AI) | 5/0m | 0 | 2 | 1 | 0 | yes | 9 integrated and verified |
+| [#47](https://github.com/ForestryAI/forestry-sdk-for-net/issues/47) Read end tag | 30/60m (AI) | 60/60m (AI) | 5m | 5/0m | 5/0m | 30/15m (AI) | 5/0m | 0 | 0 | 0 | 0 | yes | 9 lots of hint plus coded the rest of a weak shell |
 
 A short retrospective on how the numbers actually felt - what was better or worse than previous
 tasks, any pattern worth watching - belongs as a closing comment on the task itself when it moves
