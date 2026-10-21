@@ -120,7 +120,8 @@ Workflow). Terms are defined under Definitions.
   Forestry.Deserialize.Xml).
 - **Type definition**: A user's flat class plus its property definitions, built once per
   deserialization.
-- **Row**: One instance of a type definition.
+- **Row**: The name-value pairs shredded for one type definition, convertible to an instance of
+  its C# class.
 - **Shredding**: Taking parts of one document into one or more flat type definitions (rows and
   columns), rather than mirroring the document's hierarchy.
 
