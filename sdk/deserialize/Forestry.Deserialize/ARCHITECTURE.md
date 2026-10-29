@@ -1,5 +1,9 @@
 # ARCHITECTURE.md — Forestry Deserialize
 
+> **Superseded (2026-10-22)**: this describes the pre-spec-kit design, which is wrong (see
+> `specs/001-walking-skeleton/research.md` R0). The truth is `.specify/memory/constitution.md` and
+> `specs/`. Do not infer design from this file.
+
 ## 1. Purpose
 
 **Forestry Deserialize** reads large documents and streams `Value`s out one at a time instead of

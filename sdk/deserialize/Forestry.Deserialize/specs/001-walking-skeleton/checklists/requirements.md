@@ -37,3 +37,7 @@
   abstractions (cache, type/property definitions, deserializer, delegation) appear in the spec.
 - Question 1 resolved 2026-10-22: start/end dimensions (FR-003). Question 2 resolved 2026-10-22: S1 limits not in this slice (FR-012); the
   plan's Constitution Check must record S1 as a justified deviation.
+- Rewritten 2026-10-26 after the design discussion (constitution 2.0.0): start/end dimensions are
+  gone with the Value model; S1 limits are now FR-014. `Row`, options and policies appear in the
+  spec because the developer extends `Row` and attaches policies: they are user-facing. FR-012 names
+  type, property and parameter definitions as the targets a policy attaches to.
