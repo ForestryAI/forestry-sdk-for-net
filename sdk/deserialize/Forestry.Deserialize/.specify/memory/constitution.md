@@ -142,7 +142,7 @@ Workflow). Terms are defined under Definitions.
   media-specific dimensions); never a value and never cast. Per-occurrence metadata is kept only
   when a policy or option asks for it.
 - **Policy**: Behavior attached to a type, property or parameter definition at a row lifecycle
-  moment (construction, member set, child row start, end, emit, retention), by attribute or by
+  moment (construction, member set, child row start, end, hand-out, retention), by attribute or by
   options; options win over attributes.
 - **Shredding**: Taking parts of one document into one or more flat type definitions (rows of
   typed members), rather than mirroring the document's hierarchy.

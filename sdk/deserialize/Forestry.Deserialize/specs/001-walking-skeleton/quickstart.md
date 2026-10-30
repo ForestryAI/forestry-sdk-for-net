@@ -17,8 +17,9 @@ dotnet test test/Forestry.Deserialize.Tests.csproj
 
 ## Scenarios (each maps to tests written before the code, C4)
 
-`Log : Row { LogKey: int, LogVolume: decimal }`, registered on `XmlDeserializeOptions` (e.g.
-`options.Rows.Add<Log>()`, member name Deferred, R12), unless stated otherwise.
+`Log : Row { LogKey: int, LogVolume: decimal }`, added to `DeserializeXmlOptions` (e.g.
+`options.Rows.Add<Log>()`, member name Deferred, R12), unless stated otherwise. XML scenarios run
+through both entry points (sync and async) and read rows by a plain cast.
 
 | # | Setup | Expected | Spec |
 |---|---|---|---|
@@ -34,7 +35,7 @@ dotnet test test/Forestry.Deserialize.Tests.csproj
 | 10 | Test policy by attribute and by options on the same moment (core) | Only the options' policy acts | US4-3, FR-012 |
 | 11 | Change options after first use (core) | Throws | US4-4, FR-013 |
 | 12 | `<LogKey>abc</LogKey>` | Throws, naming the member, its place and `Log` | FR-007 |
-| 13 | Registered class with a nested-class property, not extending `Row`, with constructor parameters, with no constructor that can be chosen, or with two marked `[RowConstructor]`; or no class registered (core) | Throws before any byte is read | FR-008 |
+| 13 | Added class with a nested-class property, not extending `Row` (`Rows.Add(typeof(NotARow))` throws when added), with constructor parameters, with no constructor that can be chosen, or with two marked `[RowConstructor]`; or no class added (core) | Throws before any byte is read | FR-008 |
 | 14 | Document cut off inside an open `Log` | Throws (from the media's reader); the open row is never handed out | Spec edge case |
 | 15 | Generated documents with 1,000 vs 1,000,000 `Log` rows, rows discarded | Memory does not grow with the count | SC-003, C1 |
 

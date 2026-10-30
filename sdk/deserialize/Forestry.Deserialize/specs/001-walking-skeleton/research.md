@@ -192,7 +192,7 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
 - **Decision**: Static synchronous and asynchronous `Deserialize` methods in the deserialization
   package take string, memory, stream or pipe plus options, with no type argument: they return the
   abstract `Row`, and the row types come from the options (R12). The media is chosen by the options
-  type (e.g. `XmlDeserializeOptions`).
+  type (e.g. `DeserializeXmlOptions`).
 - **Shapes**:
   - `string`, `ReadOnlyMemory<byte>` (`byte[]` converts implicitly): lazy `IEnumerable<Row>`.
   - `Stream`, `PipeReader`: `IAsyncEnumerable<Row>`.
@@ -276,10 +276,10 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   Both add the referenced type automatically, and neither hands its rows out unless the type is
   added explicitly (R12). Key references belong to the key-references slice (spec 002-005):
   Deferred.
-- **Fail fast when building definitions (developer, 2026-10-26)**: a registered type whose
+- **Fail fast when building definitions (developer, 2026-10-26)**: an added type whose
   constructor cannot be satisfied is rejected before any byte is read. Cases for the ancestors
   slice, Deferred (spec 002/003): a parameter type that does not extend `Row` (and is not a lookup type); a
-  parameter type extending `Row` that is not registered (R12); several public constructors with
+  parameter type extending `Row` that is not added (R12); several public constructors with
   none marked as the one to use; more than one constructor marked. A type with no attributes and
   no options is not an error: its
   defaults apply. Detectable only while reading: a row constructed before any row of a parameter's
@@ -298,7 +298,7 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   from the explicitly added row types and the row types their constructors need (R12), and is
   fixed from then on (an
   immutable, frozen dictionary from `Type` to type definition; reads need no locking). It is not
-  global: a process-wide registry would let one options instance see types registered by another,
+  global: a process-wide registry would let one options instance see types added by another,
   breaking S0 per options and isolating nothing between deserializations running at once (R6). The
   same lookup serves `Pipeline(Type)` and the S0 check at read time (R6).
 - **Generic property definitions (developer, 2026-10-29)**: A property definition is generic,
@@ -309,7 +309,7 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   type definition's constructor delegate, and each `PropertyDefinition<T>`'s setter, an
   `Action<Row, T>` (`Delegate.CreateDelegate` on property setters; compiled expressions for fields).
   A source generator can come later (trimming/AOT).
-- **Slice impact**: This slice has parameterless constructors only: a registered type whose
+- **Slice impact**: This slice has parameterless constructors only: an added type whose
   constructor has parameters is rejected (FR-008). Parameter definitions exist in the model and get
   retained rows in specs 002-005.
 - **Status**: Construction model, fail fast when building definitions, parameters from retained rows
@@ -356,12 +356,12 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
       row and runs its policies (R2, R7).
 
     All three are named `Pipeline` because each runs a core pipeline with its policies.
-  - The core checks every handover: a type not registered throws (S0); a member not belonging to the
+  - The core checks every handover: a type not added throws (S0); a member not belonging to the
     top open row's type definition throws; `Pipeline()` with no open row throws. The core keys its lookups on something stable (the property
     definition built from the member, or metadata token plus module), not on raw `MemberInfo`
     equality, which depends on how the member was obtained.
   - The abstract `DeserializeOptions` carries the generic settings, policies, converters and
-    limits; media packages extend it (e.g. `XmlDeserializeOptions`) and supply their
+    limits; media packages extend it (e.g. `DeserializeXmlOptions`) and supply their
     `RowEnumerator` and `RowAsyncEnumerator` subclasses and default converters (R14) through it.
   - Definitions are immutable and hold no per-document state, so one options instance can serve
     several deserializations at once. Everything per document lives in the `DeserializationState`
@@ -604,7 +604,7 @@ role and name, never its design as a precedent (R0).
   - **A. Name only**: a row or member matches its name anywhere (this slice). Simple; no validation
     of roots or nesting; no skipping.
   - **B. Paths**: absolute or relative to a parent row (e.g. `Log` under `Stem` as
-    `SingleTreeProcessedStem/Log`), by attribute or options; allows checking that registered types
+    `SingleTreeProcessedStem/Log`), by attribute or options; allows checking that added types
     agree on the root once per options.
   - **C. An internal structure tree** built once per options, allowing validation and skipping whole
     subtrees (the parts of StanForD never read).
@@ -678,6 +678,9 @@ role and name, never its design as a precedent (R0).
   0x1F between name and value, 0x1E between pairs (forbidden in XML 1.0 content; a JSON value
   containing one throws in the extension). The core keeps nothing from the context by default; a
   metadata policy copies what it needs (R4).
+- **Media dimensions Deferred (developer, 2026-10-30)**: the XML media needs no dimensions yet, so
+  `Dimensions` and the dimensions builder are left out of `FieldContext` until a slice needs them;
+  this slice's `FieldContext` has `Depth`, `Name` and `Path`.
 - **Status**: The four members, byte spans with extensions, `Dimensions` naming and a rented-byte
   builder Confirmed (developer, 2026-10-29); delimiters and the builder's API Deferred
   (implementation)

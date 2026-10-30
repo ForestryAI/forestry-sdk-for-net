@@ -24,7 +24,7 @@ moments are part of the design now (constitution 2.0.0).
 
 ## User Scenarios & Testing *(mandatory)*
 
-The user of this feature is a developer who registers a class extending `Row` in the options of a
+The user of this feature is a developer who adds a class extending `Row` to the options of a
 media (XML in this feature), passes a document and those options to the deserialization package's
 entry point, and gets rows back as the abstract `Row`. A row is an instance of the developer's
 class whose typed members hold the values shredded for one occurrence of the class in the document.
@@ -34,7 +34,7 @@ Scenarios are tested with small hand-written XML documents through the real XML 
 ### User Story 1 - Shred a flat class into rows (Priority: P1)
 
 A developer has a flat class extending `Row` (e.g. `Log` with members `LogKey` and `LogVolume`) and
-a document. They register the class in the options, deserialize the document and get one row per
+a document. They add the class to the options, deserialize the document and get one row per
 occurrence of the class in the document, each holding its typed values.
 
 **Why this priority**: This is the walking skeleton itself: the smallest end-to-end path from a
@@ -48,11 +48,11 @@ come out.
 
 1. **Given** a class `Log : Row { LogKey: integer, LogVolume: decimal number }` and a document with
    two `Log` occurrences (`LogKey` 1, `LogVolume` 0.59, then `LogKey` 2, `LogVolume` 0.50), **When**
-   the document is deserialized with `Log` registered, **Then** exactly two rows come out, in document
+   the document is deserialized with `Log` added, **Then** exactly two rows come out, in document
    order, with those member values.
 2. **Given** the same class and a document that also contains data outside any `Log` occurrence,
    **When** deserialized, **Then** that data is ignored and the same two rows come out.
-3. **Given** a document with a root and no `Log` occurrence, **When** deserialized with `Log` registered,
+3. **Given** a document with a root and no `Log` occurrence, **When** deserialized with `Log` added,
    **Then** no rows come out and no error is raised.
 
 ---
@@ -92,7 +92,7 @@ synchronous result.
 
 **Acceptance Scenarios**:
 
-1. **Given** the document from Story 1 read asynchronously, **When** deserialized with `Log` registered,
+1. **Given** the document from Story 1 read asynchronously, **When** deserialized with `Log` added,
    **Then** the same rows come out, in the same order, as with synchronous input.
 2. **Given** asynchronous input, **When** the first `Log` occurrence has ended, **Then** its row is
    available to the developer before the data of the second occurrence is read.
@@ -103,7 +103,7 @@ synchronous result.
 
 ### User Story 4 - Change behavior with policies (Priority: P2)
 
-Behavior at a row's lifecycle moments (construction, member set, end, hand-out, retention) is set by
+Behavior at a row's lifecycle moments (in this slice: construction, member set, hand-out) is set by
 policies. Built-in defaults give Story 1's behavior. The developer can attach a policy to a type or
 a property, by attribute on the class or through the options; options win over attributes.
 
@@ -135,12 +135,11 @@ acts.
   allowed).
 - A member's text cannot be converted to its type (e.g. `"abc"` for `LogKey`): deserialization fails
   fast with an error identifying the member, its place in the document, and the class.
-- The registered class has a property that is not a built-in type (e.g. a nested class), does not
+- The added class has a property that is not a built-in type (e.g. a nested class), does not
   extend `Row`, has no constructor that can be chosen (several public ones and none marked, or more
   than one marked), or (in this slice) its chosen constructor has parameters: deserialization is
-  rejected
-  before any byte is read.
-- No row type is registered: deserialization is rejected before any byte is read.
+  rejected before any byte is read.
+- No row type is added: deserialization is rejected before any byte is read.
 - Two consecutive `Log` occurrences: each becomes its own row.
 - The document ends while an occurrence is still open: deserialization fails fast, and the open
   occurrence never comes out as a row.
@@ -164,8 +163,8 @@ acts.
   to it with `AsType<T>()`; converting to a different class MUST fail naming both classes.
 - **FR-007**: A member whose text cannot be converted to its type MUST make deserialization fail fast
   with an error identifying the member, its place in the document and the class.
-- **FR-008**: Before any byte is read, deserialization MUST reject: no registered class; a
-  registered class with a property that is not a built-in type, that does not extend `Row`, for
+- **FR-008**: Before any byte is read, deserialization MUST reject: no added class; an added
+  class with a property that is not a built-in type, that does not extend `Row`, for
   which no constructor can be chosen (several public constructors and none marked as the one to
   use, or more than one marked), or (in this slice) whose chosen constructor has parameters.
 - **FR-009**: The document MUST be read once, forward only; each row MUST become available as soon
@@ -173,11 +172,13 @@ acts.
   the rest of the document.
 - **FR-010**: Synchronous and asynchronous input with the same content, however it is split into
   buffers, MUST produce the same rows.
-- **FR-011**: Row lifecycle moments (construction, member set, child row start, end, hand-out,
-  retention) MUST be policy points. Built-in default policies MUST give FR-003 to FR-005.
-- **FR-012**: Policies MUST be attachable to type, property and parameter definitions both by
-  attribute and through the options. For the same moment and target, the options MUST win over
-  attributes.
+- **FR-011**: In this slice, construction, member set (convert, set) and hand-out MUST be policy
+  points; the open-row stack's push, completion and pop are fixed. Other moments (child row start,
+  retention, storing by key, resolving a key) come with later slices (research R7). Built-in
+  default policies MUST give FR-003 to FR-005.
+- **FR-012**: Policies MUST be attachable to type and property definitions both by attribute and
+  through the options (parameter definitions come with a later slice). For the same moment and
+  target, the options MUST win over attributes.
 - **FR-013**: Options MUST become read-only when first used for a deserialization; a later change
   MUST fail.
 - **FR-014**: The constitution's S1 fail-fast limits (unexpected root, no match within a depth or
@@ -209,7 +210,7 @@ acts.
   apart from the rows the developer chooses to keep.
 - **SC-004**: A developer gets from a class and a document to typed rows with one deserialize call
   and one conversion per row, without any other setup than creating the media's options and
-  registering the class.
+  adding the class.
 
 ## Assumptions
 

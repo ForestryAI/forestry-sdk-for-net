@@ -5,7 +5,7 @@ Entities follow [research.md](research.md); the R-item behind each is named. Nam
 
 ## Options (existing `DeserializeOptions`, R6, R12)
 
-Abstract; a media extends it (`XmlDeserializeOptions`) and supplies its `RowEnumerator` /
+Abstract; a media extends it (`DeserializeXmlOptions`) and supplies its `RowEnumerator` /
 `RowAsyncEnumerator` subclasses and default converters. Owns and builds all definitions.
 
 | Holds | Meaning |
@@ -64,9 +64,9 @@ is boxed.
 
 ## Field context (new, R15)
 
-`readonly ref struct`, handed over with each value: `Depth`, `Name`, `Path`, `Dimensions` (UTF-8 byte
-spans for the text members; `Dimensions` holds media-specific delimited name-value pairs built from
-rented bytes). Nothing in it is kept unless a metadata policy copies it.
+`readonly ref struct`, handed over with each value: `Depth`, `Name`, `Path` (UTF-8 byte spans for
+the text members). Nothing in it is kept unless a metadata policy copies it. Media dimensions (a
+`Dimensions` member of delimited name-value pairs built from rented bytes) are Deferred.
 
 ## Deserialization state (new, R2)
 

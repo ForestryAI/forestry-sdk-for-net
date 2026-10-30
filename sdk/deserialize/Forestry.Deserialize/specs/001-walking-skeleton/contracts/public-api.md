@@ -16,7 +16,7 @@ No type argument and no span overload (R3). The row types come from the options 
 chosen by the options type:
 
 ```csharp
-var options = new XmlDeserializeOptions();
+var options = new DeserializeXmlOptions();
 options.Rows.Add<Log>();                      // member name Deferred (implementation), R12
 foreach (Row row in Deserialization.Deserialize(xml, options)) { ... }
 ```
@@ -45,7 +45,7 @@ Behavior:
 | Read-only once used | Any change after first use throws | US4, FR-013 |
 | Media enumerators (abstract, supplied by the media's options) | The media's `RowEnumerator` / `RowAsyncEnumerator` subclasses, plus its default converters | C0, R2 |
 
-`XmlDeserializeOptions` (in `Forestry.Deserialize.Xml`) extends it. On first use the options build a
+`DeserializeXmlOptions` (in `Forestry.Deserialize.Xml`) extends it. On first use the options build a
 fixed lookup of their row types (R5); it is per options, never global.
 
 ## Row and Field (`Forestry.Deserialize`, R4)
@@ -90,9 +90,9 @@ class.
 | `Pipeline(PropertyInfo property, ReadOnlySpan<byte> utf8, in FieldContext context)`, `Pipeline(FieldInfo field, ReadOnlySpan<byte> utf8, in FieldContext context)` | Member | Converts `utf8` by the member's converter and sets it on the top open row; a member not of that row's type throws |
 | `Pipeline()` | Type | Completes the top open row, hands it out (default), pops it; no open row throws |
 
-`FieldContext` is a `readonly ref struct` with `Depth`, `Name`, `Path` and `Dimensions`; text members
-are UTF-8 byte spans, with extensions that turn them into strings or a dictionary when asked. A
-media builds `Dimensions` with rented bytes (R15).
+`FieldContext` is a `readonly ref struct` with `Depth`, `Name` and `Path`; text members are UTF-8
+byte spans, with extensions that turn them into strings when asked. Media dimensions (a
+`Dimensions` member built from rented bytes, R15) are Deferred to the slice that needs them.
 
 ## Converters (core, R14; name "Converter" or "Deserializer" Deferred)
 

@@ -65,7 +65,7 @@ note are in research.md.
 | C1 Partial deserialization | Pass | Pass | The core keeps no reference to a row once handed out; per-occurrence metadata is opt-in (R4, R7). SC-003 test. |
 | C2 Single pass shredding | Pass | Pass | One forward pass; definitions, converters and policies resolved once per options (R6, R7, R14). |
 | C3 Real media reader | Pass | Pass | Shredding tests in `Forestry.Deserialize.Xml.Tests`; core tests reference no media (R11). |
-| C4 Test-first | Pass | Pass | `/speckit-tasks` orders test shells before code; test review task on the board. |
+| C4 Test-first | Pass | Pass | In every story, test shells come before any code, declarations included; then a test review task on the board (tasks.md, no Foundational phase). |
 | C5 Design ownership | Pass | Pass | Every research item Confirmed, Rejected or Deferred by the developer; Deferred names confirmed in code review. |
 | C6 Working example first | Pass | Pass | No performance work in this slice. |
 | D0 Public documentation | Pass | Pass | Option B now (XML docs on, missing docs as warnings); A once a real StanForD document deserializes (R9). |
@@ -102,7 +102,7 @@ Forestry.Deserialize/                # references no media (C0)
 │   ├── DeserializeOptions*.cs       # abstract options, row type lookup, read-only after use (R5, R6)
 │   ├── Rows/                        # Row, Field (R4)
 │   ├── Reading/                     # RowEnumerator, RowAsyncEnumerator, RowState, DeserializationState,
-│   │                                # Pipeline calls, FieldContext, dimensions builder, PipeReaderBuffering (R2, R15)
+│   │                                # Pipeline calls, FieldContext, PipeReaderBuffering (R2, R15)
 │   ├── Definitions/                 # type, PropertyDefinition<T>, parameter definitions (R5, R6)
 │   ├── Converters/                  # Converter<T>, factories, built-ins (R14; name Deferred)
 │   ├── Policies/                    # two pipelines, slots, defaults, precedence (R7)
@@ -112,7 +112,7 @@ Forestry.Deserialize/                # references no media (C0)
 Forestry.Deserialize.Xml/            # references Forestry.Deserialize
 ├── src/
 │   ├── Utf8XmlReader ...            # existing reader (element reading: BLOCKING.md phase 2)
-│   ├── XmlDeserializeOptions.cs     # extends DeserializeOptions; supplies enumerators, default converters
+│   ├── DeserializeXmlOptions.cs     # extends DeserializeOptions; supplies enumerators, default converters
 │   ├── XmlRowEnumerator.cs          # RowEnumerator subclass (R2)
 │   ├── XmlRowAsyncEnumerator.cs     # RowAsyncEnumerator subclass (R2)
 │   └── XmlRowReading.cs             # shared override logic: tokens -> Pipeline calls, association (R2, R6, R13 A)
