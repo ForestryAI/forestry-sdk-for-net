@@ -98,9 +98,9 @@ Workflow). Terms are defined under Definitions.
 ### S0. Developer-chosen types only
 
 - **Covers**: Security
-- **Rule**: Deserialization MUST only create rows of the types the developer chose through the
-  options (registered, or found in an assembly the developer names); it never creates a type named
-  or chosen by the input, and never scans assemblies the developer did not name.
+- **Rule**: Deserialization MUST only create rows of the types the developer added through the
+  options, and of the row types their constructors need; it never creates a type named or chosen
+  by the input, and never scans assemblies.
 - **Rationale**: Classic deserialization vulnerability (input-chosen types); the package is public.
 - **Checked by**: Review; a test where input names an unknown type creates nothing.
 
@@ -169,8 +169,9 @@ Workflow). Terms are defined under Definitions.
   - C3 redefined: behavior is tested through the real XML reader (JSON later), not fake Values.
   - C1, C2 and S1 reworded to rows and their typed members; S1 adds missing ancestor data as a
     fail-fast case.
-  - S0 reworded to rows of types chosen through the options, registered or found in a named
-    assembly (the entry points take no type argument).
+  - S0 reworded to rows of types added through the options and the row types their constructors
+    need (the entry points take no type argument); reworded 2026-10-30, after the 2.0.0 approval,
+    to drop assembly scanning (research R12); approved by the developer 2026-10-30.
   - Definitions: Value removed; Row redefined from "name-value pairs convertible to an instance"
     to "an instance of a class extending `Row`"; Document, Field and Policy added; Type definition
     gains parameter definitions.
@@ -179,4 +180,4 @@ Workflow). Terms are defined under Definitions.
     value of a row" to metadata about a member; values live on the row's typed members (research
     R4).
 
-**Version**: 2.0.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-29
+**Version**: 2.0.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-30

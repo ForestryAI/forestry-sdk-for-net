@@ -10,7 +10,7 @@ Abstract; a media extends it (`XmlDeserializeOptions`) and supplies its `RowEnum
 
 | Holds | Meaning |
 |---|---|
-| Row types | Registered explicitly or found in an assembly the developer names (R12) |
+| Row types | Added explicitly (only these are handed out by default), plus the row types their constructors need, added automatically (R12) |
 | Row type lookup | Built when the options lock at first use: a fixed map from `Type` to type definition, per options, never global (R5) |
 | Converters | By target type, with factories (R14) |
 | Policies | By type, property, parameter, and options-wide (R7) |
@@ -51,7 +51,7 @@ is boxed.
 | Field | Meaning |
 |---|---|
 | Parameter | Constructor parameter (name, type) |
-| Value | A row of its type: first from the open-row stack (a partial ancestor, e.g. a `Stem`), then from retained completed rows (e.g. a `Contract`), then the parameter's C# default value; else fail fast (S1) |
+| Value | A row of its type: first from the open-row stack (a partial ancestor, e.g. a `Stem`), then from retained completed rows, then the parameter's C# default value; else fail fast (S1) |
 | Policies | Resolved per slot (R7) |
 
 ## Row and Field (new, R4)
@@ -75,7 +75,7 @@ One per deserialization, in the core:
 | Holds | Meaning |
 |---|---|
 | Open-row stack | `Pipeline<T>()` pushes, `Pipeline()` pops the top; rows stay across read cycles until popped |
-| Retained rows | Completed rows a constructor needs that are not open ancestors (spec 002/003) |
+| Retained rows | Completed rows a constructor needs that are not open ancestors (spec 002/003); rows stored by key for key references (key-references slice) |
 | Row to hand out | The row completed in the current call |
 
 `Dispose` clears it; rows still open then are never handed out.

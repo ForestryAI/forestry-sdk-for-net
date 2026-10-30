@@ -145,8 +145,8 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   read cycles (a row often starts in one buffer and gets its fields in the next):
   - a **stack of open rows**: `Pipeline<T>()` pushes, `Pipeline()` pops the top; a `Log` is pushed
     on top of its open (partial) `Stem`; rows are kept across cycles until popped;
-  - retained rows: completed rows a constructor needs, and rows kept for the whole deserialization
-    (e.g. `Contract`) (R5, R7);
+  - retained rows: completed rows a constructor needs, and rows stored by key for key references
+    (e.g. `Contract`, spec 002-005) (R5, R7);
   - a composed row not yet handed out.
 - **New implementation**: `RowEnumerator`, `RowAsyncEnumerator`, `RowState` and
   `DeserializationState` are written new. The existing `ReadingStatus`, `IReaderState`,
@@ -245,8 +245,7 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   concrete type: its constructor is called with values for its parameter definitions. It sets no
   properties itself. Its property definitions each set one property or field of the derived row
   instance with a value of the right type, through a setter (R14). A child row's constructor
-  receives the rows it needs (e.g. `Log(Stem stem, Contract contract)`) and copies the values it
-  needs, so rows stay flat and nothing downstream follows references. The type
+  receives the ancestor rows it needs (e.g. `Log(Stem stem)`) and copies the values it needs, so rows stay flat and nothing downstream follows references. The type
   pipeline's construct slot calls this (R7); the media never does. Setters are used by the member
   pipeline (R14).
 - **Parameters come from open or retained rows (developer, 2026-10-27/29)**: A parameter looks in the
@@ -255,14 +254,28 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   - **Ancestors come from the stack, partial**: a `Stem` is still open, so partial, while the `Log`
     rows inside it are constructed. It needs no retention: it stays on the stack until its own
     `Pipeline()`.
-  - **Retention is only for rows that are not open ancestors**: e.g. a `Contract` completed earlier
-    in the document, before any `Stem`. Default (POC): the latest completed row of each such type a
-    constructor needs is retained; a retention policy can keep rows for the whole deserialization
-    instead (R7; keyed lookups come later).
+  - **Retention is only for rows that are not open ancestors**: a completed row a constructor
+    needs. Default (POC): the latest completed row of each such type is retained; a retention policy
+    can keep rows longer (R7).
   - No path or structure definitions are needed: the open-row stack follows the media's own nesting.
+  - **Every parameter is a row (developer, 2026-10-30)**: each constructor parameter of a row type
+    must itself be a type derived from `Row`; otherwise defining the type fails before any byte is
+    read. Parameter types are added to the options' row types automatically and transitively (R12).
   - **Known gap**: a `Log` outside any open `Stem` would find no ancestor on the stack and could fall
     back to a retained completed `Stem`; only structure (R13) or a fail-fast policy requiring an open
     ancestor could detect that. Accepted for the POC: in HPR every `Log` is inside its `Stem`.
+- **Two ways a row references another row (developer, 2026-10-30)**:
+  - **Constructor parameters**: ancestors, taken from the open-row stack when the row is
+    constructed (type pipeline), as above.
+  - **Key references**: a key member (e.g. `Stem.ObjectKey`) refers to a row of another type (e.g.
+    `Contract`) by key. The referenced rows are stored by one or many keys when they are completed
+    (type pipeline, store slot); the reference is resolved when the key member is read (**member
+    pipeline**, resolve slot), not in a constructor. `Contract` is the StanForD example: it never
+    appears as a constructor parameter.
+
+  Both add the referenced type automatically, and neither hands its rows out unless the type is
+  added explicitly (R12). Key references belong to the key-references slice (spec 002-005):
+  Deferred.
 - **Fail fast when building definitions (developer, 2026-10-26)**: a registered type whose
   constructor cannot be satisfied is rejected before any byte is read. Cases for the ancestors
   slice, Deferred (spec 002/003): a parameter type that does not extend `Row` (and is not a lookup type); a
@@ -282,7 +295,8 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
     "once per class" is checked here (an analyzer could flag it at compile time later).
 - **Row type lookup (developer, 2026-10-29)**: The core keeps a lookup of the `Row` types the
   options know about, used by these checks. It is built per options when they lock at first use,
-  from explicit registrations and any named-assembly scan (R12), and is fixed from then on (an
+  from the explicitly added row types and the row types their constructors need (R12), and is
+  fixed from then on (an
   immutable, frozen dictionary from `Type` to type definition; reads need no locking). It is not
   global: a process-wide registry would let one options instance see types registered by another,
   breaking S0 per options and isolating nothing between deserializations running at once (R6). The
@@ -314,8 +328,8 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   - The options own and build all definitions: type, property and parameter. They are built
     behind the scenes on first use and cached in the options. Options become read-only when first
     used; a later change throws.
-  - Type definitions are found from C# types extending `Row`: registered explicitly or found by
-    scanning an assembly the developer names in the options (R12).
+  - Type definitions come from C# types extending `Row` that the developer adds explicitly, plus
+    the row types their constructors need, added automatically (R12).
   - Type definitions own their property and parameter definitions. A type definition constructs a
     row (R5); its property definitions set the row's typed members (R14).
   - **The core owns looking up a type definition by its concrete C# type**, through the per-options
@@ -329,11 +343,14 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
       `Pipeline<Log>()` with no lookup. No process-wide static cache (R5). A non-generic
       `Pipeline(Type type)` exists for simpler media, at the cost of one lookup per row in the
       per-options row type lookup (Deferred (implementation)).
-    - `Pipeline(MemberInfo member, ReadOnlySpan<byte> utf8, in FieldContext context)` for a value,
-      where `member` is the `PropertyInfo` or `FieldInfo` of the top open row's type (developer,
-      2026-10-28) and `context` is what the media reports about where the value sits (R15,
-      developer 2026-10-29). The member is a value, not a type, so it is an argument, not a generic
-      parameter.
+    - `Pipeline(PropertyInfo property, ReadOnlySpan<byte> utf8, in FieldContext context)` and
+      `Pipeline(FieldInfo field, ReadOnlySpan<byte> utf8, in FieldContext context)` for a value,
+      where the member belongs to the top open row's type (developer, 2026-10-28) and `context` is
+      what the media reports about where the value sits (R15, developer 2026-10-29). Two overloads
+      restrict the member to properties and fields at compile time (developer, 2026-10-30); a
+      generic `Pipeline<T>(T member, …)` cannot, since C# has no "`PropertyInfo` or `FieldInfo`"
+      constraint and `where T : MemberInfo` still allows methods, constructors and events. Both
+      overloads share one internal path.
     - `Pipeline()` when the media decides the top open row is complete (its end token), and for
       each row still open at the end of its document (developer, 2026-10-28/29): completes the top
       row and runs its policies (R2, R7).
@@ -401,9 +418,11 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   - **Convert and set** each member as handed over (`Pipeline(member, utf8, context)`): conversion
     to the member's `T` by its effective converter, then its setter (R14). Creating `Field`
     metadata is a separate slot, off by default (R4, opt-in).
-  - **Hand out** the top open row when the media completes it (`Pipeline()`), then pop it.
+  - **Hand out** the top open row when the media completes it (`Pipeline()`), then pop it, if its
+    type was added explicitly; rows of types added only for a constructor are popped without being
+    handed out (R12).
   - **Retain** the latest completed row of each type a constructor needs that is not an open
-    ancestor (e.g. `Contract`; R5). Open ancestors such as a partial `Stem` need no retention: they
+    ancestor (R5). Open ancestors such as a partial `Stem` need no retention: they
     are on the open-row stack.
   - **Drop the core's reference** to every other row once it is handed out: the caller may keep the
     row, but the core holds nothing it does not need, so memory stays flat (C1). This is not
@@ -414,8 +433,8 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   longer, never shorter than a constructor needs; a policy that would release too early fails when
   definitions are built. A row handed out while still retained must not change after it is handed
   out.
-- **StanForD as policies, not code**: e.g. `Contract` and other references retained for the whole
-  document. All Stem fields precede the first Log in both local Rottne HPR samples (verified
+- **StanForD as policies, not code**: e.g. `Contract` stored by key for the whole document and
+  resolved through key members (R5, key references). All Stem fields precede the first Log in both local Rottne HPR samples (verified
   2026-10-26; check other makers' files before relying on it).
 - **Fail-fast policy**: A row constructed while a field it needs from a retained row has not been
   read yet fails fast (S1), instead of silently getting a default. In the POC (developer,
@@ -430,17 +449,34 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
     uses:
 
     ```
-    Pipeline<T>()                      construct (constructor delegate, no parameters in 001) -> push
+    Pipeline<T>()                      construct (constructor delegate, no parameters in 001) -> [push]
     Pipeline(member, utf8, context)    convert (Converter<T>) -> set (Action<Row, T>); Field metadata slot off
-    Pipeline()                         complete the top row -> hand out -> pop
+    Pipeline()                         [complete the top row] -> hand out -> [pop]
     ```
 
-    Spec US4's test policy plugs into one of these slots (attached by attribute and by options, for
-    precedence and read-only options).
+    Slots are policy points; bracketed steps are fixed mechanics of the open-row stack, not slots
+    (developer, 2026-10-30): an open row is always on the stack while its members arrive, and
+    `Pipeline()` always completes and pops exactly the row its `Pipeline<T>()` pushed, so no policy
+    can break that pairing. Spec US4's test policy plugs into one of the slots (attached by attribute
+    and by options, for precedence and read-only options).
   - **Full catalogue and order: Deferred (spec 002/003)**: retention in and out (lifetime),
     parameter resolution and the fail-fast check, early hand-out (e.g. a Stem at its first child),
     typed-value policies on members (validate, transform), and whatever else two classes and real
-    HPR data bring. Listed from real cases there, not guessed now.
+    HPR data bring. Listed from real cases there, not guessed now. Known so far:
+    - a **construct** slot that stays a seam for the fail-fast check, a fallback when no row of a
+      parameter's type exists, a custom factory or pooling, and filtering (which needs a "skipped"
+      marker on the stack so the occurrence's members are ignored);
+    - a **store** slot at completion, after hand-out: keep the completed row by one or many keys (a
+      dictionary), e.g. `Contract`; the keys are only known once the row's members are read, so
+      keyed placement cannot happen at push;
+    - a **resolve** slot in the member pipeline, between convert and set: look a key up in a store
+      and attach or copy what the row needs;
+    - for key references, one attribute on the referencing member, e.g.
+      `[Reference(typeof(Contract), Key = nameof(Contract.ObjectKey))]` (name Deferred), expanding
+      when definitions are built into three single-purpose policies, each overridable by options:
+      add the referenced type (not handed out), store it by key (owned by the referenced type, one
+      store shared by every referencing member), resolve on this member (owned by the referencing
+      member).
   - **Holds whatever the order**: the type pipeline is about construction: the type definition
     arrives fully configured with its parameter and property definitions, so `Pipeline<T>()`
     constructs and pushes; retention is a lifetime policy around hand-out and pop, not
@@ -525,19 +561,34 @@ role and name, never its design as a precedent (R0).
 - **Rejected**: A fake text media in `test/Fakes/` or a `Forestry.Deserialize.Testing` project.
 - **Status**: Confirmed (developer, 2026-10-26)
 
-## R12. Finding row types
+## R12. Adding row types
 
 - **Decision**: `Deserialize` takes no type argument and returns the abstract `Row` (developer,
   2026-10-26), so the row types come from the options.
-- **Decision (developer, 2026-10-27)**: Two ways, both through the options and fixed at first use:
-  - explicit registration (e.g. `options.Rows.Add<Log>()`);
-  - scanning a specific assembly the developer names (e.g. `options.Rows.AddFromAssembly(typeof(Log).Assembly)`)
-    for types extending `Row`. Never blind scanning of loaded assemblies.
+- **Explicit only (developer, 2026-10-30)**: The developer adds row types explicitly, through the
+  options, fixed at first use. No assembly scan: it is too clumpy (rejected, below).
+- **Several at once (developer, 2026-10-30)**: C# has no variadic generics, so two shapes:
+  - chaining, keeping the compile-time `T : Row` check: `options.Rows.Add<Log>().Add<Stem>()`;
+  - `params Type[]`, shorter, checked when added (a type not extending `Row` throws there):
+    `options.Rows.Add(typeof(Log), typeof(Stem))`.
 
-  Either way the developer chooses the types; the input never does (S0). No row type found fails
-  before any byte is read. This slice uses one type; spec 002 several.
-- **Member names**: the names above are examples, Deferred (implementation).
-- **Status**: No type argument, both ways, no blind scanning Confirmed (developer, 2026-10-26/27);
+  Member names are examples, Deferred (implementation).
+- **Constructor parameters are added automatically (developer, 2026-10-30)**: every constructor
+  parameter of a row type is itself a row type (R5). Adding a type also adds its parameter types,
+  then theirs, until nothing new appears: adding `Log(Stem stem)` adds `Stem`. Types named by a key
+  reference (R5) are added the same way. S0 holds: the developer chose `Log`, whose own code names its dependencies; the
+  document never chooses a type. In this slice constructors have no parameters, so nothing is added
+  automatically yet; it becomes active with spec 002/003.
+- **Only explicitly added types are enumerated (developer, 2026-10-30)**: by default, rows of a type
+  added only because a constructor needs it are constructed and used (on the open-row stack,
+  retained), but not handed out. Adding the type explicitly makes its rows come out too. A hand-out
+  policy can change this (R7).
+- **No row type added fails before any byte is read.**
+- **Rejected**: scanning an assembly the developer names for types extending `Row` (2026-10-27):
+  too clumpy, and it would enumerate types the developer never meant to see (developer,
+  2026-10-30).
+- **Status**: No type argument, explicit only, automatic parameter types, only explicitly added
+  types enumerated, both shapes for adding several at once Confirmed (developer, 2026-10-26/30);
   member names Deferred (implementation)
 
 ## R13. Matching and the document's hierarchy

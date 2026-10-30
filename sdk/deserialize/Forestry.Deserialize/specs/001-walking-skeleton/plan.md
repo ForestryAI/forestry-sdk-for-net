@@ -69,7 +69,7 @@ note are in research.md.
 | C5 Design ownership | Pass | Pass | Every research item Confirmed, Rejected or Deferred by the developer; Deferred names confirmed in code review. |
 | C6 Working example first | Pass | Pass | No performance work in this slice. |
 | D0 Public documentation | Pass | Pass | Option B now (XML docs on, missing docs as warnings); A once a real StanForD document deserializes (R9). |
-| S0 Developer-chosen types | Pass | Pass | Rows only of types chosen through the options, registered or found in a named assembly; a per-options row type lookup checks every handover (R5, R6, R12). |
+| S0 Developer-chosen types | Pass | Pass | Rows only of types added explicitly through the options (and, from spec 002/003, the row types their constructors need); no assembly scan; a per-options row type lookup checks every handover (R5, R6, R12). |
 | S1 Fail fast on wrong input | **Deviation** | **Deviation** | Limits postponed (FR-014); ancestor fail-fast comes with the ancestors slice. Justified below. |
 | A0 / A1 / A3 | Pass | Pass | net9+net10, no third-party NuGet, shared SDK build. |
 | G0-G2 | Pass | Pass | Spec, plan and tasks are the truth; 2.0.0 takes effect when merged. |

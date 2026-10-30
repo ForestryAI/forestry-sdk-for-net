@@ -37,8 +37,9 @@ Behavior:
 
 | Member | Behavior | Spec |
 |---|---|---|
-| Row registration, e.g. `Rows.Add<T>()` (`T : Row`) | Registers a row type | FR-001, FR-002, R12 |
-| Assembly scan, e.g. `Rows.AddFromAssembly(Assembly)` | Adds the types extending `Row` in an assembly the developer names; never blind scanning | FR-002, R12 |
+| Adding row types, e.g. `Rows.Add<T>()` (`T : Row`), chainable: `Rows.Add<Log>().Add<Stem>()` | Adds a row type; its rows are handed out | FR-001, FR-002, R12 |
+| Adding several, e.g. `Rows.Add(params Type[] types)` | Same; a type not extending `Row` throws when added | FR-002, R12 |
+| Constructor parameter types | Added automatically and transitively; their rows are not handed out unless added explicitly (spec 002/003) | R5, R12 |
 | Policy registration for a type, property or parameter, and options-wide | Wins over attributes (R7 precedence) | US4, FR-012 |
 | Converter registration | Converters by target type, with factories (R14) | FR-007 |
 | Read-only once used | Any change after first use throws | US4, FR-013 |
@@ -86,7 +87,7 @@ class.
 |---|---|---|
 | `Pipeline<T>() where T : Row` | Type | Constructs a `T` (constructor delegate; no parameters in this slice) and pushes it on the open-row stack; a type not in the options' row type lookup throws (S0) |
 | `Pipeline(Type)` | Type | Non-generic form for simpler media; Deferred (implementation) |
-| `Pipeline(MemberInfo member, ReadOnlySpan<byte> utf8, in FieldContext context)` | Member | Converts `utf8` by the member's converter and sets it on the top open row; a member not of that row's type throws |
+| `Pipeline(PropertyInfo property, ReadOnlySpan<byte> utf8, in FieldContext context)`, `Pipeline(FieldInfo field, ReadOnlySpan<byte> utf8, in FieldContext context)` | Member | Converts `utf8` by the member's converter and sets it on the top open row; a member not of that row's type throws |
 | `Pipeline()` | Type | Completes the top open row, hands it out (default), pops it; no open row throws |
 
 `FieldContext` is a `readonly ref struct` with `Depth`, `Name`, `Path` and `Dimensions`; text members

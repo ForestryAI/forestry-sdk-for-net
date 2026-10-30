@@ -150,12 +150,12 @@ acts.
 ### Functional Requirements
 
 - **FR-001**: The developer MUST be able to deserialize a document through the deserialization
-  package's entry point, passing the options of a media in which classes extending `Row` are
-  registered, or found in an assembly the developer names; from in-memory input (synchronous) or a stream or pipe (asynchronous). The entry point
+  package's entry point, passing the options of a media to which classes extending `Row` were
+  added; from in-memory input (synchronous) or a stream or pipe (asynchronous). The entry point
   takes no type argument and returns the abstract `Row`.
-- **FR-002**: Deserialization MUST only produce rows of the classes chosen through the options
-  (registered, or found in an assembly the developer names); it never creates a class named or
-  chosen by the document, and never scans assemblies the developer did not name.
+- **FR-002**: Deserialization MUST only hand out rows of the classes the developer added explicitly
+  through the options; it never creates a class named or chosen by the document, and never scans
+  assemblies.
 - **FR-003**: Deserialization MUST produce exactly one row per occurrence of the class, in document
   order.
 - **FR-004**: Data inside an occurrence MUST set the member with the same name, with a typed value.
@@ -194,7 +194,7 @@ acts.
 - **Policy**: Behavior at a row lifecycle moment, attached to a type or property by attribute or
   options.
 - **Options**: The media's options (extending the deserialization package's abstract options),
-  carrying the row classes (registered, or found in a named assembly), converters, policies and
+  carrying the row classes added explicitly, converters, policies and
   the generic shredding settings; read-only once used.
 
 ## Success Criteria *(mandatory)*
