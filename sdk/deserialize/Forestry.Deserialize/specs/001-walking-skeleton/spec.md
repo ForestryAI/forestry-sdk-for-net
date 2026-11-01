@@ -135,7 +135,7 @@ acts.
   allowed).
 - A member's text cannot be converted to its type (e.g. `"abc"` for `LogKey`): deserialization fails
   fast with an error identifying the member, its place in the document, and the class.
-- The added class has a property that is not a built-in type (e.g. a nested class), does not
+- The added class has a property whose type no converter handles (e.g. a nested class), does not
   extend `Row`, has no constructor that can be chosen (several public ones and none marked, or more
   than one marked), or (in this slice) its chosen constructor has parameters: deserialization is
   rejected before any byte is read.
@@ -164,7 +164,8 @@ acts.
 - **FR-007**: A member whose text cannot be converted to its type MUST make deserialization fail fast
   with an error identifying the member, its place in the document and the class.
 - **FR-008**: Before any byte is read, deserialization MUST reject: no added class; an added
-  class with a property that is not a built-in type, that does not extend `Row`, for
+  class with a property whose type no converter handles (built-in, media default or added to the
+  options), that does not extend `Row`, for
   which no constructor can be chosen (several public constructors and none marked as the one to
   use, or more than one marked), or (in this slice) whose chosen constructor has parameters.
 - **FR-009**: The document MUST be read once, forward only; each row MUST become available as soon
@@ -218,8 +219,10 @@ acts.
   the generic row attribute) starts an occurrence; a child element named like a property (or the
   name given by the generic field attribute) sets that member. Media-specific conditions (e.g. XML
   attribute conditions) belong to the media package and later slices.
-- Built-in types for this slice: text, boolean, integer numbers, decimal numbers and date/time.
-  Nested classes, collections and custom property types are out of scope.
+- Built-in converters for this slice: text, boolean, integer numbers, decimal numbers and date/time.
+  A member of another type is accepted when the developer adds a converter for it (one value, one
+  converter). Complex (owned) members, i.e. nested classes read from a structure in the document,
+  and collections are out of scope (research R16).
 - Only one class per deserialization. Several classes in one pass, ancestors (a child row's
   constructor taking its ancestor row, e.g. `Log(Stem stem)`), key references and conditions are
   later slices (specs 002-005). Parameter definitions are part of the design now but carry no

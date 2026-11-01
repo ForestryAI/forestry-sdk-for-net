@@ -49,7 +49,8 @@ R5); options read-only after first use (R6); `TreatWarningsAsErrors` is on SDK-w
 **Dependency**: The XML reader's element and text reading (`Forestry.Deserialize.Xml/BLOCKING.md`,
 phase 2) is open; acceptance tests cannot pass before it is done.
 
-**Scale/Scope**: One flat class with a parameterless constructor, built-in member types, both
+**Scale/Scope**: One flat class with a parameterless constructor, members whose type a converter
+handles (built-in in the tests), both
 pipelines in their minimal slot order with built-in defaults plus a test policy (R7).
 
 ## Constitution Check

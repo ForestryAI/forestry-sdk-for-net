@@ -26,11 +26,11 @@ throws (FR-013).
 | Type | The developer's class extending `Row` |
 | Constructor | Chosen once: the one marked `[RowConstructor]` (public or non-public), else the single public one; built as a delegate |
 | Parameter definitions | One per constructor parameter (none in this slice) |
-| Property definitions | One per property or field of a built-in type |
+| Property definitions | One per property or field whose type a converter handles (R14) |
 | Policies | Resolved per pipeline slot when the definition is built (R7) |
 
 Its job is construction only; it sets no properties. Validation when built (FR-008): not extending
-`Row`, a non-built-in property, no constructor that can be chosen, more than one marked, or (this
+`Row`, a property whose type no converter handles, no constructor that can be chosen, more than one marked, or (this
 slice) a chosen constructor with parameters, all fail before any byte is read.
 
 ## Property definition (existing `PropertyDefinition`, made generic: `PropertyDefinition<T>`, R5, R14)

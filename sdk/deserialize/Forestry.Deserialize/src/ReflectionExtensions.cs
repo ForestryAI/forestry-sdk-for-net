@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace Forestry.Deserialize
 {
-    internal static partial class ReflextionExtensions
+    internal static partial class ReflectionExtensions
     {
         /// <summary>
         /// Get singlar attribute

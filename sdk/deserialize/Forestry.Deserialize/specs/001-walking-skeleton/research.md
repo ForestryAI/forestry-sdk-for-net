@@ -261,6 +261,20 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   - **Every parameter is a row (developer, 2026-10-30)**: each constructor parameter of a row type
     must itself be a type derived from `Row`; otherwise defining the type fails before any byte is
     read. Parameter types are added to the options' row types automatically and transitively (R12).
+  - **Parameters bound to a member value (Deferred, spec 002/003 if the POC needs it; developer,
+    2026-11-01)**: a constructor parameter could take one member value of another row type instead
+    of the whole row, e.g. `Log([From(typeof(Stem), nameof(Stem.StemKey))] int stemKey)` (attribute
+    name only an example), so the constructor copies what it needs without depending on the whole
+    class. What it would touch:
+    - the rule above widens to: every parameter is a row type, **or** a value bound by attribute or
+      option to a member of a row type; only an unbound non-row parameter (e.g. `int`) is rejected;
+    - resolution as for row parameters (open-row stack, then retained rows, or by key once key
+      references exist, R7), then reading the member from that row;
+    - property definitions also need a getter, a `Func<Row, T>` built once like the setter (R14), so
+      there is still no reflection per row;
+    - build-time checks: the referenced type is a row type (added automatically, R12), the member
+      exists, and its type matches the parameter's type; otherwise fail fast before any byte is read;
+    - a value from a keyed row uses the key-references slice's store and resolve slots.
   - **Known gap**: a `Log` outside any open `Stem` would find no ancestor on the stack and could fall
     back to a retained completed `Stem`; only structure (R13) or a fail-fast policy requiring an open
     ancestor could detect that. Accepted for the POC: in HPR every `Log` is inside its `Stem`.
@@ -646,8 +660,12 @@ role and name, never its design as a precedent (R0).
     dispatches into it, so the member pipeline calls any property without knowing `T`.
   - **Parameters**: today resolved from retained rows (type level, R5). If constructors ever take
     scalar values from the document (System.Text.Json allows it), they reuse these converters.
+- **A member is accepted when a converter resolves for its type (developer, 2026-10-30)**: built-in,
+  media default or added to the options. A nested class with a converter (e.g. coordinates written
+  as one value) is just a member; without one it is rejected before any byte is read (FR-008).
+  Nested classes read from a structure in the document are complex members (R16).
 - **Status**: Converters independent of the reader, by target type Confirmed (developer,
-  2026-10-28); `PropertyDefinition<T>` resolving its converter by `T` from the options Confirmed
+  2026-10-28); a member accepted when a converter resolves Confirmed (developer, 2026-10-30); `PropertyDefinition<T>` resolving its converter by `T` from the options Confirmed
   (developer, 2026-10-29); signature, factories, built-ins, media defaults, accessor and no-boxing
   shape Confirmed (developer, 2026-10-29); the name "Converter" or "Deserializer" Deferred
   (implementation)
@@ -684,3 +702,26 @@ role and name, never its design as a precedent (R0).
 - **Status**: The four members, byte spans with extensions, `Dimensions` naming and a rented-byte
   builder Confirmed (developer, 2026-10-29); delimiters and the builder's API Deferred
   (implementation)
+
+## R16. Complex (owned) members (Deferred)
+
+- **Question**: A row member whose type is a nested class read from a structure in the document,
+  e.g. StanForD's `StemCoordinates` (`Latitude`, `Longitude`, `Altitude` child elements plus
+  attributes) or `LogMeasurement`. It acts like a flat record owned by its row: not a row of its own,
+  not handed out, not retained (raised by the developer, 2026-10-30).
+- **Not to confuse with** a nested class read from one value, which only needs a converter (R14).
+- **Questions the slice must answer**:
+  - **Handover**: the member is several values, so while its row is open the media hands over the
+    nested type's members; the open-row stack needs a non-row frame for the nested object, set on its
+    parent when its end token arrives, never handed out.
+  - **Association**: the media must know the nested type's members only inside its structure (paths,
+    R13), where the same names elsewhere mean something else.
+  - **Flatness and storage**: keep a nested object on the row (whoever writes rows flattens it, e.g.
+    `Measurement_Diameter`), or flatten owned members into the row's fields during shredding, which
+    fits C2 better.
+  - **Missing or empty**: no element versus an empty one: a null object or one with defaults.
+  - **Policies and fields**: whether policies attach to nested members, and how `Field` metadata names
+    them.
+  - **Collections**: several occurrences of the structure (e.g. `LogDiameter`) in one row.
+- **Status**: Deferred (spec 002-005, a complex-members slice); in this slice such a member has no
+  converter and is rejected (FR-008)

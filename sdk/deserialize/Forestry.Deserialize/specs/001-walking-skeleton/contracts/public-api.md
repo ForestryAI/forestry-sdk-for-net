@@ -23,8 +23,8 @@ foreach (Row row in Deserialization.Deserialize(xml, options)) { ... }
 
 Behavior:
 - Before returning, the entry point builds the definitions and locks the options, so FR-008 errors
-  throw at the call: no row type found; a row type not extending `Row`, with a non-built-in
-  property, or (this slice) whose chosen constructor has parameters; no constructor can be chosen
+  throw at the call: no row type found; a row type not extending `Row`, with a property whose type
+  no converter handles, or (this slice) whose chosen constructor has parameters; no constructor can be chosen
   (R5).
 - It gets the media's enumerator from the options and exposes it. Each returned enumerable can be
   enumerated once; a second `GetEnumerator()` / `GetAsyncEnumerator()` throws (R2).
