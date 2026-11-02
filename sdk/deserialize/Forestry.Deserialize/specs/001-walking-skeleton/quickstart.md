@@ -34,7 +34,7 @@ through both entry points (sync and async) and read rows by a plain cast.
 | 1 | `<Root><Log><LogKey>1</LogKey><LogVolume>0.59</LogVolume></Log><Log><LogKey>2</LogKey><LogVolume>0.50</LogVolume></Log></Root>` | Two rows in order, members as given | US1-1, FR-003 |
 | 2 | As 1, plus elements outside any `Log` and an `<Unknown>` element inside one | Same two rows | US1-2, FR-005 |
 | 3 | `<Root />` | No rows, no error | US1-3 |
-| 4 | Any row from 1 | `Type` is `Log`; `AsType<Log>()` gives 1 / 0.59; `AsType<Other>()` throws naming both | US2, FR-006 |
+| 4 | Any row from 1 | `Is<Log>()` is true and `Is<Other>()` false; `AsType<Log>()` gives 1 / 0.59; `AsType<Other>()` throws naming both | US2, FR-006 |
 | 5 | `Log` without `<LogVolume>` | `LogVolume` has its default | US2-4 |
 | 6 | Document 1 through the pipe entry point | Identical rows; first row handed out at its end token, before the second `Log` is read | US3, FR-009, FR-010 |
 | 7 | Document 1 split into buffers at every byte position | Identical rows | US3-3, FR-010 |

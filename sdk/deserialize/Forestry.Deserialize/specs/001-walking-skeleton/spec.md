@@ -59,8 +59,8 @@ come out.
 
 ### User Story 2 - Work with rows without knowing their class (Priority: P2)
 
-Deserialization returns rows as the abstract `Row`. The developer asks a row which class it is and
-converts it to that class.
+Deserialization returns rows as the abstract `Row`. The developer checks whether a row is a given
+class and converts it to that class.
 
 **Why this priority**: Once several classes come out of one pass (later slices), callers handle a
 stream of mixed rows; the conversion must exist from the start.
@@ -69,7 +69,8 @@ stream of mixed rows; the conversion must exist from the start.
 
 **Acceptance Scenarios**:
 
-1. **Given** a row from Story 1, **When** the developer asks its type, **Then** it reports `Log`.
+1. **Given** a row from Story 1, **When** the developer checks it with `Is<Log>()`, **Then** it is
+   true, and `Is<T>()` for a different class is false.
 2. **Given** that row, **When** it is converted with `AsType<Log>()`, **Then** the result is the
    `Log` with `LogKey` 1 and `LogVolume` 0.59.
 3. **Given** that row, **When** it is converted to a different class, **Then** the conversion fails
@@ -159,8 +160,9 @@ acts.
   order.
 - **FR-004**: Data inside an occurrence MUST set the member with the same name, with a typed value.
 - **FR-005**: Data outside any occurrence, and data whose name matches no member, MUST be ignored.
-- **FR-006**: Rows MUST be returned as the abstract `Row`; a row MUST report its class and convert
-  to it with `AsType<T>()`; converting to a different class MUST fail naming both classes.
+- **FR-006**: Rows MUST be returned as the abstract `Row`; a row MUST tell whether it is a class
+  with `Is<T>()`, as C#'s `is` does (that class or one deriving from it), and convert to it with
+  `AsType<T>()`; converting to a different class MUST fail naming both classes.
 - **FR-007**: A member whose text cannot be converted to its type MUST make deserialization fail fast
   with an error identifying the member, its place in the document and the class.
 - **FR-008**: Before any byte is read, deserialization MUST reject: no added class; an added

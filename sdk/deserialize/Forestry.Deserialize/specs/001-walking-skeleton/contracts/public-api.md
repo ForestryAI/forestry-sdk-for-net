@@ -52,9 +52,8 @@ fixed lookup of their row types (R5); it is per options, never global.
 
 | Member | Behavior | Spec |
 |---|---|---|
-| `Type` | The row's derived class (`GetType()`) | US2, FR-006 |
-| `AsType<T>()` | Checked cast to `T`; throws naming both classes if the row is not a `T` | US2, FR-006 |
-| `Is<T>()` (name Deferred) | Whether the row is a `T` | US2 |
+| `Is<T>()` | Whether the row is a `T`, as C#'s `is` (`T` or a class deriving from it); non-virtual | US2, FR-006 |
+| `AsType<T>()` | Checked cast to `T`, returning the derived instance; throws naming both classes if the row is not a `T`; non-virtual | US2, FR-006 |
 | Fields | Metadata per member (member info, media name, C# type, converter); per-occurrence metadata (depth, name, path, dimensions) only when a policy or option asks | R4 |
 
 A row's values are the derived class's typed properties and fields (e.g. `Log.LogVolume` is a

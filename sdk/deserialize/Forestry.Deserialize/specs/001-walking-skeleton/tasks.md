@@ -147,7 +147,7 @@ added to the XML options; check the rows (quickstart rows 1-3, 12-14).
 ### Implementation for User Story 1 (declares the surface it needs, then implements it)
 
 - [X] T030 [P] [US1] Declare `RowAttribute` (class; optional name), `FieldAttribute` (property or field; optional name) and `RowConstructorAttribute` (constructor; `AllowMultiple = false`) in `Forestry.Deserialize/src/Attributes/RowAttribute.cs`, `FieldAttribute.cs`, `RowConstructorAttribute.cs` (R5, R8)
-- [X] T031 [P] [US1] Declare the abstract `Row` in `Forestry.Deserialize/src/Rows/Row.cs` (its members `Type`, `AsType<T>()`, `Is<T>()` are US2's) and implement `Field` (metadata about one member: member info, media name, C# type, converter; never a value, R4) in `Forestry.Deserialize/src/Rows/Field.cs` (the media name is not on `Field` yet: `XmlAssociation` resolves it; moving it to the core is Deferred, research R8)
+- [X] T031 [P] [US1] Declare the abstract `Row` in `Forestry.Deserialize/src/Rows/Row.cs` (its members `Is<T>()` and `AsType<T>()` are US2's) and implement `Field` (metadata about one member: member info, media name, C# type, converter; never a value, R4) in `Forestry.Deserialize/src/Rows/Field.cs` (the media name is not on `Field` yet: `XmlAssociation` resolves it; moving it to the core is Deferred, research R8)
 - [X] T032 [P] [US1] Implement the reading types in `Forestry.Deserialize/src/Reading/`: `RowState.cs` (`None`, `Partial`, `Complete`), `FieldContext.cs` (`readonly ref struct` with `int Depth`, `ReadOnlySpan<byte> Name`, `ReadOnlySpan<byte> Path`; `Dimensions` is Deferred), `FieldContextExtensions.cs` (UTF-8 span to `string`) (R2, R15)
 - [X] T033 [US1] Delete `Forestry.Deserialize/src/Deserializers/` (`Deserializer.cs`, `Deserializer.OfType.cs`, `DeserializerFactory.cs`, `IDeserializerProvider.cs`; R10) and implement the converters in `Forestry.Deserialize/src/Converters/`: `Converter<T>` with `T Convert(ReadOnlySpan<byte> utf8)`, a converter factory, and the built-ins in `Converters/BuiltIn/` for every primary type of this slice (text, boolean, integer numbers, decimal numbers, date/time): one generic converter for `T : IUtf8SpanParsable<T>` with invariant culture, plus `StringConverter` and `BooleanConverter`; a failed conversion throws naming the member, its place (the `FieldContext` path, via `FieldContextExtensions`) and the class (FR-007, R14) (depends on T032)
 - [X] T034 [US1] Implement the options in `Forestry.Deserialize/src/DeserializeOptions.cs` and `DeserializeOptions.Caching.cs`: abstract; `Rows.Add<T>() where T : Row` returning the row collection for chaining, and `Rows.Add(params Type[] types)` throwing for a type not extending `Row`; these types are marked as explicitly added (only they are handed out, R12); no assembly scan; converter registration (R14): the defaults (every primary converter of T033, and the type definition as the object converter) and the developer's converters, in `ObservableList<T>`; abstract creation of the media's `RowEnumerator` over `ReadOnlyMemory<byte>`; on first use, lock the options and build the per-options frozen row type lookup (`Type` to type definition), never global (R5, R6, R12, S0) (depends on T033)
@@ -174,20 +174,20 @@ added to the XML options; check the rows (quickstart rows 1-3, 12-14).
 
 ## Phase 3: User Story 2 - Work with rows without knowing their class (Priority: P2)
 
-**Goal**: Rows come out as `Row`; the developer asks the type and casts to it.
+**Goal**: Rows come out as `Row`; the developer checks the class with `Is<T>()` and casts with `AsType<T>()`.
 
-**Independent Test**: Rows from Story 1: `Type`, `AsType<Log>()`, `AsType<Other>()`, a missing member
+**Independent Test**: Rows from Story 1: `Is<Log>()`, `AsType<Log>()`, `AsType<Other>()`, a missing member
 (quickstart rows 4-5).
 
 ### Test shells for User Story 2 ⚠️
 
-- [ ] T044 [P] [US2] Core test shell, quickstart 4 / US2-1..3 / FR-006: a `Log` row built directly reports `Type` `Log`; `AsType<Log>()` gives 1 / 0.59; `AsType<Other>()` throws naming both classes; `Is<Log>()` is true, in `Forestry.Deserialize/test/RowTests.cs`
+- [ ] T044 [P] [US2] Core test shell, quickstart 4 / US2-1..3 / FR-006: a `Log` row built directly: `Is<Log>()` is true and `Is<Other>()` false; `AsType<Log>()` returns the same instance with 1 / 0.59; `AsType<Other>()` throws `InvalidCastException` naming both classes; a row of a class deriving from another row class is also `Is<>` and `AsType<>` its base, as C#'s `is` (fixtures `Other`, and a base and derived row class, in `Forestry.Deserialize/test/Fixtures/`), in `Forestry.Deserialize/test/RowTests.cs`
 - [ ] T045 [P] [US2] Test shell, quickstart 5 / US2-4: a `Log` without `<LogVolume>` leaves `LogVolume` at its default (theory over both entry points), in `Forestry.Deserialize.Xml/test/WalkingSkeletonTests.US2.cs`
 - [ ] T046 [US2] **Test review gate**: the developer reviews T044-T045 (`Forestry.Deserialize/test/RowTests.cs`, `Forestry.Deserialize.Xml/test/WalkingSkeletonTests.US2.cs`) on the board before T047 (C4)
 
 ### Implementation for User Story 2
 
-- [ ] T047 [US2] Declare and implement `Row`'s members in `Forestry.Deserialize/src/Rows/Row.cs`: `Type` returns `GetType()`; `AsType<T>()` is a checked cast throwing `InvalidCastException` naming both classes; `Is<T>()` (R4)
+- [ ] T047 [US2] Declare and implement `Row`'s members in `Forestry.Deserialize/src/Rows/Row.cs`: `Is<T>() where T : Row`, as C#'s `is`; `AsType<T>() where T : Row`, a checked cast returning the derived instance and throwing `InvalidCastException` naming both classes; both non-virtual, nothing stored on the row, no public `Type` or type definition (R4, developer 2026-11-02)
 - [ ] T048 [US2] Run `dotnet test` on both test projects: T044 and the sync case of T045 pass (async skipped), US1 still green. Then the performance gate: `dotnet test -s Performance.runsettings` on both test projects passes
 
 **Checkpoint**: User Stories 1 and 2 work.
@@ -320,7 +320,7 @@ Task: "Implement the reading types in Forestry.Deserialize/src/Reading/"        
 
 1. Setup
 2. US1: rows from a document, sync (MVP)
-3. US2: `Type` / `AsType<T>()`
+3. US2: `Is<T>()` / `AsType<T>()`
 4. US4: policies, precedence, read-only options
 5. US3: async input and split buffers (with #24); the async cases of every theory
 6. Polish: memory test, XML docs, how-to page, quickstart run
