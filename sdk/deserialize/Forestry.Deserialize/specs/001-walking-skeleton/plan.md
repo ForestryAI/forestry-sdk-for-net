@@ -60,7 +60,8 @@ pipelines in their minimal slot order with built-in defaults plus a test policy 
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Checked against constitution 2.0.0 (approved, not yet merged to `main`). The R-items behind each
+Checked against constitution 2.0.0, and 2.1.0's A4 during the US1 review; both in effect since the
+merge to `main` (2026-11-02). The R-items behind each
 note are in research.md.
 
 | Rule | Result (pre-research) | Result (post-design) | Notes |
@@ -77,7 +78,7 @@ note are in research.md.
 | S1 Fail fast on wrong input | **Deviation** | **Deviation** | Limits postponed (FR-014); ancestor fail-fast comes with the ancestors slice. Justified below. |
 | A0 / A1 / A3 | Pass | Pass | net9+net10, no third-party NuGet, shared SDK build. |
 | A4 Test layout (2.1.0) | n/a | Pass | Added during the US1 code review (2026-11-02): every US1 test has Arrange / Act / Assert comments, and each XML test its own document, one element per line. |
-| G0-G2 | Pass | Pass | Spec, plan and tasks are the truth; 2.0.0 takes effect when merged. |
+| G0-G2 | Pass | Pass | Spec, plan and tasks are the truth; 2.0.0 and 2.1.0 in effect since the merge to `main` (2026-11-02). |
 
 Gate result: **passes with one justified deviation (S1)**.
 

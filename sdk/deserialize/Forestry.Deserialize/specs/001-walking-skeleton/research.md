@@ -240,9 +240,9 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   `AsType<T>()`), so an unconvertible value fails fast (FR-007). Typed end to end, no boxing (R14).
 - **Board item**: A row exposing its type definition and field metadata so generic writers (e.g.
   Azure Data Explorer) can write rows without knowing the classes. Beyond the POC.
-- **Pending outside research**: the constitution's and the spec's definitions of `Field` still say
-  "one named, typed value of a row"; they change to "metadata about a member" once this item is
-  confirmed (constitution 2.0.0 is not merged yet).
+- **Done outside research**: the constitution's and the spec's definitions of `Field` say "metadata
+  about a member", no longer "one named, typed value of a row" (constitution 2.0.0, in effect since
+  the merge to `main`, 2026-11-02).
 - **Status**: Confirmed (developer, 2026-10-26/29), all of R4: Row as the typed derived instance,
   `Type`, `AsType<T>()` as a checked cast, type-check helpers, Field as metadata only,
   per-occurrence metadata opt-in, conversion at handover

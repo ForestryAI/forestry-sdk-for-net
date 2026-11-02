@@ -6,7 +6,7 @@ description: "Task list for the walking skeleton (spec 001)"
 # Tasks: Walking skeleton
 
 **Input**: Design documents from `specs/001-walking-skeleton/` (plan.md, spec.md, research.md,
-data-model.md, contracts/public-api.md, quickstart.md) and `.specify/memory/constitution.md` 2.0.0.
+data-model.md, contracts/public-api.md, quickstart.md) and `.specify/memory/constitution.md` 2.0.0 (2.1.0 since the US1 review).
 
 **Prerequisites**: every research item is Confirmed, Rejected or Deferred (research.md header).
 
