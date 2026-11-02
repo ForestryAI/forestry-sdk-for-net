@@ -219,11 +219,16 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   `Log.Volume` is a `decimal`). The pipelines construct the derived instance (`Pipeline<Log>()`) and
   set its members with typed values (`Pipeline(member, utf8, context)` -> converter -> setter, R14).
   Deserialization returns an enumeration of `Row`.
-  - `Type`: the derived class (`GetType()`).
-  - `AsType<T>()`: a checked cast from `Row` to `T`; a different class throws naming both classes.
-    It is a downcast, not unboxing (rows are classes) and converts nothing: the values are already
-    typed.
-  - Helpers on the base check the derived type (e.g. `Is<T>()`).
+  - `Is<T>()`: whether the row is a `T`, as C#'s `is` does: true for `T` and for classes deriving
+    from it (developer, 2026-11-02).
+  - `AsType<T>()`: a checked cast from `Row` to `T`, returning the derived instance; a different
+    class throws naming both classes. It is a downcast, not unboxing (rows are classes) and converts
+    nothing: the values are already typed.
+  - **US2 scope (developer, 2026-11-02)**: `Row`'s public surface is only `Is<T>()` and
+    `AsType<T>()`. No public `Type` (`GetType()` already gives it) and no public type definition:
+    the type definition is internal metadata, not something the developer works with. Both members
+    need nothing stored on the row, since the runtime knows each row's class; they are non-virtual,
+    so a row class cannot change what they mean, and a row costs only its typed members (C1).
 - **Field (developer, 2026-10-29)**: A field is **metadata** about one member of a row, never a value
   and never cast. The values live on the derived class's typed members.
   - Per definition (the same for every row of a type): the member info, the media name, the C#
@@ -238,14 +243,20 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
 - **Conversion at handover (developer, 2026-10-29)**: A member's text is converted to its type when
   it is handed over (not in
   `AsType<T>()`), so an unconvertible value fails fast (FR-007). Typed end to end, no boxing (R14).
-- **Board item**: A row exposing its type definition and field metadata so generic writers (e.g.
-  Azure Data Explorer) can write rows without knowing the classes. Beyond the POC.
+- **Board item**: Generic writers (e.g. Azure Data Explorer) writing rows without knowing the
+  classes need the type definition and field metadata; not through a public member on `Row`
+  (developer, 2026-11-02). How they get it is open. Beyond the POC.
+- **Typed type definition (Deferred; developer, 2026-11-02)**: a `TypeDefinition<T>` (internal)
+  could construct through a compiled `Func<T>` and set members through `Action<T, TMember>` instead
+  of `Action<Row, TMember>`, saving a cast per member set. An internal refactor with no public
+  surface, not part of US2.
 - **Done outside research**: the constitution's and the spec's definitions of `Field` say "metadata
   about a member", no longer "one named, typed value of a row" (constitution 2.0.0, in effect since
   the merge to `main`, 2026-11-02).
 - **Status**: Confirmed (developer, 2026-10-26/29), all of R4: Row as the typed derived instance,
-  `Type`, `AsType<T>()` as a checked cast, type-check helpers, Field as metadata only,
-  per-occurrence metadata opt-in, conversion at handover
+  `AsType<T>()` as a checked cast, type-check helpers, Field as metadata only,
+  per-occurrence metadata opt-in, conversion at handover; US2 scope (`Is<T>()` as C#'s `is`,
+  `AsType<T>()`, no public `Type` or type definition) Confirmed (developer, 2026-11-02)
 
 ## R5. Constructing rows
 

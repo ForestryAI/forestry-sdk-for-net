@@ -44,5 +44,7 @@ namespace Forestry.Deserialize
         internal static string EnumeratedTwice => GetResourceString(nameof(EnumeratedTwice), @"The rows of a deserialization can be enumerated once: deserialize again to read the document again.");
 
         internal static string PartialAtFinalBlock => GetResourceString(nameof(PartialAtFinalBlock), @"The media asked for more bytes after the final block.");
+
+        internal static string RowNotOfType => GetResourceString(nameof(RowNotOfType), @"A row of type '{0}' is not a '{1}'.");
     }
 }

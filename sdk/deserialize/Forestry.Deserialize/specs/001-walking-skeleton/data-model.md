@@ -59,7 +59,7 @@ is boxed.
 | Member | Meaning |
 |---|---|
 | Row: typed members | The derived class's properties and fields, holding the values |
-| Row: `Type`, `AsType<T>()`, `Is<T>()` | Derived class; checked cast; type check |
+| Row: `Is<T>()`, `AsType<T>()` | Type check as C#'s `is`; checked cast to the derived instance (no public `Type` or type definition, R4) |
 | Field | Metadata about one member, never a value; per-occurrence metadata only when a policy or option asks |
 
 ## Field context (new, R15)

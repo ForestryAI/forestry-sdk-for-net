@@ -79,7 +79,8 @@ gives the typed row.
 Spec 001's first user story is done: the synchronous entry points above. Still to come in this
 slice ([tasks.md](specs/001-walking-skeleton/tasks.md)):
 
-- `Row.AsType<T>()`, a checked cast naming both classes when it fails (US2).
+- `Row.Is<T>()`, a type check as C#'s `is`, and `Row.AsType<T>()`, a checked cast naming both
+  classes when it fails (US2).
 - Policies attached to types and members, by attribute or by options (US4).
 - Asynchronous entry points over a `Stream` or `PipeReader`, reading without holding the whole
   document (US3).
