@@ -1,5 +1,9 @@
 # Forestry Deserialize
 
+> **Superseded (2026-10-22)**: this describes the pre-spec-kit design, which is wrong (see
+> `specs/001-walking-skeleton/research.md` R0). The truth is `.specify/memory/constitution.md` and
+> `specs/`. Do not infer design from this file.
+
 Forestry Deserialize reads large documents and streams data out rather than loading a whole file
 into memory. A multi-gigabyte document should cost roughly the same, memory-wise, to process as a
 small one. The need originated with StanForD XML from harvesting and forwarding machines — that's

@@ -1,15 +1,12 @@
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-
 using Forestry.Deserialize.Definitions;
 
 namespace Forestry.Deserialize
 {
     internal static partial class Throwing
     {
-
         public static void ArguementIsNull([NotNull] object? argument, [CallerArgumentExpression(nameof(argument))] string? name = null)
         {
             if (argument is null)
@@ -19,28 +16,9 @@ namespace Forestry.Deserialize
         }
 
         [DoesNotReturn]
-        public static void WhenTypeDefinitionIsReadOnly()
-        {
-            throw new InvalidOperationException(Formatting.TypeDefinitionIsReadOnly);
-        }
-
-        [DoesNotReturn]
         public static void WhenDeserializeOptionsIsReadOnly()
         {
             throw new InvalidOperationException(Formatting.DeserializeOptionsIsReadOnly);
-        }
-
-        [DoesNotReturn]
-        public static void WhenWrongDeclaringTypeDefintion(PropertyDefinition propertyDefinition)
-        {
-            Debug.Assert(propertyDefinition.DeclaringTypeDefinition is not null, "Exception only expected when declaring type definition is null");
-            throw new InvalidOperationException(Formatting.Format(Formatting.WrongDeclaringTypeDefintion, propertyDefinition.DeclaringTypeDefinition.Type.FullName, propertyDefinition.Name));
-        }
-
-        [DoesNotReturn]
-        public static void WhenConfigurePropertiesWrongDeclaringTypeDefintion(TypeDefinitionKind kind)
-        {
-            throw new InvalidOperationException(Formatting.Format(Formatting.@ConfigurePropertiesWrongDeclaringTypeDefintion, kind));
         }
 
         [DoesNotReturn]
@@ -56,10 +34,86 @@ namespace Forestry.Deserialize
             throw new OperationCanceledException(Formatting.PipeReaderCanceled);
         }
 
+        #region Definitions (FR-008)
         [DoesNotReturn]
-        public static void WhenDuplicatePropertyName(Type type, string propertyName)
+        public static void WhenNoRowTypes()
         {
-            throw new InvalidOperationException(Formatting.Format(Formatting.DuplicatePropertyName, type.FullName, propertyName));
+            throw new InvalidOperationException(Formatting.NoRowTypes);
         }
+
+        [DoesNotReturn]
+        public static void WhenNotARowType(Type type)
+        {
+            throw new ArgumentException(Formatting.Format(Formatting.NotARowType, type.FullName));
+        }
+
+        [DoesNotReturn]
+        public static void WhenNoConstructorChosen(Type type)
+        {
+            throw new InvalidOperationException(Formatting.Format(Formatting.NoConstructorChosen, type.FullName));
+        }
+
+        [DoesNotReturn]
+        public static void WhenMoreThanOneRowConstructor(Type type)
+        {
+            throw new InvalidOperationException(Formatting.Format(Formatting.MoreThanOneRowConstructor, type.FullName));
+        }
+
+        [DoesNotReturn]
+        public static void WhenConstructorHasParameters(Type type)
+        {
+            throw new InvalidOperationException(Formatting.Format(Formatting.ConstructorHasParameters, type.FullName));
+        }
+
+        [DoesNotReturn]
+        public static void WhenMemberWithoutConverter(Type type, MemberInfo member, Type memberType)
+        {
+            throw new InvalidOperationException(Formatting.Format(Formatting.MemberWithoutConverter, type.FullName, member.Name, memberType.FullName));
+        }
+
+        [DoesNotReturn]
+        public static void WhenNoConverter(Type type)
+        {
+            throw new InvalidOperationException(Formatting.Format(Formatting.NoConverter, type.FullName));
+        }
+        #endregion
+
+        #region Reading
+        [DoesNotReturn]
+        public static void WhenRowTypeNotAdded(Type type)
+        {
+            throw new InvalidOperationException(Formatting.Format(Formatting.RowTypeNotAdded, type.FullName));
+        }
+
+        [DoesNotReturn]
+        public static void WhenMemberNotOfRow(MemberInfo member, Type rowType)
+        {
+            throw new InvalidOperationException(Formatting.Format(Formatting.MemberNotOfRow, member.Name, rowType.FullName));
+        }
+
+        [DoesNotReturn]
+        public static void WhenNoOpenRow()
+        {
+            throw new InvalidOperationException(Formatting.NoOpenRow);
+        }
+
+        [DoesNotReturn]
+        public static void WhenUnconvertible(PropertyDefinition property, Type rowType, string path, Exception innerException)
+        {
+            throw new FormatException(Formatting.Format(Formatting.Unconvertible, property.Name, path, rowType.FullName, property.MemberType.Name), innerException);
+        }
+
+        [DoesNotReturn]
+        public static void WhenEnumeratedTwice()
+        {
+            throw new InvalidOperationException(Formatting.EnumeratedTwice);
+        }
+
+        [DoesNotReturn]
+        public static void WhenPartialAtFinalBlock()
+        {
+            throw new InvalidOperationException(Formatting.PartialAtFinalBlock);
+        }
+        #endregion
     }
 }

@@ -1,346 +1,164 @@
-using System.Diagnostics;
-using System.Runtime.ExceptionServices;
-using Forestry.Deserialize.Deserializers;
+using System.Collections.Frozen;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq.Expressions;
+using System.Reflection;
+using Forestry.Deserialize.Converters;
 
 namespace Forestry.Deserialize.Definitions
 {
     /// <summary>
-    /// Type definition with 3 sections:
-    ///  - shape
-    ///  - configuration
-    ///  - creation
+    /// Definition of a row type, built once per options: it constructs rows of its concrete type and
+    /// owns the property definitions that set their members; it sets no members itself (research R5)
     /// </summary>
-    /// <remarks>No support for multiple media lines e.g. JSON lines <see cref="https://jsonlines.org/"/></remarks>
-    public abstract partial class TypeDefinition
+    public sealed class TypeDefinition
     {
-        protected TypeDefinition(
+        private const BindingFlags ConstructorBindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
+        private TypeDefinition(
             Type type,
-            Deserializer deserializer,
-            DeserializeOptions options
-        )
-        {
+            DeserializeOptions options,
+            Func<Row> constructor,
+            PropertyDefinition[] properties
+        ) {
             Type = type;
-            Deserializer = deserializer;
             Options = options;
-
-            Kind = GetTypeDefinitionKind(type, deserializer);
-
-            ElementType = deserializer.ElementType;
-            KeyType = deserializer.KeyType;
-
-            SelfReferencingPropertyDefinition = CreateSelfReferencingPropertyDefinition();
+            _constructor = constructor;
+            Properties = properties;
+            _propertiesByMember = properties.ToFrozenDictionary(property => MemberKey.Of(property.Member));
         }
 
-        #region Shape
         /// <summary>
-        /// Targeted <see cref="Type"/> when deserializing
+        /// The row type, extending <see cref="Row"/>
         /// </summary>
-        /// <value></value>
         public Type Type { get; }
 
         /// <summary>
-        /// Configured <see cref="Deserializer"/>
+        /// Options that built this definition
         /// </summary>
-        /// <value></value>
-        public virtual Deserializer Deserializer { get; } 
+        public DeserializeOptions Options { get; }
 
         /// <summary>
-        /// Options that initialized this <see cref="TypeDefinition"/>
+        /// One property definition per property or field whose type a converter handles
         /// </summary>
-        /// <value></value>
-        public virtual DeserializeOptions Options { get; } 
+        public IReadOnlyList<PropertyDefinition> Properties { get; }
+
+        private readonly Func<Row> _constructor;
+
+        private readonly FrozenDictionary<MemberKey, PropertyDefinition> _propertiesByMember;
 
         /// <summary>
-        /// Shapes this definition and set by the <see cref="Deserializer"/> e.g. only objects 
-        /// have properties
+        /// Construct a row with the chosen constructor (no parameters in this slice)
         /// </summary>
-        /// <value></value>
-        public TypeDefinitionKind Kind { get; }
-
-        /// <summary>
-        /// Get <see cref="TypeDefinitionKind"/> using deserializer kind falling back on None when factory deserializer
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="deserializer"></param>
         /// <returns></returns>
-        /// <exception cref="InvalidOperationException"></exception>
-        private static TypeDefinitionKind GetTypeDefinitionKind(
-            Type type,
-            Deserializer deserializer
-        )
-        {
-            // TODO: When type == typeof(object) maybe just return TypeDefinitionKind.None as simple type
-
-            switch (deserializer.DeserializerKind)
-            {
-                case DeserializerKind.Value: return TypeDefinitionKind.None;
-                case DeserializerKind.Object: return TypeDefinitionKind.Object;
-                case DeserializerKind.Enumerable: return TypeDefinitionKind.Enumerable;
-                case DeserializerKind.Dictionary: return TypeDefinitionKind.Dictionary;
-                case DeserializerKind.None:
-                {
-                    // TODO: Assert when factory deserializer + Use throwing
-                    return default;
-                }
-                default:
-                {
-                    // TODO: Use Throwing but return default
-                    throw new InvalidOperationException();
-                }
-            }
-        }
+        internal Row Construct() => _constructor();
 
         /// <summary>
-        /// Optional element type with <see cref="TypeDefinitionKind.Enumerable"/>
+        /// Property definition of one of this type's members
         /// </summary>
-        /// <value></value>
-        public Type? ElementType { get; }
-
-        private TypeDefinition? _elementTypeDefintion;
-
-        /// <summary>
-        /// Optional element <see cref="TypeDefinition"/> with <see cref="TypeDefinitionKind.Enumerable"/>
-        /// </summary>
-        /// <value></value>
-        internal TypeDefinition? ElementTypeDefinition
-        {
-            get
-            {
-                Debug.Assert(IsConfigurationImmutable);
-                Debug.Assert(_elementTypeDefintion is null or { IsConfigurationMutable: true });
-
-                TypeDefinition? value = _elementTypeDefintion;
-                value?.AssertConfiguration();
-
-                return value;
-            }
-            set
-            {
-                Debug.Assert(!IsReadOnly);
-                Debug.Assert(value is null || value.Type == ElementType);
-
-                _elementTypeDefintion = value;
-            }
-        }
+        /// <param name="member"></param>
+        /// <param name="property"></param>
+        /// <returns></returns>
+        internal bool TryGetProperty(MemberInfo member, [NotNullWhen(true)] out PropertyDefinition? property) =>
+            _propertiesByMember.TryGetValue(MemberKey.Of(member), out property);
 
         /// <summary>
-        /// Optional key type with <see cref="IDictionary{TKey, TValue}"/>
-        /// </summary>
-        /// <value></value>
-        public Type? KeyType { get; }
-
-        private TypeDefinition? _keyTypeDefinition;
-
-        /// <summary>
-        /// Optional key <see cref="TypeDefinition"/> with <see cref="IDictionary{TKey, TValue}"/>
-        /// </summary>
-        /// <value></value>
-        internal TypeDefinition? KeyTypeDefinition
-        {
-            get
-            {
-                Debug.Assert(IsConfigurationImmutable);
-                Debug.Assert(_keyTypeDefinition is null or { IsConfigurationMutable: true });
-
-                TypeDefinition? value = _keyTypeDefinition;
-                value?.AssertConfiguration();
-
-                return value;
-            }
-            set
-            {
-                Debug.Assert(!IsReadOnly);
-                Debug.Assert(value is null || value.Type == KeyType);
-
-                _keyTypeDefinition = value;
-            }
-        }
-
-        /// <summary>
-        /// Optional element collection reference by name
-        /// </summary>
-        public string? ElementCollection
-        {
-            get => _elementCollection;
-            set
-            {
-                ThrowingWhenIsReadOnly();
-
-                if (value is null || !Options.CollectionNamingPolicy.TryEnforce(value))
-                {
-                    throw new InvalidOperationException();  // TODO: Use Throwing
-                }
-
-                _elementCollection = value;
-            }
-        }
-
-        private string? _elementCollection;
-
-        /// <summary>
-        /// <see cref="Value"/> children by name
-        /// </summary>
-        internal Dictionary<string, PropertyDefinition> PropertyDefinitionsByName
-        {
-            get
-            {
-                Debug.Assert(IsConfigurationImmutable is true && _propertyDefinitionsByName is not null);
-                return _propertyDefinitionsByName;
-            }
-        }
-
-        private Dictionary<string, PropertyDefinition>? _propertyDefinitionsByName;
-
-        internal PropertyDefinition SelfReferencingPropertyDefinition { get; }
-
-        private protected abstract PropertyDefinition CreateSelfReferencingPropertyDefinition();
-        #endregion
-
-        #region Configuration
-        private volatile ConfigurationState _configurationState;
-
-        private ExceptionDispatchInfo? _lastConfigureException;                          
-
-        /// <summary>
-        /// Flag true when <see cref="TypeDefinition"> is immutable and false when mutable
-        /// </summary>
-        public bool IsReadOnly { get; private set; }
-
-        /// <summary>
-        /// Set <see cref="TypeDefinition"> as immutable
-        /// </summary>
-        public void SetReadOnly() => IsReadOnly = true;
-
-        /// <summary>
-        /// Assert configuration <see cref="TypeDefinition"/> only when configuration state == None
-        /// </summary>
-        internal void AssertConfiguration()
-        {
-            if (!IsConfigurationImmutable)
-            {
-                SynchronizeConfigure();
-            }
-
-            void SynchronizeConfigure()
-            {
-                Options.SetReadOnly();
-                SetReadOnly();
-
-                // Before locking the type definition cache assert any configuration exception
-                _lastConfigureException?.Throw();
-
-                lock (Options.Cache)
-                {
-                    // When this thread has a redundant configuration mutation || another thread is mutating the configuration
-                    if (_configurationState != ConfigurationState.None)
-                    {
-                        return;
-                    }
-
-                    // Before configuring assert any configuration exception
-                    _lastConfigureException?.Throw();
-
-                    try
-                    {
-                        _configurationState = ConfigurationState.Mutating;
-                        Configure();
-                        _configurationState = ConfigurationState.Immutable;
-                    }
-                    catch (Exception e)
-                    {
-                        _lastConfigureException = ExceptionDispatchInfo.Capture(e);
-                        _configurationState = ConfigurationState.None;
-                        throw;
-                    }
-                }
-            }
-        }
-
-        private void Configure()
-        {
-            Debug.Assert(Monitor.IsEntered(Options.Cache)); // Assert configuration locked
-            Debug.Assert(Options.IsReadOnly);
-            Debug.Assert(IsReadOnly);
-
-            // TODO: Polymorphism
-
-            if (Kind == TypeDefinitionKind.Object)
-            {
-                ConfigureProperties();
-            }
-
-            // When ElementType member from Deserializer is not null
-            if (ElementType is not null)
-            {
-                _elementTypeDefintion ??= Options.ThrowingGetTypeDefinition(ElementType);
-                _elementTypeDefintion.AssertConfiguration();
-            }
-
-            // When KeyType member from Deserializer is not null
-            if (KeyType is not null)
-            {
-                _keyTypeDefinition ??= Options.ThrowingGetTypeDefinition(KeyType);
-                _keyTypeDefinition.AssertConfiguration();
-            }
-
-            // TODO: Assert targets Options
-        }
-
-        internal bool IsConfigurationImmutable => _configurationState == ConfigurationState.Immutable;
-
-        internal bool IsConfigurationMutable => _configurationState is not ConfigurationState.None;
-
-        private enum ConfigurationState : byte
-        {
-            None = 0, // no mutation of the configuration is ongoing
-            Mutating = 1,
-            Immutable = 2
-        }
-
-        /// <summary>
-        /// Throwing when definition is read only
-        /// </summary>
-        internal void ThrowingWhenIsReadOnly()
-        {
-            if (IsReadOnly)
-            {
-                Throwing.WhenTypeDefinitionIsReadOnly();
-            }
-        }
-        #endregion
-
-        #region Creation
-        /// <summary>
-        /// Use deserializer to initialize the <see cref="TypeDefinition"/> otherwise failback on 
-        /// reflection
+        /// Build the definition of a row type, rejecting it before any byte is read (FR-008)
         /// </summary>
         /// <param name="type"></param>
-        /// <param name="deserializer"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        internal static TypeDefinition GetTypeDefinition(
-            Type type,
-            Deserializer deserializer,
-            DeserializeOptions options
-        )
+        internal static TypeDefinition Create(Type type, DeserializeOptions options)
         {
-            TypeDefinition typeDefinition = deserializer.Type == type ?
-                deserializer.InitializeTypeDefinition(options) :
-                options.TypeDefinitionReflectiveInstantiator(type, deserializer, options);
+            ConstructorInfo constructor = ChooseConstructor(type);
 
-            Debug.Assert(typeDefinition.Type == type);
-            return typeDefinition;
+            if (constructor.GetParameters().Length > 0)
+            {
+                Throwing.WhenConstructorHasParameters(type);
+            }
+
+            List<PropertyDefinition> properties = [];
+
+            foreach (MemberInfo member in GetMembers(type))
+            {
+                Type memberType = member is PropertyInfo property ? property.PropertyType : ((FieldInfo)member).FieldType;
+                Converter? converter = options.ResolveConverter(memberType);
+
+                if (converter is null)
+                {
+                    Throwing.WhenMemberWithoutConverter(type, member, memberType);
+                }
+
+                properties.Add(PropertyDefinition.Create(member, memberType, converter));
+            }
+
+            Func<Row> construct = Expression.Lambda<Func<Row>>(Expression.Convert(Expression.New(constructor), typeof(Row))).Compile();
+
+            return new TypeDefinition(type, options, construct, [.. properties]);
         }
 
         /// <summary>
-        /// Default <see cref="Object"/> type
+        /// Exactly one constructor marked <see cref="RowConstructorAttribute"/> is used, whatever its
+        /// accessibility; none marked and exactly one public constructor: that one; otherwise, or with
+        /// more than one marked, fail fast (research R5)
         /// </summary>
-        internal static readonly Type SystemObjectType = typeof(object);
+        /// <param name="type"></param>
+        /// <returns></returns>
+        private static ConstructorInfo ChooseConstructor(Type type)
+        {
+            ConstructorInfo[] constructors = type.GetConstructors(ConstructorBindingFlags);
+            ConstructorInfo[] marked = Array.FindAll(constructors, constructor => constructor.IsDefined(typeof(RowConstructorAttribute), inherit: false));
+
+            if (marked.Length > 1)
+            {
+                Throwing.WhenMoreThanOneRowConstructor(type);
+            }
+
+            if (marked.Length == 1)
+            {
+                return marked[0];
+            }
+
+            ConstructorInfo[] publicConstructors = Array.FindAll(constructors, constructor => constructor.IsPublic);
+
+            if (publicConstructors.Length != 1)
+            {
+                Throwing.WhenNoConstructorChosen(type);
+            }
+
+            return publicConstructors[0];
+        }
 
         /// <summary>
-        /// Default <see cref="ValueType"/> type
+        /// Public instance properties with a public setter, and public instance fields that can be set
         /// </summary>
-        internal static readonly Type SystemValueType = typeof(ValueType);
-        #endregion
+        /// <param name="type"></param>
+        /// <returns></returns>
+        private static IEnumerable<MemberInfo> GetMembers(Type type)
+        {
+            foreach (PropertyInfo property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
+            {
+                if (property.SetMethod is { IsPublic: true } && property.GetIndexParameters().Length == 0)
+                {
+                    yield return property;
+                }
+            }
+
+            foreach (FieldInfo field in type.GetFields(BindingFlags.Instance | BindingFlags.Public))
+            {
+                if (!field.IsInitOnly && !field.IsLiteral)
+                {
+                    yield return field;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Stable key of a member, independent of how its <see cref="MemberInfo"/> was obtained
+        /// (research R6)
+        /// </summary>
+        private readonly record struct MemberKey(Module Module, int MetadataToken)
+        {
+            public static MemberKey Of(MemberInfo member) => new(member.Module, member.MetadataToken);
+        }
     }
 }

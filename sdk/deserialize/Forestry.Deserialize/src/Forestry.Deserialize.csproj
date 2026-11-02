@@ -9,6 +9,12 @@
     <PackageTags>Forestry Deserialize</PackageTags>
   </PropertyGroup>
 
+  <!-- Public documentation (D0), option B (R9): XML docs on, missing docs warn until the first real StanForD document -->
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);CS1591</WarningsNotAsErrors>
+  </PropertyGroup>
+
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>Forestry.Deserialize.Xml</_Parameter1>

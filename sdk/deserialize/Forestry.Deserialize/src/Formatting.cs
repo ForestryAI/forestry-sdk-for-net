@@ -8,8 +8,8 @@ namespace Forestry.Deserialize
         /// Strip exception messages for System.* assemblies. When an exception is thrown from 
         /// a System.* assembly, the message will be a simplified resource ID instead of the full message.
         /// </summary>
-        /// <see cref="https://github.com/dotnet/runtime/blob/main/docs/workflow/trimming/feature-switches.md"/>
-        /// <seealso cref="https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options?pivots=dotnet-8-0"/>
+        /// <see href="https://github.com/dotnet/runtime/blob/main/docs/workflow/trimming/feature-switches.md"/>
+        /// <seealso href="https://learn.microsoft.com/en-us/dotnet/core/deploying/trimming/trimming-options?pivots=dotnet-8-0"/>
         internal static bool UsingResourceKeys() => s_usingResourceKeys;
 
         private static readonly bool s_usingResourceKeys = AppContext.TryGetSwitch("System.Resources.UseSystemResourceKeys", out bool usingResourceKeys) ? usingResourceKeys : false;
@@ -49,6 +49,16 @@ namespace Forestry.Deserialize
             }
 
             return string.Format(resourceFormat, p1, p2, p3);
+        }
+
+        internal static string Format(string resourceFormat, object? p1, object? p2, object? p3, object? p4)
+        {
+            if (UsingResourceKeys())
+            {
+                return string.Join(", ", resourceFormat, p1, p2, p3, p4);
+            }
+
+            return string.Format(resourceFormat, p1, p2, p3, p4);
         }
 
 

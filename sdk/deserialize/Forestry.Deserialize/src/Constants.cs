@@ -5,14 +5,14 @@ namespace Forestry.Deserialize
     public static class Constants
     {
         /// <summary>
-        /// Empty async <see cref="Value"/> enumerator
+        /// Empty async <typeparamref name="Value"/> enumerator
         /// </summary>
         /// <typeparam name="Value"></typeparam>
         /// <returns></returns>
         public static IAsyncEnumerator<Value> EmptyAsync<Value>() => EmptyAsyncEnumerator<Value>.Instance;
 
         /// <summary>
-        /// Empty <see cref="Value"/> enumerator
+        /// Empty <typeparamref name="Value"/> enumerator
         /// </summary>
         /// <typeparam name="Value"></typeparam>
         /// <returns></returns>

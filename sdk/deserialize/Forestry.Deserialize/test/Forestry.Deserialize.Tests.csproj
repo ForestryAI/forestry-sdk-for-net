@@ -8,6 +8,8 @@
 
   <PropertyGroup>
     <AssemblyName>Forestry.Deserialize.Tests</AssemblyName>
+    <!-- Leaves out performance tests; Performance.runsettings runs only them -->
+    <RunSettingsFilePath>$(MSBuildThisFileDirectory)Forestry.Deserialize.Tests.runsettings</RunSettingsFilePath>
   </PropertyGroup>
 
   <!-- Test package references -->

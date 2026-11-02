@@ -1,12 +1,10 @@
-using Forestry.Deserialize.Reading;
-
 namespace Forestry.Deserialize.Xml.Reading
 {
     /// <summary>
     /// The reader state is meant to live over async || sync bounderies to 
     /// reconstruct a reader with debuging, assertions and options fields.
     /// </summary>
-    public readonly struct ReaderState: IReaderState<ReaderState>
+    public readonly struct ReaderState
     {
         internal readonly long _lineNumber;
 
@@ -73,15 +71,6 @@ namespace Forestry.Deserialize.Xml.Reading
 
             _readerOptions = readerOptions;
         }
-
-        // Explicit interface implementation: IReaderState<TState>'s members are `internal`, and an
-        // internal interface member can only ever be satisfied by a `public` implicitly-implementing
-        // member - even across an InternalsVisibleTo friend assembly. Forwarding explicitly here
-        // keeps the fields above `internal`/`_`-prefixed/readonly, matching every other field on
-        // this type, instead of promoting four of them to `public` just to satisfy the interface.
-        long IReaderState<ReaderState>._lineNumber => _lineNumber;
-
-        long IReaderState<ReaderState>._linePosition => _linePosition;
 
         /// <summary>
         /// Any deviations from strict adherence to the XML specification

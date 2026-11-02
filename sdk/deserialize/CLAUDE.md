@@ -1,5 +1,9 @@
 # Task #110 — Review current code base
 
+> **Superseded (2026-10-22)**: this describes the pre-spec-kit design, which is wrong (see
+> `specs/001-walking-skeleton/research.md` R0). The truth is `.specify/memory/constitution.md` and
+> `specs/`. Do not infer design from this file.
+
 ## User Story
 #106 — Deserialize
 

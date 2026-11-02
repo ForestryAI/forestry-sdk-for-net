@@ -1,191 +1,69 @@
-using System.Diagnostics;
+using System.Reflection;
+using Forestry.Deserialize.Converters;
+using Forestry.Deserialize.Reading;
 
 namespace Forestry.Deserialize.Definitions
 {
-    public abstract class PropertyDefinition(
-        Type type,
-        Type declaringType,
-        TypeDefinition? declaringTypeDefinition,
-        DeserializeOptions options
-    )
+    /// <summary>
+    /// Definition of one property or field of a row type: converts a value handed over as UTF-8 text
+    /// into the member's type and sets it on a row (research R5, R14)
+    /// </summary>
+    public abstract class PropertyDefinition
     {
-        internal static readonly PropertyDefinition _Empty = CreateEmptyPropertyDefinition();
-
-        internal static PropertyDefinition CreateEmptyPropertyDefinition()
+        private protected PropertyDefinition(MemberInfo member, Type memberType, Converter converter)
         {
-            PropertyDefinition value = new PropertyDefinition<object>(typeof(object), declaringTypeDefinition: null, options: null!)
-            {
-                Name = string.Empty
-            };
-
-            // TODO: Debug assertions
-
-            return value;
-        }
-
-        #region Shape
-        /// <summary>
-        /// Property <see cref="Type"/>
-        /// </summary>
-        /// <value></value>
-        public Type Type { get; } = type;
-
-        /// <summary>
-        /// Declaring <see cref="Type"/>
-        /// </summary>
-        /// <value></value>
-        public Type DeclaringType { get; } = declaringType;
-
-        /// <summary>
-        /// Declaring <see cref="TypeDefinition"/>
-        /// </summary>
-        /// <value></value>
-        public TypeDefinition? DeclaringTypeDefinition { get; private set; } = declaringTypeDefinition;
-
-        /// <summary>
-        /// Options
-        /// </summary>
-        /// <value></value>
-        public virtual DeserializeOptions Options { get; } = options;
-
-        /// <summary>
-        /// Unescaped property name e.g. escaped newlines or tabs from REST APIs
-        /// </summary>
-        /// <value></value>
-        public string Name
-        {
-            get
-            {
-                Debug.Assert(_name is not null);
-                return _name;
-            }
-            set
-            {
-                ThrowingWhenIsReadOnly();
-                ArgumentNullException.ThrowIfNull(value);
-
-                _name = value;
-            }
-        }
-
-        private string? _name;
-
-        /// <summary>
-        /// UTF-8 encoded property name
-        /// </summary>
-        internal byte[] Utf8Name { get; private set; } = null!;
-
-        /// <summary>
-        /// Property <see cref="TypeDefinition"/>
-        /// </summary>
-        /// <value></value>
-        public TypeDefinition TypeDefinition
-        {
-            get
-            {
-                Debug.Assert(_typeDefinition?.IsConfigurationMutable == true);
-
-                TypeDefinition value = _typeDefinition;
-                value.AssertConfiguration();
-
-                return value;
-            }
-            set
-            {
-                _typeDefinition = value;
-            }
-        }
-
-        private TypeDefinition? _typeDefinition;
-
-        /// <summary>
-        /// Property index in declaring <see cref="TypeDefinition"/> sealed set when 
-        /// this <see cref="PropertyDefinition"/> is configured
-        /// </summary>
-        internal int Index
-        {
-            get
-            {
-                Debug.Assert(IsConfigured);
-                return _index;
-            }
-            set
-            {
-                Debug.Assert(!IsConfigured);
-                _index = value;
-            }
-        }
-
-        private int _index;
-
-        /// <summary>
-        /// Required property
-        /// </summary>
-        public bool IsRequired
-        {
-            get => _isRequired;
-            set
-            {
-                ThrowingWhenIsReadOnly();
-                _isRequired = value;
-            }
-        }
-
-        private protected bool _isRequired;
-
-        internal bool IsSelfReferencedTypeDefinition { get; init; }
-
-        // TODO: Maybe property order metadata
-        #endregion
-
-        #region Configuration
-        /// <summary>
-        /// Asserts is configured
-        /// </summary>
-        /// <value></value>
-        internal bool IsConfigured { get; private set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        internal void Configure()
-        {
-            Debug.Assert(DeclaringTypeDefinition is not null);
-            Debug.Assert(!IsConfigured);
-
-            // Synchronize configuration of declaring <see cref="TypeDefinition"/>
-            // TODO: Ingore property conditions
-            _typeDefinition ??= Options.GetTypeDefinition(Type);
-            _typeDefinition.AssertConfiguration();
-            
-            Utf8Name = System.Text.Encoding.UTF8.GetBytes(Name);
-
-            IsConfigured = true;
+            Member = member;
+            MemberType = memberType;
+            Field = new Field(member, memberType, converter);
         }
 
         /// <summary>
-        /// Throw when definition is read only
+        /// Member name in C#
         /// </summary>
-        private protected void ThrowingWhenIsReadOnly()
-        {
-            DeclaringTypeDefinition?.ThrowingWhenIsReadOnly();
-        }
+        public string Name => Member.Name;
 
         /// <summary>
-        /// Set declaring type definition only once else throw
+        /// The <see cref="PropertyInfo"/> or <see cref="FieldInfo"/>
         /// </summary>
-        /// <param name="parent"></param>
-        internal void SetDeclaringTypeDefinition(TypeDefinition parent)
-        {
-            if (DeclaringTypeDefinition is null)
-            {
-                DeclaringTypeDefinition = parent;
-            }
-            else if (DeclaringTypeDefinition != parent)
-            {
-                Throwing.WhenWrongDeclaringTypeDefintion(this);
-            }
-        }
-        #endregion
+        public MemberInfo Member { get; }
+
+        /// <summary>
+        /// C# type of the member
+        /// </summary>
+        public Type MemberType { get; }
+
+        /// <summary>
+        /// Effective converter of the member's type
+        /// </summary>
+        public Converter Converter => Field.Converter;
+
+        /// <summary>
+        /// Metadata about the member (research R4)
+        /// </summary>
+        public Field Field { get; }
+
+        /// <summary>
+        /// Convert <paramref name="utf8"/> and set it on <paramref name="row"/>, without boxing
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="utf8"></param>
+        /// <param name="context"></param>
+        internal abstract void ReadAndSet(Row row, ReadOnlySpan<byte> utf8, in FieldContext context);
+
+        /// <summary>
+        /// Create the generic definition for the member's type, once when definitions are built
+        /// </summary>
+        /// <param name="member"></param>
+        /// <param name="memberType"></param>
+        /// <param name="converter"></param>
+        /// <returns></returns>
+        internal static PropertyDefinition Create(MemberInfo member, Type memberType, Converter converter) =>
+            (PropertyDefinition)Activator.CreateInstance(
+                typeof(PropertyDefinition<>).MakeGenericType(memberType),
+                BindingFlags.Instance | BindingFlags.NonPublic,
+                binder: null,
+                args: [member, converter],
+                culture: null
+            )!;
     }
 }
