@@ -40,7 +40,7 @@ namespace Forestry.Deserialize
         /// <param name="parameterTypes"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        /// <see cref="https://learn.microsoft.com/en-us/dotnet/core/compatibility/core-libraries/7.0/reflection-invoke-exceptions"/>
+        /// <see href="https://learn.microsoft.com/en-us/dotnet/core/compatibility/core-libraries/7.0/reflection-invoke-exceptions"/>
         public static object? ThrowingInstantiate(
             this Type type,
             Type[] parameterTypes,
@@ -62,10 +62,11 @@ namespace Forestry.Deserialize
         }
 
         /// <summary>
-        /// Try get generic base type e.g. generic List<T> from base type List<>
+        /// Try get generic base type e.g. generic <c>List&lt;T&gt;</c> from base type <c>List&lt;&gt;</c>
         /// </summary>
         /// <param name="type"></param>
         /// <param name="baseType"></param>
+        /// <param name="genericBaseType"></param>
         /// <returns></returns>
         public static bool TryGetGenericBaseType(
             this Type type, 

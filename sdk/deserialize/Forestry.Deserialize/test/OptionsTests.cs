@@ -24,7 +24,7 @@ namespace Forestry.Deserialize.Tests
             optionsA.MakeReadOnly();
 
             TestingDeserializeOptions optionsB = new();
-            optionsB.Rows.Add<LogWithParameters>();
+            optionsB.Rows.Add<Stem>();
             optionsB.MakeReadOnly();
 
             Assert.True(optionsA.TryGetTypeDefinition(typeof(Log), out TypeDefinition? definitionA));

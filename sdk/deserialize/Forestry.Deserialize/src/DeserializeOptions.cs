@@ -1,165 +1,111 @@
-using Forestry.Deserialize.Definitions;
-using Forestry.Deserialize.Deserializers;
+using Forestry.Deserialize.Converters;
 using Forestry.Deserialize.Reading;
 
 namespace Forestry.Deserialize
 {
     /// <summary>
-    /// Deserialize options responsible for getting a <see cref="Deserializer"/> by <see cref="Type"/> and 
-    /// deserialization policies
+    /// Options of one media (e.g. <c>DeserializeXmlOptions</c>): the row types, converters and settings
+    /// of a deserialization. The options own and build all definitions; once first used they are
+    /// read-only (research R6)
     /// </summary>
     public abstract partial class DeserializeOptions
     {
-        #region TypeDefinition
-        public Deserializer GetDeserializer(Type type)
+        /// <summary>
+        /// Options of a media
+        /// </summary>
+        protected DeserializeOptions()
         {
-            TypeDefinition typeDefinition = GetTypeDefinition(type);
-            return typeDefinition.Deserializer;
+            Rows = new RowTypes(this);
         }
+
+        #region Row types
+        /// <summary>
+        /// Row types added explicitly: only their rows are handed out (research R12)
+        /// </summary>
+        public RowTypes Rows { get; }
         #endregion
 
-        #region Configuration
+        #region Converters
         /// <summary>
-        /// Read only the options are locked for changes
+        /// Converters added by the developer; they win over the media's defaults and the built-ins
+        /// (research R14)
         /// </summary>
-        public bool IsReadOnly => _isReadOnly;
-        private volatile bool _isReadOnly;
+        public IList<Converter> Converters => _converters ??= new OptionsObservableList<Converter>(this);
+
+        private OptionsObservableList<Converter>? _converters;
 
         /// <summary>
-        /// Idempotent set as read only
+        /// The media's default converters, e.g. XML Schema booleans; after the developer's converters,
+        /// before the built-ins
         /// </summary>
-        public void SetReadOnly()
+        protected virtual IEnumerable<Converter> MediaConverters => [];
+        #endregion
+
+        #region Read-only
+        /// <summary>
+        /// Locked for changes: the definitions are built
+        /// </summary>
+        public bool IsReadOnly => _isReadOnly;
+
+        private volatile bool _isReadOnly;
+
+        private readonly object _gate = new();
+
+        /// <summary>
+        /// Lock the options and build their definitions, as the first deserialization does; throws when
+        /// an added row type cannot be defined. Idempotent
+        /// </summary>
+        public void MakeReadOnly()
         {
-            _isReadOnly = true;
+            if (_isReadOnly)
+            {
+                return;
+            }
+
+            lock (_gate)
+            {
+                if (_isReadOnly)
+                {
+                    return;
+                }
+
+                _typeDefinitions = BuildTypeDefinitions();
+                _isReadOnly = true;
+            }
         }
 
         /// <summary>
-        /// Throws when read only
+        /// Throws when read-only
         /// </summary>
-        internal void ThrowingAssertReadOnly()
+        internal void ThrowingAssertNotReadOnly()
         {
             if (_isReadOnly)
             {
                 Throwing.WhenDeserializeOptionsIsReadOnly();
             }
         }
-
-        /// <summary>
-        /// Reflective type definition instantiator
-        /// </summary>
-        internal abstract Func<Type, Deserializer, DeserializeOptions, TypeDefinition> TypeDefinitionReflectiveInstantiator { get; }
-
-        /// <summary>
-        /// Reflective property definition instantiator
-        /// </summary>
-        internal abstract Func<Type, TypeDefinition, DeserializeOptions, PropertyDefinition> PropertyDefinitionReflectiveInstantiator { get; }
-
-        /// <summary>
-        /// Deserializer provider of simple and factory deserializers
-        /// </summary>
-        internal abstract IDeserializerProvider DeserializerProvider { get; }
-
-        /// <summary>
-        /// Reflection only type definition provider when sdk developing
-        /// </summary>
-        public TypeDefinitionProvider TypeDefinitionProvider => _typeDefinitionProvider;
-
-        private readonly TypeDefinitionProvider _typeDefinitionProvider = new();
         #endregion
 
-        #region Policies
+        #region Media
         /// <summary>
-        /// Naming policy enforced on collection element names (e.g. <see cref="TypeDefinition.ElementCollection"/>)
+        /// The media's synchronous row enumerator over UTF-8 bytes (research R2)
         /// </summary>
-        public virtual NamingPolicy CollectionNamingPolicy { get; set; } = NamingPolicy.Default;
-
-        /// <summary>
-        /// Naming policy applied to reflected property/field names; null leaves member names as-is
-        /// </summary>
-        public virtual NamingPolicy? ElementNamingPolicy { get; set; }
-
-        /// <summary>
-        /// Policy asserting when a reflected property is excluded. Defaults to including everything
-        /// </summary>
-        public virtual IIgnorePropertyPolicy IgnorePropertyPolicy { get; set; } = NeverIgnorePropertyPolicy.Instance;
-
-        /// <summary>
-        /// Policy asserting when a reflected field is included. Defaults to excluding all fields
-        /// </summary>
-        public virtual IIncludeFieldPolicy IncludeFieldPolicy { get; set; } = NeverIncludeFieldPolicy.Instance;
-
-        private sealed class NeverIgnorePropertyPolicy : IIgnorePropertyPolicy
-        {
-            public static readonly NeverIgnorePropertyPolicy Instance = new();
-
-            public bool TryEnforce(System.Reflection.PropertyInfo property) => false;
-        }
-
-        private sealed class NeverIncludeFieldPolicy : IIncludeFieldPolicy
-        {
-            public static readonly NeverIncludeFieldPolicy Instance = new();
-
-            public bool TryEnforce(System.Reflection.FieldInfo field) => false;
-        }
-        #endregion
-
-        #region Customization
-        /// <summary>
-        /// User defined deserializers
-        /// </summary>
-        public IList<Deserializer> UserDefinedDeserializers
-        {
-            get => _userDefinedDeserializers ??= new(this);
-        }
-
-        private OptionsObservableList<Deserializer>? _userDefinedDeserializers;
-
-        /// <summary>
-        /// Get user defined deserializer
-        /// </summary>
-        /// <param name="type"></param>
+        /// <param name="utf8"></param>
         /// <returns></returns>
-        internal Deserializer? GetUserDefinedDeserializer(Type type)
-        {
-            if (_userDefinedDeserializers is { } values)
-            {
-                foreach (Deserializer value in values)
-                {
-                    if (value.CanDeserialize(type))
-                    {
-                        return value;
-                    }
-                }
-            }
-
-            return null;
-        }
+        protected internal abstract RowEnumerator CreateRowEnumerator(ReadOnlyMemory<byte> utf8);
+        #endregion
 
         /// <summary>
-        /// Observable options
+        /// List locked with the options
         /// </summary>
-        private sealed class OptionsObservableList<T>: ObservableList<T>
+        private sealed class OptionsObservableList<T>(DeserializeOptions options) : ObservableList<T>
         {
-            public OptionsObservableList(
-                DeserializeOptions options,
-                IList<T>? elements = null
-            ) : base(elements) {
-                _options = options;
-            }
-
-            private readonly DeserializeOptions _options;
-
-            public override bool IsReadOnly => _options.IsReadOnly;
+            public override bool IsReadOnly => options.IsReadOnly;
 
             protected override void Before()
             {
-                _options.ThrowingAssertReadOnly();
+                options.ThrowingAssertNotReadOnly();
             }
         }
-        #endregion
-
-        #region Reading
-        public abstract TState CreateReaderState<TState>(ReadOnlySpan<byte> buffer) where TState : struct, IReaderState<TState>;
-        #endregion
     }
 }

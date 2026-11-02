@@ -7,7 +7,7 @@ namespace Forestry.Deserialize.Reading
     /// <summary>
     /// Only async reading using <see cref="PipeReader"/>
     /// </summary>
-    internal struct PipeReaderBuffering(PipeReader stream) : IBuffering<PipeReaderBuffering, PipeReader>
+    internal struct PipeReaderBuffering(PipeReader stream)
     {
         private readonly PipeReader _stream = stream;
 
@@ -32,7 +32,7 @@ namespace Forestry.Deserialize.Reading
         /// <summary>
         /// Asynchronously read the next buffered bytes from the stream
         /// </summary>
-        /// <param name="stream"></param>
+        /// <param name="_">Unused: the buffering holds its pipe</param>
         /// <param name="cancellationToken"></param>
         /// <param name="maximum">Maximum bytes with internal buffers</param>
         /// <returns></returns>
