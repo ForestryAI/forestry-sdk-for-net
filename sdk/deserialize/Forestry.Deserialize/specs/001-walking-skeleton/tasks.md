@@ -187,8 +187,8 @@ added to the XML options; check the rows (quickstart rows 1-3, 12-14).
 
 ### Implementation for User Story 2
 
-- [ ] T047 [US2] Declare and implement `Row`'s members in `Forestry.Deserialize/src/Rows/Row.cs`: `Is<T>() where T : Row`, as C#'s `is`; `AsType<T>() where T : Row`, a checked cast returning the derived instance and throwing `InvalidCastException` naming both classes; both non-virtual, nothing stored on the row, no public `Type` or type definition (R4, developer 2026-11-02)
-- [ ] T048 [US2] Run `dotnet test` on both test projects: T044 and the sync case of T045 pass (async skipped), US1 still green. Then the performance gate: `dotnet test -s Performance.runsettings` on both test projects passes
+- [X] T047 [US2] Declare and implement `Row`'s members in `Forestry.Deserialize/src/Rows/Row.cs`: `Is<T>() where T : Row`, as C#'s `is`; `AsType<T>() where T : Row`, a checked cast returning the derived instance and throwing `InvalidCastException` naming both classes; both non-virtual, nothing stored on the row, no public `Type` or type definition (R4, developer 2026-11-02)
+- [X] T048 [US2] Run `dotnet test` on both test projects: T044 and the sync case of T045 pass (async skipped), US1 still green. Then the performance gate: `dotnet test -s Performance.runsettings` on both test projects passes
 
 **Checkpoint**: User Stories 1 and 2 work.
 

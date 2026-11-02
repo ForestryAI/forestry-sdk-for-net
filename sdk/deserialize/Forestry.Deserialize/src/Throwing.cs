@@ -115,5 +115,13 @@ namespace Forestry.Deserialize
             throw new InvalidOperationException(Formatting.PartialAtFinalBlock);
         }
         #endregion
+
+        #region Rows (FR-006)
+        [DoesNotReturn]
+        public static void WhenRowNotOfType(Type rowType, Type type)
+        {
+            throw new InvalidCastException(Formatting.Format(Formatting.RowNotOfType, rowType.FullName, type.FullName));
+        }
+        #endregion
     }
 }
