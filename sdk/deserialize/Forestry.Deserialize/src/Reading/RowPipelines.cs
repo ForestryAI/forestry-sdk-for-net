@@ -59,7 +59,7 @@ namespace Forestry.Deserialize.Reading
             SetMember(field, utf8, in context);
 
         /// <summary>
-        /// The top open row is complete: pop it and hand it out when its type was added explicitly
+        /// The top open row is complete: pop it and hand it out when the options enumerate its type
         /// </summary>
         /// <returns>The row to hand out, or null for a row only a constructor needs</returns>
         public Row? Pipeline()
@@ -69,7 +69,7 @@ namespace Forestry.Deserialize.Reading
                 Throwing.WhenNoOpenRow();
             }
 
-            return openRow.TypeDefinition.IsHandedOut ? openRow.Row : null;
+            return _options.Enumerates(openRow.TypeDefinition.Type) ? openRow.Row : null;
         }
 
         /// <summary>

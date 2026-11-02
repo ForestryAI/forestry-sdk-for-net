@@ -27,7 +27,7 @@ namespace Forestry.Deserialize
 
         #region Converters
         /// <summary>
-        /// Converters added by the developer; they win over the media's defaults and the built-ins
+        /// Converters added by the developer; they win over the media's defaults and the primitives
         /// (research R14)
         /// </summary>
         public IList<Converter> Converters => _converters ??= new OptionsObservableList<Converter>(this);
@@ -36,7 +36,7 @@ namespace Forestry.Deserialize
 
         /// <summary>
         /// The media's default converters, e.g. XML Schema booleans; after the developer's converters,
-        /// before the built-ins
+        /// before the primitives
         /// </summary>
         protected virtual IEnumerable<Converter> MediaConverters => [];
         #endregion
@@ -70,9 +70,16 @@ namespace Forestry.Deserialize
                 }
 
                 _typeDefinitions = BuildTypeDefinitions();
+                OnMakingReadOnly();
                 _isReadOnly = true;
             }
         }
+
+        /// <summary>
+        /// The media builds what it derives from the definitions, once, before the options are locked;
+        /// it throws to reject them, at the call like any definition error (FR-008)
+        /// </summary>
+        protected virtual void OnMakingReadOnly() { }
 
         /// <summary>
         /// Throws when read-only

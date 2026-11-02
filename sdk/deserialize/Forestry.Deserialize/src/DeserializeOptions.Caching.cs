@@ -1,7 +1,7 @@
 using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
 using Forestry.Deserialize.Converters;
-using Forestry.Deserialize.Converters.BuiltIn;
+using Forestry.Deserialize.Converters.Primitive;
 using Forestry.Deserialize.Definitions;
 
 namespace Forestry.Deserialize
@@ -18,14 +18,19 @@ namespace Forestry.Deserialize
         private FrozenDictionary<Type, TypeDefinition>? _typeDefinitions;
 
         /// <summary>
+        /// Row types whose rows are enumerated: the explicitly added ones, fixed once locked (research R12)
+        /// </summary>
+        private FrozenSet<Type>? _enumeratedTypes;
+
+        /// <summary>
         /// Converters resolved per type while definitions are built
         /// </summary>
         private Dictionary<Type, Converter?>? _resolvedConverters;
 
         /// <summary>
-        /// Built-in converters, last in the precedence
+        /// Primitive converters, last in the precedence
         /// </summary>
-        private static readonly Converter[] s_builtInConverters =
+        private static readonly Converter[] s_primitiveConverters =
         [
             new StringConverter(),
             new BooleanConverter(),
@@ -68,8 +73,16 @@ namespace Forestry.Deserialize
         }
 
         /// <summary>
+        /// Rows of this type are enumerated: it was added explicitly, not only needed by a constructor.
+        /// Decided by the options, not the type definition (research R12)
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        internal bool Enumerates(Type type) => _enumeratedTypes?.Contains(type) ?? false;
+
+        /// <summary>
         /// Effective converter of a type: the developer's converters, then the media's defaults, then
-        /// the built-ins; null when none handles it (research R14)
+        /// the primitives; null when none handles it (research R14)
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
@@ -82,7 +95,7 @@ namespace Forestry.Deserialize
                 return resolved;
             }
 
-            resolved = FindConverter(_converters, type) ?? FindConverter(MediaConverters, type) ?? FindConverter(s_builtInConverters, type);
+            resolved = FindConverter(_converters, type) ?? FindConverter(MediaConverters, type) ?? FindConverter(s_primitiveConverters, type);
             _resolvedConverters[type] = resolved;
 
             return resolved;
@@ -107,7 +120,8 @@ namespace Forestry.Deserialize
         }
 
         /// <summary>
-        /// Build the type definitions of the added row types, under the options' lock
+        /// Build the type definitions of the added row types, and the set of enumerated ones, under the
+        /// options' lock
         /// </summary>
         /// <returns></returns>
         private FrozenDictionary<Type, TypeDefinition> BuildTypeDefinitions()
@@ -121,9 +135,10 @@ namespace Forestry.Deserialize
 
             foreach (Type type in Rows)
             {
-                typeDefinitions[type] = TypeDefinition.Create(type, this, isHandedOut: true);
+                typeDefinitions[type] = TypeDefinition.Create(type, this);
             }
 
+            _enumeratedTypes = Rows.ToFrozenSet();
             _resolvedConverters = null;
             return typeDefinitions.ToFrozenDictionary();
         }

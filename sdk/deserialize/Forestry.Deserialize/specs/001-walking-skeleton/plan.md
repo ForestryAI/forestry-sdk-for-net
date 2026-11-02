@@ -105,7 +105,7 @@ Forestry.Deserialize/                # references no media (C0)
 │   ├── Reading/                     # RowEnumerator, RowAsyncEnumerator, RowState, DeserializationState,
 │   │                                # Pipeline calls, FieldContext, PipeReaderBuffering (R2, R15)
 │   ├── Definitions/                 # type, PropertyDefinition<T>, parameter definitions (R5, R6)
-│   ├── Converters/                  # Converter<T>, factories, built-ins (R14; name Deferred)
+│   ├── Converters/                  # Converter<T>, factories, Primitive/ (R14)
 │   ├── Policies/                    # two pipelines, slots, defaults, precedence (R7)
 │   └── Attributes/                  # [Row], [Field], [RowConstructor] (R5, R8; names Deferred)
 └── test/                            # definitions, constructor choice, converters, precedence, read-only options, AsType

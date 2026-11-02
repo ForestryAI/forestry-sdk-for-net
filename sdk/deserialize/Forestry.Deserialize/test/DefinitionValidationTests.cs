@@ -45,11 +45,19 @@ namespace Forestry.Deserialize.Tests
             Assert.Contains("row type", exception.Message, StringComparison.OrdinalIgnoreCase);
         }
 
-        // T022 - FR-008: a property whose type no converter handles (no converter for Measurement)
+        // T022 - FR-008: a property whose type no converter handles (no converter for Measurement).
+        //
+        // The message must name the member's type and the reason, not only the class, so a rejection
+        // for another reason (e.g. the constructor) does not pass this test.
         [Fact]
         public void Deserialize_ForAPropertyWithoutAConverter_ItShould_ThrowBeforeAnyByteIsRead()
         {
-            AssertRejectedAtTheCall(OptionsWith<LogWithNestedProperty>(), nameof(LogWithNestedProperty));
+            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+                () => Deserialization.Deserialize("<Root />", OptionsWith<LogWithNestedProperty>()));
+
+            Assert.Contains(nameof(LogWithNestedProperty), exception.Message);
+            Assert.Contains(nameof(Measurement), exception.Message);
+            Assert.Contains("converter", exception.Message, StringComparison.OrdinalIgnoreCase);
         }
 
         // T023 - FR-008 (this slice): the chosen constructor has parameters.
@@ -76,6 +84,17 @@ namespace Forestry.Deserialize.Tests
         public void Deserialize_ForTwoUnmarkedPublicConstructors_ItShould_ThrowBeforeAnyByteIsRead()
         {
             AssertRejectedAtTheCall(OptionsWith<LogWithTwoPublicConstructors>(), nameof(LogWithTwoPublicConstructors));
+        }
+
+        // T079 - FR-008 / R5: no public constructor and none marked
+        [Fact]
+        public void Deserialize_ForNoPublicConstructorAndNoneMarked_ItShould_ThrowBeforeAnyByteIsRead()
+        {
+            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+                () => Deserialization.Deserialize("<Root />", OptionsWith<LogWithPrivateConstructor>()));
+
+            Assert.Contains(nameof(LogWithPrivateConstructor), exception.Message);
+            Assert.DoesNotContain("parameter", exception.Message, StringComparison.OrdinalIgnoreCase);
         }
 
         // T025 - FR-008: more than one constructor marked.

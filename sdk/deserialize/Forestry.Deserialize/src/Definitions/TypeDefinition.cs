@@ -17,13 +17,11 @@ namespace Forestry.Deserialize.Definitions
         private TypeDefinition(
             Type type,
             DeserializeOptions options,
-            bool isHandedOut,
             Func<Row> constructor,
             PropertyDefinition[] properties
         ) {
             Type = type;
             Options = options;
-            IsHandedOut = isHandedOut;
             _constructor = constructor;
             Properties = properties;
             _propertiesByMember = properties.ToFrozenDictionary(property => MemberKey.Of(property.Member));
@@ -38,11 +36,6 @@ namespace Forestry.Deserialize.Definitions
         /// Options that built this definition
         /// </summary>
         public DeserializeOptions Options { get; }
-
-        /// <summary>
-        /// Rows of this type are handed out: the type was added explicitly (research R12)
-        /// </summary>
-        public bool IsHandedOut { get; }
 
         /// <summary>
         /// One property definition per property or field whose type a converter handles
@@ -73,9 +66,8 @@ namespace Forestry.Deserialize.Definitions
         /// </summary>
         /// <param name="type"></param>
         /// <param name="options"></param>
-        /// <param name="isHandedOut"></param>
         /// <returns></returns>
-        internal static TypeDefinition Create(Type type, DeserializeOptions options, bool isHandedOut)
+        internal static TypeDefinition Create(Type type, DeserializeOptions options)
         {
             ConstructorInfo constructor = ChooseConstructor(type);
 
@@ -101,7 +93,7 @@ namespace Forestry.Deserialize.Definitions
 
             Func<Row> construct = Expression.Lambda<Func<Row>>(Expression.Convert(Expression.New(constructor), typeof(Row))).Compile();
 
-            return new TypeDefinition(type, options, isHandedOut, construct, [.. properties]);
+            return new TypeDefinition(type, options, construct, [.. properties]);
         }
 
         /// <summary>

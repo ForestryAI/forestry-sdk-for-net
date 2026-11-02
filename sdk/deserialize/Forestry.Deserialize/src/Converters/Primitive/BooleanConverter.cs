@@ -1,7 +1,7 @@
-namespace Forestry.Deserialize.Converters.BuiltIn
+namespace Forestry.Deserialize.Converters.Primitive
 {
     /// <summary>
-    /// Built-in converter for <see cref="bool"/>: <c>true</c> or <c>false</c>. A media may add its own
+    /// Primitive converter for <see cref="bool"/>: <c>true</c> or <c>false</c>. A media may add its own
     /// default (e.g. XML Schema also accepts <c>1</c> and <c>0</c>)
     /// </summary>
     internal sealed class BooleanConverter : Converter<bool>

@@ -1,7 +1,7 @@
-namespace Forestry.Deserialize.Converters.BuiltIn
+namespace Forestry.Deserialize.Converters.Primitive
 {
     /// <summary>
-    /// Built-in converter for <see cref="Nullable{T}"/> over the converter of <typeparamref name="T"/>;
+    /// Primitive converter for <see cref="Nullable{T}"/> over the converter of <typeparamref name="T"/>;
     /// an empty value is null before any converter is called (research R14)
     /// </summary>
     /// <typeparam name="T"></typeparam>
@@ -11,7 +11,7 @@ namespace Forestry.Deserialize.Converters.BuiltIn
     }
 
     /// <summary>
-    /// Built-in factory of <see cref="NullableConverter{T}"/>
+    /// Primitive factory of <see cref="NullableConverter{T}"/>
     /// </summary>
     internal sealed class NullableConverterFactory : ConverterFactory
     {

@@ -1,9 +1,9 @@
 using System.Globalization;
 
-namespace Forestry.Deserialize.Converters.BuiltIn
+namespace Forestry.Deserialize.Converters.Primitive
 {
     /// <summary>
-    /// Built-in converter for every type parsable from UTF-8 (integers, <see cref="decimal"/>,
+    /// Primitive converter for every type parsable from UTF-8 (integers, <see cref="decimal"/>,
     /// <see cref="double"/>, ...), with invariant culture
     /// </summary>
     /// <typeparam name="T"></typeparam>
@@ -21,7 +21,7 @@ namespace Forestry.Deserialize.Converters.BuiltIn
     }
 
     /// <summary>
-    /// Built-in factory of <see cref="Utf8SpanParsableConverter{T}"/>
+    /// Primitive factory of <see cref="Utf8SpanParsableConverter{T}"/>
     /// </summary>
     internal sealed class Utf8SpanParsableConverterFactory : ConverterFactory
     {

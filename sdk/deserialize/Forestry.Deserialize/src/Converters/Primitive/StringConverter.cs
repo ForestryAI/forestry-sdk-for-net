@@ -1,9 +1,9 @@
 using System.Text;
 
-namespace Forestry.Deserialize.Converters.BuiltIn
+namespace Forestry.Deserialize.Converters.Primitive
 {
     /// <summary>
-    /// Built-in converter for text
+    /// Primitive converter for text
     /// </summary>
     internal sealed class StringConverter : Converter<string>
     {

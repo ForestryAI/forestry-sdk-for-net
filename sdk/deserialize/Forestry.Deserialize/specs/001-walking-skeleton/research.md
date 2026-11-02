@@ -133,6 +133,14 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   returned enumerable can be enumerated once: a second `GetEnumerator()` / `GetAsyncEnumerator()`
   throws, since a pipe or stream cannot restart; sync and async behave the same. To read again, call
   `Deserialize` again.
+  - **Where the options lock (Deferred, US3; developer, 2026-11-02)**: in US1 the memory entry point
+    calls `MakeReadOnly()` itself, and the string entry point goes through it, so there is one call.
+    Each later entry point (`DeserializeAsync` over a pipe or stream, T065/T066) would have to
+    repeat it, and a missed call shows only as a late error during enumeration instead of at the
+    call. Decide with US3 where locking lives instead: the options lock when they hand out an
+    enumerator (one internal method that locks, then creates the sync or async enumerator), or, if
+    definitions are shared (R17), the options lock when first asked for a definition, as
+    System.Text.Json does. Either way FR-008 errors still throw at the call.
 - **End tokens**: The mismatch that started this design was about values (an XML leaf element has
   start, text and end; JSON has a property name and a value), not rows: both media have an end token
   for a row, and the media maps it to `Pipeline()`. Values need no end: a member is handed over with
@@ -291,11 +299,13 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   added explicitly (R12). Key references belong to the key-references slice (spec 002-005):
   Deferred.
 - **Fail fast when building definitions (developer, 2026-10-26)**: an added type whose
-  constructor cannot be satisfied is rejected before any byte is read. Cases for the ancestors
-  slice, Deferred (spec 002/003): a parameter type that does not extend `Row` (and is not a lookup type); a
-  parameter type extending `Row` that is not added (R12); several public constructors with
-  none marked as the one to use; more than one constructor marked. A type with no attributes and
-  no options is not an error: its
+  constructor cannot be satisfied is rejected before any byte is read. No constructor that can be
+  chosen (several public with none marked, or none public and none marked) and more than one
+  marked are rejected in this slice, by the rules in "Choosing the constructor" below (FR-008),
+  as is, in this slice only, a chosen constructor with any parameter. Cases for the ancestors
+  slice, Deferred (spec 002/003): a parameter type that does not extend `Row` (and is not a
+  lookup type); a parameter type extending `Row` that is not added (R12). A type with no
+  attributes and no options is not an error: its
   defaults apply. Detectable only while reading: a row constructed before any row of a parameter's
   type is open or retained (S1, data not read).
 - **Choosing the constructor (developer, 2026-10-29)**: A core attribute (proposed name
@@ -315,6 +325,9 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   global: a process-wide registry would let one options instance see types added by another,
   breaking S0 per options and isolating nothing between deserializations running at once (R6). The
   same lookup serves `Pipeline(Type)` and the S0 check at read time (R6).
+- **Shared caching context (Deferred, R17)**: equal options could share how a type is defined, as
+  System.Text.Json does; what the options allow (S0) and enumerate (R12) would stay per options,
+  so the objection above still holds for those.
 - **Generic property definitions (developer, 2026-10-29)**: A property definition is generic,
   `PropertyDefinition<T> : PropertyDefinition`. Its `T` determines its effective converter, which
   converts the handed-over byte span into a `T`; converters are registered from the options (R14).
@@ -596,7 +609,9 @@ role and name, never its design as a precedent (R0).
 - **Only explicitly added types are enumerated (developer, 2026-10-30)**: by default, rows of a type
   added only because a constructor needs it are constructed and used (on the open-row stack,
   retained), but not handed out. Adding the type explicitly makes its rows come out too. A hand-out
-  policy can change this (R7).
+  policy can change this (R7). The options decide this (`Enumerates(Type)`), not the type
+  definition: a definition is metadata about the type and knows nothing of how one options
+  instance registered it (developer, 2026-11-02).
 - **No row type added fails before any byte is read.**
 - **Rejected**: scanning an assembly the developer names for types extending `Row` (2026-10-27):
   too clumpy, and it would enumerate types the developer never meant to see (developer,
@@ -644,12 +659,19 @@ role and name, never its design as a precedent (R0).
     Deferred (implementation) (developer, 2026-10-29).
   - **Built-ins**: one generic converter over `IUtf8SpanParsable<T>` (.NET 8+) covers `int`, `long`,
     `decimal`, `double`, `DateTime`, `Guid` and the other built-in types, with invariant culture;
-    `string` and `bool` get their own.
+    `string` and `bool` get their own. They are named primitive converters, in
+    `Forestry.Deserialize.Converters.Primitive` (developer, 2026-11-02): the values a document
+    holds as one piece of text. This is wider than .NET's `Type.IsPrimitive`, which leaves out
+    `string`, `decimal`, `DateTime` and `Guid`.
   - **Resolved once by type** into each `PropertyDefinition<T>`'s effective converter, by its `T`,
     from the converters registered in the options (developer, 2026-10-29), with the policy
     precedence (R7): options, attributes, media defaults, built-ins. Media defaults exist because
     grammars disagree on text (XML Schema accepts `1` / `0` for `bool`, JSON does not); the media
     registers them through its options without the core knowing why.
+  - **Converter attribute (Deferred, later slice; developer, 2026-11-02)**: this slice resolves
+    options, then media defaults, then primitives, and has no converter attribute on a member or
+    type (the "attributes" step above). Tested: options over primitives (T028), options over a media
+    default (T080) and options inside `Nullable<T>` (T081).
   - **A failed conversion fails fast** naming the field, its place and the class (FR-007); the place
     is supplied by the media.
   - **Setters**: a member accessor builds, once per property definition, an `Action<Row, T>` for a
@@ -668,7 +690,7 @@ role and name, never its design as a precedent (R0).
   2026-10-28); a member accepted when a converter resolves Confirmed (developer, 2026-10-30); `PropertyDefinition<T>` resolving its converter by `T` from the options Confirmed
   (developer, 2026-10-29); signature, factories, built-ins, media defaults, accessor and no-boxing
   shape Confirmed (developer, 2026-10-29); the name "Converter" or "Deserializer" Deferred
-  (implementation)
+  (implementation); a converter attribute Deferred (developer, 2026-11-02)
 
 ## R15. Field context and dimensions
 
@@ -725,3 +747,59 @@ role and name, never its design as a precedent (R0).
   - **Collections**: several occurrences of the structure (e.g. `LogDiameter`) in one row.
 - **Status**: Deferred (spec 002-005, a complex-members slice); in this slice such a member has no
   converter and is rejected (FR-008)
+
+## R17. Sharing type definitions between options (Deferred)
+
+- **Question**: Should equal options instances share their type definitions, as System.Text.Json
+  shares type metadata between equal `JsonSerializerOptions`? Raised by the developer while
+  reviewing US1 (2026-11-02), since the code before US1 already tried this.
+- **How System.Text.Json does it** (`JsonSerializerOptions.Caching.cs`):
+  - **Caching context**: "encapsulates all cached metadata referenced by the current
+    `JsonSerializerOptions` instance"; it can be shared by several equivalent options instances. It
+    holds the `JsonTypeInfo` (the type definition) of each type in a concurrent dictionary, built on
+    first use.
+  - **Equality comparer**: options are equivalent when every setting that shapes metadata is equal:
+    the plain settings by value, the converter list element by element by reference, the type info
+    resolver.
+  - **Tracked contexts**: a process-wide, fixed-size array of weak references to contexts, scanned
+    for an equivalent one when options lock; a new context takes a free slot, and when the array is
+    full the options get a private context. Weak references let unused contexts be collected.
+  - **Cache entries**: an entry holds either the metadata or the exception that building it threw,
+    so a type that fails keeps failing the same way without rebuilding.
+  - **Last-used fast path**: the options keep the last root type's metadata and skip the dictionary
+    when the next call asks for the same type.
+  - **Resolver**: the metadata is not built by the options but by an `IJsonTypeInfoResolver` they
+    hold: reflection (`DefaultJsonTypeInfoResolver`), source generation (`JsonSerializerContext`),
+    chains of resolvers and modifiers that adjust what another resolver built. The resolver is part
+    of the equality, so options with different resolvers never share metadata.
+- **Why**:
+  - building a definition is reflection and compiled delegates, costly next to reading one row,
+    and should be paid once per configuration, not once per options instance;
+  - code that creates new, equal options per call (a common mistake) still reuses definitions;
+  - definitions are immutable once built, so sharing them between deserializations running at once
+    is safe (R6); only building them needs the concurrent dictionary;
+  - the resolver separates "what the definition of a type is" from "where it comes from", which is
+    what lets reflection-free sources (source generation, trimming and AOT) plug in later.
+- **What the code before US1 had** (removed by US1, still in history before `cc6333f`):
+  `DeserializeOptions.Caching.cs` mapped these one to one: `TypeDefinitionCache` (the caching
+  context, a `ConcurrentDictionary` of `NullableValue` entries holding a definition or an
+  `ExceptionDispatchInfo`), `TypeDefinitionCacheFactory` (the tracked contexts: 64 weak references,
+  "an unlikely high number" of different options, falling back to a private cache when full),
+  `lastTypeDefinition` (the fast path) and `ITypeDefinitionProvider` / `TypeDefinitionProvider` (the
+  resolver). Its equality comparer was still a stub that found every options instance equal, so the
+  sharing never really worked; that comparer is the part still to design.
+- **Why US1 does not share**: the row type lookup (R5) also decides which types the options allow
+  (S0) and which they enumerate (R12), and sharing that between instances would break S0. US1 keeps
+  everything per options and fixed at lock, which is simpler and enough for the walking skeleton.
+- **If a later slice shares definitions**:
+  - share only how a type is defined; leave the added row types out of the comparer, so options
+    that differ only in `Rows.Add(...)` still share `Log`'s definition, while what they allow (S0)
+    and enumerate (`Enumerates(Type)`, R12) stays per options;
+  - compare the media type, the converter instances (by reference, as System.Text.Json does) and,
+    once they exist, the policies (US4) and the resolver;
+  - remove `TypeDefinition.Options`: a shared definition has no single options instance;
+  - keep media-specific derived data (the XML association) per options: its row names depend on
+    which types were added, and its duplicate-name check (T077) must stay at the call.
+- **Status**: Deferred (a later slice, if measurements or many options instances call for it;
+  developer, 2026-11-02). The enumeration decision already lives in the options (T078), so sharing
+  can be added underneath without moving it again.

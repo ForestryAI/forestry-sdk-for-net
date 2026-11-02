@@ -1,3 +1,4 @@
+using Forestry.Deserialize.Converters;
 using Forestry.Deserialize.Definitions;
 using Forestry.Deserialize.Tests.Fixtures;
 using Xunit;
@@ -15,9 +16,9 @@ namespace Forestry.Deserialize.Tests
     /// </remarks>
     public sealed class ConverterResolutionTests
     {
-        // T028 - a converter added to the options wins over the built-in (options, attributes, media defaults, built-ins)
+        // T028 - a converter added to the options wins over the primitive (options, attributes, media defaults, primitives)
         [Fact]
-        public void EffectiveConverter_ForAnInt32ConverterInTheOptions_ItShould_BeUsedInsteadOfTheBuiltIn()
+        public void EffectiveConverter_ForAnInt32ConverterInTheOptions_ItShould_BeUsedInsteadOfThePrimitive()
         {
             TestingDeserializeOptions options = new();
             options.Converters.Add(new MarkingInt32Converter());
@@ -28,6 +29,22 @@ namespace Forestry.Deserialize.Tests
             PropertyDefinition logKey = Assert.Single(definition!.Properties, property => property.Name == nameof(Log.LogKey));
 
             Assert.IsType<MarkingInt32Converter>(logKey.Converter);
+        }
+
+        // T081 - a converter added to the options is used inside Nullable<T>
+        [Fact]
+        public void EffectiveConverter_ForANullableInt32WithAnInt32ConverterInTheOptions_ItShould_WrapIt()
+        {
+            TestingDeserializeOptions options = new();
+            options.Converters.Add(new MarkingInt32Converter());
+            options.Rows.Add<LogWithNullableKey>();
+            options.MakeReadOnly();
+
+            Assert.True(options.TryGetTypeDefinition(typeof(LogWithNullableKey), out TypeDefinition? definition));
+            PropertyDefinition logKey = Assert.Single(definition!.Properties, property => property.Name == nameof(LogWithNullableKey.LogKey));
+
+            Converter<int?> converter = Assert.IsAssignableFrom<Converter<int?>>(logKey.Converter);
+            Assert.Equal(-1, converter.Convert("5"u8));
         }
     }
 }
