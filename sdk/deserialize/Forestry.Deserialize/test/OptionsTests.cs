@@ -19,6 +19,7 @@ namespace Forestry.Deserialize.Tests
         [Fact]
         public void TryGetTypeDefinition_ForARowAddedToOtherOptions_ItShould_NotFindIt()
         {
+            // Arrange
             TestingDeserializeOptions optionsA = new();
             optionsA.Rows.Add<Log>();
             optionsA.MakeReadOnly();
@@ -27,6 +28,7 @@ namespace Forestry.Deserialize.Tests
             optionsB.Rows.Add<Stem>();
             optionsB.MakeReadOnly();
 
+            // Act + Assert
             Assert.True(optionsA.TryGetTypeDefinition(typeof(Log), out TypeDefinition? definitionA));
             Assert.Equal(typeof(Log), definitionA!.Type);
             Assert.False(optionsB.TryGetTypeDefinition(typeof(Log), out _));

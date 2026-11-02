@@ -31,6 +31,12 @@ namespace Forestry.Deserialize.Xml
         /// <summary>
         /// Associate the row types added to <paramref name="options"/>, which must be read-only
         /// </summary>
+        /// <remarks>
+        /// The names are resolved here from <see cref="RowAttribute"/> and <see cref="FieldAttribute"/>,
+        /// or the class and member names. That is generic, not XML: resolving them moves to the core's
+        /// definitions as a media name, and this reads it (Deferred, research R8). Matching the name and
+        /// the duplicate checks stay here, since they depend on how XML matches.
+        /// </remarks>
         /// <param name="options"></param>
         /// <returns></returns>
         public static XmlAssociation Create(DeserializeOptions options)
@@ -46,13 +52,27 @@ namespace Forestry.Deserialize.Xml
                 foreach (PropertyDefinition property in typeDefinition.Properties)
                 {
                     string memberName = property.Member.GetCustomAttribute<FieldAttribute>(inherit: false)?.Name is { Length: > 0 } fieldName ? fieldName : property.Member.Name;
-                    members[Encoding.UTF8.GetBytes(memberName)] = new MemberAssociation(property.Member);
+                    byte[] utf8MemberName = Encoding.UTF8.GetBytes(memberName);
+
+                    if (members.TryGetValue(utf8MemberName, out MemberAssociation? other))
+                    {
+                        Throwing.WhenDuplicateMemberName(type, other.Member, property.Member, memberName);
+                    }
+
+                    members.Add(utf8MemberName, new MemberAssociation(property.Member));
                 }
 
                 string rowName = type.GetCustomAttribute<RowAttribute>(inherit: false)?.Name is { Length: > 0 } name ? name : type.Name;
+                byte[] utf8RowName = Encoding.UTF8.GetBytes(rowName);
+
+                if (rows.TryGetValue(utf8RowName, out RowAssociation? otherRow))
+                {
+                    Throwing.WhenDuplicateRowName(otherRow.Type, type, rowName);
+                }
+
                 Action<RowPipelines> startRow = start.MakeGenericMethod(type).CreateDelegate<Action<RowPipelines>>();
 
-                rows[Encoding.UTF8.GetBytes(rowName)] = new RowAssociation(type, startRow, members);
+                rows.Add(utf8RowName, new RowAssociation(type, startRow, members));
             }
 
             return new XmlAssociation(rows);
@@ -97,6 +117,11 @@ namespace Forestry.Deserialize.Xml
         /// <param name="member"></param>
         internal sealed class MemberAssociation(MemberInfo member)
         {
+            /// <summary>
+            /// The property or field
+            /// </summary>
+            public MemberInfo Member { get; } = member;
+
             private readonly PropertyInfo? _property = member as PropertyInfo;
 
             private readonly FieldInfo? _field = member as FieldInfo;

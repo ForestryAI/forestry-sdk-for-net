@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Forestry.Deserialize.Xml.Reading;
@@ -72,6 +73,18 @@ namespace Forestry.Deserialize.Xml
         public static void WhenValueNotPositive(int value, string name)
         {
             throw new InvalidOperationException(Deserialize.Formatting.Format(Formatting.WhenNotPositive, value, name));
+        }
+
+        [DoesNotReturn]
+        public static void WhenDuplicateRowName(Type first, Type second, string name)
+        {
+            throw new InvalidOperationException(Deserialize.Formatting.Format(Formatting.DuplicateRowName, first.FullName, second.FullName, name));
+        }
+
+        [DoesNotReturn]
+        public static void WhenDuplicateMemberName(Type type, MemberInfo first, MemberInfo second, string name)
+        {
+            throw new InvalidOperationException(Deserialize.Formatting.Format(Formatting.DuplicateMemberName, type.FullName, first.Name, second.Name, name));
         }
         #endregion
 

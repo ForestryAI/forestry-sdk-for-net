@@ -8,6 +8,11 @@ namespace Forestry.Deserialize
     /// typed property or field; per-occurrence metadata (depth, name, path) is kept only when a policy
     /// asks for it
     /// </summary>
+    /// <remarks>
+    /// R4 lists the media name (from <see cref="FieldAttribute"/>, or the member name) as metadata here;
+    /// it is not yet, and the XML association resolves it itself (Deferred, research R8). The row's
+    /// media name (from <see cref="RowAttribute"/>) moves to the type definition the same way.
+    /// </remarks>
     public sealed class Field
     {
         internal Field(MemberInfo member, Type type, Converter converter)

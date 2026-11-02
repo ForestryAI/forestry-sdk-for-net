@@ -73,6 +73,7 @@ note are in research.md.
 | S0 Developer-chosen types | Pass | Pass | Rows only of types added explicitly through the options (and, from spec 002/003, the row types their constructors need); no assembly scan; a per-options row type lookup checks every handover (R5, R6, R12). |
 | S1 Fail fast on wrong input | **Deviation** | **Deviation** | Limits postponed (FR-014); ancestor fail-fast comes with the ancestors slice. Justified below. |
 | A0 / A1 / A3 | Pass | Pass | net9+net10, no third-party NuGet, shared SDK build. |
+| A4 Test layout (2.1.0) | n/a | Pass | Added during the US1 code review (2026-11-02): every US1 test has Arrange / Act / Assert comments, and each XML test its own document, one element per line. |
 | G0-G2 | Pass | Pass | Spec, plan and tasks are the truth; 2.0.0 takes effect when merged. |
 
 Gate result: **passes with one justified deviation (S1)**.

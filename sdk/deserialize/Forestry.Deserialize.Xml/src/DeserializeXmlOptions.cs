@@ -20,16 +20,22 @@ namespace Forestry.Deserialize.Xml
         protected override IEnumerable<Converter> MediaConverters => s_mediaConverters;
 
         /// <summary>
-        /// Association of elements with row types and members, built once after the options are locked
+        /// Association of elements with row types and members, built once when the options are locked
         /// </summary>
         internal XmlAssociation Association
         {
             get
             {
                 MakeReadOnly();
-                return LazyInitializer.EnsureInitialized(ref _association, () => XmlAssociation.Create(this));
+                return _association!;
             }
         }
+
+        /// <summary>
+        /// Associate the definitions, throwing for two row types or two members read from the same
+        /// element (FR-008, R8)
+        /// </summary>
+        protected override void OnMakingReadOnly() => _association = XmlAssociation.Create(this);
 
         /// <summary>
         /// The XML synchronous row enumerator

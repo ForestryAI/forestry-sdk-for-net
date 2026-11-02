@@ -18,13 +18,10 @@ namespace Forestry.Deserialize.Xml.Tests
     /// </list>
     /// Rows are read with a plain cast; <c>AsType&lt;T&gt;()</c> is US2's. Async rows are skipped until US3 (T066).
     /// Every shell needs the XML reader's element and text reading (BLOCKING.md phase 2) to pass.
+    /// Each test has its own document, one element per line, so what it reads is next to what it asserts.
     /// </remarks>
     public sealed class WalkingSkeletonTestsUS1
     {
-        private const string Document1 =
-            "<Root><Log><LogKey>1</LogKey><LogVolume>0.59</LogVolume></Log>" +
-            "<Log><LogKey>2</LogKey><LogVolume>0.50</LogVolume></Log></Root>";
-
         private static DeserializeXmlOptions OptionsWith<TRow>() where TRow : Row
         {
             DeserializeXmlOptions options = new();
@@ -38,8 +35,24 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
         public void Deserialize_ForTwoLogOccurrences_ItShould_YieldTwoRowsInDocumentOrder(EntryPoint entryPoint)
         {
-            List<Row> rows = EntryPoints.Read(entryPoint, Document1, OptionsWith<Log>());
+            // Arrange
+            const string document = """
+                <Root>
+                  <Log>
+                    <LogKey>1</LogKey>
+                    <LogVolume>0.59</LogVolume>
+                  </Log>
+                  <Log>
+                    <LogKey>2</LogKey>
+                    <LogVolume>0.50</LogVolume>
+                  </Log>
+                </Root>
+                """;
 
+            // Act
+            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith<Log>());
+
+            // Assert
             Assert.Equal(2, rows.Count);
             Log first = (Log)rows[0];
             Log second = (Log)rows[1];
@@ -55,13 +68,29 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
         public void Deserialize_ForDataOutsideLogsAndUnknownMembers_ItShould_IgnoreThem(EntryPoint entryPoint)
         {
-            const string document =
-                "<Root><Header><LogKey>9</LogKey></Header>" +
-                "<Log><LogKey>1</LogKey><Unknown>x</Unknown><LogVolume>0.59</LogVolume></Log>" +
-                "<Log><LogKey>2</LogKey><LogVolume>0.50</LogVolume></Log><Footer /></Root>";
+            // Arrange
+            const string document = """
+                <Root>
+                  <Header>
+                    <LogKey>9</LogKey>
+                  </Header>
+                  <Log>
+                    <LogKey>1</LogKey>
+                    <Unknown>x</Unknown>
+                    <LogVolume>0.59</LogVolume>
+                  </Log>
+                  <Log>
+                    <LogKey>2</LogKey>
+                    <LogVolume>0.50</LogVolume>
+                  </Log>
+                  <Footer />
+                </Root>
+                """;
 
+            // Act
             List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith<Log>());
 
+            // Assert
             Assert.Equal(2, rows.Count);
             Assert.Equal(1, ((Log)rows[0]).LogKey);
             Assert.Equal(0.59m, ((Log)rows[0]).LogVolume);
@@ -75,8 +104,10 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
         public void Deserialize_ForARootWithoutLogs_ItShould_YieldNoRowsAndNoError(EntryPoint entryPoint)
         {
+            // Arrange + Act
             List<Row> rows = EntryPoints.Read(entryPoint, "<Root />", OptionsWith<Log>());
 
+            // Assert
             Assert.Empty(rows);
         }
 
@@ -86,11 +117,29 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
         public void Deserialize_ForAnEmptyMemberElement_ItShould_SetNullOrTheDefault(EntryPoint entryPoint)
         {
-            const string document = "<Root><Log><LogKey>1</LogKey><LogVolume /></Log></Root>";
+            // Arrange
+            const string notNullableDocument = """
+                <Root>
+                  <Log>
+                    <LogKey>1</LogKey>
+                    <LogVolume />
+                  </Log>
+                </Root>
+                """;
+            const string nullableDocument = """
+                <Root>
+                  <LogWithNullableVolume>
+                    <LogKey>1</LogKey>
+                    <LogVolume />
+                  </LogWithNullableVolume>
+                </Root>
+                """;
 
-            List<Row> notNullable = EntryPoints.Read(entryPoint, document, OptionsWith<Log>());
-            List<Row> nullable = EntryPoints.Read(entryPoint, document.Replace("Log>", "LogWithNullableVolume>"), OptionsWith<LogWithNullableVolume>());
+            // Act
+            List<Row> notNullable = EntryPoints.Read(entryPoint, notNullableDocument, OptionsWith<Log>());
+            List<Row> nullable = EntryPoints.Read(entryPoint, nullableDocument, OptionsWith<LogWithNullableVolume>());
 
+            // Assert
             Assert.Equal(0m, ((Log)Assert.Single(notNullable)).LogVolume);
             Assert.Null(((LogWithNullableVolume)Assert.Single(nullable)).LogVolume);
         }
@@ -101,11 +150,20 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
         public void Deserialize_ForAnUnconvertibleValue_ItShould_ThrowNamingMemberPlaceAndClass(EntryPoint entryPoint)
         {
-            const string document = "<Root><Log><LogKey>abc</LogKey></Log></Root>";
+            // Arrange
+            const string document = """
+                <Root>
+                  <Log>
+                    <LogKey>abc</LogKey>
+                  </Log>
+                </Root>
+                """;
 
+            // Act
             FormatException exception = Assert.Throws<FormatException>(
                 () => EntryPoints.Read(entryPoint, document, OptionsWith<Log>()));
 
+            // Assert
             Assert.Contains("LogKey", exception.Message);
             Assert.Contains("Root/Log/LogKey", exception.Message);
             Assert.Contains(nameof(Log), exception.Message);
@@ -117,9 +175,19 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
         public void Deserialize_ForADocumentCutOffInsideALog_ItShould_ThrowAndNeverHandOutTheOpenRow(EntryPoint entryPoint)
         {
-            const string document = "<Root><Log><LogKey>1</LogKey><LogVolume>0.59</LogVolume></Log><Log><LogKey>2</LogKey>";
+            // Arrange
+            const string document = """
+                <Root>
+                  <Log>
+                    <LogKey>1</LogKey>
+                    <LogVolume>0.59</LogVolume>
+                  </Log>
+                  <Log>
+                    <LogKey>2</LogKey>
+                """;
             List<Row> handedOut = new();
 
+            // Act
             Assert.Throws<XmlException>(() =>
             {
                 foreach (Row row in EntryPoints.Read(entryPoint, document, OptionsWith<Log>()))
@@ -128,6 +196,7 @@ namespace Forestry.Deserialize.Xml.Tests
                 }
             });
 
+            // Assert
             Assert.DoesNotContain(handedOut, row => ((Log)row).LogKey == 2);
         }
 
@@ -137,10 +206,24 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
         public void Deserialize_ForFieldMembers_ItShould_SetTheFields(EntryPoint entryPoint)
         {
-            string document = Document1.Replace("Log>", "LogWithFieldMember>");
+            // Arrange
+            const string document = """
+                <Root>
+                  <LogWithFieldMember>
+                    <LogKey>1</LogKey>
+                    <LogVolume>0.59</LogVolume>
+                  </LogWithFieldMember>
+                  <LogWithFieldMember>
+                    <LogKey>2</LogKey>
+                    <LogVolume>0.50</LogVolume>
+                  </LogWithFieldMember>
+                </Root>
+                """;
 
+            // Act
             List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith<LogWithFieldMember>());
 
+            // Assert
             Assert.Equal(2, rows.Count);
             Assert.Equal(1, ((LogWithFieldMember)rows[0]).LogKey);
             Assert.Equal(0.59m, ((LogWithFieldMember)rows[0]).LogVolume);
@@ -153,12 +236,24 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
         public void Deserialize_ForARenamedField_ItShould_SetItFromTheMediaNameOnly(EntryPoint entryPoint)
         {
-            const string document =
-                "<Root><Log><LogKey>1</LogKey><Volume>0.59</Volume></Log>" +
-                "<Log><LogKey>2</LogKey><LogVolume>0.50</LogVolume></Log></Root>";
+            // Arrange
+            const string document = """
+                <Root>
+                  <Log>
+                    <LogKey>1</LogKey>
+                    <Volume>0.59</Volume>
+                  </Log>
+                  <Log>
+                    <LogKey>2</LogKey>
+                    <LogVolume>0.50</LogVolume>
+                  </Log>
+                </Root>
+                """;
 
+            // Act
             List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith<LogWithRenamedField>());
 
+            // Assert
             Assert.Equal(2, rows.Count);
             Assert.Equal(0.59m, ((LogWithRenamedField)rows[0]).LogVolume);
             Assert.Equal(0m, ((LogWithRenamedField)rows[1]).LogVolume);
@@ -170,10 +265,22 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
         public void Deserialize_ForARenamedRow_ItShould_ShredTheMediaNameOnly(EntryPoint entryPoint)
         {
-            const string document = "<Root><Tree><LogKey>1</LogKey></Tree><Log><LogKey>2</LogKey></Log></Root>";
+            // Arrange
+            const string document = """
+                <Root>
+                  <Tree>
+                    <LogKey>1</LogKey>
+                  </Tree>
+                  <Log>
+                    <LogKey>2</LogKey>
+                  </Log>
+                </Root>
+                """;
 
+            // Act
             List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith<TreeLog>());
 
+            // Assert
             Assert.Equal(1, ((TreeLog)Assert.Single(rows)).LogKey);
         }
 
@@ -183,15 +290,52 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
         public void Deserialize_ForXmlSchemaBooleans_ItShould_ConvertOneAndZero(EntryPoint entryPoint)
         {
-            const string document =
-                "<Root><Log><LogKey>1</LogKey><TopSawing>1</TopSawing></Log>" +
-                "<Log><LogKey>2</LogKey><TopSawing>0</TopSawing></Log></Root>";
+            // Arrange
+            const string document = """
+                <Root>
+                  <Log>
+                    <LogKey>1</LogKey>
+                    <TopSawing>1</TopSawing>
+                  </Log>
+                  <Log>
+                    <LogKey>2</LogKey>
+                    <TopSawing>0</TopSawing>
+                  </Log>
+                </Root>
+                """;
 
+            // Act
             List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith<LogWithFlag>());
 
+            // Assert
             Assert.Equal(2, rows.Count);
             Assert.True(((LogWithFlag)rows[0]).TopSawing);
             Assert.False(((LogWithFlag)rows[1]).TopSawing);
+        }
+
+        // T080 - flow 3: a converter added to the options wins over the XML default (options, media defaults, primitives)
+        [Theory]
+        [InlineData(EntryPoint.Sync)]
+        [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
+        public void Deserialize_ForABooleanConverterInTheOptions_ItShould_BeUsedInsteadOfTheXmlDefault(EntryPoint entryPoint)
+        {
+            // Arrange
+            const string document = """
+                <Root>
+                  <Log>
+                    <LogKey>1</LogKey>
+                    <TopSawing>1</TopSawing>
+                  </Log>
+                </Root>
+                """;
+            DeserializeXmlOptions options = OptionsWith<LogWithFlag>();
+            options.Converters.Add(new MarkingBooleanConverter());
+
+            // Act
+            List<Row> rows = EntryPoints.Read(entryPoint, document, options);
+
+            // Assert
+            Assert.False(((LogWithFlag)Assert.Single(rows)).TopSawing);
         }
 
         // T020 - FR-008 / R5 rule 1: exactly one constructor marked [RowConstructor] is used, whatever its accessibility
@@ -200,12 +344,60 @@ namespace Forestry.Deserialize.Xml.Tests
         [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
         public void Deserialize_ForOneMarkedPrivateConstructor_ItShould_ConstructRowsWithIt(EntryPoint entryPoint)
         {
-            List<Row> rows = EntryPoints.Read(entryPoint, Document1, OptionsWith<LogWithMarkedConstructor>());
+            // Arrange
+            const string document = """
+                <Root>
+                  <Log>
+                    <LogKey>1</LogKey>
+                  </Log>
+                  <Log>
+                    <LogKey>2</LogKey>
+                  </Log>
+                </Root>
+                """;
 
+            // Act
+            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith<LogWithMarkedConstructor>());
+
+            // Assert
             Assert.Equal(2, rows.Count);
             Assert.All(rows, row => Assert.True(((LogWithMarkedConstructor)row).WasConstructedByMarked()));
             Assert.Equal(1, ((LogWithMarkedConstructor)rows[0]).LogKey);
             Assert.Equal(2, ((LogWithMarkedConstructor)rows[1]).LogKey);
+        }
+
+        // T076 - FR-008 / R8: two row types read from the same element throw at the call, naming both and the element.
+        // The options are rejected before any byte is read, so the document is never read.
+        [Fact]
+        public void Deserialize_ForTwoRowTypesWithTheSameElementName_ItShould_ThrowAtTheCall()
+        {
+            // Arrange
+            DeserializeXmlOptions options = new();
+            options.Rows.Add<Log>().Add<LogWithRenamedField>();
+
+            // Act
+            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+                () => Deserialization.Deserialize("<Root />", options));
+
+            // Assert
+            Assert.Contains(nameof(Log), exception.Message);
+            Assert.Contains(nameof(LogWithRenamedField), exception.Message);
+            Assert.Contains("'Log'", exception.Message);
+        }
+
+        // T076 - FR-008 / R8: two members read from the same element throw at the call, naming both, the element and the class.
+        // The options are rejected before any byte is read, so the document is never read.
+        [Fact]
+        public void Deserialize_ForTwoMembersWithTheSameElementName_ItShould_ThrowAtTheCall()
+        {
+            // Arrange + Act
+            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+                () => Deserialization.Deserialize("<Root />", OptionsWith<LogWithDuplicateField>()));
+
+            // Assert
+            Assert.Contains(nameof(LogWithDuplicateField), exception.Message);
+            Assert.Contains(nameof(LogWithDuplicateField.Volume), exception.Message);
+            Assert.Contains("'LogVolume'", exception.Message);
         }
     }
 }

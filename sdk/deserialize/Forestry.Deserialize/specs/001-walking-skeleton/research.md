@@ -537,6 +537,19 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
 - **Names, Deferred (implementation)**: e.g. `[Row("Log")]`, `[Field("LogKey")]`; default names are
   the class and property names. `[RowConstructor]` marks the constructor to use (R5); unlike the
   others it is read by the core, not interpreted by the media.
+- **Resolving the media name moves to the core (Deferred; developer, 2026-11-02)**: in this slice
+  `XmlAssociation.Create` reads `[Row]` / `[Field]` itself (else the class or member name) when the
+  options lock. That step is generic: every media resolves the name the same way, R4 already lists
+  "the media name" as a `Field`'s per-definition metadata, and a generic writer (R4's board item)
+  needs the names without the media. System.Text.Json does the same: the resolver sets
+  `JsonPropertyInfo.Name` from `[JsonPropertyName]` or a naming policy; the reader only matches.
+  Later: the core resolves it into the definitions (a `MediaName` beside the C# `Name` on the type
+  definition and on `Field`, keeping `Name` as the C# name the tests use), and a naming policy, if
+  any, is a core option. What stays in the media: what a name means (element, JSON property), how it
+  matches (bytes, case, paths R13 B), and the duplicate checks (T077), since with paths two row
+  types may share an element name under different parents. Timing is unchanged: definitions at
+  lock, then the media associates (`OnMakingReadOnly`). Notes in `XmlAssociation.Create` and
+  `Field` point here.
 - **Status**: Placement Confirmed (developer, 2026-10-26); the media interpreting them for types and
   members Confirmed (developer, 2026-10-29); names Deferred (implementation)
 
@@ -674,6 +687,16 @@ role and name, never its design as a precedent (R0).
     default (T080) and options inside `Nullable<T>` (T081).
   - **A failed conversion fails fast** naming the field, its place and the class (FR-007); the place
     is supplied by the media.
+    - **Exception details as data (Deferred, later slice; developer, 2026-11-02)**: in this slice
+      the failure is a `FormatException` whose message names the member, its path and the class,
+      with the converter's exception as `InnerException` (T014). A caller ingesting many documents
+      will want those as properties, not text to parse, as System.Text.Json's `JsonException` has
+      `Path`, `LineNumber` and `BytePositionInLine`. Candidate: a `DeserializeException`
+      deriving from `FormatException` (so T014 still holds) with `Path`, `Member`, `RowType`, the
+      position in the document (supplied by the media, like the path) and optionally the
+      document's name (a blob path, known only to the caller, so given through the options or the
+      entry point). `Exception.Source` is not used for this: it is a single free-text string that
+      .NET fills with the throwing assembly's name.
   - **Setters**: a member accessor builds, once per property definition, an `Action<Row, T>` for a
     property (setter delegate) or a field (compiled expression). No reflection per value.
   - **No boxing**: `PropertyDefinition<T>` holds `Converter<T>` and `Action<Row, T>`; a non-generic

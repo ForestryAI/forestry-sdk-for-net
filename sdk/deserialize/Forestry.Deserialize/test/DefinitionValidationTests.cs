@@ -27,21 +27,15 @@ namespace Forestry.Deserialize.Tests
             return options;
         }
 
-        private static void AssertRejectedAtTheCall(DeserializeOptions options, string expectedName)
-        {
-            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
-                () => Deserialization.Deserialize("<Root />", options));
-
-            Assert.Contains(expectedName, exception.Message);
-        }
-
         // T021 - quickstart 13 / FR-008: no row type added
         [Fact]
         public void Deserialize_ForOptionsWithoutRowTypes_ItShould_ThrowBeforeAnyByteIsRead()
         {
+            // Arrange + Act
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
                 () => Deserialization.Deserialize("<Root />", new TestingDeserializeOptions()));
 
+            // Assert
             Assert.Contains("row type", exception.Message, StringComparison.OrdinalIgnoreCase);
         }
 
@@ -52,9 +46,11 @@ namespace Forestry.Deserialize.Tests
         [Fact]
         public void Deserialize_ForAPropertyWithoutAConverter_ItShould_ThrowBeforeAnyByteIsRead()
         {
+            // Arrange + Act
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
                 () => Deserialization.Deserialize("<Root />", OptionsWith<LogWithNestedProperty>()));
 
+            // Assert
             Assert.Contains(nameof(LogWithNestedProperty), exception.Message);
             Assert.Contains(nameof(Measurement), exception.Message);
             Assert.Contains("converter", exception.Message, StringComparison.OrdinalIgnoreCase);
@@ -71,9 +67,11 @@ namespace Forestry.Deserialize.Tests
         [Fact]
         public void Deserialize_ForAConstructorWithParameters_ItShould_ThrowBeforeAnyByteIsRead()
         {
+            // Arrange + Act
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
                 () => Deserialization.Deserialize("<Root />", OptionsWith<LogWithParameters>()));
 
+            // Assert
             Assert.Contains(nameof(LogWithParameters), exception.Message);
             Assert.Contains("constructor", exception.Message, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("parameter", exception.Message, StringComparison.OrdinalIgnoreCase);
@@ -83,16 +81,23 @@ namespace Forestry.Deserialize.Tests
         [Fact]
         public void Deserialize_ForTwoUnmarkedPublicConstructors_ItShould_ThrowBeforeAnyByteIsRead()
         {
-            AssertRejectedAtTheCall(OptionsWith<LogWithTwoPublicConstructors>(), nameof(LogWithTwoPublicConstructors));
+            // Arrange + Act
+            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+                () => Deserialization.Deserialize("<Root />", OptionsWith<LogWithTwoPublicConstructors>()));
+
+            // Assert
+            Assert.Contains(nameof(LogWithTwoPublicConstructors), exception.Message);
         }
 
         // T079 - FR-008 / R5: no public constructor and none marked
         [Fact]
         public void Deserialize_ForNoPublicConstructorAndNoneMarked_ItShould_ThrowBeforeAnyByteIsRead()
         {
+            // Arrange + Act
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
                 () => Deserialization.Deserialize("<Root />", OptionsWith<LogWithPrivateConstructor>()));
 
+            // Assert
             Assert.Contains(nameof(LogWithPrivateConstructor), exception.Message);
             Assert.DoesNotContain("parameter", exception.Message, StringComparison.OrdinalIgnoreCase);
         }
@@ -106,9 +111,11 @@ namespace Forestry.Deserialize.Tests
         [Fact]
         public void Deserialize_ForTwoMarkedConstructors_ItShould_ThrowBeforeAnyByteIsRead()
         {
+            // Arrange + Act
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
                 () => Deserialization.Deserialize("<Root />", OptionsWith<LogWithTwoMarkedConstructors>()));
 
+            // Assert
             Assert.Contains(nameof(LogWithTwoMarkedConstructors), exception.Message);
             Assert.Contains(nameof(RowConstructorAttribute).Replace("Attribute", string.Empty), exception.Message);
             Assert.Contains("more than one", exception.Message, StringComparison.OrdinalIgnoreCase);
@@ -118,10 +125,13 @@ namespace Forestry.Deserialize.Tests
         [Fact]
         public void RowsAdd_ForATypeNotExtendingRow_ItShould_ThrowWhenAdded()
         {
+            // Arrange
             TestingDeserializeOptions options = new();
 
+            // Act
             ArgumentException exception = Assert.Throws<ArgumentException>(() => options.Rows.Add(typeof(NotARow)));
 
+            // Assert
             Assert.Contains(nameof(NotARow), exception.Message);
         }
     }

@@ -20,14 +20,17 @@ namespace Forestry.Deserialize.Tests
         [Fact]
         public void EffectiveConverter_ForAnInt32ConverterInTheOptions_ItShould_BeUsedInsteadOfThePrimitive()
         {
+            // Arrange
             TestingDeserializeOptions options = new();
             options.Converters.Add(new MarkingInt32Converter());
             options.Rows.Add<Log>();
             options.MakeReadOnly();
 
+            // Act
             Assert.True(options.TryGetTypeDefinition(typeof(Log), out TypeDefinition? definition));
             PropertyDefinition logKey = Assert.Single(definition!.Properties, property => property.Name == nameof(Log.LogKey));
 
+            // Assert
             Assert.IsType<MarkingInt32Converter>(logKey.Converter);
         }
 
@@ -35,14 +38,17 @@ namespace Forestry.Deserialize.Tests
         [Fact]
         public void EffectiveConverter_ForANullableInt32WithAnInt32ConverterInTheOptions_ItShould_WrapIt()
         {
+            // Arrange
             TestingDeserializeOptions options = new();
             options.Converters.Add(new MarkingInt32Converter());
             options.Rows.Add<LogWithNullableKey>();
             options.MakeReadOnly();
 
+            // Act
             Assert.True(options.TryGetTypeDefinition(typeof(LogWithNullableKey), out TypeDefinition? definition));
             PropertyDefinition logKey = Assert.Single(definition!.Properties, property => property.Name == nameof(LogWithNullableKey.LogKey));
 
+            // Assert
             Converter<int?> converter = Assert.IsAssignableFrom<Converter<int?>>(logKey.Converter);
             Assert.Equal(-1, converter.Convert("5"u8));
         }

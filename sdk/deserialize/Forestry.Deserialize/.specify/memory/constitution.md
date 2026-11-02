@@ -125,6 +125,10 @@ Workflow). Terms are defined under Definitions.
 - **A1** (Architecture): No third-party NuGet dependencies in the deserialization package.
 - **A3** (Workflow): Builds follow the SDK's shared engineering (`Directory.Build.props`, `eng/`,
   `doc/dev/`), referenced, not copied, including CI/CD.
+- **A4** (Code quality): Every test separates its steps with the comments `// Arrange`, `// Act` and
+  `// Assert`, with one blank line between steps; steps done in one statement are labelled together
+  (`// Arrange + Act`, `// Act + Assert`). A media test reads its own document, a local constant
+  written one element per line, never one shared between tests.
 
 ## Definitions
 
@@ -159,6 +163,11 @@ Workflow). Terms are defined under Definitions.
 
 ## Amendments
 
+- **2.1.0** (2026-11-02, proposed and approved by the developer during the US1 code review, takes
+  effect on merge to `main`). Reason: a shared document (`Document1`) used by throwing and non-throwing tests hid
+  what each test reads, and unlabelled steps made tests slower to review (C4).
+  - A4 added: Arrange / Act / Assert comments in every test, and one local document per media
+    test, one element per line.
 - **2.0.0** (2026-10-26, approved by the developer, takes effect on merge to `main`). Reason: a
   media-neutral Value with dimensions cannot harmonize media grammars (XML's end element has no
   JSON counterpart), and a fake media to test it duplicates work per media while the XML reader is
@@ -180,4 +189,4 @@ Workflow). Terms are defined under Definitions.
     value of a row" to metadata about a member; values live on the row's typed members (research
     R4).
 
-**Version**: 2.0.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-10-30
+**Version**: 2.1.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-11-02
