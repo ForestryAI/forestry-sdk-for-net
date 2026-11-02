@@ -181,9 +181,9 @@ added to the XML options; check the rows (quickstart rows 1-3, 12-14).
 
 ### Test shells for User Story 2 ⚠️
 
-- [ ] T044 [P] [US2] Core test shell, quickstart 4 / US2-1..3 / FR-006: a `Log` row built directly: `Is<Log>()` is true and `Is<Other>()` false; `AsType<Log>()` returns the same instance with 1 / 0.59; `AsType<Other>()` throws `InvalidCastException` naming both classes; a row of a class deriving from another row class is also `Is<>` and `AsType<>` its base, as C#'s `is` (fixtures `Other`, and a base and derived row class, in `Forestry.Deserialize/test/Fixtures/`), in `Forestry.Deserialize/test/RowTests.cs`
-- [ ] T045 [P] [US2] Test shell, quickstart 5 / US2-4: a `Log` without `<LogVolume>` leaves `LogVolume` at its default (theory over both entry points), in `Forestry.Deserialize.Xml/test/WalkingSkeletonTests.US2.cs`
-- [ ] T046 [US2] **Test review gate**: the developer reviews T044-T045 (`Forestry.Deserialize/test/RowTests.cs`, `Forestry.Deserialize.Xml/test/WalkingSkeletonTests.US2.cs`) on the board before T047 (C4)
+- [X] T044 [P] [US2] Core test shell, quickstart 4 / US2-1..3 / FR-006: a `Log` row built directly: `Is<Log>()` is true and `Is<Stem>()` false; `AsType<Log>()` returns the same instance with 1 / 0.59; `AsType<Stem>()` throws `InvalidCastException` naming both classes; a row of a class deriving from another row class is also `Is<>` and `AsType<>` its base, as C#'s `is` (existing fixture `Stem`; new fixtures `BaseLog` and `DerivedLog : BaseLog` in `Forestry.Deserialize/test/Fixtures/BaseLog.cs`), in `Forestry.Deserialize/test/RowTests.cs`
+- [X] T045 [P] [US2] Test shell, quickstart 5 / US2-4: a `Log` without `<LogVolume>` leaves `LogVolume` at its default (theory over both entry points), in `Forestry.Deserialize.Xml/test/WalkingSkeletonTests.US2.cs`
+- [X] T046 [US2] **Test review gate**: the developer reviews T044-T045 (`Forestry.Deserialize/test/RowTests.cs`, `Forestry.Deserialize.Xml/test/WalkingSkeletonTests.US2.cs`) on the board before T047 (C4)
 
 ### Implementation for User Story 2
 
