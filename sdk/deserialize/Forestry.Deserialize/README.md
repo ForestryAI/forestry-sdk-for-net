@@ -1,59 +1,99 @@
 # Forestry Deserialize
 
-> **Superseded (2026-10-22)**: this describes the pre-spec-kit design, which is wrong (see
-> `specs/001-walking-skeleton/research.md` R0). The truth is `.specify/memory/constitution.md` and
-> `specs/`. Do not infer design from this file.
+Forestry Deserialize reads large documents in one forward pass and shreds them into flat rows: one
+instance of your own class per occurrence in the document, handed out as soon as it is complete.
+Nothing keeps a row once it is handed out, so a document of a million rows costs about the same
+memory as one of a thousand. The need comes from StanForD XML from harvesting and forwarding
+machines, which is the real data this is developed and tested against, but neither this package nor
+`Forestry.Deserialize.Xml` is limited to StanForD.
 
-Forestry Deserialize reads large documents and streams data out rather than loading a whole file
-into memory. A multi-gigabyte document should cost roughly the same, memory-wise, to process as a
-small one. The need originated with StanForD XML from harvesting and forwarding machines — that's
-the catalyst and the real data this is developed and tested against — but neither this package nor
-`Forestry.Deserialize.Xml` are limited to StanForD's rules; both are general-purpose.
-
-For how the package is put together internally — the walk, the buffering model, the split between
-this package and a concrete media provider — see [ARCHITECTURE.md](ARCHITECTURE.md). For the
-in-progress design history behind the current shape, see [CLAUDE.md](CLAUDE.md). Some of this
-package's design is adapted from Microsoft's open-source .NET runtime — see
-[THIRD-PARTY-NOTICES.md](../../../THIRD-PARTY-NOTICES.md).
+The design is specified with spec-kit: the rules are in the
+[constitution](.specify/memory/constitution.md) and the current slice is
+[spec 001, walking skeleton](specs/001-walking-skeleton/spec.md), with its decisions in
+[research.md](specs/001-walking-skeleton/research.md). Some of the design is adapted from
+Microsoft's open-source .NET runtime; see [THIRD-PARTY-NOTICES.md](../../../THIRD-PARTY-NOTICES.md).
 
 ## Packages
 
-- **Forestry.Deserialize** — the media-agnostic core. Install this to describe a document's shape
-  with `[Element]`/`[Collection]` and drive it against a concrete reader.
-- **Forestry.Deserialize.Xml** — general XML support, developed against real StanForD documents.
-  Not usable yet — see Status below.
+- **Forestry.Deserialize**: the media-agnostic core: rows, options, type definitions, converters and
+  the pipelines that build rows. It knows no media.
+- **Forestry.Deserialize.Xml**: the XML media. Its options (`DeserializeXmlOptions`) choose XML and
+  its reader feeds the core.
 
-## Describing a document's shape
+## Shredding a document into rows
 
-A schema class tells a reader what to expect — which elements/attributes, and eventually in what
-order — so a mismatch between the schema and the actual media can be caught while streaming.
+A row class extends `Row`. Its public properties and fields are set from the document by name:
 
 ```csharp
-[Collection("Machine")]
-public sealed class Machine
+public sealed class Log : Row
 {
-    [Element("MachineId", "Machine")]
-    public string MachineId { get; set; } = string.Empty;
-}
+    public int LogKey { get; set; }
 
-TypeDefinition machine = options.GetTypeDefinition(typeof(Machine));
-// machine.ElementCollection == "Machine"
-// machine.Properties[0].Name == "MachineId"
+    public decimal LogVolume { get; set; }
+}
 ```
 
-`[Collection("Machine")]` names a class for when it appears as an item in a list. `[Element(...)]`
-names a property explicitly, independent of the C# member name.
+Add the row types to the media's options, then deserialize. Every `<Log>` element becomes one `Log`
+row, in document order; elements and members that match nothing are ignored.
+
+```csharp
+DeserializeXmlOptions options = new();
+options.Rows.Add<Log>();
+
+foreach (Row row in Deserialization.Deserialize(xml, options))
+{
+    Log log = (Log)row;
+    // use log.LogKey and log.LogVolume, then let it go
+}
+```
+
+`Deserialize` takes a `string` or UTF-8 bytes (`ReadOnlyMemory<byte>`, so a `byte[]` too) and
+returns a lazy `IEnumerable<Row>` that can be enumerated once. Rows are classes, so a plain cast
+gives the typed row.
+
+### Names, constructors and converters
+
+- **Names**: by default a row matches an element named like its class and a member an element named
+  like the member. `[Row("Tree")]` on the class and `[Field("Volume")]` on a property or field use
+  the document's name instead.
+- **Constructor**: a row type needs exactly one public constructor, or exactly one constructor
+  marked `[RowConstructor]`, whatever its accessibility. In this slice it takes no parameters.
+- **Converters**: each member's text is converted to its type once, invariant culture: text,
+  booleans, integers, decimals, `DateTime`, `DateTimeOffset`, `Guid` and the other types parsable
+  from UTF-8, plus their `Nullable<T>`. A media adds its own defaults (XML reads `1` and `0` as
+  booleans). Your own `Converter<T>` added to `options.Converters` wins over both.
+- **Empty elements**: `<LogVolume />` sets `null` where the member allows it, otherwise the type's
+  default.
+
+### Failing fast
+
+- Before any byte is read, at the `Deserialize` call: no row type added, a member whose type no
+  converter handles, no constructor that can be chosen, a chosen constructor with parameters, and
+  two row types or two members read from the same element.
+- While reading: a value that cannot be converted throws a `FormatException` naming the member, its
+  path in the document (e.g. `Root/Log/LogKey`) and the class. A document cut off inside a row
+  throws, and that row is never handed out.
 
 ## Status
 
-**There is no working end-to-end read yet.** Schema reflection (the sample above) works today.
-Actually streaming `Value`s out of a real document does not — the walk that would drive it is
-still being built (`Deserializer<T>`'s graph/node update is unimplemented), and
-`Forestry.Deserialize.Xml` does not currently compile. See ARCHITECTURE.md §5 for the full list of
-what's missing, and CLAUDE.md for why each gap exists and what's already been decided about
-closing it.
+Spec 001's first user story is done: the synchronous entry points above. Still to come in this
+slice ([tasks.md](specs/001-walking-skeleton/tasks.md)):
 
-Until then, [`TypeDefinitionReflectionTests`](test/TypeDefinitionReflectionTests.cs) and
-[`SchemaGuidedReadingTests`](test/SchemaGuidedReadingTests.cs) are the best reference for what
-actually works, exercised against `TestingMachine`, a fake StanForD-shaped fixture standing in
-until a real `Forestry.StanForD` project exists.
+- `Row.AsType<T>()`, a checked cast naming both classes when it fails (US2).
+- Policies attached to types and members, by attribute or by options (US4).
+- Asynchronous entry points over a `Stream` or `PipeReader`, reading without holding the whole
+  document (US3).
+
+Later slices add several row types in one pass and rows that take their ancestors (e.g. a `Log`
+built with its `Stem`).
+
+## Tests
+
+```bash
+dotnet test test/Forestry.Deserialize.Tests.csproj
+```
+
+The core's tests need no document: definitions, constructor choice and converter resolution.
+Shredding is tested through the real XML reader in `Forestry.Deserialize.Xml`. Slow performance
+tests (trait `Category=Performance`) are left out of a plain `dotnet test` and run as the gate at
+the end of every user story: `dotnet test -s Performance.runsettings`.

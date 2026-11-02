@@ -1,26 +1,44 @@
 # Forestry Deserialize Xml
 
-General XML support for [Forestry.Deserialize](../Forestry.Deserialize/README.md) — the concrete
-media provider that lets the core package's streaming, schema-guided walk actually read XML
-instead of just describing one. StanForD harvester/forwarder XML exports are what created the need
-for this and are the real documents it's developed and tested against, but the reader isn't
-StanForD-specific — it targets XML generally.
+The XML media for [Forestry.Deserialize](../Forestry.Deserialize/README.md): `DeserializeXmlOptions`
+chooses XML, and its own span-based reader (`Utf8XmlReader`, not `System.Xml.XmlReader`) reads UTF-8
+forward and feeds the core's pipelines, so each row is handed out as soon as its element ends.
+StanForD harvester and forwarder exports are the real documents it is developed and tested against,
+but the reader targets XML generally. Parts of the design are adapted from Microsoft's open-source
+.NET runtime; see [THIRD-PARTY-NOTICES.md](../../../THIRD-PARTY-NOTICES.md).
 
-For how this package is put together internally — the custom span-based reader and why
-`System.Xml.XmlReader` isn't used — see [ARCHITECTURE.md](ARCHITECTURE.md). For the design history
-and the real `.hpr` sample analysis behind those decisions, see [CLAUDE.md](../CLAUDE.md). Parts of
-this package's design are adapted from Microsoft's open-source .NET runtime — see
-[THIRD-PARTY-NOTICES.md](../../../THIRD-PARTY-NOTICES.md).
+```csharp
+DeserializeXmlOptions options = new();
+options.Rows.Add<Log>();
+
+foreach (Row row in Deserialization.Deserialize(xml, options))
+{
+    Log log = (Log)row;
+}
+```
+
+## How elements become rows
+
+- An element named like a row type (its class name, or its `[Row]` name) starts a row, wherever it
+  is in the document; its end tag completes the row and hands it out.
+- A direct child element named like one of the row's members (or its `[Field]` name) sets that
+  member from its text. An empty element sets `null`, or the type's default.
+- Everything else is skipped. Paths, roots and nesting rules for matching come with later slices
+  ([research R13](../Forestry.Deserialize/specs/001-walking-skeleton/research.md)).
+- XML's default converters: `bool` accepts `true`, `false`, `1` and `0`, as XML Schema does.
 
 ## Status
 
-**Not usable yet, though the package builds clean.** `TokenType`/`Constants` now carry a real XML
-token vocabulary, and `ReaderState` fully implements the core's `IReaderState<TState>` shape, but
-the actual tokenizing (`Utf8XmlReader.Read()`) and walking (`ObjectDeserializer<T>
-.TryReadNullableValue`, `BooleanDeserializer.TryReadNullableValue`, `DeserializeXmlOptions`) are
-still stubs. See ARCHITECTURE.md §5 for the precise, current list of what's built vs. stubbed in
-each file.
+Synchronous reading works (spec 001, user story 1); the asynchronous entry points come with user
+story 3. The reader's grammar is still being reviewed phase by phase against the W3C XML grammar
+([BLOCKING.md](BLOCKING.md)), so its element handling may still change.
 
-Until then, [Forestry.Deserialize](../Forestry.Deserialize/README.md)'s own README/tests are the
-best reference for what actually works today — schema reflection and the core pipe-based walk,
-neither of which is XML-specific.
+## Tests
+
+```bash
+dotnet test test/Forestry.Deserialize.Xml.Tests.csproj
+```
+
+Slow performance tests (trait `Category=Performance`, e.g. the memory test over a million rows) are
+left out of a plain run; the gate at the end of every user story runs them:
+`dotnet test test/Forestry.Deserialize.Xml.Tests.csproj -s test/Performance.runsettings`.
