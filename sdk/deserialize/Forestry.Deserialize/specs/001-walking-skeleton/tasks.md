@@ -25,6 +25,10 @@ behavior a test could assert, so it is accepted as setup, not code under C4 (dev
   throws until US3, so no test references `DeserializeAsync` before it exists; the async rows are
   marked skipped (`[InlineData(…, Skip = "US3")]`). Sync alone is enough until then. T066 switches
   the helper's async branch to `DeserializeAsync` and removes the skips (developer, 2026-10-30).
+- **Performance tests are a gate at the end of every user story** (developer, 2026-11-02): tests with the
+  xUnit trait `Category=Performance` (e.g. T070) are slow, so each test project's `.runsettings` leaves
+  them out of a plain `dotnet test`. Each story ends with `dotnet test -s Performance.runsettings` on both
+  test projects, so a story cannot make memory or time worse unnoticed (T082, T048, T061, T069).
 - **A shell that does not compile breaks its whole test project** until its story's implementation
   (e.g. US4's shells in `OptionsTests.cs`); accepted (developer, 2026-10-30).
 - **Tests read rows with a plain C# cast** (`(Log)row`); `AsType<T>()` is US2's (developer,
@@ -162,6 +166,7 @@ added to the XML options; check the rows (quickstart rows 1-3, 12-14).
 - [X] T079 [US1] Core test shell, quickstart 13 / FR-008 / R5 (found reviewing constructor choice): fixture `LogWithPrivateConstructor` (one private parameterless constructor, none marked) in `Forestry.Deserialize/test/Fixtures/LogWithPrivateConstructor.cs` throws at the call, naming the class and not a parameter as the reason, in `Forestry.Deserialize/test/DefinitionValidationTests.cs`; passes against the existing T035 code; the developer reviews it on the board (C4). Also corrects research R5 "Fail fast when building definitions", which still listed the constructor-choice cases as Deferred
 - [X] T080 [US1] Test shell, flow 3 (found reviewing converter resolution): a converter added to the options wins over the media default: fixture `MarkingBooleanConverter` (always `false`) in `Forestry.Deserialize.Xml/test/Fixtures/MarkingBooleanConverter.cs`, added to `DeserializeXmlOptions`, makes `<TopSawing>1</TopSawing>` read as `false` for `LogWithFlag`, where XML's default gives `true` (theory over both entry points; precedence options, media defaults, primitives; R14), in `Forestry.Deserialize.Xml/test/WalkingSkeletonTests.US1.cs`; passes against the existing code; the developer reviews it on the board (C4)
 - [X] T081 [US1] Core test shell, flow 3 (found reviewing converter resolution): a converter added to the options is used inside `Nullable<T>`: fixture `LogWithNullableKey` (`int? LogKey`) in `Forestry.Deserialize/test/Fixtures/LogWithNullableKey.cs`, with `MarkingInt32Converter` in the options, gets an effective `Converter<int?>` for `LogKey` that returns the marked value (R14), in `Forestry.Deserialize/test/ConverterResolutionTests.cs`; passes against the existing code; the developer reviews it on the board (C4)
+- [ ] T082 [US1] **Performance gate** (end of US1): `dotnet test -s Performance.runsettings` on both test projects passes: the sync case of T070 (SC-003 / C1); the default run leaves performance tests out (`Forestry.Deserialize.Tests.runsettings`, `Forestry.Deserialize.Xml.Tests.runsettings`) (depends on T070-T072)
 
 **Checkpoint**: User Story 1 works end to end with the synchronous entry point (MVP).
 
@@ -183,7 +188,7 @@ added to the XML options; check the rows (quickstart rows 1-3, 12-14).
 ### Implementation for User Story 2
 
 - [ ] T047 [US2] Declare and implement `Row`'s members in `Forestry.Deserialize/src/Rows/Row.cs`: `Type` returns `GetType()`; `AsType<T>()` is a checked cast throwing `InvalidCastException` naming both classes; `Is<T>()` (R4)
-- [ ] T048 [US2] Run `dotnet test` on both test projects: T044 and the sync case of T045 pass (async skipped), US1 still green
+- [ ] T048 [US2] Run `dotnet test` on both test projects: T044 and the sync case of T045 pass (async skipped), US1 still green. Then the performance gate: `dotnet test -s Performance.runsettings` on both test projects passes
 
 **Checkpoint**: User Stories 1 and 2 work.
 
@@ -214,7 +219,7 @@ options win; options are read-only once used.
 - [ ] T058 [P] [US4] Implement attachment by attribute through `Forestry.Deserialize/src/Attributes/PolicyAttribute.cs` and by options through policy registration in `Forestry.Deserialize/src/DeserializeOptions.cs`, for type and property definitions (parameter definitions with spec 002/003; R7, FR-012)
 - [ ] T059 [US4] Implement read-only options in `Forestry.Deserialize/src/DeserializeOptions.cs` and `Forestry.Deserialize/src/ObservableList.OfType.cs`: once locked (T034), any change throws (FR-013, R6)
 - [ ] T060 [US4] Fold `Forestry.Deserialize/src/NamingPolicy.cs`, `IIgnorePropertyPolicy.cs`, `IIncludeFieldPolicy.cs` into the policy model (R10: Reshape)
-- [ ] T061 [US4] Run `dotnet test` on both test projects: T053-T054 and the sync cases of T050-T052 pass (async skipped), US1 and US2 still green
+- [ ] T061 [US4] Run `dotnet test` on both test projects: T053-T054 and the sync cases of T050-T052 pass (async skipped), US1 and US2 still green. Then the performance gate: `dotnet test -s Performance.runsettings` on both test projects passes
 
 **Checkpoint**: User Stories 1, 2 and 4 work.
 
@@ -239,7 +244,7 @@ options win; options are read-only once used.
 - [ ] T066 [US3] Implement the asynchronous entry points in `Forestry.Deserialize/src/Deserialization.Pipe.cs`: `DeserializeAsync(PipeReader, DeserializeOptions, CancellationToken)` and `DeserializeAsync(Stream, DeserializeOptions, CancellationToken)` (via `PipeReader.Create`); validate and lock before returning; one enumeration only; then make the async branch of `Forestry.Deserialize.Xml/test/EntryPoints.cs` call `DeserializeAsync` and remove the `Skip = "US3"` marks from the theories (R2, R3)
 - [ ] T067 [US3] Implement `Forestry.Deserialize.Xml/src/XmlRowAsyncEnumerator.cs` (`: RowAsyncEnumerator`) delegating `Read` to `XmlRowReading`, and supply it from `Forestry.Deserialize.Xml/src/DeserializeXmlOptions.cs` (R2)
 - [ ] T068 [US3] Extend `Forestry.Deserialize.Xml/src/XmlRowReading.cs` for multi-segment buffers (needs #24): a value split across segments is joined into the scratch buffer; an incomplete value returns `Partial` without consuming it (R2)
-- [ ] T069 [US3] Run `dotnet test` on both test projects: T062-T063 and the async cases of every earlier theory pass; all earlier stories still green
+- [ ] T069 [US3] Run `dotnet test` on both test projects: T062-T063 and the async cases of every earlier theory pass; all earlier stories still green. Then the performance gate: `dotnet test -s Performance.runsettings` on both test projects passes
 
 **Checkpoint**: All user stories work.
 
@@ -247,8 +252,8 @@ options win; options are read-only once used.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T070 Test shell, quickstart 15 / SC-003 / C1: generated documents with 1,000 vs 1,000,000 `Log` rows, rows discarded: memory does not grow with the count, in `Forestry.Deserialize.Xml/test/MemoryTests.cs`
-- [ ] T071 **Test review gate**: the developer reviews T070 (`Forestry.Deserialize.Xml/test/MemoryTests.cs`) on the board before T072 (C4)
+- [X] T070 Test shell, quickstart 15 / SC-003 / C1: generated documents with 1,000 vs 1,000,000 `Log` rows, rows discarded: memory does not grow with the count, in `Forestry.Deserialize.Xml/test/MemoryTests.cs`
+- [X] T071 **Test review gate**: the developer reviews T070 (`Forestry.Deserialize.Xml/test/MemoryTests.cs`) on the board before T072 (C4)
 - [ ] T072 Make T070 pass: no reference kept to handed-out rows in `Forestry.Deserialize/src/Reading/DeserializationState.cs`, scratch buffers returned to the pool in `Forestry.Deserialize.Xml/src/XmlRowReading.cs`
 - [ ] T073 [P] Add XML doc comments to every public member of `Forestry.Deserialize/src/` until no CS1591 warning is left (D0, R9 option B)
 - [ ] T074 [P] Rewrite `Forestry.Deserialize/README.md` (replacing the superseded banner) as the how-to page for this slice: add a row class, deserialize XML sync and async, `AsType<T>()`, attach a policy, with the example from `contracts/public-api.md` (D0)

@@ -33,7 +33,10 @@ async buffering (already used by `PipeReaderBuffering`)
 **Testing**: xUnit. Shredding scenarios in `Forestry.Deserialize.Xml.Tests` with small hand-written
 XML documents through the real XML reader (C3, R11). `Forestry.Deserialize.Tests` for what needs no
 document: definitions, constructor choice, converters, policy precedence, read-only options,
-`Row.AsType<T>()`. Test shells before code (C4)
+`Row.AsType<T>()`. Test shells before code (C4). Slow tests that measure memory or time carry the
+xUnit trait `Category=Performance`; each test project's `.runsettings` leaves them out of a plain
+`dotnet test`, and `dotnet test -s Performance.runsettings` runs only them, as the gate at the end of
+every user story (developer, 2026-11-02; first one: T070; gates T082, T048, T061, T069)
 
 **Target Platform**: Any .NET 9/10 runtime (library)
 

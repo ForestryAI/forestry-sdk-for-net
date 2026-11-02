@@ -9,6 +9,14 @@ Shredding scenarios run in the XML package, from `sdk/deserialize/Forestry.Deser
 dotnet test test/Forestry.Deserialize.Xml.Tests.csproj
 ```
 
+Performance tests (scenario 15, about 10-20 seconds per framework) carry the trait
+`Category=Performance`. The test project's `.runsettings` leaves them out of the run above; they are
+the gate at the end of every user story (tasks.md), run with:
+
+```bash
+dotnet test test/Forestry.Deserialize.Xml.Tests.csproj -s test/Performance.runsettings
+```
+
 Scenarios needing no document (marked "core") run from `sdk/deserialize/Forestry.Deserialize`:
 
 ```bash

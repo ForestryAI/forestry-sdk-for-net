@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Performance tests only (trait Category=Performance): the gate at the end of every user story
+  (tasks.md). Replaces the project's default run settings, which leave them out:
+  dotnet test -s Performance.runsettings
+-->
+<RunSettings>
+  <RunConfiguration>
+    <TestCaseFilter>Category=Performance</TestCaseFilter>
+  </RunConfiguration>
+</RunSettings>
