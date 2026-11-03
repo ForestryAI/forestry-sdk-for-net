@@ -59,7 +59,7 @@ check the exception's line and position.
 4. **Given** each of `&amp;`, `&lt;`, `&gt;`, `&quot;`, `&apos;`, `&#65;`, `&#x41;`, `&#x1F332;` as
    the whole text of an element and as the whole of an attribute value, **When** read, **Then**
    each is one Value equal to the reference, flagged.
-5. **Given** `<a>x &amp;|amp; y</a>` (a segment ends inside a reference), **When** the first segment
+5. **Given** `<a>x &am|p; y</a>` (a segment ends inside a reference), **When** the first segment
    is read without the second, **Then** `Read()` halts with nothing committed, and a new reader over
    both segments continues to the same tokens as the whole document.
 6. **Given** a bare `&` (`<a>x & y</a>`), a missing `;` (`<a>&amp</a>`, `<a b="&#65"/>`), an empty
@@ -198,8 +198,9 @@ and encoding name.
 - **FR-008**: An end tag MUST be compared with the whole name of the start tag it closes; any
   difference in length or bytes throws a mismatch.
 - **FR-009**: `ReaderOptions.MaxNameLength` MUST limit names in bytes, default 128, overridable like
-  `MaxDepth` (a negative value is rejected when set). It is carried by the reader state like the
-  other options.
+  `MaxDepth` (a zero or negative value is rejected when set, for both options, and `MaxNameLength`
+  above the element stack's 2048 name bytes too; an option never set gets its default). It is
+  carried by the reader state like the other options (developer, 2026-11-03).
 - **FR-010**: Every name the reader reads MUST be bounded by `MaxNameLength`: element names (in a
   start tag), attribute names, processing instruction targets and entity names in references. A
   longer name throws at the first byte beyond the limit, before more of it is buffered (S1)

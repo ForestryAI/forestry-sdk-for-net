@@ -38,7 +38,7 @@ Tests: `test/Utf8XmlReaderTests.ReadReferences.cs`, updated `ReadCharacterData` 
 | text without | `<a>Spruce and pine</a>` | `HasEscapedValue` false |
 | attribute value | `<a b="&lt;&#60;&#x3C;"/>` | Value `&lt;&#60;&#x3C;`, flagged |
 | each reference alone | the eight of scenario 4, as text and as a value | one flagged Value each |
-| split inside a reference | `<a>x &amp;` + `amp; y</a>` | halts, nothing committed; with both parts, the whole document's tokens |
+| split inside a reference | `<a>x &am` + `p; y</a>` | halts, nothing committed; with both parts, the whole document's tokens |
 | malformed / not supported | [exceptions.md, Story 1](contracts/exceptions.md#story-1-references) | category, markup, line and position as listed |
 
 Every document is also read split at every byte and in parts (SC-001). Allocation:

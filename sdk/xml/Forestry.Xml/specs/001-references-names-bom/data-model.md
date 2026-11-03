@@ -19,8 +19,8 @@ on.
 ## Reference (one evaluation)
 
 A character reference or one of the five predefined entity references inside a Value; never a token
-(spec Key Entities). Scanned by `ReferenceScanner`, owned by `CharacterDataMarkup` or
-`LiteralMarkup`.
+(spec Key Entities). Checked by `ReferenceConstraint` (`internal`, tested as a unit, R8), owned by
+`CharacterDataMarkup` or `LiteralMarkup`.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -28,7 +28,7 @@ A character reference or one of the five predefined entity references inside a V
 | `_codePoint` | `int` | value so far; never above `0x10FFFF` (checked per digit) |
 | `_digits` | `int` | digits seen, leading zeros included (empty number check) |
 | `_entityLength` | `int` | bytes of the entity name seen |
-| `_entityCandidates` | `byte` flags | which of `amp`, `lt`, `gt`, `quot`, `apos` still match (no document type) |
+| `_entity` | `byte` enum | which predefined name is being matched: `None` until it is chosen, then `Ampersand`, `LessThan`, `GreaterThan`, `Quote` or `Apostrophe` (compared with `EBNF.AmpersandEntityName`, `LessThanEntityName`, `GreaterThanEntityName`, `QuoteEntityName`, `ApostropheEntityName`); `Other` only after a document type, for a name no predefined name accepts |
 | `HasReferences` | `bool` | at least one complete reference in this Value |
 | `IsDocumentType` | `bool` (init) | the reader's `_documentType`: entity names are scanned as whole names |
 | `MaxNameLength` | `int` (init) | bound on an entity name when `IsDocumentType` |
@@ -38,16 +38,22 @@ A character reference or one of the five predefined entity references inside a V
 ```text
 None --'&'--> Ampersand
 Ampersand --'#'--> Hash
-Ampersand --NameStartChar--> EntityName            (no document type: must match a predefined name)
+Ampersand --'l' | 'g' | 'q'--> EntityName         (_entity = LessThan | GreaterThan | Quote)
+Ampersand --'a'--> EntityName                      (_entity = None: the second byte chooses)
+EntityName --'m' | 'p' as 2nd byte after 'a'--> EntityName  (_entity = Ampersand | Apostrophe)
+EntityName --byte == entity name[_entityLength]--> EntityName  (the chosen EBNF constant, byte by byte)
+Ampersand | EntityName --any other byte--> no document type: Malformed (UndeclaredEntity) at this byte;
+                                            with one: _entity = Other, scanned as NameChar,
+                                            length > MaxNameLength -> Limit
 Hash --'x'--> HexMarker
 Hash --[0-9]--> Decimal
 HexMarker --[0-9a-fA-F]--> Hex
 Decimal --[0-9]--> Decimal | Hex --[0-9a-fA-F]--> Hex  (value > 0x10FFFF -> Malformed at this digit)
-EntityName --NameChar--> EntityName                (no document type: no predefined name continues -> Malformed;
-                                                     with one: length > MaxNameLength -> Limit)
 Decimal | Hex --';'--> None                        (not a legal Char -> Malformed at ';')
-EntityName --';'--> None                           (predefined -> HasReferences;
-                                                     with a document type and not predefined -> NotSupported at '&')
+EntityName --';'--> None                           (only once the whole chosen constant has matched -> HasReferences;
+                                                     before that, no document type: Malformed (UndeclaredEntity) at ';';
+                                                     with one (Other, or a partial match like `&am;`):
+                                                     NotSupported at '&')
 Ampersand | Hash | HexMarker --';'--> Malformed    (empty reference)
 any reference state --other byte--> Malformed      (missing ';', non-digit, 'X', '<', quote, spacing)
 any reference state --end of span--> Unknown       (halt, or Incomplete when reading is completed)
@@ -59,14 +65,15 @@ any reference state --end of span--> Unknown       (halt, or Incomplete when rea
 
 | Struct | Change |
 |---|---|
-| `CharacterDataMarkup` | holds a `ReferenceScanner`; `&` no longer ends character data; `<` ends it only outside a reference |
-| `LiteralMarkup` | holds a `ReferenceScanner`; `&` no longer malformed; the matching quote ends the literal only outside a reference |
+| `CharacterDataMarkup` | holds a `ReferenceConstraint`; `&` no longer ends character data; `<` ends it only outside a reference |
+| `LiteralMarkup` | holds a `ReferenceConstraint`; `&` no longer malformed; the matching quote ends the literal only outside a reference |
 | `NameMarkup` | new `MaxLength` init property; a name byte at index `MaxLength` is Malformed with reason "too long" |
-| `ProcessingInstructionTarget` | new `MaxLength`; a target byte at that index is Malformed with reason "too long" |
-| `DeclarationEncoding` (new) | scans the declaration for `encoding`, `Eq`, quote, name; `OffendingIndex` = the name's first byte when it is not `UTF-8` |
+| `ProcessingInstructionTargetConstraint` (renamed from `ProcessingInstructionTarget`) | an `IConstraint` (R8); new `MaxLength`; a target byte at that index is Malformed with reason "too long" |
+| `NoConstraint` (new) | an `IConstraint` that is always well-formed: comment and document type |
+| `DeclarationEncodingConstraint` (new) | an `IConstraint` (R8); scans the declaration for `encoding`, `Eq`, quote, name; `OffendingIndex` = the name's first byte when it is not `UTF-8` |
 
 The `out bool unsupportedCharacter` of `IMarkup.Evaluate` becomes an `out` reason (`None`,
-`UnsupportedCharacter`, `TooLong`, `NotSupported`) so a delegate picks the category without another
+`UnsupportedCharacter`, `MalformedReference`, `UndeclaredEntity`, `NotSupportedEntity`, and `TooLong` from US2) so a delegate picks the category without another
 scan. The span paths (`_isMultipleSegments == false`) call the same structs.
 
 ## Reader fields
@@ -83,12 +90,12 @@ scan. The span paths (`_isMultipleSegments == false`) call the same structs.
 | Member | Today | After |
 |---|---|---|
 | storage | `ulong[64 × 4]` packed names, 32 bytes each, truncated | `_names`: `[InlineArray(2048)] byte`, names end to end; `_ends`: `[InlineArray(64)] ushort`, end offsets; `_depth` |
-| `Push(ReadOnlySpan<byte>)` | packs, truncates | copies the whole name at the current end, records `_ends[_depth++]`; throws NotSupported + ElementStack when it does not fit |
-| `Push(ReadOnlySequence<byte>)` | – | **new**: same, with `CopyTo` straight into `_names` (no `stackalloc`) |
+| `Push(ReadOnlySpan<byte>)` → `TryPush` | packs, truncates | copies the whole name at the current end, records `_ends[_depth++]`; returns false and changes nothing when it does not fit (bytes past 2048, or `_depth` already 64), and `ReadStartTag` throws NotSupported + ElementStack (the stack has no position to report) |
+| `TryPush(ReadOnlySequence<byte>)` | – | **new**: same, with `CopyTo` straight into `_names` (no `stackalloc`) |
 | `TryPeek(name)` | compares packed 32-byte prefixes | lengths first, then `SequenceEqual` (span) or `SequenceReader<byte>.IsNext` (sequence); no copy |
 | `TopLength` | – | **new**: `_ends[_depth - 1]` minus the previous end (0 for one name), the end tag's budget (FR-011) |
 | `TryPop(name)` | peek then pop | unchanged contract, full comparison |
-| `Pop()` | unpacks into a caller buffer | `_depth--`, returns nothing |
+| `Pop()` | unpacks into a caller buffer | `_depth--` behind the empty-stack guard (`InvalidOperationException` when `_depth == 0`), returns nothing |
 | `PackedNameLength` | 4 | removed; `NameBytesCapacity = 2048` |
 
 Worked layout inside `<ab><Log><LogDiameter>`: `_names: "ab" "Log" "LogDiameter"`, `_ends: 2 5 16`,
@@ -96,15 +103,19 @@ Worked layout inside `<ab><Log><LogDiameter>`: `_names: "ab" "Log" "LogDiameter"
 R4](research.md#r4-names-compared-in-full-the-element-stack)).
 
 **Invariants**: `_ends[0 .. _depth]` is strictly increasing and at most 2048; the top name is
-`_names[_ends[_depth - 2] .. _ends[_depth - 1]]` (from 0 when `_depth == 1`); `_depth <= 64`; no
-name is longer than `MaxNameLength` (checked before `Push`).
+`_names[_ends[_depth - 2] .. _ends[_depth - 1]]` (from 0 when `_depth == 1`); `0 <= _depth <= 64`,
+and `Pop()` never takes `_depth` below 0; no name is longer than `MaxNameLength` (checked before `Push`).
 
 ## ReaderOptions (options)
 
 | Option | Type | Default | Set | Constructors |
 |---|---|---|---|---|
-| `MaxDepth` | `int` | 64 | negative throws | `<= 0` → default (unchanged) |
-| `MaxNameLength` | `int` | 128 | negative throws | `<= 0` → default (**new**, same pattern) |
+| `MaxDepth` | `int` | 64 | `<= 0` or above `ElementStack.NonAllocatingMaxDepth` (64) throws (**changed**: an explicit 0 used to mean 64) | a field still 0 (never set) → default |
+| `MaxNameLength` | `int` | 128 | `<= 0` or above `ElementStack.NameBytesCapacity` (2048) throws (**new**) | a field still 0 (never set) → default |
+
+`ReaderOptions` is a struct, so a field at 0 can only mean "never set": the setters reject an
+explicit 0 and the constructors default an unset one, so `default(ReaderOptions)` keeps working
+(research.md R5).
 
 ## Throwing (exceptions)
 

@@ -44,13 +44,19 @@ public struct ReaderOptions
     /// processing instruction targets, and entity names in references (only reached after a
     /// document type, since the five predefined names are short). A longer name throws where it is
     /// first read, at the first byte beyond the limit, before more of it is buffered. End tags are
-    /// not bounded by it: an end tag longer than its start tag is a mismatch. Default 128; 0 means
-    /// the default; a negative value throws.
+    /// not bounded by it: an end tag longer than its start tag is a mismatch. Default 128 when
+    /// never set; setting 0, a negative value or more than 2048 (the element stack's name bytes)
+    /// throws InvalidOperationException.
     public int MaxNameLength { readonly get; set; }
 }
 ```
 
 `DefaultMaxNameLength = 128` is `internal const`, like `DefaultMaxDepth`.
+
+`MaxDepth` changes too: setting 0 now throws `InvalidOperationException`, like a negative value
+(it used to mean 64), and so does a value above 64 (the element stack's depth cap; a 65th open
+element throws `NotSupported`). An unset `MaxDepth` still defaults to 64, so `default(ReaderOptions)` reads
+as before. Unlike `JsonReaderOptions`, an explicit 0 is never "default" (research.md R5).
 
 ## `ReaderState`
 

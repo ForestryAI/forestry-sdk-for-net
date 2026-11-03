@@ -10,7 +10,7 @@
 
 Three thin stories on `Utf8XmlReader`. **P1**: character and predefined entity references are
 scanned inside the existing evaluate-then-commit loops of character data and literals, by a small
-`ReferenceScanner` carried in the markup struct across segments, so a halted cycle re-scans and
+`ReferenceConstraint` carried in the markup struct across segments, so a halted cycle re-scans and
 commits nothing (C1); the Value stays raw and a new `HasEscapedValue` flag says it holds references.
 **P2**: the element stack keeps whole names end to end in its existing 2 KB, end tags compare in
 full with the start-tag name's length as their budget, and the new `ReaderOptions.MaxNameLength`
@@ -99,9 +99,9 @@ sdk/xml/Forestry.Xml/
 │       ├── ReaderOptions.cs          # US2: MaxNameLength, DefaultMaxNameLength
 │       ├── ReaderState.cs            # US3: _isByteOrderMarkChecked (rule 22)
 │       ├── Throwing.cs               # US1–3: Category.NotSupported/Limit, new Markup members
-│       ├── Utf8XmlReader.cs          # US1: ReferenceScanner, markup structs, HasEscapedValue;
+│       ├── Utf8XmlReader.cs          # US1: ReferenceConstraint, markup structs, HasEscapedValue;
 │       │                             # US2: name budgets, ReadStartTag/ReadEndTag/empty-element pop;
-│       │                             # US3: Skip BOM step, DeclarationEncoding
+│       │                             # US3: Skip BOM step, DeclarationEncodingConstraint
 │       ├── Utf8XmlReader.Single.cs   # US2/US3: defaults, state copy, declaration check
 │       └── Utf8XmlReader.Multiple.cs # US2/US3: defaults, state copy, declaration check
 └── test/
@@ -109,6 +109,9 @@ sdk/xml/Forestry.Xml/
     ├── Utf8XmlReaderTests.ReadNameLength.cs      # US2 (new)
     ├── Utf8XmlReaderTests.ByteOrderMark.cs       # US3 (new)
     ├── Utf8XmlReaderTests.DeclarationEncoding.cs # US3 (new)
+    ├── ReferenceConstraintTests.cs               # US1 (new), constraint as a unit
+    ├── DeclarationEncodingConstraintTests.cs     # US3 (new), constraint as a unit
+    ├── ProcessingInstructionTargetConstraintTests.cs # US3 (new), with the IConstraint refactor
     ├── ReadAllocationTests.cs                    # SC-003, Category=Performance (new, first in this package)
     ├── Utf8XmlReaderTests.Documents.cs           # shared whole / every-split / in-parts helpers (new)
     └── existing ReadCharacterData, ReadAttributeValue, ReadEndTag, ReadStartTag,
@@ -125,7 +128,7 @@ structs; element stack and names; the BOM step and declaration), so they can be 
 
 ### US1 References (P1)
 
-1. `ReferenceScanner` and the state transitions in [data-model.md](data-model.md#reference-one-evaluation).
+1. `ReferenceConstraint` and the state transitions in [data-model.md](data-model.md#reference-one-evaluation).
 2. `CharacterDataMarkup` and `LiteralMarkup` own a scanner; `EvaluateCharacterDataNonTerminalMarkup`
    and `EvaluateLiteralNonTerminalMarkup` become their `Evaluate`, used by both span and sequence
    paths; `IMarkup.Evaluate`'s `out bool unsupportedCharacter` becomes an `out` reason.
@@ -140,7 +143,7 @@ structs; element stack and names; the BOM step and declaration), so they can be 
 1. `ElementStack` layout per [data-model.md](data-model.md#elementstack-across-readers).
 2. `ReaderOptions.MaxNameLength`; both constructors default `<= 0`.
 3. `NameMarkup.MaxLength` and the name evaluation's budget; `ReadName` (start tag, attribute)
-   throws `Limit` + `Name`; `ProcessingInstructionTarget` throws `Limit` + `ProcessingInstructionTarget`.
+   throws `Limit` + `Name`; `ProcessingInstructionTargetConstraint` throws `Limit` + `ProcessingInstructionTarget`.
 4. `ReadStartTag` pushes a span or a sequence with no `stackalloc`; `ReadEndTag` evaluates with
    `TopLength` as budget and compares in full; `TryReadEmptyElementEndingTerminal` calls `Pop()`.
 5. `Throwing`: `Category.Limit`, `Markup.ElementStack`.
@@ -149,8 +152,11 @@ structs; element stack and names; the BOM step and declaration), so they can be 
 
 1. `ReaderState._isByteOrderMarkChecked` in rule 22's six places, and the test helpers.
 2. Skip BOM step in `Read()` after the first drained check (R7).
-3. `DeclarationEncoding` scan before the declaration commits, single and multiple paths (R8).
-4. `Throwing`: `Markup.ByteOrderMark`, `Markup.Encoding`.
+3. A behaviour-preserving refactor: the opaque readers take a generic `TConstraint : struct,
+   IConstraint` (`NoConstraint`, `ProcessingInstructionTargetConstraint`) instead of
+   `isProcessingInstruction` (R8).
+4. `DeclarationEncodingConstraint`, the second `IConstraint`, passed by `ReadDeclaration` (R8).
+5. `Throwing`: `Markup.ByteOrderMark`, `Markup.Encoding`.
 
 ## Documentation changes (D0, G0)
 
@@ -162,6 +168,7 @@ READER.md, in the story that changes the behaviour:
   part of the Value and flagged (US1).
 - **Rule 21** (a literal's string excludes `&`): references allowed and flagged (US1).
 - **Rule 22**: add `_isByteOrderMarkChecked` to the list of fields that proved the rule (US3).
+- **Glossary**: markup delimits, constraint checks; "evaluate" for both (US3, R8).
 - **Decided, not built yet**: the unsupported exception is designed as far as a category (R6);
   candidate None no longer lists the BOM.
 
@@ -173,7 +180,8 @@ bytes now throws).
 
 Nothing is left for review. The developer reviewed every research decision on 2026-11-03: R1,
 R2, R5, R6, R7, R8 and R9 approved, R3 renamed to `HasEscapedValue`, R4 approved and rewritten
-around a worked layout. Follow-ups noticed: `MaxDepth` is never enforced; getters allocate for
+around a worked layout. Follow-ups noticed: usage tests for public settings are deferred to the CI/CD and packaging spec,
+as a gate before publishing to NuGet (developer, 2026-11-03; research.md); `MaxDepth` is never enforced; getters allocate for
 value sequences.
 
 ## Complexity Tracking

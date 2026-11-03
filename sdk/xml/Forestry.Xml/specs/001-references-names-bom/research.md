@@ -19,7 +19,7 @@ Findings that shape every decision below (file and line as of `e5cec73`).
   re-evaluates from the same committed position (C1, READER.md rules 8, 9).
 - **Scan state never survives a halt.** The only state carried across readers is `ReaderState`
   (rule 22); scan state lives in the `IMarkup` struct for one evaluation. `ProcessingInstructionTarget`
-  (`Utf8XmlReader.cs:1529`) is the existing example of a small state machine scanned segment by
+  (`Utf8XmlReader.cs:1529`, renamed `ProcessingInstructionTargetConstraint` in R8) is the existing example of a small state machine scanned segment by
   segment with an `OffendingIndex`.
 - **`&` today.** `EvaluateCharacterDataNonTerminalMarkup` ends character data at `&` with
   `unsupportedCharacter = true` (`:1505`), so the text before it is a Value and the next cycle throws
@@ -51,7 +51,7 @@ Findings that shape every decision below (file and line as of `e5cec73`).
 
 ## R1. Reference scanning inside character data and literals
 
-**Decision** (approved by the developer, 2026-11-03): A `ReferenceScanner` struct (internal, in `Utf8XmlReader.cs`'s markup region) scans
+**Decision** (approved by the developer, 2026-11-03; named a constraint in R8): A `ReferenceConstraint` struct (internal, in `Utf8XmlReader.cs`'s markup region) scans
 one reference byte by byte from `&` to `;`. `CharacterDataMarkup` and `LiteralMarkup` each hold one
 and hand it every byte from `&` on, so a reference that straddles segments carries its state like
 `NameMarkup` does. The text scan and the reference scan are one loop: a Value is text and references
@@ -61,6 +61,13 @@ one scanner for both.
 States: after `&` → `#` (character reference) or a name start (entity reference); after `&#` → `x`
 (hex) or a decimal digit; digits accumulate into an `int` code point (leading zeros add nothing);
 `;` ends the reference and is checked for an empty number, an empty name and a legal Char.
+
+Entity names are matched against five EBNF constants (`AmpersandEntityName` `amp`,
+`LessThanEntityName` `lt`, `GreaterThanEntityName` `gt`, `QuoteEntityName` `quot`,
+`ApostropheEntityName` `apos`, a new `#region Entities` in `src/EBNF.cs`), chosen by the first byte
+after `&` (the second after `a`) and compared byte by byte; the scanner only checks references and
+never unescapes (developer, 2026-11-03). A later unescaping getter (the `// TODO` in
+`GetUnescapedValue`, out of scope here) will switch on the same constants.
 
 **Rationale**: Re-scanning from the committed position after a halt (C1) means the scanner needs no
 `ReaderState` field and no rollback; it is the PI-target pattern applied to a second construct. It
@@ -180,15 +187,23 @@ is hashed or truncated (S1).
 
 **Decision** (approved by the developer, 2026-11-03):
 
-- `ReaderOptions.MaxNameLength`, like `MaxDepth`: `DefaultMaxNameLength = 128`, a negative value
-  throws in the setter (`Throwing.WhenValueNotPositive`), and both reader constructors replace
-  `<= 0` with the default. Carried by `ReaderState._readerOptions`, so rule 22's six places are not
-  touched for it.
+- `ReaderOptions.MaxNameLength`, like `MaxDepth`: `DefaultMaxNameLength = 128`. Both setters
+  (`MaxDepth` and `MaxNameLength`) throw `InvalidOperationException` via
+  `Throwing.WhenValueNotPositive` for `value <= 0`, so an explicit 0 is rejected (today `MaxDepth`
+  rejects only `< 0`, and an explicit 0 quietly becomes 64). The `MaxNameLength` setter also
+  rejects a value above `ElementStack.NameBytesCapacity` (2048, R4), rather than letting it fail
+  later as a Limit throw at the first long name, and the `MaxDepth` setter likewise rejects a value
+  above `ElementStack.NonAllocatingMaxDepth` (64), the stack's depth cap; a 65th open element
+  throws NotSupported + ElementStack (R4, R6). The constructors are unchanged: `ReaderOptions` is
+  a struct, so a field still 0 means never set and gets the default (64 / 128), and
+  `default(ReaderOptions)` keeps working (developer, 2026-11-03). This departs on purpose from
+  `JsonReaderOptions`, which accepts an explicit 0 as "default": a mistake throws where it is
+  known. Carried by `ReaderState._readerOptions`, so rule 22's six places are not touched for it.
 - `NameMarkup` gets a `MaxLength` init property and `EvaluateNameNonTerminalMarkup` a remaining
   budget: a name byte at index `MaxLength` is Malformed with a "too long" reason, reported at that
   byte, so the scan never looks further (S1). Used by `ReadName` (start tag and attribute names) with
   `MaxNameLength`.
-- `ProcessingInstructionTarget` stops at the same bound (FR-010). The PI is opaque and found by its
+- `ProcessingInstructionTargetConstraint` stops at the same bound (FR-010). The PI is opaque and found by its
   ending terminal first, so the bound decides where it throws, not how much is buffered; bounding
   the PI's buffering is the later `MaxValueLength`.
 - An entity name is bounded only when a document type exists (R2); without one it never exceeds 4
@@ -234,10 +249,15 @@ delimiter), active only while a new `ReaderState` field `_isByteOrderMarkChecked
 - `EF BB BF`: skip 3 bytes with no line tracking (FR-012); finish with `SkipMultipleSpacing`-style
   `TrySkipEmptySegments` so the step leaves the reader on a readable byte (rule 12), then the
   drained check: a BOM-only document throws Incomplete RootElement as an empty document does.
-- `EF` or `EF BB` at the end of the data: halt when reading is not completed; when it is, throw
-  Incomplete RootElement (an incomplete document).
+- Every incomplete start of a listed BOM at the end of the data (`EF`, `EF BB`, `FE`, `FF`, `00`,
+  `00 00`, `00 00 FE`) halts when reading is not completed, so a split document reads as the whole
+  one does (C1; developer, 2026-11-03). When reading is completed, `EF` or `EF BB` throws
+  Incomplete RootElement (an incomplete document), and `FE`, `FF`, `00`, `00 00`, `00 00 FE` skip
+  nothing and throw what an unrecognised start throws today: the generic "starts no markup"
+  (`ThrowUnexpectedMarkup`, candidate None) at line 1, position 1.
 - `FE FF`, `FF FE` (covers `FF FE 00 00`), `00 00 FE FF`: throw NotSupported + ByteOrderMark at
-  line 1, position 1 (offset 0). `00` or `00 00` at the end of the data halts like `EF`.
+  line 1, position 1 (offset 0). `FF FE` throws at once without waiting for `FF FE 00 00`, since
+  both are NotSupported at offset 0.
 - Anything else: nothing skipped.
 - The field is set once the step has decided (skipped, or nothing to skip), so a later reader never
   checks again and a second `EF BB BF` is never skipped.
@@ -257,16 +277,43 @@ straddle segments).
 
 ## R8. Encoding in the declaration
 
-**Decision** (approved by the developer, 2026-11-03): Before the declaration is committed (rule 26), a `DeclarationEncoding` scan, like
-`ProcessingInstructionTarget` and segment by segment, looks for the first `encoding` preceded by
+**Decision** (approved by the developer, 2026-11-03): Before the declaration is committed (rule 26), a `DeclarationEncodingConstraint`, evaluated segment by segment like
+`ProcessingInstructionTargetConstraint`, looks for the first `encoding` preceded by
 spacing, then `S? '=' S?`, a quote, and the name up to the matching quote. The name is compared
-with `UTF-8` ignoring ASCII case (`System.Text.Ascii.EqualsIgnoreCase` on bytes, no allocation;
-across segments, byte by byte with `| 0x20` as the PI target does). A different name throws
-NotSupported + Encoding at the name's first byte. No `encoding`, or text after `encoding` that does
+with `UTF-8` ignoring ASCII letter case on one path: each chunk is compared with
+`System.Text.Ascii.EqualsIgnoreCase` against the matching slice of `"UTF-8"u8`, starting from
+what is matched so far (no allocation, no separate span and segment versions). Not `| 0x20`, which
+folds more than letters (`0x0D | 0x20` is `-`, `0x18 | 0x20` is `8`, so `UTF\r8` would match;
+developer, 2026-11-03). A different name, or one longer than 5 bytes, throws NotSupported +
+Encoding at the name's first byte. No `encoding`, or text after `encoding` that does
 not have that shape, throws nothing: the rest of the declaration stays unchecked, as today. The
 Declaration token's `Value` stays the raw declaration.
 
-**Rationale**: FR-014 and XML 1.0 §4.3.3 (encoding names are case-insensitive). The scan is bounded
+**How the opaque readers run a constraint** (developer, 2026-11-03): the opaque readers take a
+generic struct, not a flag or a delegate. An internal `IConstraint` has `MarkupState
+Evaluate(ReadOnlySpan<byte> characters)`, evaluated segment by segment over the value with its
+state in the struct, plus `int OffendingIndex`, `Throwing.Category Category` and `Throwing.Markup
+Markup`; `NoConstraint` is always well-formed. `ReadSingleOpaqueValue<TConstraint>` /
+`IgnoreSingleOpaqueValue<TConstraint>` and their Multiple counterparts take `where TConstraint :
+struct, IConstraint`, with one check-then-throw before commit in each path; `isProcessingInstruction`
+is removed and no `isDeclaration` is added. The declaration passes `DeclarationEncodingConstraint`,
+the processing instruction `ProcessingInstructionTargetConstraint` (today's
+`ProcessingInstructionTarget`, renamed), comment and document type `NoConstraint`. Not a delegate:
+`Utf8XmlReader` is a ref struct, so a lambda cannot capture it, and the span and sequence paths
+would need separate delegate types; the generic struct is the idiom the reader already uses in
+`EvaluateMultipleMarkup<T> where T : IMarkup`.
+
+**Vocabulary**: markup delimits, constraint checks; "evaluate" is the verb for both. A markup is
+evaluated to its end (`IMarkup`: `NameMarkup`, `CharacterDataMarkup`, `LiteralMarkup`); a
+constraint is evaluated over its value (`IConstraint`, after the XML specification's
+"well-formedness constraint"). `ReferenceConstraint` (R1) shares the noun but does not implement
+`IConstraint`: it runs byte by byte inside a markup's evaluation, not over a delimited value, and
+reports `HasReferences`, a `MarkupReason` and `ReferenceStart`, which `IConstraint` has no place
+for. Every constraint is `internal` (nested in `Utf8XmlReader`, no longer `private`) so it is tested
+as a unit, fed `Evaluate` directly whole and chunk by chunk, like `ElementStack`; reader-level tests
+keep line and position, halts and the token (developer, 2026-11-03).
+
+**Rationale**: FR-014 and XML 1.0 §4.3.3 (encoding names are case-insensitive). The check is bounded
 by the declaration, which is already found by its ending terminal.
 
 **Alternatives considered**: checking the whole `XMLDecl` production (version, standalone): out of
@@ -280,6 +327,11 @@ scope, the spec keeps the declaration opaque; comparing after decoding to a stri
   `Utf8XmlReaderTests.ReadReferences.cs` (US1), `Utf8XmlReaderTests.ReadNameLength.cs` and updates to
   `ReadEndTag`/`ReadStartTag`/`ElementNameStackTests` (US2), `Utf8XmlReaderTests.ByteOrderMark.cs`
   and `Utf8XmlReaderTests.DeclarationEncoding.cs` (US3).
+- The constraints (`ReferenceConstraint`, `ProcessingInstructionTargetConstraint`,
+  `DeclarationEncodingConstraint`, `NoConstraint`) are tested as units in one file each
+  (`ReferenceConstraintTests.cs`, `ProcessingInstructionTargetConstraintTests.cs`,
+  `DeclarationEncodingConstraintTests.cs`), fed `Evaluate` whole and chunk by chunk at every split;
+  the reader-level files keep representative rows (developer, 2026-11-03, R8).
 - Every scenario is read whole, as two segments split at every byte position (the existing
   `SequenceSplitAt` helper in `Utf8XmlReaderTests.PeekStartingTerminal.cs`, moved to a shared
   partial so every file can use it), and as input arriving in parts (a new reader per halt, built
@@ -299,7 +351,13 @@ anything.
 
 ## Follow-ups noticed (not this spec)
 
-- `ReaderOptions.MaxDepth` is defaulted but never enforced; depth beyond 64 throws
-  `NotImplementedException` from `ElementStack.PushAllocating`. Belongs with the later limits spec.
+- Usage tests for public settings (every public option has tests for its default, an override and
+  the values it rejects) are deferred to the CI/CD and packaging spec, as a gate before publishing
+  to NuGet; not added to the constitution or to this spec, which meets it anyway through its option
+  shells (developer, 2026-11-03).
+- `ReaderOptions.MaxDepth` is defaulted and, with this spec, capped at 64 when set, but a
+  `MaxDepth` below 64 is still not enforced; depth beyond 64 throws NotSupported + ElementStack
+  with this spec (R4), no longer `NotImplementedException`. Enforcing it belongs with the later
+  limits spec.
 - `Utf8XmlReader.GetString()` and `GetUnescapedValue()` allocate (`ToArray()`) for a value sequence;
   typed getters are out of scope (C3).
