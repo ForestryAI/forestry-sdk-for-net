@@ -50,7 +50,9 @@ media package, the media package references it (C0); no reflection per row (dele
 R5); options read-only after first use (R6); `TreatWarningsAsErrors` is on SDK-wide.
 
 **Dependency**: The XML reader's element and text reading (`Forestry.Deserialize.Xml/BLOCKING.md`,
-phase 2) is open; acceptance tests cannot pass before it is done.
+phase 2) is open; acceptance tests cannot pass before it is done. Met during US1. Since 2026-11-03 the
+reader is its own package, `sdk/xml/Forestry.Xml` (namespace `Forestry.Xml`), with its own spec-kit
+silo (#64); `Forestry.Deserialize.Xml` references it, and `BLOCKING.md` is retired.
 
 **Scale/Scope**: One flat class with a parameterless constructor, members whose type a converter
 handles (built-in in the tests), both
@@ -115,9 +117,8 @@ Forestry.Deserialize/                # references no media (C0)
 │   └── Attributes/                  # [Row], [Field], [RowConstructor] (R5, R8; names Deferred)
 └── test/                            # definitions, constructor choice, converters, precedence, read-only options, AsType
 
-Forestry.Deserialize.Xml/            # references Forestry.Deserialize
+Forestry.Deserialize.Xml/            # references Forestry.Deserialize and Forestry.Xml (the reader, sdk/xml, since 2026-11-03)
 ├── src/
-│   ├── Utf8XmlReader ...            # existing reader (element reading: BLOCKING.md phase 2)
 │   ├── DeserializeXmlOptions.cs     # extends DeserializeOptions; supplies enumerators, default converters
 │   ├── XmlRowEnumerator.cs          # RowEnumerator subclass (R2)
 │   ├── XmlRowAsyncEnumerator.cs     # RowAsyncEnumerator subclass (R2)

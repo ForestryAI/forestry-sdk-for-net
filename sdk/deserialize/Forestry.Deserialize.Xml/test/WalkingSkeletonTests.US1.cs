@@ -1,3 +1,4 @@
+using Forestry.Xml;
 using Forestry.Deserialize.Xml.Tests.Fixtures;
 using Xunit;
 

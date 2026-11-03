@@ -1,5 +1,10 @@
 # ARCHITECTURE.md — Forestry Deserialize Xml
 
+> **Superseded (2026-11-03)**: this predates both the rebuilt reader and spec-kit. The reader moved to
+> its own package, `sdk/xml/Forestry.Xml` (#64); how it reads is in `Forestry.Xml/READER.md`. The XML
+> media's association and row reading are specified in `Forestry.Deserialize/specs/`. Do not infer
+> design from this file.
+
 ## 1. Purpose
 
 **Forestry.Deserialize.Xml** is the first concrete media provider for `Forestry.Deserialize`
