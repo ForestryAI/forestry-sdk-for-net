@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-03
 
-**Status**: Draft
+**Status**: Approved (2026-11-03)
 
 **Issue**: #64 is this spec's feature; each story becomes a sub-issue under it when tasks are
 generated, and Story 3 links the existing #31 instead of duplicating it.
@@ -199,12 +199,17 @@ and encoding name.
   difference in length or bytes throws a mismatch.
 - **FR-009**: `ReaderOptions.MaxNameLength` MUST limit names in bytes, default 128, overridable like
   `MaxDepth` (a zero or negative value is rejected when set, for both options, and `MaxNameLength`
-  above the element stack's 2048 name bytes too; an option never set gets its default). It is
-  carried by the reader state like the other options (developer, 2026-11-03).
+  above the element stack's 2048 name bytes too, `MaxDepth` above its 64 levels; an option never
+  set gets its default). It is carried by the reader state like the other options. `MaxDepth` is
+  enforced: a start tag at a depth equal to `MaxDepth` throws a limit error at that start tag,
+  before committing (S1) (developer, 2026-11-03).
 - **FR-010**: Every name the reader reads MUST be bounded by `MaxNameLength`: element names (in a
   start tag), attribute names, processing instruction targets and entity names in references. A
-  longer name throws at the first byte beyond the limit, before more of it is buffered (S1)
-  (developer, 2026-11-03). The XML doc on `ReaderOptions.MaxNameLength` MUST list exactly which
+  longer element, attribute or entity name throws at the first byte beyond the limit, before more
+  of it is buffered (S1). A processing instruction target is checked against `MaxNameLength` once
+  the instruction is delimited (after `?>` is found): the instruction's body is unbounded anyway
+  until the later `MaxValueLength` spec, which is what bounds that buffering (developer,
+  2026-11-03). The XML doc on `ReaderOptions.MaxNameLength` MUST list exactly which
   names it bounds, since the option's name alone is generic (D0).
 - **FR-011**: An end tag MUST only fail on a mismatch: an end-tag name longer than any start-tag name
   can be is a mismatch, reported without buffering beyond the start-tag name plus one byte.
@@ -247,7 +252,7 @@ and encoding name.
   line and position (100% of the listed cases).
 - **SC-003**: A read loop over a document with references in text and attribute values allocates
   nothing beyond what the same loop allocates without references (C2).
-- **SC-004**: A StanForD sample with `ButtEndProfileExtrapolationFunction`, saved with a UTF-8 BOM
+- **SC-004**: A StanForD-shaped document with `ButtEndProfileExtrapolationFunction`, saved with a UTF-8 BOM
   and containing `&amp;` in text, reads to the end with the default options.
 - **SC-005**: The performance gate (`dotnet test -s Performance.runsettings`) passes at the end of
   each story (A4).

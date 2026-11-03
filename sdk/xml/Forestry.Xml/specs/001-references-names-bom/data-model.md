@@ -110,7 +110,7 @@ and `Pop()` never takes `_depth` below 0; no name is longer than `MaxNameLength`
 
 | Option | Type | Default | Set | Constructors |
 |---|---|---|---|---|
-| `MaxDepth` | `int` | 64 | `<= 0` or above `ElementStack.NonAllocatingMaxDepth` (64) throws (**changed**: an explicit 0 used to mean 64) | a field still 0 (never set) → default |
+| `MaxDepth` | `int` | 64 | enforced: a start tag at `Depth == MaxDepth` throws Limit + Element (**new**); `<= 0` or above `ElementStack.NonAllocatingMaxDepth` (64) throws (**changed**: an explicit 0 used to mean 64) | a field still 0 (never set) → default |
 | `MaxNameLength` | `int` | 128 | `<= 0` or above `ElementStack.NameBytesCapacity` (2048) throws (**new**) | a field still 0 (never set) → default |
 
 `ReaderOptions` is a struct, so a field at 0 can only mean "never set": the setters reject an

@@ -37,7 +37,7 @@ Findings that shape every decision below (file and line as of `e5cec73`).
   (`Throwing.WhenValueNotPositive`), and both reader constructors replace `<= 0` with
   `DefaultMaxDepth` (`Utf8XmlReader.Single.cs:50`, `Utf8XmlReader.Multiple.cs:77`). `ReaderState`
   carries the whole `ReaderOptions` struct, so a new option needs no new `ReaderState` field.
-  `MaxDepth` is defaulted but never enforced (follow-up, not this spec).
+  `MaxDepth` is defaulted but never enforced (this spec enforces it, R5).
 - **Exceptions.** `Throwing.Category` is why the markup is malformed (Incomplete, Expected, Name,
   Order, Unique); `XmlException.Category` carries its name. The only "not supported" throw,
   `ThrowUnsupportedNameCharacter`, has no category, so it cannot be told apart from
@@ -56,7 +56,7 @@ one reference byte by byte from `&` to `;`. `CharacterDataMarkup` and `LiteralMa
 and hand it every byte from `&` on, so a reference that straddles segments carries its state like
 `NameMarkup` does. The text scan and the reference scan are one loop: a Value is text and references
 up to `<` (content) or the quote (literal). The span paths call the same markup structs, so there is
-one scanner for both.
+one constraint for both.
 
 States: after `&` → `#` (character reference) or a name start (entity reference); after `&#` → `x`
 (hex) or a decimal digit; digits accumulate into an `int` code point (leading zeros add nothing);
@@ -65,11 +65,11 @@ States: after `&` → `#` (character reference) or a name start (entity referenc
 Entity names are matched against five EBNF constants (`AmpersandEntityName` `amp`,
 `LessThanEntityName` `lt`, `GreaterThanEntityName` `gt`, `QuoteEntityName` `quot`,
 `ApostropheEntityName` `apos`, a new `#region Entities` in `src/EBNF.cs`), chosen by the first byte
-after `&` (the second after `a`) and compared byte by byte; the scanner only checks references and
+after `&` (the second after `a`) and compared byte by byte; the constraint only checks references and
 never unescapes (developer, 2026-11-03). A later unescaping getter (the `// TODO` in
 `GetUnescapedValue`, out of scope here) will switch on the same constants.
 
-**Rationale**: Re-scanning from the committed position after a halt (C1) means the scanner needs no
+**Rationale**: Re-scanning from the committed position after a halt (C1) means the constraint needs no
 `ReaderState` field and no rollback; it is the PI-target pattern applied to a second construct. It
 adds no allocation (C2): a few `int`/`byte` fields in a struct on the stack.
 
@@ -193,8 +193,10 @@ is hashed or truncated (S1).
   rejects only `< 0`, and an explicit 0 quietly becomes 64). The `MaxNameLength` setter also
   rejects a value above `ElementStack.NameBytesCapacity` (2048, R4), rather than letting it fail
   later as a Limit throw at the first long name, and the `MaxDepth` setter likewise rejects a value
-  above `ElementStack.NonAllocatingMaxDepth` (64), the stack's depth cap; a 65th open element
-  throws NotSupported + ElementStack (R4, R6). The constructors are unchanged: `ReaderOptions` is
+  above `ElementStack.NonAllocatingMaxDepth` (64), the stack's depth cap. `MaxDepth` is enforced
+  (S1; developer, 2026-11-03): in `ReadStartTag`, when `Depth == MaxDepth`, the start tag throws
+  Limit + Element at the start tag, before committing; with the default 64 that is the 65th open
+  element. NotSupported + ElementStack remains only for the 2 KB name pool overflowing (R4, R6). The constructors are unchanged: `ReaderOptions` is
   a struct, so a field still 0 means never set and gets the default (64 / 128), and
   `default(ReaderOptions)` keeps working (developer, 2026-11-03). This departs on purpose from
   `JsonReaderOptions`, which accepts an explicit 0 as "default": a mistake throws where it is
@@ -203,9 +205,12 @@ is hashed or truncated (S1).
   budget: a name byte at index `MaxLength` is Malformed with a "too long" reason, reported at that
   byte, so the scan never looks further (S1). Used by `ReadName` (start tag and attribute names) with
   `MaxNameLength`.
-- `ProcessingInstructionTargetConstraint` stops at the same bound (FR-010). The PI is opaque and found by its
-  ending terminal first, so the bound decides where it throws, not how much is buffered; bounding
-  the PI's buffering is the later `MaxValueLength`.
+- `ProcessingInstructionTargetConstraint` stops at the same bound (FR-010), checked once the
+  instruction is delimited: the PI is opaque and found by its ending terminal `?>` first, then the
+  constraint is evaluated over it (R8's "delimit, then check"). So the bound decides where it
+  throws, not how much is buffered; the instruction's body is unbounded anyway until the later
+  `MaxValueLength` spec, which is what bounds that buffering (developer, 2026-11-03, option B of
+  the analysis).
 - An entity name is bounded only when a document type exists (R2); without one it never exceeds 4
   bytes.
 - `ReadEndTag` uses the top name's length as its budget (FR-011): a name byte at that index is a
@@ -355,9 +360,8 @@ anything.
   the values it rejects) are deferred to the CI/CD and packaging spec, as a gate before publishing
   to NuGet; not added to the constitution or to this spec, which meets it anyway through its option
   shells (developer, 2026-11-03).
-- `ReaderOptions.MaxDepth` is defaulted and, with this spec, capped at 64 when set, but a
-  `MaxDepth` below 64 is still not enforced; depth beyond 64 throws NotSupported + ElementStack
-  with this spec (R4), no longer `NotImplementedException`. Enforcing it belongs with the later
-  limits spec.
+- Processing instruction buffering (limits spec): a PI target is checked against `MaxNameLength`
+  only once `?>` is found, so a PI is buffered whole first; the later `MaxValueLength` bounds that
+  (FR-010, R5; developer, 2026-11-03).
 - `Utf8XmlReader.GetString()` and `GetUnescapedValue()` allocate (`ToArray()`) for a value sequence;
   typed getters are out of scope (C3).

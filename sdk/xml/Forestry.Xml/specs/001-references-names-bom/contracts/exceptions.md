@@ -39,8 +39,8 @@ byte its line and position point at (1-based, READER.md rule 17). Messages are p
 | PI target of `MaxNameLength + 1` bytes | Limit | ProcessingInstructionTarget | the byte at index `MaxNameLength` |
 | `<abc></ab>`, `<ab></abc>`, names equal on 32 bytes then different | Name | EndTag | the end tag's name start (as today) |
 | end tag longer than `MaxNameLength` | Name | EndTag | the end tag's name start |
-| open names beyond the stack's 2048 bytes | NotSupported | ElementStack | the start tag's name start |
-| a 65th open element (depth beyond 64) | NotSupported | ElementStack | the 65th start tag's name start |
+| open names beyond the stack's 2048 bytes (the only NotSupported + ElementStack) | NotSupported | ElementStack | the start tag's name start |
+| a start tag at `Depth == MaxDepth` (the 65th open element with the default 64) | Limit | Element | the start tag's name start |
 | setting `MaxDepth` to 0, a negative value or above 64; `MaxNameLength` to 0, a negative value or above 2048 | `InvalidOperationException` (not an `XmlException`) | – | at the setter |
 
 ## Story 3: BOM and encoding

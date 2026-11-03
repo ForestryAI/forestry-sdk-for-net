@@ -29,6 +29,7 @@ The behaviour follows `Utf8JsonReader.ValueIsEscaped` (the precedent the spec ci
 | `&` in an attribute value | throws | the whole literal is the Value; `HasEscapedValue` set |
 | End tag vs start tag | first 32 bytes compared | whole names compared |
 | Name over `MaxNameLength` | read (truncated on the stack) | throws `Limit` at the first byte beyond |
+| Depth beyond `MaxDepth` | not enforced (`NotImplementedException` past 64) | throws `Limit` + Element at the start tag |
 | UTF-8 BOM at the start | throws "starts no markup" | skipped, not counted in line positions |
 | UTF-16/32 BOM, non-UTF-8 `encoding` | misread or generic throw | throws `NotSupported` |
 | `Read()` allocation | none per token | none per token (C2), references included |
@@ -54,8 +55,9 @@ public struct ReaderOptions
 `DefaultMaxNameLength = 128` is `internal const`, like `DefaultMaxDepth`.
 
 `MaxDepth` changes too: setting 0 now throws `InvalidOperationException`, like a negative value
-(it used to mean 64), and so does a value above 64 (the element stack's depth cap; a 65th open
-element throws `NotSupported`). An unset `MaxDepth` still defaults to 64, so `default(ReaderOptions)` reads
+(it used to mean 64), and so does a value above 64 (the element stack's depth cap). `MaxDepth`
+is now **enforced**: a start tag at `Depth == MaxDepth` throws `Limit` + Element, so with the
+default 64 the 65th open element throws. An unset `MaxDepth` still defaults to 64, so `default(ReaderOptions)` reads
 as before. Unlike `JsonReaderOptions`, an explicit 0 is never "default" (research.md R5).
 
 ## `ReaderState`

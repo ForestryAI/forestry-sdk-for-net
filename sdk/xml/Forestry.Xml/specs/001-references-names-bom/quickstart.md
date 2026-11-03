@@ -57,6 +57,7 @@ Tests: `test/Utf8XmlReaderTests.ReadNameLength.cs`, updated `ReadEndTag`, `ReadS
 | prefix / extension | `<abc></ab>`, `<ab></abc>` | Name + EndTag |
 | at and beyond the limit | names of 32, 33, 128, 129 bytes; `MaxNameLength = 16` with 17 | read up to the limit, Limit + Name one byte beyond |
 | long end tag | an end tag of 129 bytes | Name + EndTag, never Limit |
+| depth | `MaxDepth = 2` with three nested elements; 65 nested with the default | Limit + Element at the start tag beyond the limit |
 
 ## 3. BOM and encoding (US3)
 

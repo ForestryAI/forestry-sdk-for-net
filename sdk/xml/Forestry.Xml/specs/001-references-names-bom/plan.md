@@ -53,14 +53,14 @@ per segment, so the element stack stays 2 KB
 |---|---|---|---|
 | C0 Grammar | each behaviour traces to [66] CharRef, [68] EntityRef, [10] AttValue, [43] content, WFC Legal Character, WFC Entity Declared, WFC Element Type Match, §4.3.3; what stays unsupported throws `NotSupported` (R6) | ✅ | ✅ |
 | C1 Resumable | reference and name-length state live in the `IMarkup` struct for one evaluation, re-scanned after a halt; the BOM step halts when cut off; every scenario split at every byte (R1, R7, R9) | ✅ | ✅ |
-| C2 No allocation | scanner is a stack struct; the stack copies names into its inline pool, no `stackalloc` copy; an allocation test is added (R4, R9) | ✅ | ✅ |
+| C2 No allocation | each constraint is a stack struct; the stack copies names into its inline pool, no `stackalloc` copy; an allocation test is added (R4, R9) | ✅ | ✅ |
 | C3 Read contract | each new path is true / false (nothing committed) / throw; no getters or skip added | ✅ | ✅ |
 | C4 Test-first | shells per assertion row, reviewed before code, one review task per story (R9) | ✅ | ✅ |
 | C5 Ownership | every research decision (R1–R9) reviewed by the developer, 2026-11-03 | ✅ | ✅ |
 | C6 On its own | no reference to `Forestry.Deserialize`; SC-004's document is hand-written in this package | ✅ | ✅ |
 | D0 Docs | XML docs on `HasEscapedValue`, `MaxNameLength` (listing the names it bounds); READER.md updated (below) | ✅ | ✅ |
 | S0 Fail fast | positions per throw in [contracts/exceptions.md](contracts/exceptions.md); checks before commit (rule 26) | ✅ | ✅ |
-| S1 Limits | `MaxNameLength` checked at the byte beyond, end tags budgeted by the start-tag name; stack overflow throws, never truncates (R4, R5) | ✅ | ✅ |
+| S1 Limits | `MaxNameLength` checked at the byte beyond (a PI target once the PI is delimited; PI buffering is the later `MaxValueLength`), end tags budgeted by the start-tag name; `MaxDepth` enforced at the start tag; stack overflow throws, never truncates (R4, R5) | ✅ | ✅ |
 | S2 No external resolution | the document type stays opaque; a non-predefined entity after one throws `NotSupported` | ✅ | ✅ |
 | A0–A4 | net9/net10; no packages; shared build; A/A/A labels and the performance gate per story | ✅ | ✅ |
 | G0 Spec-kit is truth | READER.md and the spec-kit markdown updated in the same story as the code | ✅ | ✅ |
@@ -77,7 +77,7 @@ specs/001-references-names-bom/
 ├── checklists/requirements.md
 ├── plan.md              # this file
 ├── research.md          # Phase 0: decisions R1–R9
-├── data-model.md        # Phase 1: scanner, stack, options, lifetimes
+├── data-model.md        # Phase 1: constraints, stack, options, lifetimes
 ├── quickstart.md        # Phase 1: how to validate each story
 ├── contracts/
 │   ├── public-api.md    # HasEscapedValue, MaxNameLength, behaviour table
@@ -92,6 +92,8 @@ sdk/xml/Forestry.Xml/
 ├── READER.md                         # pipeline step Skip BOM; rules 16, 18, 21 rewritten; unsupported designed
 ├── CHANGELOG.md                      # Features Added / Breaking Changes for 1.0.0-beta.1
 ├── src/
+│   ├── Forestry.Xml.csproj           # Setup: GenerateDocumentationFile, CS1591 a warning (D0)
+│   ├── EBNF.cs                       # US1: #region Entities (amp, lt, gt, quot, apos); Setup: doc fixes
 │   ├── Formatting.Resource.cs        # NotSupported and Limit templates (placeholder wording, #49)
 │   └── Reading/
 │       ├── ElementStack.cs           # US2: byte pool + end offsets, full comparison, Push(sequence), TopLength
@@ -112,6 +114,8 @@ sdk/xml/Forestry.Xml/
     ├── ReferenceConstraintTests.cs               # US1 (new), constraint as a unit
     ├── DeclarationEncodingConstraintTests.cs     # US3 (new), constraint as a unit
     ├── ProcessingInstructionTargetConstraintTests.cs # US3 (new), with the IConstraint refactor
+    ├── ReaderOptionsTests.cs                     # US2 (new), MaxDepth setter and enforcement
+    ├── Utf8XmlReaderTests.StanForD.cs            # Polish (new), SC-004 end to end
     ├── ReadAllocationTests.cs                    # SC-003, Category=Performance (new, first in this package)
     ├── Utf8XmlReaderTests.Documents.cs           # shared whole / every-split / in-parts helpers (new)
     └── existing ReadCharacterData, ReadAttributeValue, ReadEndTag, ReadStartTag,
@@ -129,7 +133,7 @@ structs; element stack and names; the BOM step and declaration), so they can be 
 ### US1 References (P1)
 
 1. `ReferenceConstraint` and the state transitions in [data-model.md](data-model.md#reference-one-evaluation).
-2. `CharacterDataMarkup` and `LiteralMarkup` own a scanner; `EvaluateCharacterDataNonTerminalMarkup`
+2. `CharacterDataMarkup` and `LiteralMarkup` own a `ReferenceConstraint`; `EvaluateCharacterDataNonTerminalMarkup`
    and `EvaluateLiteralNonTerminalMarkup` become their `Evaluate`, used by both span and sequence
    paths; `IMarkup.Evaluate`'s `out bool unsupportedCharacter` becomes an `out` reason.
 3. `ReadContentCharacterData` and `ReadAttributeValue`: remove the `&` throws (FR-007), throw per
@@ -137,13 +141,18 @@ structs; element stack and names; the BOM step and declaration), so they can be 
 4. `Read()` step 0 clears `HasEscapedValue`.
 5. `Throwing`: `Category.NotSupported`, `Markup.Reference`, `Markup.EntityReference`;
    `ThrowUnsupportedNameCharacter` onto `NotSupported` + `Name`.
+6. `EBNF`: the five entity-name constants; `GetString()` / `TryGetString()` docs say the bytes are
+   raw, references unresolved, with `HasEscapedValue` telling the caller.
 
 ### US2 Names (P2)
 
 1. `ElementStack` layout per [data-model.md](data-model.md#elementstack-across-readers).
-2. `ReaderOptions.MaxNameLength`; both constructors default `<= 0`.
+2. `ReaderOptions.MaxNameLength`; both setters reject `<= 0` and values above the stack's caps
+   (2048 bytes, depth 64); the constructors default an unset 0; `MaxDepth` is enforced in
+   `ReadStartTag` (Limit + Element at `Depth == MaxDepth`).
 3. `NameMarkup.MaxLength` and the name evaluation's budget; `ReadName` (start tag, attribute)
-   throws `Limit` + `Name`; `ProcessingInstructionTargetConstraint` throws `Limit` + `ProcessingInstructionTarget`.
+   throws `Limit` + `Name`; `ProcessingInstructionTarget` (renamed in US3) throws `Limit` +
+   `ProcessingInstructionTarget` once the instruction is delimited.
 4. `ReadStartTag` pushes a span or a sequence with no `stackalloc`; `ReadEndTag` evaluates with
    `TopLength` as budget and compares in full; `TryReadEmptyElementEndingTerminal` calls `Pop()`.
 5. `Throwing`: `Category.Limit`, `Markup.ElementStack`.
@@ -181,7 +190,7 @@ bytes now throws).
 Nothing is left for review. The developer reviewed every research decision on 2026-11-03: R1,
 R2, R5, R6, R7, R8 and R9 approved, R3 renamed to `HasEscapedValue`, R4 approved and rewritten
 around a worked layout. Follow-ups noticed: usage tests for public settings are deferred to the CI/CD and packaging spec,
-as a gate before publishing to NuGet (developer, 2026-11-03; research.md); `MaxDepth` is never enforced; getters allocate for
+as a gate before publishing to NuGet (developer, 2026-11-03; research.md); PI buffering is bounded only by the later `MaxValueLength`; getters allocate for
 value sequences.
 
 ## Complexity Tracking
