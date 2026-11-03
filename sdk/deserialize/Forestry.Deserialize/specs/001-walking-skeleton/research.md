@@ -115,10 +115,14 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
     and members (R6), calls the three `Pipeline` overloads, and saves the reader state again.
   - It hands over raw UTF-8 text only, as one contiguous `ReadOnlySpan<byte>`, as `Utf8JsonReader`
     callers do (`HasValueSequence ? ValueSequence.ToArray() : ValueSpan`). Conversion happens in
-    the core (R14), so there is no `TValue` (developer, 2026-10-28). A value split across segments,
-    or needing escapes or entities resolved, is copied into a scratch buffer (`stackalloc` for short
-    values, a rented `ArrayPool<byte>` buffer for long ones) instead of `ToArray()`, and released
-    right after the call, since the core converts synchronously inside it.
+    the core (R14), so there is no `TValue` (developer, 2026-10-28).
+  - **A value split across segments is copied with `ValueSequence.ToArray()` (developer,
+    2026-11-02)**, as `Utf8JsonReader`'s getters do and as `Utf8XmlReader.Get.cs` already does. It
+    allocates only when a value straddles a buffer boundary, at most about once per refill, never
+    once per row, so memory stays bounded (C1, SC-003). A scratch buffer instead (`stackalloc` for
+    short values, a rented `ArrayPool<byte>` buffer for long ones) is a later optimisation (C6), not
+    part of US3. A value needing escapes or entities resolved still needs a buffer to write the
+    resolved bytes into; that comes with escape resolution, not with US3.
   - A value is never split across calls from the core's view: if its bytes are incomplete, the
     override returns `Partial` without consuming them, and the reader sees the whole value next
     time.

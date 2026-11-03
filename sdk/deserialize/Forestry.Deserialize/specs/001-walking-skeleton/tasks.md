@@ -51,8 +51,11 @@ There is no Foundational phase: C4 puts every story's shells before any of its c
   T050-T052, T062-T063, T070) and the XML reading tasks (T041, T068) need it before they can pass.
   Their shells can be written and reviewed now. Core-only tests (`Forestry.Deserialize/test/`) do not
   depend on it.
-- **XML reader multi-segment support** (`BLOCKING.md` "not part of this pass", issue #24): needed by
-  quickstart row 7 (T063) and T068, buffers split at arbitrary byte positions.
+- **XML reader multi-segment support**: needed by quickstart row 7 (T063) and T068, buffers split at
+  arbitrary byte positions. Earlier versions of this file named it issue #24, which is "Read opaque
+  value" (closed 2026-10-02). `Utf8XmlReader` reads `ReadOnlySequence<byte>` input (names, opaque
+  values, spacing across segments; closed issues #16, #26, #38), but nothing has proven it end to end
+  through the row reading: T063 does (developer, 2026-11-02).
 
 ## Not in this slice
 
@@ -232,7 +235,7 @@ options win; options are read-only once used.
 **Independent Test**: Document 1 through the pipe entry point and split at every byte position
 (quickstart rows 6-7); the async cases of every earlier theory.
 
-### Test shells for User Story 3 ⚠️ (T063 also needs XML multi-segment support, #24)
+### Test shells for User Story 3 ⚠️ (T063 proves the XML reader's multi-segment support end to end)
 
 - [ ] T062 [US3] Test shell, quickstart 6 / US3-1, US3-2 / FR-009, FR-010: document 1 through `DeserializeAsync(PipeReader, …)` gives identical rows, and the first row is handed out at its end token, before the second `Log` is read, in `Forestry.Deserialize.Xml/test/WalkingSkeletonTests.US3.cs`
 - [ ] T063 [US3] Test shell, quickstart 7 / US3-3 / FR-010: document 1 written to a pipe split at every byte position gives identical rows, in `Forestry.Deserialize.Xml/test/WalkingSkeletonTests.US3.cs`
@@ -243,7 +246,7 @@ options win; options are read-only once used.
 - [ ] T065 [US3] Declare and implement `RowAsyncEnumerator` (`IAsyncEnumerator<Row>`) in `Forestry.Deserialize/src/Reading/RowAsyncEnumerator.cs`, with the same protected `Read` and `Pipeline` overloads as `RowEnumerator`, using `Forestry.Deserialize/src/Reading/PipeReaderBuffering.cs` (kept, internal): `MoveNextAsync` refills, calls `Read` on the unconsumed bytes with the final-block flag from `IsCompleted`, advances the pipe by the bytes consumed (even 0), refills again on `Partial`, returns `false` on `None`; cancellation; `DisposeAsync` clears the state and releases the pipe's buffer, handing out no row; add the abstract creation of the media's `RowAsyncEnumerator` over a `PipeReader` to `Forestry.Deserialize/src/DeserializeOptions.cs` (R2)
 - [ ] T066 [US3] Implement the asynchronous entry points in `Forestry.Deserialize/src/Deserialization.Pipe.cs`: `DeserializeAsync(PipeReader, DeserializeOptions, CancellationToken)` and `DeserializeAsync(Stream, DeserializeOptions, CancellationToken)` (via `PipeReader.Create`); validate and lock before returning; one enumeration only; then make the async branch of `Forestry.Deserialize.Xml/test/EntryPoints.cs` call `DeserializeAsync` and remove the `Skip = "US3"` marks from the theories (R2, R3)
 - [ ] T067 [US3] Implement `Forestry.Deserialize.Xml/src/XmlRowAsyncEnumerator.cs` (`: RowAsyncEnumerator`) delegating `Read` to `XmlRowReading`, and supply it from `Forestry.Deserialize.Xml/src/DeserializeXmlOptions.cs` (R2)
-- [ ] T068 [US3] Extend `Forestry.Deserialize.Xml/src/XmlRowReading.cs` for multi-segment buffers (needs #24): a value split across segments is joined into the scratch buffer; an incomplete value returns `Partial` without consuming it (R2)
+- [ ] T068 [US3] Extend `Forestry.Deserialize.Xml/src/XmlRowReading.cs` for multi-segment buffers: a value split across segments is copied with `ValueSequence.ToArray()`, as `Utf8JsonReader`'s getters do (allocates only at a buffer boundary, never per row; a scratch buffer is a later optimisation, developer 2026-11-02); an incomplete value returns `Partial` without consuming it (R2)
 - [ ] T069 [US3] Run `dotnet test` on both test projects: T062-T063 and the async cases of every earlier theory pass; all earlier stories still green. Then the performance gate: `dotnet test -s Performance.runsettings` on both test projects passes
 
 **Checkpoint**: All user stories work.
@@ -270,7 +273,7 @@ options win; options are read-only once used.
   until T030-T042; XML shells pass only after BLOCKING.md phase 2
 - **US2 (Phase 3)**: depends on US1 (the `Row` it extends, the XML path for T045)
 - **US4 (Phase 4)**: depends on US1 (the pipelines it attaches policies to); T059 builds on T034
-- **US3 (Phase 5)**: depends on US1 (T037-T041); T063 and T068 need #24; completes the async cases
+- **US3 (Phase 5)**: depends on US1 (T037-T041); T063 and T068 rely on the reader's multi-segment support; completes the async cases
   of every earlier theory
 - **Polish (Phase 6)**: depends on the stories it measures (T070 needs US1)
 
@@ -322,7 +325,7 @@ Task: "Implement the reading types in Forestry.Deserialize/src/Reading/"        
 2. US1: rows from a document, sync (MVP)
 3. US2: `Is<T>()` / `AsType<T>()`
 4. US4: policies, precedence, read-only options
-5. US3: async input and split buffers (with #24); the async cases of every theory
+5. US3: async input and split buffers; the async cases of every theory
 6. Polish: memory test, XML docs, how-to page, quickstart run
 
 ---

@@ -93,6 +93,6 @@ GitHub issue: #___
 
 ## Not part of this pass
 
-Already tracked separately, not duplicated here: multi-segment support (#24), `Skip()`/
+Already tracked separately, not duplicated here: multi-segment support (closed #16, #26, #38; proven end to end by spec 001's T063, not #24 as written before), `Skip()`/
 `ReaderOptions` auto-skip (noted in `ARCHITECTURE.md` §5), the 32-byte name-packing cap (#23),
 `_documentPosition`'s undecided semantics.
