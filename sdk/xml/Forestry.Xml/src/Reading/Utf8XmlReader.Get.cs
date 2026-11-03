@@ -3,7 +3,7 @@ using System.Buffers.Text;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
-namespace Forestry.Xml
+namespace Forestry.Xml.Reading
 {
     /// <summary>
     /// Typed value getters

@@ -1,7 +1,7 @@
 using System.Buffers;
 using System.Runtime.CompilerServices;
 
-namespace Forestry.Xml
+namespace Forestry.Xml.Reading
 {
     /// <summary>
     /// Utf8 Reader

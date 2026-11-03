@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace Forestry.Xml
+namespace Forestry.Xml.Reading
 {
     /// <summary>
     /// Formats XML exceptions from a category (why) and a markup (what)

@@ -1,6 +1,6 @@
 using System.Buffers.Binary;
 
-namespace Forestry.Xml
+namespace Forestry.Xml.Reading
 {
     /// <summary>
     /// Extensions regioned by type

@@ -2,7 +2,7 @@ using System.Buffers;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace Forestry.Xml
+namespace Forestry.Xml.Reading
 {
     /// <summary>
     /// Single segment reading

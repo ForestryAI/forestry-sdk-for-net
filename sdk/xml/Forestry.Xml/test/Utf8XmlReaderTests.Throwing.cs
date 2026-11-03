@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text;
 using Xunit;
+using Forestry.Xml.Reading;
 
 namespace Forestry.Xml.Tests
 {

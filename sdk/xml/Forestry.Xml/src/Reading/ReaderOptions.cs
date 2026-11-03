@@ -1,4 +1,4 @@
-namespace Forestry.Xml
+namespace Forestry.Xml.Reading
 {
     public struct ReaderOptions
     {

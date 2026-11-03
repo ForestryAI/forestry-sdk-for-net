@@ -1,4 +1,4 @@
-namespace Forestry.Xml
+namespace Forestry.Xml.Reading
 {
     /// <summary>
     /// The reader state is meant to live over async || sync bounderies to 

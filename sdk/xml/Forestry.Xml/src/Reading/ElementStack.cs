@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace Forestry.Xml
+namespace Forestry.Xml.Reading
 {
     /// <summary>
     /// Stack of packed element names, used to assert the Element Type Match WFC (an ending tag's

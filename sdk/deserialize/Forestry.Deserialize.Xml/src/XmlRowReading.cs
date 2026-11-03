@@ -1,6 +1,7 @@
 using System.Buffers;
 using Forestry.Deserialize.Reading;
 using Forestry.Xml;
+using Forestry.Xml.Reading;
 
 namespace Forestry.Deserialize.Xml
 {

@@ -1,6 +1,6 @@
 using static Forestry.Xml.EBNF;
 
-namespace Forestry.Xml
+namespace Forestry.Xml.Reading
 {
     /// <summary>
     /// CandidateNonTerminal non-terminal that a read value delegate can operate on (#27)

@@ -4,9 +4,11 @@ Rules no design decision may override, for the reader silo (Forestry.Xml) only. 
 spec-kit area it covers (Architecture, Code quality, Security, Documentation, Workflow). Terms are
 defined under Definitions. Agreed by the developer in #64 (2026-11-03).
 
-**Scope**: the package `Forestry.Xml` in `sdk/xml/Forestry.Xml/` (namespace `Forestry.Xml`): the
-reader (`Utf8XmlReader`, `ReaderState`, `ReaderOptions`, `ElementStack`, `CandidateNonTerminal`,
-`Utf8Reader`, `XmlException`) and its tests. A writer may join the package later. The XML media's
+**Scope**: the package `Forestry.Xml` in `sdk/xml/Forestry.Xml/` and its tests. What is specific to
+reading is in `Forestry.Xml.Reading` (`src/Reading/`: `Utf8XmlReader`, `ReaderState`, `ReaderOptions`,
+`ElementStack`, `CandidateNonTerminal`, `Utf8Reader` and the reader's throwing); what reading and a
+later writer share is in `Forestry.Xml` (`EBNF`, `TokenType`, `XmlException`, formatting) (developer,
+2026-11-03). A writer is not needed for the POC; it would go in `Forestry.Xml.Writing`. The XML media's
 association and row reading (`Forestry.Deserialize.Xml`) are governed by the deserialization
 constitution, not this one.
 

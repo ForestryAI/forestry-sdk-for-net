@@ -8,10 +8,13 @@ exports are the real documents it is developed against, but it targets XML gener
 design are adapted from Microsoft's open-source .NET runtime; see
 [THIRD-PARTY-NOTICES.md](../../../THIRD-PARTY-NOTICES.md).
 
-The reader stands on its own; [Forestry.Deserialize.Xml](../../deserialize/Forestry.Deserialize.Xml/README.md)
+Reading is in the namespace `Forestry.Xml.Reading`; what a later writer would share (`TokenType`,
+`XmlException`, the grammar's terminals) is in `Forestry.Xml`. The reader stands on its own; [Forestry.Deserialize.Xml](../../deserialize/Forestry.Deserialize.Xml/README.md)
 uses it to shred XML into rows.
 
 ```csharp
+using Forestry.Xml.Reading;
+
 Utf8XmlReader reader = new(utf8);
 
 while (reader.Read())
