@@ -24,8 +24,12 @@ namespace Forestry.Xml.Reading
         }
 
         /// <summary>
-        /// Get string from the name || value of an attribute or element 
+        /// Get string from the name || value of an attribute or element
         /// </summary>
+        /// <remarks>
+        /// The bytes are raw: character and entity references are not resolved, and
+        /// <see cref="HasEscapedValue"/> tells the caller the value contains some
+        /// </remarks>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
         public readonly ReadOnlySpan<byte> GetString()
@@ -42,6 +46,10 @@ namespace Forestry.Xml.Reading
         /// <summary>
         /// Try get string
         /// </summary>
+        /// <remarks>
+        /// Decodes the raw bytes of <see cref="GetString"/>: references are not resolved, so a
+        /// value with <see cref="HasEscapedValue"/> set still contains them (e.g. <c>&amp;amp;</c>)
+        /// </remarks>
         /// <param name="value"></param>
         /// <returns></returns>
         public bool TryGetString([NotNullWhen(true)] out string? value)

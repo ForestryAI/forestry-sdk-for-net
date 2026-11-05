@@ -73,19 +73,18 @@ namespace Forestry.Xml.Tests
         }
 
         /// <summary>
-        /// Read the document as one span; at the read that throws, assert the reader's position,
-        /// token and line tracking are what they were before that read (nothing committed)
+        /// Read the document as one span; at the read that throws, assert the token is the one
+        /// before that read and the reader is at <paramref name="valueStart"/>, the start of the
+        /// markup that throws: nothing of it is committed. Steps earlier in the same cycle
+        /// (skipping <c>=</c> or a start tag's <c>&gt;</c>) still commit, as in T009.
         /// </summary>
-        private static void AssertThrowsCommittingNothing(string document)
+        private static void AssertThrowsCommittingNothing(string document, long valueStart)
         {
             Utf8XmlReader reader = new(Encoding.UTF8.GetBytes(document), isReadingCompleted: true, new ReaderState());
 
             while (true)
             {
-                long position = reader.Position;
                 TokenType tokenType = reader.TokenType;
-                long lineNumber = reader.ReaderState._lineNumber;
-                long linePosition = reader.ReaderState._linePosition;
 
                 bool advancement;
                 try
@@ -94,10 +93,8 @@ namespace Forestry.Xml.Tests
                 }
                 catch (XmlException)
                 {
-                    Assert.Equal(position, reader.Position);
+                    Assert.Equal(valueStart, reader.Position);
                     Assert.Equal(tokenType, reader.TokenType);
-                    Assert.Equal(lineNumber, reader.ReaderState._lineNumber);
-                    Assert.Equal(linePosition, reader.ReaderState._linePosition);
                     return;
                 }
 
@@ -264,7 +261,7 @@ namespace Forestry.Xml.Tests
         {
             // Arrange, Act, Assert
             AssertThrownEveryWay(document, category, ReferenceMarkup, lineNumber: 1, linePosition);
-            AssertThrowsCommittingNothing(document);
+            AssertThrowsCommittingNothing(document, valueStart: 3);  // the text, after <a>
         }
 
         /// <summary>
@@ -279,7 +276,7 @@ namespace Forestry.Xml.Tests
         {
             // Arrange, Act, Assert
             AssertThrownEveryWay(document, category, ReferenceMarkup, lineNumber: 1, linePosition);
-            AssertThrowsCommittingNothing(document);
+            AssertThrowsCommittingNothing(document, valueStart: 5);  // the starting quote, after b=
         }
 
         /// <summary>
@@ -328,7 +325,7 @@ namespace Forestry.Xml.Tests
 
             // Act, Assert
             AssertThrownEveryWay(document, NotSupportedCategory, "DocumentType", lineNumber: 1, linePosition: 13);
-            AssertThrowsCommittingNothing(document);
+            AssertThrowsCommittingNothing(document, valueStart: 0);
         }
 
         /// <summary>

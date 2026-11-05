@@ -35,18 +35,15 @@ namespace Forestry.Xml.Reading
         }
 
         /// <summary>
-        /// Temporary throw for markup the POC does not support, outside the category and
-        /// markup pair until the unsupported exception is designed
+        /// Throw for a non-ASCII name byte (READER.md rule 14): not supported for the name, so it
+        /// is told apart from malformed markup by its category (spec 001 R6)
         /// </summary>
         /// <param name="reader"></param>
         /// <param name="offset">bytes from the committed position to the unsupported byte (#43)</param>
         [DoesNotReturn]
         public static void ThrowUnsupportedNameCharacter(ref Utf8XmlReader reader, long offset)
         {
-            string message = Formatting.WhenNameUnsupportedCharacter;
-            (long lineNumber, long linePosition) = GetPosition(ref reader, offset);
-
-            throw new XmlException(message + GetPositionMessage(lineNumber, linePosition), null, null, lineNumber, linePosition);
+            throw GetXmlException(ref reader, Category.NotSupported, Markup.Name, null, default, offset);
         }
 
         /// <summary>
@@ -130,6 +127,7 @@ namespace Forestry.Xml.Reading
                 Category.Name => Formatting.Name,
                 Category.Order => Formatting.Order,
                 Category.Unique => Formatting.Unique,
+                Category.NotSupported => Formatting.NotSupported,
                 _ => throw new UnreachableException(),
             };
 
@@ -207,7 +205,12 @@ namespace Forestry.Xml.Reading
             /// <summary>
             /// Duplicates
             /// </summary>
-            Unique
+            Unique,
+
+            /// <summary>
+            /// Well-formed, but this reader does not read it (C0)
+            /// </summary>
+            NotSupported
         }
 
         /// <summary>
@@ -227,7 +230,9 @@ namespace Forestry.Xml.Reading
             AttributeValue,
             CharacterData,
             EqualsSignTerminal,
-            Spacing
+            Spacing,
+            Reference,
+            EntityReference
         }
         #endregion
     }

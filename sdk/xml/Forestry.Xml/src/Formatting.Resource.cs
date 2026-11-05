@@ -22,11 +22,10 @@ namespace Forestry.Xml
 
         internal static string Unique => GetResourceString(nameof(Unique), @"Malformed markup: {0}{1} is repeated");
 
-        internal static string Unexpected => GetResourceString(nameof(Unexpected), @"Malformed markup: {0} starts no markup allowed here");
-        #endregion
+        // Placeholder wording until #49
+        internal static string NotSupported => GetResourceString(nameof(NotSupported), @"Not supported: {0}{1}");
 
-        #region unsupported
-        internal static string WhenNameUnsupportedCharacter => GetResourceString(nameof(WhenNameUnsupportedCharacter), @"Unsupported markup: a name non-terminal contains a character outside ASCII");
+        internal static string Unexpected => GetResourceString(nameof(Unexpected), @"Malformed markup: {0} starts no markup allowed here");
         #endregion
 
         #region invalid operation exception

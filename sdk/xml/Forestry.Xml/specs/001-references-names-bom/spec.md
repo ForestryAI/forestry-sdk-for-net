@@ -273,7 +273,8 @@ and encoding name.
 - Encodings are recognised only by a BOM or the declaration's encoding name; a UTF-16 document
   without a BOM or declaration starts no markup and throws as today. The rest of the declaration
   stays unchecked (opaque), as today.
-- Out of scope, later specs or bugs: #30 line position (a bug, fixed with a test), CDATA,
+- Out of scope, later specs or bugs: #30 line position counting characters (its one-line fix, a
+  start tag's `>` leaving positions one column short, was made in US1: developer, 2026-11-05), CDATA,
   skip/try-skip and #33, typed getters, #49 messages, lone `\r` line ends, non-ASCII names, whether
   `Extensions` stays public, `]]>` in character data.
 - Out of scope, a later limits spec (S1, developer 2026-11-03): a running size limit on the open

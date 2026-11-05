@@ -1,7 +1,9 @@
 using System.Text;
 using Xunit;
 using Forestry.Xml.Reading;
-using static Forestry.Xml.Reading.Utf8XmlReader;
+using MarkupReason = Forestry.Xml.Reading.Utf8XmlReader.MarkupReason;
+using MarkupState = Forestry.Xml.Reading.Utf8XmlReader.MarkupState;
+using ReferenceConstraint = Forestry.Xml.Reading.Utf8XmlReader.ReferenceConstraint;
 
 namespace Forestry.Xml.Tests
 {

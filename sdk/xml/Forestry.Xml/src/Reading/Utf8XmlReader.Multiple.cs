@@ -371,21 +371,21 @@ namespace Forestry.Xml.Reading
         /// </summary>
         /// <param name="markup"></param>
         /// <param name="length"></param>
-        /// <param name="unsupportedCharacter"></param>
+        /// <param name="reason"></param>
         /// <returns></returns>
         private MarkupState EvaluateMultipleMarkup<T>(
             ref T markup,
             out int length,
-            out bool unsupportedCharacter
+            out MarkupReason reason
         ) where T: struct, IMarkup
         {
             length = 0;
-            unsupportedCharacter = false;
+            reason = MarkupReason.None;
 
             // The markup starts after its starting terminal, e.g. a literal's starting quote
             foreach (ReadOnlyMemory<byte> memory in _sequence.Slice(SequencePosition).Slice(markup.StartingTerminalLength))
             {
-                MarkupState markupState = markup.Evaluate(memory.Span, out int segmentLength, out unsupportedCharacter);
+                MarkupState markupState = markup.Evaluate(memory.Span, out int segmentLength, out reason);
                 length += segmentLength;
 
                 if (markupState != MarkupState.Unknown)

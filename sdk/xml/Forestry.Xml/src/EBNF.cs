@@ -162,6 +162,23 @@ namespace Forestry.Xml {
         }
         #endregion
 
+        #region Entities
+        /// <summary>The predefined entity name <c>amp</c>, for <c>&amp;</c></summary>
+        public static ReadOnlySpan<byte> AmpersandEntityName => "amp"u8;
+
+        /// <summary>The predefined entity name <c>lt</c>, for <c>&lt;</c></summary>
+        public static ReadOnlySpan<byte> LessThanEntityName => "lt"u8;
+
+        /// <summary>The predefined entity name <c>gt</c>, for <c>&gt;</c></summary>
+        public static ReadOnlySpan<byte> GreaterThanEntityName => "gt"u8;
+
+        /// <summary>The predefined entity name <c>quot</c>, for <c>"</c></summary>
+        public static ReadOnlySpan<byte> QuoteEntityName => "quot"u8;
+
+        /// <summary>The predefined entity name <c>apos</c>, for <c>'</c></summary>
+        public static ReadOnlySpan<byte> ApostropheEntityName => "apos"u8;
+        #endregion
+
         #region BOM
         /// <summary>The UTF-8 byte order mark <c>EF BB BF</c></summary>
         public static ReadOnlySpan<byte> Utf8Bom => [0xEF, 0xBB, 0xBF];

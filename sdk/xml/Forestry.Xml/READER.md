@@ -122,7 +122,9 @@ the Attribute candidate.
 16. **Element names are compared on their first 32 bytes.** A `ValueSequence` name is copied to a
     32-byte `stackalloc` before pushing (#37, #23).
 17. **Line and position are 0-based internally, 1-based in exceptions.** Line position counts
-    bytes, not characters (#24, bug #30). Only a line feed ends a line; a carriage return adds one
+    bytes, not characters (#24, bug #30). Skipping a start tag's `>` (step 4) adds one to the
+    position like any other byte: #30's one-line fix, made with spec 001 US1 (#65); counting
+    characters is still open in #30. Only a line feed ends a line; a carriage return adds one
     to the position like any other byte, so `\r\n` is one line end (`Utf8Reader.Track`). A lone
     `\r` is **not** a line end, unlike XML 1.0 §2.11: a known gap, harmless for `\r\n` files.
 18. **Spacing in content may be character data.** Spacing-only character data is skipped by
@@ -137,12 +139,13 @@ the Attribute candidate.
 <b/>` gives `A
 `.
 
-    **Character data ends at `<` or `&`** and is the raw bytes before it: control bytes other
-    than tab, line feed and carriage return are malformed, every other byte (quotes, `>`, bytes
-    ≥ 0x80) is plain text, as in literals (rule 21). `&` starts a reference, unsupported in the
-    POC: the text before it is a Value token, then the next cycle starts at `&` (an empty pad,
-    so character data again) and the delegate throws Expected for its length 0 with the
-    unsupported flag. `]]>` is not checked.
+    **Character data ends at `<`** and is the raw bytes before it, references included: control
+    bytes other than tab, line feed and carriage return are malformed, every other byte (quotes,
+    `>`, bytes ≥ 0x80) is plain text, as in literals (rule 21). `&` starts a reference, checked by
+    `ReferenceConstraint` inside `CharacterDataMarkup` and returned raw, not resolved, with
+    `HasEscapedValue` set for that Value (spec 001 US1, #65): text and references are one Value,
+    a `<` inside a reference is malformed there, and a malformed reference throws at its first
+    known byte (spec 001 research R2). `]]>` is not checked.
 
 ### Attributes
 19. **An attribute needs spacing before it**, but spacing is skipped before the candidate sees
@@ -179,8 +182,8 @@ the Attribute candidate.
     other than tab, line feed and carriage return; the other quote kind is content. Bytes
     ≥ 0x80 pass unchecked (no UTF-8 validation, no ASCII rule as for names), and `Value` is the
     raw bytes between the quotes: not normalized, unlike XML 1.0 §3.3.3. `&` starts a reference,
-    well-formed but unsupported in the POC; until the unsupported exception is designed it throws
-    Expected (#44). The starting quote is guaranteed by candidate S7 (a `Debug.Assert`); the
+    checked by `ReferenceConstraint` inside `LiteralMarkup` and kept raw, with `HasEscapedValue`
+    set; the matching quote ends the literal only outside a reference (spec 001 US1, #65). The starting quote is guaranteed by candidate S7 (a `Debug.Assert`); the
     current token is not, so a value without an attribute name throws (`<a "1">`, #44's G0).
 
 ### Reader state
@@ -214,11 +217,13 @@ the Attribute candidate.
     e.g. the processing instruction target).
 
 ### Decided, not built yet
-- **The unsupported exception is not designed** (#43). `&` in a literal (#44), `&` in
-  character data (#48) and a non-ASCII name byte (#38) are its users so far.
+- **The unsupported exception is designed as far as a category** (spec 001 R6, #65):
+  `Throwing.Category.NotSupported`, told apart from malformed markup by `XmlException.Category`.
+  Its users: a non-ASCII name byte (Name), an entity other than the five after a document type
+  (EntityReference), a document type's internal subset (DocumentType, at its `[`). The wording
+  is #49's.
 - **Candidate None throws one generic malformed exception** (#48): `Throwing.ThrowUnexpectedMarkup`
-  ("… starts no markup allowed here"), an `XmlException` without category or markup, like the
-  unsupported name throw. Its cases (second root, text or an end tag outside the root, a document
+  ("… starts no markup allowed here"), an `XmlException` without category or markup. Its cases (second root, text or an end tag outside the root, a document
   type after the prolog, `<` without a name, markup inside a start tag, a BOM until #31) need
   specific category + markup explanations (rule 24) in their own task.
 - **`/>`'s ElementEnd has an empty `Value`.** Exposing the popped name needs storage in the

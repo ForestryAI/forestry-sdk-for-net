@@ -146,7 +146,7 @@ namespace Forestry.Xml.Tests
 
         #region message
         /// <summary>
-        /// Every category has a template starting with <c>Malformed markup:</c>
+        /// Every malformed category has a template starting with <c>Malformed markup:</c>
         /// </summary>
         [Theory]
         [MemberData(nameof(Categories))]
@@ -161,12 +161,36 @@ namespace Forestry.Xml.Tests
             Assert.DoesNotContain("{", exception.Message);
         }
 
+        /// <summary>
+        /// Spec 001 R6: a well-formed construct the reader doesn't read is not malformed, so its
+        /// template starts with <c>Not supported:</c> (wording placeholder until #49)
+        /// </summary>
+        [Fact]
+        public void Throwing_ForNotSupported_ItShould_HaveANotSupportedMessage()
+        {
+            // Act
+            XmlException exception = GetXmlExceptionAt(0, 0, "NotSupported", nameof(Throwing.Markup.Element));
+
+            // Assert
+            Assert.StartsWith("Not supported: ", exception.Message);
+            Assert.DoesNotContain("{", exception.Message);
+        }
+
+        /// <summary>
+        /// The malformed categories: not the well-formed ones of spec 001 R6 (NotSupported, and
+        /// Limit from US2)
+        /// </summary>
         public static TheoryData<string> Categories()
         {
+            string[] wellFormed = ["NotSupported", "Limit"];
+
             TheoryData<string> data = [];
             foreach (string category in Enum.GetNames<Throwing.Category>())
             {
-                data.Add(category);
+                if (!wellFormed.Contains(category))
+                {
+                    data.Add(category);
+                }
             }
 
             return data;
