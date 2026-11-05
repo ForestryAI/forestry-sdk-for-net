@@ -25,11 +25,16 @@ namespace Forestry.Xml
         // Placeholder wording until #49
         internal static string NotSupported => GetResourceString(nameof(NotSupported), @"Not supported: {0}{1}");
 
+        // Placeholder wording until #49
+        internal static string Limit => GetResourceString(nameof(Limit), @"Limit exceeded: {0}{1}");
+
         internal static string Unexpected => GetResourceString(nameof(Unexpected), @"Malformed markup: {0} starts no markup allowed here");
         #endregion
 
         #region invalid operation exception
         internal static string WhenNotPositive => GetResourceString(nameof(WhenNotPositive), @"Value {0} named {1} is not positive");
+
+        internal static string WhenAbove => GetResourceString(nameof(WhenAbove), @"Value {0} named {1} is above {2}");
         #endregion
     }
 }

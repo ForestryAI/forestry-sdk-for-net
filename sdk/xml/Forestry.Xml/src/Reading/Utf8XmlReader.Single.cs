@@ -52,6 +52,11 @@ namespace Forestry.Xml.Reading
                 _readerOptions.MaxDepth = ReaderOptions.DefaultMaxDepth;
             }
 
+            if (_readerOptions.MaxNameLength <= 0)
+            {
+                _readerOptions.MaxNameLength = ReaderOptions.DefaultMaxNameLength;
+            }
+
             // value
             Value = ReadOnlySpan<byte>.Empty;
             ValueSequence = ReadOnlySequence<byte>.Empty;
@@ -164,13 +169,13 @@ namespace Forestry.Xml.Reading
 
             if (isProcessingInstruction)
             {
-                ProcessingInstructionTarget target = default;
+                ProcessingInstructionTarget target = new() { MaxLength = _readerOptions.MaxNameLength };
                 MarkupState evaluation = target.Evaluate(value[startingTerminal.Length..]);
 
                 Debug.Assert(evaluation != MarkupState.Unknown, "The value ends with the ending terminal ?> so the scan always ends.");
                 if (evaluation != MarkupState.WellFormed)
                 {
-                    Throwing.ThrowXmlException(ref this, Throwing.Category.Name, Throwing.Markup.ProcessingInstructionTarget, offset: startingTerminal.Length + target.OffendingIndex);  // S5 + S6
+                    Throwing.ThrowXmlException(ref this, target.IsTooLong ? Throwing.Category.Limit : Throwing.Category.Name, Throwing.Markup.ProcessingInstructionTarget, offset: startingTerminal.Length + target.OffendingIndex);  // S5 + S6
                 }
             }
 

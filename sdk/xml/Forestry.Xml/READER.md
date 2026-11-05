@@ -119,8 +119,15 @@ the Attribute candidate.
 14. **Names are ASCII only in the POC.** A non-ASCII byte throws "unsupported" (#38).
 15. **A name ends at the first non-name byte** (no ending terminal), so a segment ending inside a
     name is undecided: `false`, or a token when reading is completed (#38).
-16. **Element names are compared on their first 32 bytes.** A `ValueSequence` name is copied to a
-    32-byte `stackalloc` before pushing (#37, #23).
+16. **Element names are compared in full, within `MaxNameLength`** (spec 001 US2, #66). The
+    element stack keeps the open names end to end in a 2048-byte pool with the end offset of each
+    (`_names`, `_ends`, `_depth`, at most 64 levels; research R4); a `ValueSequence` name is copied
+    straight in, with no `stackalloc`. An end tag compares lengths first, so it is evaluated only
+    to the start-tag name's length plus one byte and fails only on a mismatch. Every name first
+    read (element, attribute, processing instruction target, entity name after a document type)
+    is bounded by `ReaderOptions.MaxNameLength` (default 128), throwing Limit at the first byte
+    beyond it; a start tag at `Depth == MaxDepth` throws Limit + Element, and names that do not
+    fit the pool throw NotSupported + ElementStack, both before anything is committed.
 17. **Line and position are 0-based internally, 1-based in exceptions.** Line position counts
     bytes, not characters (#24, bug #30). Skipping a start tag's `>` (step 4) adds one to the
     position like any other byte: #30's one-line fix, made with spec 001 US1 (#65); counting

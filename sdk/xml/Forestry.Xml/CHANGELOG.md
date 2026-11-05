@@ -12,6 +12,9 @@
   contains some (spec 001 US1, #65). A malformed reference throws at its first known byte; an
   entity other than the five after a document type, and a document type's internal subset, throw
   "not supported".
+- `ReaderOptions.MaxNameLength` (default 128 bytes) bounds element names, attribute names,
+  processing instruction targets and entity names after a document type; a longer name throws an
+  `XmlException` with `Category` "Limit" (spec 001 US2, #66).
 
 ### Behavior Changes
 - `&` no longer throws: `GetString()` and the `Forestry.Deserialize.Xml` bridge above it now get
@@ -21,5 +24,10 @@
   fix).
 
 ### Breaking Changes
+- End tags are compared with the whole start-tag name, not its first 32 bytes: a document whose
+  names differ only after 32 bytes now throws a mismatch (#66).
+- `ReaderOptions.MaxDepth` is enforced: a start tag at that depth throws an `XmlException` with
+  `Category` "Limit"; setting it to 0 (which used to mean 64) or above 64 now throws
+  `InvalidOperationException` (#66).
 - A non-ASCII name byte throws an `XmlException` with `Category` "NotSupported" and `Markup` "Name"
   instead of one without a category (#65).

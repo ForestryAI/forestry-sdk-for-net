@@ -69,6 +69,12 @@ namespace Forestry.Xml.Reading
         {
             throw new InvalidOperationException(Formatting.Format(Formatting.WhenNotPositive, value, name));
         }
+
+        [DoesNotReturn]
+        public static void WhenValueAbove(int value, string name, int maximum)
+        {
+            throw new InvalidOperationException(Formatting.Format(Formatting.WhenAbove, value, name, maximum));
+        }
         #endregion
 
         #region exception formatting
@@ -128,6 +134,7 @@ namespace Forestry.Xml.Reading
                 Category.Order => Formatting.Order,
                 Category.Unique => Formatting.Unique,
                 Category.NotSupported => Formatting.NotSupported,
+                Category.Limit => Formatting.Limit,
                 _ => throw new UnreachableException(),
             };
 
@@ -210,7 +217,12 @@ namespace Forestry.Xml.Reading
             /// <summary>
             /// Well-formed, but this reader does not read it (C0)
             /// </summary>
-            NotSupported
+            NotSupported,
+
+            /// <summary>
+            /// Well-formed, but beyond a reader option's limit (S1)
+            /// </summary>
+            Limit
         }
 
         /// <summary>
@@ -232,7 +244,8 @@ namespace Forestry.Xml.Reading
             EqualsSignTerminal,
             Spacing,
             Reference,
-            EntityReference
+            EntityReference,
+            ElementStack
         }
         #endregion
     }

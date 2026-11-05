@@ -166,13 +166,12 @@ namespace Forestry.Xml.Tests
         }
 
         /// <summary>
-        /// S4, S5: a name over 32 bytes is compared on its first 32 bytes only (rule 16), so a
-        /// difference after them is a known leniency, not a throw. The value is the full name
-        /// from the document, not the stack's 32 bytes.
+        /// S4: a name over 32 bytes is compared in full and read as the full name. Spec 001 US2
+        /// removed S5's 32-byte leniency: names equal on 32 bytes and different after are a
+        /// mismatch (FR-008, <c>Read_ForNamesEqualOnThirtyTwoBytes_ItShould_ThrowAMismatch</c>).
         /// </summary>
         [Theory]
         [InlineData(Name32 + "a", Name32 + "a")]     // S4 same 33-byte name
-        [InlineData(Name32 + "b", Name32 + "c")]     // S5 first 32 bytes match, the rest differs
         [InlineData(Name40, Name40)]                 // S4
         public void ReadEndTag_ForS4S5LongName_ItShould_ReadTheFullName(
             string openName,
@@ -242,12 +241,13 @@ namespace Forestry.Xml.Tests
         /// <summary>
         /// S9, S13: the segment ends inside the name or with only spacing after it, and reading
         /// is not completed, so the delegate halts (simulated rollback) - line feeds in the
-        /// spacing aren't tracked either
+        /// spacing aren't tracked either. A name already longer than the open one (<c>&lt;/Stem</c>
+        /// with <c>a</c> open) no longer halts: it is a mismatch at once (spec 001 FR-011,
+        /// <c>Read_ForAnEndTagLongerThanItsStartTagWithReadingNotCompleted_ItShould_ThrowRatherThanHalt</c>)
         /// </summary>
         [Theory]
         [InlineData("</")]       // S9 the name hasn't started
         [InlineData("</a")]      // S9
-        [InlineData("</Stem")]   // S9
         [InlineData("</a ")]     // S13
         [InlineData("</a\n")]    // S13
         public void ReadEndTag_ForS9S13SegmentEnds_ItShould_HaltCommittingNothing(

@@ -868,7 +868,7 @@ namespace Forestry.Xml.Reading
 
             _previousTokenType = _currentTokenType;
             _currentTokenType = TokenType.ElementEnd;
-            _elementStack.Pop(stackalloc byte[ElementStack.PackedNameLength * 8]);
+            _elementStack.Pop();
 
             if (_isMultipleSegments)
             {
@@ -1053,36 +1053,58 @@ namespace Forestry.Xml.Reading
         /// <returns></returns>
         internal bool ReadName()
         {
-            NameMarkup markup = new();
+            if (!EvaluateName(startingTerminalLength: 0, out int nameLength)) // S7
+            {
+                return false; // simulate rollback without advancement
+            }
+
+            AdvanceValue(ref this, startingTerminalLength: 0, valueLength: nameLength, consumedLength: nameLength, lineTracking: true); // S4, S8
+            return true;
+        }
+
+        /// <summary>
+        /// Evaluate a name after its starting terminal without committing anything, bounded by
+        /// <c>MaxNameLength</c> (spec 001 US2): true when the name is decided, false to halt;
+        /// throws when malformed, not supported or too long
+        /// </summary>
+        /// <param name="startingTerminalLength"></param>
+        /// <param name="nameLength"></param>
+        /// <returns></returns>
+        private bool EvaluateName(int startingTerminalLength, out int nameLength)
+        {
+            NameMarkup markup = startingTerminalLength > 0
+                ? new() { StartingTerminalLength = startingTerminalLength, MaxLength = _readerOptions.MaxNameLength }
+                : new() { MaxLength = _readerOptions.MaxNameLength };
             MarkupState value = _isMultipleSegments ?
-                EvaluateMultipleMarkup(ref markup, out int nameLength, out MarkupReason reason) :
-                markup.Evaluate(_segment[_segmentPosition..], out nameLength, out reason);
+                EvaluateMultipleMarkup(ref markup, out nameLength, out MarkupReason reason) :
+                markup.Evaluate(_segment[(_segmentPosition + startingTerminalLength)..], out nameLength, out reason);
 
             switch (value)
-            {                
+            {
                 case MarkupState.WellFormed:
-                    AdvanceValue(ref this, startingTerminalLength: 0, valueLength: nameLength, consumedLength: nameLength, lineTracking: true); // S4 
-                    return true;
+                    return true;  // S4
                 case MarkupState.Malformed:
-                    if (reason == MarkupReason.UnsupportedCharacter) // S5 else S6
+                    if (reason == MarkupReason.UnsupportedCharacter) // S5
                     {
-                        Throwing.ThrowUnsupportedNameCharacter(ref this, offset: nameLength);
-                    } else
-                    {
-                        Throwing.ThrowXmlException(ref this, Throwing.Category.Name, Throwing.Markup.Name, offset: nameLength);
+                        Throwing.ThrowUnsupportedNameCharacter(ref this, offset: startingTerminalLength + nameLength);
                     }
+                    if (reason == MarkupReason.TooLong)  // spec 001 US2
+                    {
+                        Throwing.ThrowXmlException(ref this, Throwing.Category.Limit, Throwing.Markup.Name, offset: startingTerminalLength + nameLength);
+                    }
+
+                    Throwing.ThrowXmlException(ref this, Throwing.Category.Name, Throwing.Markup.Name, offset: startingTerminalLength + nameLength);  // S6
                     break;
                 case MarkupState.Unknown:
                     if (!_isReadingCompleted) // S7
                     {
-                        return false; // simulate rollback without advancement
+                        return false;
                     }
                     if (nameLength > 0) // S8
                     {
-                        AdvanceValue(ref this, startingTerminalLength: 0, valueLength: nameLength, consumedLength: nameLength, lineTracking: true);
                         return true;
                     }
-                    
+
                     Throwing.ThrowXmlException(ref this, Throwing.Category.Name, Throwing.Markup.Name, offset: RemainingLength); // S9
                     break;
                 default:
@@ -1102,29 +1124,34 @@ namespace Forestry.Xml.Reading
         {
             Debug.Assert(_segment[_segmentPosition] == EBNF.LessThan, "The first character of a start tag is the starting terminal '<'.");
 
-            _segmentPosition += 1;
-            _linePosition += 1;
+            const int startingTerminalLength = 1;
 
-            if (!ReadName()) // S0
+            // MaxDepth is enforced at the start tag, before anything is committed (S1, spec 001 US2)
+            if (_elementStack.Depth >= _readerOptions.MaxDepth)
             {
-                _segmentPosition -= 1;
-                _linePosition -= 1;
+                Throwing.ThrowXmlException(ref this, Throwing.Category.Limit, Throwing.Markup.Element, offset: startingTerminalLength);
+            }
+
+            if (!EvaluateName(startingTerminalLength, out int nameLength)) // S0
+            {
                 return false;
             }
 
             // S1: propagate exceptions
 
-            if (HasValueSequence) // S3
+            // The whole name must fit the element stack, checked before committing (R4)
+            if (!_elementStack.CanPush(nameLength))
             {
-                Span<byte> name = stackalloc byte[ElementStack.PackedNameLength * 8];
-
-                int length = (int)Math.Min(ValueSequence.Length, name.Length); // S4
-                ValueSequence.Slice(0, length).CopyTo(name);
-                _elementStack.Push(name[..length]);
-            } else // S2
-            {
-                _elementStack.Push(Value);
+                Throwing.ThrowXmlException(ref this, Throwing.Category.NotSupported, Throwing.Markup.ElementStack, offset: startingTerminalLength);
             }
+
+            AdvanceValue(ref this, startingTerminalLength: startingTerminalLength, valueLength: nameLength, consumedLength: startingTerminalLength + nameLength, lineTracking: true);
+            _linePosition += startingTerminalLength;
+
+            bool pushed = HasValueSequence  // S3 straddling, S2 in one span; copied straight into the stack
+                ? _elementStack.TryPush(ValueSequence)
+                : _elementStack.TryPush(Value);
+            Debug.Assert(pushed, "The name was checked to fit before committing.");
 
             _previousTokenType = _currentTokenType;
             _currentTokenType = TokenType.Element;
@@ -1143,8 +1170,9 @@ namespace Forestry.Xml.Reading
         {
             const int startingTerminalLength = 2;
 
-            // Evaluate the name non-terminal after the starting terminal
-            NameMarkup markup = new() { StartingTerminalLength = startingTerminalLength };
+            // Evaluate the name non-terminal after the starting terminal, never beyond the start-tag
+            // name's length: a longer end tag is a mismatch (FR-011, spec 001 US2)
+            NameMarkup markup = new() { StartingTerminalLength = startingTerminalLength, MaxLength = _elementStack.TopLength };
             MarkupState value = _isMultipleSegments ?
                 EvaluateMultipleMarkup(ref markup, out int nameLength, out MarkupReason reason) :
                 markup.Evaluate(_segment[(_segmentPosition + startingTerminalLength)..], out nameLength, out reason);
@@ -1157,6 +1185,10 @@ namespace Forestry.Xml.Reading
                     if (reason == MarkupReason.UnsupportedCharacter)
                     {
                         Throwing.ThrowUnsupportedNameCharacter(ref this, offset: startingTerminalLength + nameLength);
+                    }
+                    if (reason == MarkupReason.TooLong)  // S15: longer than the start-tag name
+                    {
+                        Throwing.ThrowXmlException(ref this, Throwing.Category.Name, Throwing.Markup.EndTag, offset: startingTerminalLength);
                     }
                     Throwing.ThrowXmlException(ref this, Throwing.Category.Name, Throwing.Markup.Name, offset: startingTerminalLength + nameLength);
                     break;
@@ -1184,36 +1216,19 @@ namespace Forestry.Xml.Reading
                 Throwing.ThrowXmlException(ref this, Throwing.Category.Expected, Throwing.Markup.EndingTerminal, foundByte: character, offset: index);
             }
 
-            // Evaluate the name against the top of the element stack, a contiguous copy capped at the packed length when straddling (rule 16)
-            Span<byte> copy = stackalloc byte[ElementStack.PackedNameLength * 8];
-            scoped ReadOnlySpan<byte> name;
-            if (_isMultipleSegments)
-            {
-                ReadOnlySequence<byte> sequence = _sequence.Slice(SequencePosition).Slice(startingTerminalLength, nameLength);
-                if (sequence.IsSingleSegment)
-                {
-                    name = sequence.FirstSpan;
-                }
-                else
-                {
-                    int length = (int)Math.Min(sequence.Length, copy.Length);
-                    sequence.Slice(0, length).CopyTo(copy);
-                    name = copy[..length];
-                }
-            }
-            else
-            {
-                name = _segment.Slice(_segmentPosition + startingTerminalLength, nameLength);
-            }
+            // Evaluate the name against the top of the element stack in full, a sequence compared
+            // without copying (spec 001 US2, R4)
+            bool matches = _isMultipleSegments
+                ? _elementStack.TryPeek(_sequence.Slice(SequencePosition).Slice(startingTerminalLength, nameLength), out _)
+                : _elementStack.TryPeek(_segment.Slice(_segmentPosition + startingTerminalLength, nameLength), out _);
 
-            if (!_elementStack.TryPeek(name, out _)) // S15
+            if (!matches) // S15
             {
                 Throwing.ThrowXmlException(ref this, Throwing.Category.Name, Throwing.Markup.EndTag, offset: startingTerminalLength);
             }
 
             // Commit: pop, value, line tracking (spacing may hold line feeds), positions past the ending terminal, tokens
-            bool popped = _elementStack.TryPop(name);
-            Debug.Assert(popped, "The name was peeked on the element stack before popping.");
+            _elementStack.Pop();
 
             AdvanceValue(ref this, startingTerminalLength: startingTerminalLength, valueLength: nameLength, consumedLength: (int)index + 1, lineTracking: false);
 
@@ -1242,7 +1257,7 @@ namespace Forestry.Xml.Reading
         /// <returns></returns>
         internal bool ReadContentCharacterData()
         {
-            CharacterDataMarkup markup = new() { IsDocumentType = _documentType };
+            CharacterDataMarkup markup = new() { IsDocumentType = _documentType, MaxNameLength = _readerOptions.MaxNameLength };
             MarkupState value = _isMultipleSegments ?
                 EvaluateMultipleMarkup(ref markup, out int length, out MarkupReason reason) :
                 markup.Evaluate(_segment[_segmentPosition..], out length, out reason);
@@ -1328,7 +1343,7 @@ namespace Forestry.Xml.Reading
             byte quote = _segment[_segmentPosition];
             Debug.Assert(quote == EBNF.DoubleQuote || quote == EBNF.SingleQuote, "Candidate S7 guarantees the starting quote.");
 
-            LiteralMarkup markup = new() { Quote = quote, IsDocumentType = _documentType };
+            LiteralMarkup markup = new() { Quote = quote, IsDocumentType = _documentType, MaxNameLength = _readerOptions.MaxNameLength };
             MarkupState value = _isMultipleSegments ?
                 EvaluateMultipleMarkup<LiteralMarkup>(ref markup, out int literalLength, out MarkupReason reason) :
                 markup.Evaluate(_segment[(_segmentPosition + 1)..], out literalLength, out reason);
@@ -1391,6 +1406,9 @@ namespace Forestry.Xml.Reading
                     break;
                 case MarkupReason.NotSupportedEntity:
                     Throwing.ThrowXmlException(ref this, Throwing.Category.NotSupported, Throwing.Markup.EntityReference, offset: referenceStart);
+                    break;
+                case MarkupReason.TooLong:
+                    Throwing.ThrowXmlException(ref this, Throwing.Category.Limit, Throwing.Markup.EntityReference, offset: offset);
                     break;
             }
         }
@@ -1504,6 +1522,11 @@ namespace Forestry.Xml.Reading
             /// declare it: not supported (S2)
             /// </summary>
             NotSupportedEntity,
+
+            /// <summary>
+            /// A name longer than its bound, at the first byte beyond it (S1, spec 001 US2)
+            /// </summary>
+            TooLong,
         }
 
         /// <summary>
@@ -1513,12 +1536,15 @@ namespace Forestry.Xml.Reading
         /// <param name="isFirstCharacter"></param>
         /// <param name="nameLength"></param>
         /// <param name="reason"></param>
+        /// <param name="budget">name bytes still allowed: a name byte at this index is Malformed
+        /// with <see cref="MarkupReason.TooLong"/>, nothing beyond it is looked at (S1)</param>
         /// <returns></returns>
         internal static MarkupState EvaluateNameNonTerminalMarkup(
             ReadOnlySpan<byte> characters,
             bool isFirstCharacter,
             out int nameLength,
-            out MarkupReason reason
+            out MarkupReason reason,
+            int budget = int.MaxValue
         ) {
             static bool IsUnsupportedCharacterGuard(byte value) => value >= 0x80;
 
@@ -1543,6 +1569,13 @@ namespace Forestry.Xml.Reading
                 {
                     nameLength = characterIndex;
                     return MarkupState.WellFormed;  // S2 (fall through from S1)
+                }
+
+                if (characterIndex >= budget)
+                {
+                    nameLength = characterIndex;
+                    reason = MarkupReason.TooLong;
+                    return MarkupState.Malformed;  // the first name byte beyond the bound (spec 001 US2)
                 }
             }
 
@@ -1590,6 +1623,17 @@ namespace Forestry.Xml.Reading
             internal int OffendingIndex { get; private set; }
 
             /// <summary>
+            /// Bound on the target in bytes, 0 for none (<c>MaxNameLength</c>, spec 001 US2)
+            /// </summary>
+            internal int MaxLength { get; init; }
+
+            /// <summary>
+            /// Malformed because the target is longer than <see cref="MaxLength"/>, at the first
+            /// byte beyond it
+            /// </summary>
+            internal bool IsTooLong { get; private set; }
+
+            /// <summary>
             /// Evaluate the character terminals after the starting terminal <c>&lt;?</c>
             /// </summary>
             /// <param name="characters"></param>
@@ -1632,6 +1676,12 @@ namespace Forestry.Xml.Reading
                         return MarkupState.Malformed;  // S5
                     }
 
+                    if (MaxLength > 0 && _length >= MaxLength)
+                    {
+                        IsTooLong = true;
+                        return MarkupState.Malformed;  // the first target byte beyond MaxNameLength (spec 001 US2)
+                    }
+
                     // ASCII letters only differ by the 0x20 bit in case, and only 'X'/'x',
                     // 'M'/'m' and 'L'/'l' match "xml" with that bit set
                     _isXml = _length < 3
@@ -1648,6 +1698,14 @@ namespace Forestry.Xml.Reading
         {
             private bool _hasNameCharacter;
 
+            private int _evaluated;
+
+            /// <summary>
+            /// Bound on the name in bytes, 0 for none (spec 001 US2: <c>MaxNameLength</c>, or the
+            /// start-tag name's length for an end tag)
+            /// </summary>
+            public int MaxLength { get; init; }
+
             public int StartingTerminalLength
             {
                 get;
@@ -1658,8 +1716,10 @@ namespace Forestry.Xml.Reading
 
             public MarkupState Evaluate(ReadOnlySpan<byte> characters, out int length, out MarkupReason reason)
             {
-                MarkupState markupState = EvaluateNameNonTerminalMarkup(characters, isFirstCharacter: !_hasNameCharacter, out length, out reason);
+                int budget = MaxLength > 0 ? MaxLength - _evaluated : int.MaxValue;
+                MarkupState markupState = EvaluateNameNonTerminalMarkup(characters, isFirstCharacter: !_hasNameCharacter, out length, out reason, budget);
                 _hasNameCharacter |= length > 0;
+                _evaluated += length;
                 return markupState;
             }
         }
@@ -1686,6 +1746,11 @@ namespace Forestry.Xml.Reading
             /// The reader read a document type, so an entity other than the five may be declared
             /// </summary>
             public bool IsDocumentType { get; init; }
+
+            /// <summary>
+            /// Bound on an entity name after a document type (spec 001 US2)
+            /// </summary>
+            public int MaxNameLength { get; init; }
 
             private ReferenceConstraint _reference;
 
@@ -1726,7 +1791,7 @@ namespace Forestry.Xml.Reading
                             case EBNF.LessThan:
                                 return MarkupState.Malformed;  // S6
                             case EBNF.Ampersand:
-                                _reference = new ReferenceConstraint { IsDocumentType = IsDocumentType };
+                                _reference = new ReferenceConstraint { IsDocumentType = IsDocumentType, MaxNameLength = MaxNameLength };
                                 _isInReference = true;
                                 ReferenceStart = _evaluated + length;
                                 break;  // S7, a reference: evaluated from its '&' below
@@ -1777,6 +1842,11 @@ namespace Forestry.Xml.Reading
             /// </summary>
             public bool IsDocumentType { get; init; }
 
+            /// <summary>
+            /// Bound on an entity name after a document type (spec 001 US2)
+            /// </summary>
+            public int MaxNameLength { get; init; }
+
             private ReferenceConstraint _reference;
 
             private bool _isInReference;
@@ -1812,7 +1882,7 @@ namespace Forestry.Xml.Reading
                             case EBNF.LessThan:
                                 return MarkupState.WellFormed;  // markup
                             case EBNF.Ampersand:
-                                _reference = new ReferenceConstraint { IsDocumentType = IsDocumentType };
+                                _reference = new ReferenceConstraint { IsDocumentType = IsDocumentType, MaxNameLength = MaxNameLength };
                                 _isInReference = true;
                                 ReferenceStart = _evaluated + length;
                                 break;  // a reference: evaluated from its '&' below
@@ -1992,6 +2062,11 @@ namespace Forestry.Xml.Reading
                             if (!IsDocumentType)
                             {
                                 return Malformed(MarkupReason.UndeclaredEntity, out reason);  // no predefined name continues so
+                            }
+
+                            if (MaxNameLength > 0 && _entityLength >= MaxNameLength)
+                            {
+                                return Malformed(MarkupReason.TooLong, out reason);  // the first byte beyond MaxNameLength (spec 001 US2)
                             }
 
                             _entity = Entity.Other;  // may be declared in the document type, scanned as a name to ';'

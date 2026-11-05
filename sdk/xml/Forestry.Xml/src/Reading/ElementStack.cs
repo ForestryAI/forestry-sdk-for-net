@@ -1,38 +1,53 @@
+using System.Buffers;
 using System.Runtime.CompilerServices;
 
 namespace Forestry.Xml.Reading
 {
     /// <summary>
-    /// Stack of packed element names, used to assert the Element Type Match WFC (an ending tag's
-    /// name must match its starting tag's) once content is more than one level deep. Up to
-    /// <see cref="NonAllocatingMaxDepth"/> levels are stored inline, in <see cref="_nonAllocatingArray"/> -
-    /// no allocation per push. Deeper nesting falls back to <see cref="PushAllocating"/> (not yet
-    /// built - depth this deep is not expected for real StanForD data).
+    /// Stack of open element names, used to assert the Element Type Match WFC (an ending tag's
+    /// name must match its starting tag's) in full (spec 001 research R4). The names are laid end
+    /// to end in <see cref="_names"/> with the end offset of each in <see cref="_ends"/>, all
+    /// inline - no allocation per push, and about 2 KB in the reader state. Inside
+    /// <c>&lt;ab&gt;&lt;Log&gt;&lt;LogDiameter&gt;</c>:
+    /// <code>
+    /// _names: "ab" "Log" "LogDiameter"
+    /// _ends:   2    5     16
+    /// _depth:  3
+    /// </code>
     /// </summary>
     internal struct ElementStack
     {
         /// <summary>
-        /// How many ulongs a single packed name occupies - 32 bytes, per #23's accepted POC
-        /// tradeoff (names longer than this are capped, compared only up to this length).
+        /// Open elements the stack holds
         /// </summary>
-        internal const int PackedNameLength = 4;
-
         internal const int NonAllocatingMaxDepth = 64;
 
-        private NonAllocatingPool _nonAllocatingArray;
+        /// <summary>
+        /// Bytes of open names the stack holds, the same 2 KB as the 32-byte packed names before
+        /// </summary>
+        internal const int NameBytesCapacity = NonAllocatingMaxDepth * 32;
 
         /// <summary>
-        /// Fixed number of raw ulong slots living inline in this struct - no separate heap
-        /// allocation for the pool itself, safe even for a `default`-initialized
-        /// <see cref="ElementStack"/> (unlike a plain array field, which would come back
-        /// null from default-initialization and only get allocated through an explicit
-        /// constructor nothing currently calls).
+        /// The open names' bytes laid end to end
         /// </summary>
-        [InlineArray(NonAllocatingMaxDepth * PackedNameLength)]
-        internal struct NonAllocatingPool
+        [InlineArray(NameBytesCapacity)]
+        internal struct Names
         {
-            private ulong _element;
+            private byte _element;
         }
+
+        /// <summary>
+        /// The end offset of each open name in <see cref="_names"/>
+        /// </summary>
+        [InlineArray(NonAllocatingMaxDepth)]
+        internal struct Ends
+        {
+            private ushort _element;
+        }
+
+        private Names _names;
+
+        private Ends _ends;
 
         private bool _rootElement;
 
@@ -48,76 +63,131 @@ namespace Forestry.Xml.Reading
         private bool _contentReady;
 
         /// <summary>
-        /// After an element non-terminal start tag is a content non-terminal 
+        /// After an element non-terminal start tag is a content non-terminal
         /// </summary>
         internal readonly bool ContentReady => _contentReady;
 
         /// <summary>
-        /// Push a raw element name onto the stack. Packs directly into the pool slot for the
-        /// current depth (or the allocating fallback beyond <see cref="NonAllocatingMaxDepth"/>) -
-        /// no caller-side allocation in the common path.
+        /// Where the top name starts in <see cref="_names"/>, 0 when one or none is open
+        /// </summary>
+        private readonly int TopStart => _depth > 1 ? _ends[_depth - 2] : 0;
+
+        /// <summary>
+        /// Where the next name starts in <see cref="_names"/>
+        /// </summary>
+        private readonly int End => _depth > 0 ? _ends[_depth - 1] : 0;
+
+        /// <summary>
+        /// Length of the top name, the end tag's budget (FR-011); 0 when nothing is open
+        /// </summary>
+        public readonly int TopLength => End - TopStart;
+
+        /// <summary>
+        /// A name of <paramref name="length"/> bytes fits: fewer than
+        /// <see cref="NonAllocatingMaxDepth"/> names are open and the bytes stay within
+        /// <see cref="NameBytesCapacity"/>
+        /// </summary>
+        /// <param name="length"></param>
+        public readonly bool CanPush(long length) =>
+            _depth < NonAllocatingMaxDepth && End + length <= NameBytesCapacity;
+
+        /// <summary>
+        /// Push a whole element name, copied straight into the pool; false and nothing changed
+        /// when it does not fit (the bytes would pass <see cref="NameBytesCapacity"/>, or
+        /// <see cref="NonAllocatingMaxDepth"/> names are open)
         /// </summary>
         /// <param name="name"></param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Push(ReadOnlySpan<byte> name)
+        public bool TryPush(ReadOnlySpan<byte> name)
+        {
+            int end = End;
+            if (_depth == NonAllocatingMaxDepth || end + name.Length > NameBytesCapacity)
+            {
+                return false;
+            }
+
+            name.CopyTo(((Span<byte>)_names)[end..]);
+            Pushed(end + name.Length);
+            return true;
+        }
+
+        /// <summary>
+        /// Push a whole element name straddling segments, copied straight into the pool; false and
+        /// nothing changed when it does not fit
+        /// </summary>
+        /// <param name="name"></param>
+        public bool TryPush(ReadOnlySequence<byte> name)
+        {
+            int end = End;
+            if (_depth == NonAllocatingMaxDepth || end + name.Length > NameBytesCapacity)
+            {
+                return false;
+            }
+
+            name.CopyTo(((Span<byte>)_names)[end..]);
+            Pushed(end + (int)name.Length);
+            return true;
+        }
+
+        private void Pushed(int end)
         {
             if (_depth == 0 && !_rootElement)
             {
                 _rootElement = true;
             }
 
-            if (_depth < NonAllocatingMaxDepth)
-            {
-                Span<ulong> pool = _nonAllocatingArray;
-                name.Pack(pool.Slice(_depth * PackedNameLength, PackedNameLength));
-            }
-            else
-            {
-                PushAllocating(name);
-            }
-
+            _ends[_depth] = (ushort)end;
             _contentReady = false;  // unreliable if a content non-terminal exists after a start tag
             _depth++;
         }
 
         /// <summary>
-        /// 
+        /// The top name equals <paramref name="name"/> in full: lengths first, so an end tag
+        /// never compares past the start-tag name, then the bytes
         /// </summary>
         /// <param name="name"></param>
         /// <param name="tailIndex"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryPeek(ReadOnlySpan<byte> name, out int tailIndex)
+        public readonly bool TryPeek(ReadOnlySpan<byte> name, out int tailIndex)
         {
-            if (_depth == 0)
-            {
-                tailIndex = 0;
-                return false;
-            }
-
             tailIndex = _depth - 1;
 
-            Span<ulong> packedName = stackalloc ulong[PackedNameLength];
-            name.Pack(packedName);
-
-            ReadOnlySpan<ulong> tail = tailIndex < NonAllocatingMaxDepth
-                ? ((Span<ulong>)_nonAllocatingArray).Slice(tailIndex * PackedNameLength, PackedNameLength)
-                : PeekAllocating();
-
-            if (!tail.SequenceEqual(packedName))
+            if (_depth == 0 || name.Length != TopLength)
             {
                 return false;
             }
 
-            return true;
+            ReadOnlySpan<byte> names = _names;
+            return names[TopStart..End].SequenceEqual(name);
+        }
+
+        /// <summary>
+        /// The top name equals <paramref name="name"/>, straddling segments, in full and without
+        /// copying it
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="tailIndex"></param>
+        /// <returns></returns>
+        public readonly bool TryPeek(ReadOnlySequence<byte> name, out int tailIndex)
+        {
+            tailIndex = _depth - 1;
+
+            if (_depth == 0 || name.Length != TopLength)
+            {
+                return false;
+            }
+
+            ReadOnlySpan<byte> names = _names;
+            SequenceReader<byte> reader = new(name);
+            return reader.IsNext(names[TopStart..End], advancePast: false);
         }
 
         /// <summary>
         /// Try pop the most recently pushed name, matching it against <paramref name="name"/> -
         /// the Element Type Match WFC (an ending tag's name must match its starting tag's).
-        /// Peeks before mutating anything: packs <paramref name="name"/> and compares it against
-        /// the tail slot first, only decrementing <see cref="Depth"/> on an actual match - same
-        /// "peek, don't mutate on failure" contract as <see cref="Utf8Reader.TryMatch"/>/
+        /// Peeks before mutating anything, only decrementing <see cref="Depth"/> on an actual
+        /// match - same "peek, don't mutate on failure" contract as <see cref="Utf8Reader.TryMatch"/>/
         /// <see cref="Utf8Reader.TrySkip"/>. Returns <see langword="false"/>, never throws, for
         /// either failure case: nothing to pop, or a name that doesn't match - the caller decides
         /// what a mismatch means (a thrown malformed-document error), not this method.
@@ -127,37 +197,43 @@ namespace Forestry.Xml.Reading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryPop(ReadOnlySpan<byte> name)
         {
-            if (TryPeek(name, out int tailIndex))
+            if (!TryPeek(name, out int tailIndex))
             {
-                goto Completed;
+                return false;
             }
 
-            return false;
+            _contentReady = true;  // unreliable if a content non-terminal exists before a end tag e.g. character data
+            _depth = tailIndex;
+            return true;
+        }
 
-            Completed:
-                _contentReady = true;  // unreliable if a content non-terminal exists before a end tag e.g. character data
-                _depth = tailIndex;
-                return true;
+        /// <summary>
+        /// Try pop the most recently pushed name, matching it against a name straddling segments
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public bool TryPop(ReadOnlySequence<byte> name)
+        {
+            if (!TryPeek(name, out int tailIndex))
+            {
+                return false;
+            }
+
+            _contentReady = true;
+            _depth = tailIndex;
+            return true;
         }
 
         /// <summary>
         /// Pop the most recently pushed name unconditionally - no comparison, unlike
-        /// <see cref="TryPop"/>. For a case where the caller already knows something is open and
-        /// is closing exactly that (e.g. an empty element's own '/&gt;' immediately after its
-        /// name was pushed) - there's nothing to validate, so nothing to fail gracefully on.
-        /// Calling this with nothing open is a caller bug, not a document condition, so unlike
-        /// every other method on this type it throws rather than returning something misleading -
-        /// this method comes with that responsibility. Unpacks the popped name back into raw
-        /// bytes (see <see cref="Extensions.Unpack"/>) into caller-owned <paramref name="destination"/>
-        /// (needs room for <see cref="PackedNameLength"/> * 8 bytes) and returns its real,
-        /// trimmed length - a plain value copy into storage the caller already owns, rather than
-        /// returning a span into this stack's own storage, which a caller elsewhere (e.g.
-        /// <c>Utf8XmlReader.Value</c>) couldn't safely hold onto past the call.
+        /// <see cref="TryPop(ReadOnlySpan{byte})"/>. For a case where the caller already knows
+        /// something is open and is closing exactly that (e.g. an empty element's own '/&gt;'
+        /// immediately after its name was pushed). Calling this with nothing open is a caller bug,
+        /// not a document condition, so it throws rather than making the depth negative and
+        /// corrupting the top name (R4).
         /// </summary>
-        /// <param name="destination"></param>
-        /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int Pop(Span<byte> destination)
+        public void Pop()
         {
             if (_depth == 0)
             {
@@ -166,34 +242,6 @@ namespace Forestry.Xml.Reading
 
             _contentReady = true;  // unreliable if a content non-terminal exists before a end tag e.g. character data
             _depth--;
-
-            ReadOnlySpan<ulong> tail = _depth < NonAllocatingMaxDepth
-                ? ((Span<ulong>)_nonAllocatingArray).Slice(_depth * PackedNameLength, PackedNameLength)
-                : PeekAllocating();
-
-            return tail.Unpack(destination);
-        }
-
-        /// <summary>
-        /// Fallback for depth beyond <see cref="NonAllocatingMaxDepth"/> - not yet built.
-        /// Deliberately throws rather than silently doing nothing, since nesting this deep
-        /// wouldn't be a caller mistake, it just isn't supported yet.
-        /// </summary>
-        /// <param name="name"></param>
-        private readonly void PushAllocating(ReadOnlySpan<byte> name)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Fallback for depth beyond <see cref="NonAllocatingMaxDepth"/> - not yet built. Peeks
-        /// (does not remove) the tail slot, matching <see cref="TryPop"/>'s own peek-before-mutate
-        /// contract for the non-allocating path.
-        /// </summary>
-        /// <returns></returns>
-        private readonly ReadOnlySpan<ulong> PeekAllocating()
-        {
-            throw new NotImplementedException();
         }
 
         /// <summary>

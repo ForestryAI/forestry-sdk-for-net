@@ -79,6 +79,11 @@ namespace Forestry.Xml.Reading
                 _readerOptions.MaxDepth = ReaderOptions.DefaultMaxDepth;
             }
 
+            if (_readerOptions.MaxNameLength <= 0)
+            {
+                _readerOptions.MaxNameLength = ReaderOptions.DefaultMaxNameLength;
+            }
+
             // value
             Value = ReadOnlySpan<byte>.Empty;
             ValueSequence = ReadOnlySequence<byte>.Empty;
@@ -346,7 +351,7 @@ namespace Forestry.Xml.Reading
         /// <param name="startingTerminalLength"></param>
         private void ThrowWhenMultipleProcessingInstructionMalformed(ReadOnlySequence<byte> value, int startingTerminalLength)
         {
-            ProcessingInstructionTarget target = default;
+            ProcessingInstructionTarget target = new() { MaxLength = _readerOptions.MaxNameLength };
 
             foreach (ReadOnlyMemory<byte> memory in value.Slice(startingTerminalLength))
             {
@@ -358,7 +363,7 @@ namespace Forestry.Xml.Reading
 
                 if (evaluation == MarkupState.Malformed)
                 {
-                    Throwing.ThrowXmlException(ref this, Throwing.Category.Name, Throwing.Markup.ProcessingInstructionTarget, offset: startingTerminalLength + target.OffendingIndex);  // S5 + S6
+                    Throwing.ThrowXmlException(ref this, target.IsTooLong ? Throwing.Category.Limit : Throwing.Category.Name, Throwing.Markup.ProcessingInstructionTarget, offset: startingTerminalLength + target.OffendingIndex);  // S5 + S6
                 }
             }
 
