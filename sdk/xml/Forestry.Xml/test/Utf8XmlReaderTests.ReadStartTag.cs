@@ -127,7 +127,7 @@ namespace Forestry.Xml.Tests
             Exception? thrown = ReadValueThrown(ref reader);
 
             // Assert
-            Assert.IsType<XmlException>(thrown);
+            AssertNotSupportedName(thrown);
         }
 
         /// <summary>
@@ -143,7 +143,7 @@ namespace Forestry.Xml.Tests
             Exception? thrown = ReadValueThrown(ref reader);
 
             // Assert
-            Assert.IsType<XmlException>(thrown);
+            AssertNotSupportedName(thrown);
         }
         #endregion
 

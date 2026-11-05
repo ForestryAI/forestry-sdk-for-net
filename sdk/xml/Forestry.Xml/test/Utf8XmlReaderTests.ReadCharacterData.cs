@@ -273,44 +273,51 @@ namespace Forestry.Xml.Tests
         }
         #endregion
 
-        #region E0-E9 (evaluation)
+        #region E0-E11 (evaluation)
         /// <summary>
-        /// E0-E9: the evaluation stops at <c>&lt;</c> (well-formed), <c>&amp;</c> (well-formed and
-        /// unsupported) or a control byte other than spacing (malformed); every other byte is
-        /// plain text; without a stop it is Unknown. The length is the bytes before the stop.
-        /// The state is passed by name: a public test method can't take the internal enum.
+        /// E0-E11 (spec 001 US1, T014): the evaluation stops at <c>&lt;</c> (well-formed) or a
+        /// control byte other than spacing (malformed); a reference is part of the text, and a
+        /// malformed one is malformed at its first known byte (reason MalformedReference); every
+        /// other byte is plain text; without a stop it is Unknown. The length is the bytes before
+        /// the stop. The state and reason are passed by name: a public test method can't take
+        /// the internal enums. The shell assumes T019's markup struct, `internal` for the tests.
         /// </summary>
         [Theory]
-        [InlineData("Gary<", "WellFormed", 4, false)]       // E0
-        [InlineData("Gary&", "WellFormed", 4, true)]        // E1
-        [InlineData("&amp;", "WellFormed", 0, true)]        // E2
-        [InlineData("<", "WellFormed", 0, false)]           // E0 at once
-        [InlineData("Ga\u0001ry<", "Malformed", 2, false)]  // E3
-        [InlineData("\u001F<", "Malformed", 0, false)]      // E3
-        [InlineData("\u0000", "Malformed", 0, false)]       // E3
-        [InlineData("\t\n\r x<", "WellFormed", 5, false)]   // E4
-        [InlineData("Gärd<", "WellFormed", 5, false)]       // E5 'ä' is 2 bytes
-        [InlineData("\"'>=<", "WellFormed", 4, false)]      // E6
-        [InlineData("\u007F<", "WellFormed", 1, false)]     // E7
-        [InlineData("Gary", "Unknown", 4, false)]           // E8
-        [InlineData("Ga\n", "Unknown", 3, false)]           // E8
-        [InlineData("", "Unknown", 0, false)]               // E9
-        public void EvaluateCharacterData_ForE0ToE9_ItShould_StopAtTheFirstDecidingByte(
+        [InlineData("Gary<", "WellFormed", 4, "None")]                     // E0
+        [InlineData("Gary&amp;<", "WellFormed", 9, "None")]                // E1 a reference is text
+        [InlineData("&amp;<", "WellFormed", 5, "None")]                    // E2
+        [InlineData("<", "WellFormed", 0, "None")]                         // E0 at once
+        [InlineData("Ga\u0001ry<", "Malformed", 2, "None")]                // E3
+        [InlineData("\u001F<", "Malformed", 0, "None")]                    // E3
+        [InlineData("\u0000", "Malformed", 0, "None")]                     // E3
+        [InlineData("\t\n\r x<", "WellFormed", 5, "None")]                 // E4
+        [InlineData("Gärd<", "WellFormed", 5, "None")]                     // E5 'ä' is 2 bytes
+        [InlineData("\"'>=<", "WellFormed", 4, "None")]                    // E6
+        [InlineData("\u007F<", "WellFormed", 1, "None")]                   // E7
+        [InlineData("Gary", "Unknown", 4, "None")]                         // E8
+        [InlineData("Ga\n", "Unknown", 3, "None")]                         // E8
+        [InlineData("", "Unknown", 0, "None")]                             // E9
+        [InlineData("Gary&am", "Unknown", 7, "None")]                      // E10 inside a reference
+        [InlineData("Gary&am<", "Malformed", 7, "MalformedReference")]     // E11 '<' inside a reference
+        public void EvaluateCharacterData_ForE0ToE11_ItShould_StopAtTheFirstDecidingByte(
             string text,
             string expectedState,
             int expectedLength,
-            bool expectedUnsupported
+            string expectedReason
         ) {
+            // Arrange
+            Utf8XmlReader.CharacterDataMarkup markup = new();
+
             // Act
-            Utf8XmlReader.MarkupState state = Utf8XmlReader.EvaluateCharacterDataNonTerminalMarkup(
+            Utf8XmlReader.MarkupState state = markup.Evaluate(
                 Encoding.UTF8.GetBytes(text),
                 out int length,
-                out bool unsupportedCharacter);
+                out Utf8XmlReader.MarkupReason reason);
 
             // Assert
             Assert.Equal(expectedState, state.ToString());
             Assert.Equal(expectedLength, length);
-            Assert.Equal(expectedUnsupported, unsupportedCharacter);
+            Assert.Equal(expectedReason, reason.ToString());
         }
         #endregion
 
@@ -347,43 +354,40 @@ namespace Forestry.Xml.Tests
         }
 
         /// <summary>
-        /// S1: an <c>&amp;</c> at the reader position (length 0, unsupported) throws Expected at the
-        /// <c>&amp;</c> - temporary until the unsupported exception is designed; nothing committed
+        /// S1 (spec 001 US1, T014): a reference at the reader position is character data, read
+        /// as an escaped Value up to <c>&lt;</c> (FR-007: no longer unsupported)
         /// </summary>
         [Fact]
-        public void ReadCharacterData_ForS1AmpersandFirst_ItShould_ThrowCommittingNothing()
+        public void ReadCharacterData_ForS1AmpersandFirst_ItShould_ReadAnEscapedValue()
         {
             // Arrange
             Utf8XmlReader reader = CharacterDataReader("&amp;</E0>", isReadingCompleted: true);
 
             // Act
-            Exception? thrown = ReadValueThrown(ref reader);
+            bool advancement = reader.ReadValue();
 
             // Assert
-            AssertCharacterDataException(thrown, nameof(Throwing.Category.Expected), 1, 1);
-            AssertCharacterDataNothingCommitted(ref reader);
+            Assert.True(advancement);
+            Assert.True(reader.HasEscapedValue);
+            AssertCharacterDataRead(ref reader, "&amp;", expectedPosition: 5, expectedLineNumber: 0, expectedLinePosition: 5);
         }
 
         /// <summary>
-        /// S2: the text before an <c>&amp;</c> is the Value; the next read starts at the
-        /// <c>&amp;</c> and throws as S1
+        /// S2 (spec 001 US1, T014): text and a reference are one escaped Value up to <c>&lt;</c>
         /// </summary>
         [Fact]
-        public void ReadCharacterData_ForS2TextBeforeAmpersand_ItShould_SetTheValueThenThrow()
+        public void ReadCharacterData_ForS2TextBeforeAmpersand_ItShould_ReadOneEscapedValue()
         {
             // Arrange
             Utf8XmlReader reader = CharacterDataReader("Gary&amp;</E0>", isReadingCompleted: true);
 
             // Act
             bool advancement = reader.ReadValue();
-            string value = ValueText(ref reader);
-            Exception? thrown = ReadValueThrown(ref reader);
 
             // Assert
             Assert.True(advancement);
-            Assert.Equal("Gary", value);
-            AssertCharacterDataException(thrown, nameof(Throwing.Category.Expected), 1, 5);
-            Assert.Equal(4, reader.Position);
+            Assert.True(reader.HasEscapedValue);
+            AssertCharacterDataRead(ref reader, "Gary&amp;", expectedPosition: 9, expectedLineNumber: 0, expectedLinePosition: 9);
         }
 
         /// <summary>
@@ -506,26 +510,23 @@ namespace Forestry.Xml.Tests
         }
 
         /// <summary>
-        /// M3: the text before an <c>&amp;</c> in a later segment is the Value; the next read throws
-        /// at the <c>&amp;</c>
+        /// M3 (spec 001 US1, T014): text and a reference straddling segments are one escaped Value
+        /// sequence
         /// </summary>
         [Fact]
-        public void ReadCharacterData_ForM3AmpersandStraddling_ItShould_SetTheValueThenThrow()
+        public void ReadCharacterData_ForM3AmpersandStraddling_ItShould_ReadOneEscapedValueSequence()
         {
             // Arrange
             Utf8XmlReader reader = CharacterDataReader(["Ga", "ry&amp;</E0>"], isReadingCompleted: true);
 
             // Act
             bool advancement = reader.ReadValue();
-            bool hasValueSequence = reader.HasValueSequence;
-            string value = ValueText(ref reader);
-            Exception? thrown = ReadValueThrown(ref reader);
 
             // Assert
             Assert.True(advancement);
-            Assert.True(hasValueSequence);
-            Assert.Equal("Gary", value);
-            AssertCharacterDataException(thrown, nameof(Throwing.Category.Expected), 1, 5);
+            Assert.True(reader.HasValueSequence);
+            Assert.True(reader.HasEscapedValue);
+            Assert.Equal("Gary&amp;", ValueText(ref reader));
         }
 
         /// <summary>

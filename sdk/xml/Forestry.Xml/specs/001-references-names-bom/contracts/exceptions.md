@@ -27,6 +27,7 @@ byte its line and position point at (1-based, READER.md rule 17). Messages are p
 | `&#99999999999999999999;` | Expected | Reference | the 7th `9` (9,999,999 > 1,114,111) |
 | `&#0;`, `&#xD800;`, `&#xFFFE;` | Expected | Reference | `;` |
 | `&e;` after `<!DOCTYPE …>` | NotSupported | EntityReference | `&` |
+| `<!DOCTYPE a [<!ENTITY e "x">]>` (an internal subset) | NotSupported | DocumentType | `[` |
 | entity name over `MaxNameLength` after a document type | Limit | EntityReference | the first byte beyond |
 | `<a>&amp` with reading completed | Incomplete | CharacterData | end of data |
 | `<a b="&amp` with reading completed | Incomplete | AttributeValue | end of data |

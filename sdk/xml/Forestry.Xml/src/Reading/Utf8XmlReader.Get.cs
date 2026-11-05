@@ -10,6 +10,9 @@ namespace Forestry.Xml.Reading
     /// </summary>
     public ref partial struct Utf8XmlReader
     {
+        /// <summary>
+        /// UTF-8 without a byte order mark, throwing on invalid bytes, used to decode values to strings
+        /// </summary>
         public static readonly UTF8Encoding Encoding = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
         internal ReadOnlySpan<byte> GetUnescapedValue()

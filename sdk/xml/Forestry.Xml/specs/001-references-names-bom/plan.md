@@ -162,7 +162,8 @@ structs; element stack and names; the BOM step and declaration), so they can be 
 1. `ReaderState._isByteOrderMarkChecked` in rule 22's six places, and the test helpers.
 2. Skip BOM step in `Read()` after the first drained check (R7).
 3. A behaviour-preserving refactor: the opaque readers take a generic `TConstraint : struct,
-   IConstraint` (`NoConstraint`, `ProcessingInstructionTargetConstraint`) instead of
+   IConstraint` (`NoConstraint`, `ProcessingInstructionTargetConstraint`, and
+   `DocumentTypeConstraint` for US1's internal-subset check) instead of
    `isProcessingInstruction` (R8).
 4. `DeclarationEncodingConstraint`, the second `IConstraint`, passed by `ReadDeclaration` (R8).
 5. `Throwing`: `Markup.ByteOrderMark`, `Markup.Encoding`.

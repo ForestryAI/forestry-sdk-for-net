@@ -9,6 +9,12 @@
     <PackageTags>Forestry Xml</PackageTags>
   </PropertyGroup>
 
+  <!-- Public documentation (D0): XML docs on, a missing doc stays a warning (T001) -->
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);CS1591</WarningsNotAsErrors>
+  </PropertyGroup>
+
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>Forestry.Xml.Tests</_Parameter1>

@@ -7,71 +7,111 @@ namespace Forestry.Xml {
     public static partial class EBNF
     {
         #region Delimeters
+        /// <summary>The slash <c>/</c>, in end tags and empty element tags</summary>
         public const byte Slash = (byte)'/';
 
+        /// <summary>The space, one of the four spacing bytes of the <c>S</c> production</summary>
         public const byte Space = (byte)' ';
 
+        /// <summary>The equals sign <c>=</c> of the <c>Eq</c> production</summary>
         public const byte EqualsSign = (byte)'=';
 
+        /// <summary>The double quote <c>"</c>, one of the two literal quotes</summary>
         public const byte DoubleQuote = (byte)'"';
 
+        /// <summary>The question mark <c>?</c>, in declarations and processing instructions</summary>
         public const byte QuestionMark = (byte)'?';
 
+        /// <summary>The line feed, which ends a line; one of the four spacing bytes</summary>
         public const byte LineFeed = (byte)'\n';
 
+        /// <summary>The carriage return, one of the four spacing bytes</summary>
         public const byte CarriageReturn = (byte)'\r';
 
+        /// <summary>The tab, one of the four spacing bytes</summary>
         public const byte Tab = (byte)'\t';
 
+        /// <summary>The colon <c>:</c>, a name starting character</summary>
         public const byte Colon = (byte)':';
 
+        /// <summary>The underscore <c>_</c>, a name starting character</summary>
         public const byte Underscore = (byte)'_';
 
+        /// <summary>The hyphen <c>-</c>, a name character</summary>
         public const byte Hyphen = (byte)'-';
 
+        /// <summary>The period <c>.</c>, a name character</summary>
         public const byte Period = (byte)'.';
 
+        /// <summary>The less than <c>&lt;</c>, which starts markup</summary>
         public const byte LessThan = (byte)'<';
 
+        /// <summary>The greater than <c>&gt;</c>, which ends tags</summary>
         public const byte GreaterThan = (byte)'>';
 
+        /// <summary>The exclamation mark <c>!</c>, in comments and the document type</summary>
         public const byte ExclamationMark = (byte)'!';
 
+        /// <summary>The single quote <c>'</c>, one of the two literal quotes</summary>
         public const byte SingleQuote = (byte)'\'';
 
+        /// <summary>The ampersand <c>&amp;</c>, which starts a reference</summary>
         public const byte Ampersand = (byte)'&';
         #endregion
 
         #region Terminals
+        /// <summary>The declaration's starting terminal <c>&lt;?xml</c></summary>
         public static ReadOnlySpan<byte> DeclarationStartingTerminal => "<?xml"u8;
 
+        /// <summary>The declaration's ending terminal <c>?&gt;</c></summary>
         public static ReadOnlySpan<byte> DeclarationEndingTerminal => "?>"u8;
 
+        /// <summary>The document type's starting terminal <c>&lt;!DOCTYPE</c></summary>
         public static ReadOnlySpan<byte> DocumentTypeStartingTerminal => "<!DOCTYPE"u8;
 
+        /// <summary>The document type's ending terminal <c>&gt;</c></summary>
         public static ReadOnlySpan<byte> DocumentTypeEndingTerminal => ">"u8;
 
+        /// <summary>The comment's starting terminal <c>&lt;!--</c></summary>
         public static ReadOnlySpan<byte> CommentStartingTerminal => "<!--"u8;
 
+        /// <summary>The comment's ending terminal <c>--&gt;</c></summary>
         public static ReadOnlySpan<byte> CommentEndingTerminal => "-->"u8;
 
+        /// <summary>The processing instruction's starting terminal <c>&lt;?</c></summary>
         public static ReadOnlySpan<byte> ProcessingInstructionStartingTerminal => "<?"u8;
 
+        /// <summary>The processing instruction's ending terminal <c>?&gt;</c></summary>
         public static ReadOnlySpan<byte> ProcessingInstructionEndingTerminal => "?>"u8;
 
+        /// <summary>The start tag's starting terminal <c>&lt;</c></summary>
         public static ReadOnlySpan<byte> StartTagStartingTerminal => "<"u8;
 
+        /// <summary>The start tag's ending terminal <c>&gt;</c></summary>
         public static byte StartTagEndingTerminal => (byte)'>';
 
+        /// <summary>The end tag's starting terminal <c>&lt;/</c></summary>
         public static ReadOnlySpan<byte> EndTagStartingTerminal => "</"u8;
 
+        /// <summary>The empty element tag's ending terminal <c>/&gt;</c></summary>
         public static ReadOnlySpan<byte> EmptyElementTagEndingTerminal => "/>"u8;
 
+        /// <summary>
+        /// The two starting terminals of an attribute value, a double or a single quote
+        /// </summary>
         public readonly ref struct AttributeValueStartingTerminals
         {
+            /// <summary>The double quote starting terminal <c>"</c></summary>
             public ReadOnlySpan<byte> DoubleQuote { get; }
+
+            /// <summary>The single quote starting terminal <c>'</c></summary>
             public ReadOnlySpan<byte> SingleQuote { get; }
 
+            /// <summary>
+            /// Attribute value starting terminals from a double and a single quote
+            /// </summary>
+            /// <param name="doubleQuote"></param>
+            /// <param name="singleQuote"></param>
             public AttributeValueStartingTerminals(ReadOnlySpan<byte> doubleQuote, ReadOnlySpan<byte> singleQuote)
             {
                 DoubleQuote = doubleQuote;
@@ -79,6 +119,7 @@ namespace Forestry.Xml {
             }
         }
 
+        /// <summary>The attribute value's starting terminals <c>"</c> and <c>'</c></summary>
         public static AttributeValueStartingTerminals AttributeValueStartingTerminal => new("\""u8, "'"u8);
 
         /// <summary>
@@ -122,6 +163,7 @@ namespace Forestry.Xml {
         #endregion
 
         #region BOM
+        /// <summary>The UTF-8 byte order mark <c>EF BB BF</c></summary>
         public static ReadOnlySpan<byte> Utf8Bom => [0xEF, 0xBB, 0xBF];
         #endregion
 
@@ -153,7 +195,7 @@ namespace Forestry.Xml {
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        /// <see cref="https://www.w3.org/TR/xml/#NT-NameStartChar"/>
+        /// <seealso href="https://www.w3.org/TR/xml/#NT-NameStartChar"/>
         public static bool IsNameStartingCharacter(byte value) =>
             value == Colon ||
             (value >= (byte)'A' && value <= (byte)'Z') ||
@@ -172,7 +214,7 @@ namespace Forestry.Xml {
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        /// <see cref="https://www.w3.org/TR/xml/#NT-NameChar"/>
+        /// <seealso href="https://www.w3.org/TR/xml/#NT-NameChar"/>
         public static bool IsNameCharacter(byte value) =>
             IsNameStartingCharacter(value) ||
             value == Hyphen ||
@@ -205,7 +247,7 @@ namespace Forestry.Xml {
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        /// <see cref="https://www.w3.org/TR/xml/#NT-Comment"/>
+        /// <seealso href="https://www.w3.org/TR/xml/#NT-Comment"/>
         public static bool IsCommentCharacter(byte value) =>
             value == Tab ||
             value == LineFeed ||
@@ -219,12 +261,16 @@ namespace Forestry.Xml {
         /// </summary>
         public enum Document: byte
         {
+            /// <summary>Before the document</summary>
             None = (byte)0,
 
+            /// <summary>The prolog, before the root element</summary>
             Prolog = (byte)1,
 
+            /// <summary>The root element</summary>
             Element = (byte)2,
 
+            /// <summary>Miscellaneous markup after the root element</summary>
             Miscellaneous  = (byte)3,
         }
     }

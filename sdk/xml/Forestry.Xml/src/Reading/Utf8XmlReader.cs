@@ -223,7 +223,7 @@ namespace Forestry.Xml.Reading
 
         /// <summary>
         /// Starting position of the current token in the segment
-        /// </remarks>
+        /// </summary>
         public long TokenPosition { get; private set; }
 
         /// <summary>
@@ -1017,7 +1017,7 @@ namespace Forestry.Xml.Reading
         }
 
         /// <summary>
-        /// Read the start tag's starting terminal < and name, shared by 
+        /// Read the start tag's starting terminal &lt; and name, shared by
         /// element and empty element non-terminals; simulated rollback when false.
         /// </summary>
         /// <returns></returns>

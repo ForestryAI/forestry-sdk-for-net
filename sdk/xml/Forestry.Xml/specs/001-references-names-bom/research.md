@@ -303,7 +303,8 @@ Markup`; `NoConstraint` is always well-formed. `ReadSingleOpaqueValue<TConstrain
 struct, IConstraint`, with one check-then-throw before commit in each path; `isProcessingInstruction`
 is removed and no `isDeclaration` is added. The declaration passes `DeclarationEncodingConstraint`,
 the processing instruction `ProcessingInstructionTargetConstraint` (today's
-`ProcessingInstructionTarget`, renamed), comment and document type `NoConstraint`. Not a delegate:
+`ProcessingInstructionTarget`, renamed), the document type `DocumentTypeConstraint` (the internal
+subset check, FR-006), the comment `NoConstraint`. Not a delegate:
 `Utf8XmlReader` is a ref struct, so a lambda cannot capture it, and the span and sequence paths
 would need separate delegate types; the generic struct is the idiom the reader already uses in
 `EvaluateMultipleMarkup<T> where T : IMarkup`.
@@ -356,6 +357,10 @@ anything.
 
 ## Follow-ups noticed (not this spec)
 
+- A document type's internal subset (`'[' intSubset ']'`) is an opaque inside the opaque
+  declaration: delimiting it means matching `[` to `]` while skipping its quoted literals, comments
+  and processing instructions, then `S? '>'`. This spec throws "not supported" at the `[` instead
+  (option A, developer, 2026-11-05); delimiting it is later work.
 - Usage tests for public settings (every public option has tests for its default, an override and
   the values it rejects) are deferred to the CI/CD and packaging spec, as a gate before publishing
   to NuGet; not added to the constitution or to this spec, which meets it anyway through its option

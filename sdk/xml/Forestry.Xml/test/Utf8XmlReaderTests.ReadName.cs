@@ -21,7 +21,7 @@ namespace Forestry.Xml.Tests
         // during Understanding. Won't compile until it exists:
         // - `MarkupState` (#39) made internal, still nested in Utf8XmlReader
         // - phase 1 as `internal static MarkupState Utf8XmlReader.EvaluateNameNonTerminalMarkup(ReadOnlySpan<byte>
-        //   characters, bool isFirstCharacter, out int nameLength, out bool unsupportedCharacter)` -
+        //   characters, bool isFirstCharacter, out int nameLength, out MarkupReason reason)` (spec 001 US1, T019: the reason replaced the bool) -
         //   isFirstCharacter is true only for the span holding the name's first character,
         //   nameLength is the count of name characters in this span
         // - phase 2 as `internal bool ReadName()` starting at the reader's current position
@@ -69,11 +69,11 @@ namespace Forestry.Xml.Tests
             bool isFirstCharacter
         ) {
             // Act
-            Utf8XmlReader.MarkupState state = Utf8XmlReader.EvaluateNameNonTerminalMarkup(Encoding.UTF8.GetBytes(text), isFirstCharacter, out _, out bool unsupportedCharacter);
+            Utf8XmlReader.MarkupState state = Utf8XmlReader.EvaluateNameNonTerminalMarkup(Encoding.UTF8.GetBytes(text), isFirstCharacter, out _, out Utf8XmlReader.MarkupReason reason);
 
             // Assert
             Assert.Equal(Utf8XmlReader.MarkupState.Malformed, state);
-            Assert.True(unsupportedCharacter);
+            Assert.Equal(Utf8XmlReader.MarkupReason.UnsupportedCharacter, reason);
         }
         #endregion
 
@@ -94,11 +94,11 @@ namespace Forestry.Xml.Tests
             string text
         ) {
             // Act
-            Utf8XmlReader.MarkupState state = Utf8XmlReader.EvaluateNameNonTerminalMarkup(Encoding.UTF8.GetBytes(text), isFirstCharacter: true, out _, out bool unsupportedCharacter);
+            Utf8XmlReader.MarkupState state = Utf8XmlReader.EvaluateNameNonTerminalMarkup(Encoding.UTF8.GetBytes(text), isFirstCharacter: true, out _, out Utf8XmlReader.MarkupReason reason);
 
             // Assert
             Assert.Equal(Utf8XmlReader.MarkupState.Malformed, state);
-            Assert.False(unsupportedCharacter);
+            Assert.Equal(Utf8XmlReader.MarkupReason.None, reason);
         }
 
         /// <summary>
@@ -114,12 +114,12 @@ namespace Forestry.Xml.Tests
             int expectedNameLength
         ) {
             // Act
-            Utf8XmlReader.MarkupState state = Utf8XmlReader.EvaluateNameNonTerminalMarkup(Encoding.UTF8.GetBytes(text), isFirstCharacter: false, out int nameLength, out bool unsupportedCharacter);
+            Utf8XmlReader.MarkupState state = Utf8XmlReader.EvaluateNameNonTerminalMarkup(Encoding.UTF8.GetBytes(text), isFirstCharacter: false, out int nameLength, out Utf8XmlReader.MarkupReason reason);
 
             // Assert
             Assert.Equal(Utf8XmlReader.MarkupState.Unknown, state);
             Assert.Equal(expectedNameLength, nameLength);
-            Assert.False(unsupportedCharacter);
+            Assert.Equal(Utf8XmlReader.MarkupReason.None, reason);
         }
         #endregion
 
@@ -141,12 +141,12 @@ namespace Forestry.Xml.Tests
             int expectedNameLength
         ) {
             // Act
-            Utf8XmlReader.MarkupState state = Utf8XmlReader.EvaluateNameNonTerminalMarkup(Encoding.UTF8.GetBytes(text), isFirstCharacter: true, out int nameLength, out bool unsupportedCharacter);
+            Utf8XmlReader.MarkupState state = Utf8XmlReader.EvaluateNameNonTerminalMarkup(Encoding.UTF8.GetBytes(text), isFirstCharacter: true, out int nameLength, out Utf8XmlReader.MarkupReason reason);
 
             // Assert
             Assert.Equal(Utf8XmlReader.MarkupState.WellFormed, state);
             Assert.Equal(expectedNameLength, nameLength);
-            Assert.False(unsupportedCharacter);
+            Assert.Equal(Utf8XmlReader.MarkupReason.None, reason);
         }
 
         /// <summary>
@@ -163,12 +163,12 @@ namespace Forestry.Xml.Tests
             int expectedNameLength
         ) {
             // Act
-            Utf8XmlReader.MarkupState state = Utf8XmlReader.EvaluateNameNonTerminalMarkup(Encoding.UTF8.GetBytes(text), isFirstCharacter: false, out int nameLength, out bool unsupportedCharacter);
+            Utf8XmlReader.MarkupState state = Utf8XmlReader.EvaluateNameNonTerminalMarkup(Encoding.UTF8.GetBytes(text), isFirstCharacter: false, out int nameLength, out Utf8XmlReader.MarkupReason reason);
 
             // Assert
             Assert.Equal(Utf8XmlReader.MarkupState.WellFormed, state);
             Assert.Equal(expectedNameLength, nameLength);
-            Assert.False(unsupportedCharacter);
+            Assert.Equal(Utf8XmlReader.MarkupReason.None, reason);
         }
         #endregion
 
@@ -189,12 +189,12 @@ namespace Forestry.Xml.Tests
             int expectedNameLength
         ) {
             // Act
-            Utf8XmlReader.MarkupState state = Utf8XmlReader.EvaluateNameNonTerminalMarkup(Encoding.UTF8.GetBytes(text), isFirstCharacter, out int nameLength, out bool unsupportedCharacter);
+            Utf8XmlReader.MarkupState state = Utf8XmlReader.EvaluateNameNonTerminalMarkup(Encoding.UTF8.GetBytes(text), isFirstCharacter, out int nameLength, out Utf8XmlReader.MarkupReason reason);
 
             // Assert
             Assert.Equal(Utf8XmlReader.MarkupState.Unknown, state);
             Assert.Equal(expectedNameLength, nameLength);
-            Assert.False(unsupportedCharacter);
+            Assert.Equal(Utf8XmlReader.MarkupReason.None, reason);
         }
         #endregion
 
@@ -323,7 +323,7 @@ namespace Forestry.Xml.Tests
             Exception? thrown = ReadNameThrown(ref reader);
 
             // Assert
-            Assert.IsType<XmlException>(thrown);
+            AssertNotSupportedName(thrown);
         }
 
         /// <summary>
@@ -343,7 +343,7 @@ namespace Forestry.Xml.Tests
             Exception? thrown = ReadNameThrown(ref reader);
 
             // Assert
-            Assert.IsType<XmlException>(thrown);
+            AssertNotSupportedName(thrown);
         }
         #endregion
 

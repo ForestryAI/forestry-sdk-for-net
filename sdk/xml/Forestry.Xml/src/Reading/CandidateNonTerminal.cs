@@ -172,7 +172,6 @@ namespace Forestry.Xml.Reading
         /// Deconstruct into the candidate non-terminal
         /// </summary>
         /// <param name="nonTerminal"></param>
-        /// <param name="startingTerminalLength"></param>
         public void Deconstruct(out NonTerminal nonTerminal)
         {
             nonTerminal = NonTerminal;

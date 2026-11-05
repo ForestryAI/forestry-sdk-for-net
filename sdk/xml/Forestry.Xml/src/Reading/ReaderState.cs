@@ -24,6 +24,10 @@ namespace Forestry.Xml.Reading
 
         internal readonly bool _hasSkippedAttributeDelimiter;
         
+        /// <summary>
+        /// Reader state at the start of a document, with optional reader options
+        /// </summary>
+        /// <param name="readerOptions"></param>
         public ReaderState(ReaderOptions readerOptions = default)
         {
             _lineNumber = default;

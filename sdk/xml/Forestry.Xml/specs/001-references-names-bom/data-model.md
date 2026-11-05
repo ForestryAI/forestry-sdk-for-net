@@ -69,7 +69,8 @@ any reference state --end of span--> Unknown       (halt, or Incomplete when rea
 | `LiteralMarkup` | holds a `ReferenceConstraint`; `&` no longer malformed; the matching quote ends the literal only outside a reference |
 | `NameMarkup` | new `MaxLength` init property; a name byte at index `MaxLength` is Malformed with reason "too long" |
 | `ProcessingInstructionTargetConstraint` (renamed from `ProcessingInstructionTarget`) | an `IConstraint` (R8); new `MaxLength`; a target byte at that index is Malformed with reason "too long" |
-| `NoConstraint` (new) | an `IConstraint` that is always well-formed: comment and document type |
+| `NoConstraint` (new) | an `IConstraint` that is always well-formed: declaration (until T064) and comment |
+| `DocumentTypeConstraint` (new, US3 T063) | an `IConstraint`: NotSupported + DocumentType at a `[` outside quoted literals (an internal subset, FR-006); built in US1 as a check in `ReadDocumentType`, moved here by the refactor |
 | `DeclarationEncodingConstraint` (new) | an `IConstraint` (R8); scans the declaration for `encoding`, `Eq`, quote, name; `OffendingIndex` = the name's first byte when it is not `UTF-8` |
 
 The `out bool unsupportedCharacter` of `IMarkup.Evaluate` becomes an `out` reason (`None`,

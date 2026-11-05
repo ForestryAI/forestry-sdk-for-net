@@ -68,11 +68,15 @@ check the exception's line and position.
    character (`&#0;`, `&#xD800;`, `&#xFFFE;`, `&#x110000;`), **When** read, **Then** an
    `XmlException` is thrown with the line and position of the first byte that shows the reference is
    malformed.
-7. **Given** a document with a document type declaration that declares an entity
-   (`<!DOCTYPE a [<!ENTITY e "x">]><a>&e;</a>`), **When** read, **Then** the declaration is not
-   applied and `&e;` throws "not supported": the entity may be declared, but S2 never processes the
-   DTD (developer, 2026-11-03). Without a document type declaration, `&e;` is malformed
-   (scenario 6).
+7. **Given** a document with a document type declaration (`<!DOCTYPE a SYSTEM "a.dtd"><a>&e;</a>`),
+   **When** read, **Then** the declaration is not applied and `&e;` throws "not supported": the
+   entity may be declared, but S2 never processes the DTD (developer, 2026-11-03). Without a
+   document type declaration, `&e;` is malformed (scenario 6).
+8. **Given** a document type declaration with an internal subset
+   (`<!DOCTYPE a [<!ENTITY e "x">]><a/>`), **When** read, **Then** it throws "not supported" at the
+   `[`: an internal subset is an opaque inside the opaque declaration, delimited by its own `[` and
+   `]`, and delimiting it is later work (option A, developer, 2026-11-05). A `[` inside a quoted
+   literal (`<!DOCTYPE a SYSTEM "a[1].dtd">`) is not an internal subset.
 
 ---
 
@@ -190,7 +194,9 @@ and encoding name.
   U+FFFF). It is not bounded by `MaxNameLength` and has no option of its own (developer,
   2026-11-03).
 - **FR-006**: A document type declaration MUST stay an opaque token; entities it declares are never
-  applied (S2).
+  applied (S2). A declaration with an internal subset (a `[` outside its quoted literals) MUST throw
+  "not supported" at the `[` before anything is committed (C0), since today's opaque read ends at
+  the first `>`, which may be inside the subset.
 - **FR-007**: The "unsupported" throw for `&` in character data and literals MUST be removed.
 
 **Names (Story 2)**
@@ -276,5 +282,6 @@ and encoding name.
   `MaxValueLength`. A per-field string length limit (an attribute on a field) belongs to the
   deserialization silo.
 - Not supported after this spec (C0's list): CDATA sections, entities declared in a DTD (could come
-  later if a use case comes up or another contributor joins), encodings other than UTF-8, non-ASCII
-  names.
+  later if a use case comes up or another contributor joins), a document type's internal subset
+  (delimiting `[` … `]` while skipping its literals, comments and processing instructions is later
+  work), encodings other than UTF-8, non-ASCII names.

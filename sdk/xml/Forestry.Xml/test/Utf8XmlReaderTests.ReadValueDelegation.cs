@@ -275,7 +275,7 @@ namespace Forestry.Xml.Tests
         [InlineData("=")]
         [InlineData("\"")]
         [InlineData("'")]
-        [InlineData("&amp;")]  // malformed, the character data delegate throws
+        [InlineData("&amp;")]  // a reference, read as character data (spec 001 US1)
         public void ReadValueDelegation_ForS8CharacterDataInContent_ItShould_BeACharacterDataCandidate(
             string text
         ) {

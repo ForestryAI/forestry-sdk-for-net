@@ -233,6 +233,7 @@ namespace Forestry.Xml.Tests
 
             // Assert
             AssertXmlExceptionAt(thrown, 1, expectedLinePosition);
+            AssertNotSupportedName(thrown);
             AssertEndTagNothingCommitted(ref reader, depthBefore: 1);
         }
         #endregion

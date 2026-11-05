@@ -355,6 +355,7 @@ namespace Forestry.Xml.Tests
 
             // Assert
             AssertXmlExceptionAt(thrown, 1, expectedLinePosition);
+            AssertNotSupportedName(thrown);
             Assert.Equal(0, reader.Position);
         }
 
@@ -377,6 +378,7 @@ namespace Forestry.Xml.Tests
 
             // Assert
             AssertXmlExceptionAt(thrown, 1, expectedLinePosition);
+            AssertNotSupportedName(thrown);
         }
 
         /// <summary>

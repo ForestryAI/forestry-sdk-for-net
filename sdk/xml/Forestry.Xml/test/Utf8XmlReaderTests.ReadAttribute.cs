@@ -421,7 +421,27 @@ namespace Forestry.Xml.Tests
             Exception? thrown = ReadValueThrown(ref reader);
 
             // Assert
-            Assert.IsType<XmlException>(thrown);
+            AssertNotSupportedName(thrown);
+        }
+
+        /// <summary>
+        /// S2 (spec 001 US1, T015): the unsupported rows above throw "not supported" for the
+        /// name (R6)
+        /// </summary>
+        [Theory]
+        [InlineData("é=\"x\">")]
+        [InlineData("bé=\"x\">")]
+        public void ReadAttribute_ForS2UnsupportedName_ItShould_ThrowNotSupported(
+            string text
+        ) {
+            // Arrange
+            Utf8XmlReader reader = new(Encoding.UTF8.GetBytes(text), isReadingCompleted: true, StartTagState(TokenType.Element, hasSkippedSpacingInStartTag: true));
+
+            // Act
+            Exception? thrown = ReadValueThrown(ref reader);
+
+            // Assert
+            AssertNotSupportedName(thrown);
         }
         #endregion
 

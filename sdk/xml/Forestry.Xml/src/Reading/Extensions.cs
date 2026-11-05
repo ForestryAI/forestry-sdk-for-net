@@ -13,7 +13,7 @@ namespace Forestry.Xml.Reading
         /// writing into caller-owned storage rather than allocating - the number of ulongs
         /// packed is however many <paramref name="destination"/> has room for, not a fixed
         /// constant here; #23's "Name packing" cap (32 bytes / 4 ulongs) lives on
-        /// <see cref="ElementNameStack"/>'s own pool sizing, not duplicated in this method.
+        /// <see cref="ElementStack"/>'s own pool sizing, not duplicated in this method.
         ///
         /// Names longer than <paramref name="destination"/>'s capacity are truncated - only the
         /// leading bytes are packed and therefore compared later. Per #23's accepted POC

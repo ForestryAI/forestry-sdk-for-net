@@ -205,34 +205,50 @@ namespace Forestry.Xml.Tests
         }
         #endregion
 
-        #region S7, S10 (unsupported)
+        #region S7, S10 (references)
         /// <summary>
-        /// S7, S10: <c>&amp;</c> starts a reference, well-formed but unsupported in the POC,
-        /// reported at the <c>&amp;</c>; nothing is committed. Exception type open in #44.
+        /// S7 (spec 001 US1, T014): a reference in a literal is read with it, the whole literal an
+        /// escaped Value (FR-007: no longer unsupported)
         /// </summary>
         [Theory]
-        [InlineData("\"a&amp;\"", 1, 3)]     // S7
-        [InlineData("'&#60;'", 1, 2)]        // S7 character reference
-        [InlineData("\"a&<\"", 1, 3)]        // S10 '&' first
-        public void ReadAttributeValue_ForReference_ItShould_ThrowUnsupportedCommittingNothing(
+        [InlineData("\"a&amp;\"", "a&amp;", 8)]    // S7
+        [InlineData("'&#60;'", "&#60;", 7)]        // S7 character reference
+        public void ReadAttributeValue_ForReference_ItShould_ReadAnEscapedValue(
             string text,
-            long expectedLineNumber,
-            long expectedLinePosition
+            string expectedValue,
+            long expectedPosition
         ) {
             // Arrange
             Utf8XmlReader reader = AttributeValueReader(text);
 
             // Act
+            bool advancement = reader.ReadValue();
+
+            // Assert
+            Assert.True(advancement);
+            Assert.True(reader.HasEscapedValue);
+            AssertAttributeValueRead(ref reader, expectedValue, expectedPosition, expectedLineNumber: 0, expectedLinePosition: expectedPosition);
+        }
+
+        /// <summary>
+        /// S10 (spec 001 US1, T014): a malformed reference throws at its first known byte, here
+        /// <c>&lt;</c> where <c>;</c> or a name was expected; nothing is committed
+        /// </summary>
+        [Fact]
+        public void ReadAttributeValue_ForAMalformedReference_ItShould_ThrowCommittingNothing()
+        {
+            // Arrange
+            Utf8XmlReader reader = AttributeValueReader("\"a&<\"");
+
+            // Act
             Exception? thrown = ReadValueThrown(ref reader);
 
             // Assert
-            Assert.NotNull(thrown);
-            Assert.IsNotType<NotImplementedException>(thrown);
-            if (thrown is XmlException exception)
-            {
-                Assert.Equal(expectedLineNumber, exception.LineNumber);
-                Assert.Equal(expectedLinePosition, exception.LinePosition);
-            }
+            XmlException exception = Assert.IsType<XmlException>(thrown);
+            Assert.Equal("Expected", exception.Category);
+            Assert.Equal("Reference", exception.Markup);
+            Assert.Equal(1, exception.LineNumber);
+            Assert.Equal(4, exception.LinePosition);
             AssertNothingCommitted(ref reader);
         }
         #endregion
@@ -399,7 +415,7 @@ namespace Forestry.Xml.Tests
         /// </summary>
         [Theory]
         [InlineData(new[] { "\"a", "\n", "<\"" }, 2, 1)]       // M5 '<'
-        [InlineData(new[] { "\"a", "", "&b\"" }, 1, 3)]        // M5 '&'
+        [InlineData(new[] { "\"a", "", "&b\"" }, 1, 4)]        // M5 'b' starts no predefined entity (spec 001 US1, T014)
         [InlineData(new[] { "\"a", "\u0001\"" }, 1, 3)]        // M5 control byte
         [InlineData(new[] { "\"Stem", "" }, 1, 6)]             // M6 incomplete
         [InlineData(new[] { "'a\n", "b" }, 2, 2)]              // M6 incomplete after a line feed
