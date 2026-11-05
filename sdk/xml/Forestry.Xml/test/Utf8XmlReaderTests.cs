@@ -49,12 +49,12 @@ namespace Forestry.Xml.Tests
             ElementStack stack = default;
             for (int i = 0; i < depth; i++)
             {
-                stack.Push(Encoding.UTF8.GetBytes($"E{i}"));
+                stack.TryPush(Encoding.UTF8.GetBytes($"E{i}"));
             }
 
             if (contentReady)
             {
-                stack.Push(Encoding.UTF8.GetBytes("Child"));
+                stack.TryPush(Encoding.UTF8.GetBytes("Child"));
                 stack.TryPop(Encoding.UTF8.GetBytes("Child"));
             }
 
@@ -74,8 +74,8 @@ namespace Forestry.Xml.Tests
         private static ElementStack ElementStackAfterRootClosed()
         {
             ElementStack stack = default;
-            stack.Push(Encoding.UTF8.GetBytes("Root"));
-            stack.Pop(stackalloc byte[ElementStack.PackedNameLength * 8]);
+            stack.TryPush(Encoding.UTF8.GetBytes("Root"));
+            stack.Pop();
             return stack;
         }
 

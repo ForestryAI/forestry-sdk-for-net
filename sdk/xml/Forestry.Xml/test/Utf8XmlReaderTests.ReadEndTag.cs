@@ -37,11 +37,11 @@ namespace Forestry.Xml.Tests
             ElementStack stack = default;
             foreach (string name in openElements)
             {
-                stack.Push(Encoding.UTF8.GetBytes(name));
+                stack.TryPush(Encoding.UTF8.GetBytes(name));
             }
 
             // TryPop is the only way to set content ready (see ElementStackAtDepth)
-            stack.Push("Child"u8);
+            stack.TryPush("Child"u8);
             stack.TryPop("Child"u8);
 
             return State(stack, TokenType.Element);

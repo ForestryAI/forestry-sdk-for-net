@@ -45,12 +45,18 @@ namespace Forestry.Xml.Tests
         /// Read the document whole, split at every byte and in parts, asserting the three agree,
         /// and assert the tokens
         /// </summary>
-        private static void AssertTokensEveryWay(string document, params ReadToken[] expected)
+        private static void AssertTokensEveryWay(string document, params ReadToken[] expected) =>
+            AssertTokensEveryWay(document, default, expected);
+
+        /// <summary>
+        /// As <see cref="AssertTokensEveryWay(string, ReadToken[])"/>, with reader options (US2)
+        /// </summary>
+        private static void AssertTokensEveryWay(string document, ReaderOptions options, params ReadToken[] expected)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(document);
 
-            List<ReadToken> tokens = ReadEverySplit(bytes);
-            ReadInParts(bytes);
+            List<ReadToken> tokens = ReadEverySplit(bytes, options);
+            ReadInParts(bytes, options);
 
             Assert.Equal(expected, tokens);
         }
@@ -59,12 +65,12 @@ namespace Forestry.Xml.Tests
         /// Read the document whole, split at every byte and in parts, asserting each throws the
         /// same exception, and assert it
         /// </summary>
-        private static void AssertThrownEveryWay(string document, string category, string markup, long lineNumber, long linePosition)
+        private static void AssertThrownEveryWay(string document, string category, string markup, long lineNumber, long linePosition, ReaderOptions options = default)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(document);
 
-            XmlException thrown = ReadThrownEverySplit(bytes);
-            ReadThrownInParts(bytes);
+            XmlException thrown = ReadThrownEverySplit(bytes, options);
+            ReadThrownInParts(bytes, options);
 
             Assert.Equal(category, thrown.Category);
             Assert.Equal(markup, thrown.Markup);
@@ -78,9 +84,9 @@ namespace Forestry.Xml.Tests
         /// markup that throws: nothing of it is committed. Steps earlier in the same cycle
         /// (skipping <c>=</c> or a start tag's <c>&gt;</c>) still commit, as in T009.
         /// </summary>
-        private static void AssertThrowsCommittingNothing(string document, long valueStart)
+        private static void AssertThrowsCommittingNothing(string document, long valueStart, int expectedDepth = -1, ReaderOptions options = default)
         {
-            Utf8XmlReader reader = new(Encoding.UTF8.GetBytes(document), isReadingCompleted: true, new ReaderState());
+            Utf8XmlReader reader = new(Encoding.UTF8.GetBytes(document), isReadingCompleted: true, new ReaderState(options));
 
             while (true)
             {
@@ -95,6 +101,10 @@ namespace Forestry.Xml.Tests
                 {
                     Assert.Equal(valueStart, reader.Position);
                     Assert.Equal(tokenType, reader.TokenType);
+                    if (expectedDepth >= 0)
+                    {
+                        Assert.Equal(expectedDepth, reader.Depth);  // US2: the failing start tag pushed nothing
+                    }
                     return;
                 }
 
