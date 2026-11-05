@@ -9,8 +9,8 @@ description: "Tasks for reader spec 001: references, names compared in full, BOM
 R1–R9 as reviewed by the developer on 2026-11-03, data-model.md, contracts/public-api.md,
 contracts/exceptions.md, quickstart.md) and `.specify/memory/constitution.md` 1.0.0.
 
-**Issue**: #64. Each story becomes a sub-issue of #64 when the developer asks for issues; US3 links
-#31 instead of duplicating it.
+**Issue**: #64. Each story is a sub-issue of #64: US1 #65 (with Setup), US2 #66, US3 #67 (with
+Polish).
 
 **Tests**: Required (constitution C4). In every story phase: test shells first, one per acceptance
 scenario, edge case or contract row; then a **test review gate** (the developer reviews the shells
@@ -169,7 +169,7 @@ whole and cut up with `ReadWhole`, `ReadEverySplit` and `ReadInParts` (T004).
 
 **Goal**: A UTF-8 BOM at the start is skipped without line tracking, other BOMs throw "not
 supported" at line 1, position 1, and a declaration naming an encoding other than UTF-8 throws "not
-supported" at the name (FR-012 to FR-014, R7, R8, #31).
+supported" at the name (FR-012 to FR-014, R7, R8, #67).
 
 **Independent Test**: Read the same document with and without a UTF-8 BOM, with each other BOM and
 each encoding name, whole, split at every byte and in parts (quickstart §3).
@@ -199,7 +199,7 @@ New shells in `test/Utf8XmlReaderTests.ByteOrderMark.cs` and
 - [ ] T063 [US3] Behaviour-preserving refactor (research.md R8): add an internal `IConstraint` in `src/Reading/Utf8XmlReader.cs` with `MarkupState Evaluate(ReadOnlySpan<byte> characters)` evaluated segment by segment over the opaque value (state in the struct), `int OffendingIndex`, `Throwing.Category Category` and `Throwing.Markup Markup`; add `NoConstraint` (always well-formed); rename `ProcessingInstructionTarget` to `ProcessingInstructionTargetConstraint` implementing `IConstraint`; `IConstraint`, `NoConstraint` and `ProcessingInstructionTargetConstraint` become `internal` (nested in `Utf8XmlReader`, no longer `private`), so the tests reach them like `ElementStack` (Name + ProcessingInstructionTarget, Limit from T045); make `ReadSingleOpaqueValue<TConstraint>` / `IgnoreSingleOpaqueValue<TConstraint>` in `src/Reading/Utf8XmlReader.Single.cs` and `ReadMultipleOpaqueValue<TConstraint>` / `IgnoreMultipleOpaqueValue<TConstraint>` in `src/Reading/Utf8XmlReader.Multiple.cs` generic with `where TConstraint : struct, IConstraint`, one check-then-throw before commit in each path, replacing `ThrowWhenMultipleProcessingInstructionMalformed` and the single path's PI check; remove `isProcessingInstruction` (never add `isDeclaration`); call sites in `src/Reading/Utf8XmlReader.cs`: `ReadProcessingInstruction` passes `ProcessingInstructionTargetConstraint`, `ReadDeclaration`, `ReadComment` and `ReadDocumentType` pass `NoConstraint`. Ends with `dotnet test Forestry.Xml.slnx` green except the US3 reader shells and `DeclarationEncodingConstraintTests`; `ProcessingInstructionTargetConstraintTests` pass (depends on T059)
 - [ ] T064 [US3] `DeclarationEncodingConstraint` (research.md R8) in `src/Reading/Utf8XmlReader.cs`, evaluated segment by segment like `ProcessingInstructionTargetConstraint`: the first `encoding` preceded by spacing, then `S? '=' S?`, a quote, the name to the matching quote, compared with `UTF-8` ignoring ASCII letter case on one path: each chunk is compared with `System.Text.Ascii.EqualsIgnoreCase` against the matching slice of `"UTF-8"u8`, starting from what is matched so far (no `| 0x20`, which folds more than letters: `0x0D | 0x20` is `-`, `0x18 | 0x20` is `8`); a name longer than 5 bytes, shorter at its closing quote, or different gives `OffendingIndex` at its first byte; any other shape throws nothing. It is the second `IConstraint` (T063), `internal` like the first, with `Category` NotSupported and `Markup` Encoding; `ReadDeclaration` passes it instead of `NoConstraint` (depends on T060, T063)
 - [ ] T065 [US3] Run `dotnet test Forestry.Xml.slnx`: T050–T058 pass, US1, US2 and every other test still green (depends on T062, T064)
-- [ ] T066 [P] [US3] Documentation (D0, G0): in `READER.md` add a Skip BOM row between pipeline steps 1 and 2, remove it from "Steps not built yet", remove "a BOM until #31" from candidate None's cases, add `_isByteOrderMarkChecked` to rule 22's list, and a glossary line: markup delimits, constraint checks ("evaluate" for both: a markup is evaluated to its end, a constraint over its value; `IMarkup` and `IConstraint`); in `CHANGELOG.md` add the BOM and encoding checks under Features Added, linking #31 (depends on T065)
+- [ ] T066 [P] [US3] Documentation (D0, G0): in `READER.md` add a Skip BOM row between pipeline steps 1 and 2, remove it from "Steps not built yet", remove "a BOM until #31" from candidate None's cases, add `_isByteOrderMarkChecked` to rule 22's list, and a glossary line: markup delimits, constraint checks ("evaluate" for both: a markup is evaluated to its end, a constraint over its value; `IMarkup` and `IConstraint`); in `CHANGELOG.md` add the BOM and encoding checks under Features Added, linking #67 (depends on T065)
 - [ ] T067 [US3] **Performance gate** (end of US3): `dotnet test Forestry.Xml.slnx -s test/Performance.runsettings` passes (SC-005) (depends on T065)
 
 **Checkpoint**: All three stories work independently.
@@ -273,7 +273,7 @@ Task: "T063 IConstraint refactor, then T064 DeclarationEncodingConstraint"
 1. Setup → baseline.
 2. US1 → references (MVP).
 3. US2 → names compared in full; StanForD's 35-byte name is safe.
-4. US3 → BOM and encoding (#31).
+4. US3 → BOM and encoding (#67).
 5. Polish → SC-004 end to end, quickstart, G0.
 
 Each story ends green with its documentation and performance gate, so the branch can stop after any

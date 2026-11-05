@@ -4,7 +4,7 @@
 
 **Input**: Feature specification from `specs/001-references-names-bom/spec.md`
 
-**Issue**: #64 (feature); each story becomes a sub-issue when tasks are generated; Story 3 links #31.
+**Issue**: #64 (feature); stories are sub-issues #65 (US1), #66 (US2) and #67 (US3).
 
 ## Summary
 

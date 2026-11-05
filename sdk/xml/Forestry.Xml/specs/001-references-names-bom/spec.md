@@ -6,8 +6,8 @@
 
 **Status**: Approved (2026-11-03)
 
-**Issue**: #64 is this spec's feature; each story becomes a sub-issue under it when tasks are
-generated, and Story 3 links the existing #31 instead of duplicating it.
+**Issue**: #64 is this spec's feature; its stories are sub-issues: #65 (Story 1), #66 (Story 2)
+and #67 (Story 3, which supersedes the earlier #31).
 
 **Input**: User description: "Reader spec 001: references, names compared in full, BOM. Three user
 stories, thin (scope agreed by the developer, 2026-11-03).
@@ -21,7 +21,7 @@ stories, thin (scope agreed by the developer, 2026-11-03).
   bytes; `ReaderOptions.MaxNameLength` (default 128 bytes, overridable like `MaxDepth`) throws where
   a name is first read (start tag or attribute name), so an end tag only fails on a mismatch; real
   StanForD has a 35-byte name (`ButtEndProfileExtrapolationFunction`).
-- P3 BOM (#31): a UTF-8 BOM at the start is skipped (no line tracking); any other BOM, or a
+- P3 BOM (#67): a UTF-8 BOM at the start is skipped (no line tracking); any other BOM, or a
   declaration naming an encoding other than UTF-8, throws not supported."
 
 ## User Scenarios & Testing *(mandatory)*
@@ -117,7 +117,7 @@ matching and mismatched end tags, with the default and an overridden limit.
 A developer reads a file saved with a UTF-8 byte order mark (as many Windows tools write). The BOM
 is skipped before the first token and is not counted in line positions. A document in another
 encoding, recognised by its BOM or by its declaration's encoding name, throws "not supported"
-instead of being misread (#31).
+instead of being misread (#67).
 
 **Why this priority**: A BOM today reaches candidate None and throws a generic malformed error, so
 such files cannot be read; the fix is small and self-contained.
