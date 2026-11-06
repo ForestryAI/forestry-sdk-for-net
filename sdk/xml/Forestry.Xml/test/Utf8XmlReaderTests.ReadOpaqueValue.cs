@@ -46,6 +46,7 @@ namespace Forestry.Xml.Tests
             linePosition: linePosition,
             hasSkippedSpacingInStartTag: false,
             hasSkippedAttributeDelimiter: false,
+            byteOrderMark: current != TokenType.None || lineNumber != 0 || linePosition != 0 ? ByteOrderMark.None : ByteOrderMark.Unchecked,  // checked past the start of the document (spec 001 US3, T058)
             currentTokenType: current,
             previousTokenType: TokenType.None,
             elementStack: context switch

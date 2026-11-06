@@ -54,6 +54,7 @@ namespace Forestry.Xml.Tests
             linePosition: linePosition,
             hasSkippedSpacingInStartTag: false,
             hasSkippedAttributeDelimiter: false,
+            byteOrderMark: ByteOrderMark.None,  // past the start of the document (spec 001 US3, T058)
             currentTokenType: current,
             previousTokenType: TokenType.None,
             elementStack: ElementStackAtDepth(2, contentReady: false),

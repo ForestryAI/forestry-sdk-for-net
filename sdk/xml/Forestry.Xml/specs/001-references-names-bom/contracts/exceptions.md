@@ -52,6 +52,7 @@ byte its line and position point at (1-based, READER.md rule 17). Messages are p
 | `EF BB BF` only, or `EF BB` with reading completed | Incomplete | RootElement | end of data |
 | `<?xml version="1.0" encoding="ISO-8859-1"?>` | NotSupported | Encoding | `I` |
 | `encoding="UTF-16"` | NotSupported | Encoding | `U` |
+| `EF BB BF` + `<?xml version="1.0" encoding="ISO-8859-1"?>` (the BOM contradicted) | Expected | Encoding | `I` (the BOM not counted) |
 | `EF BB BF<a>&</a>` | Expected | Reference | the same line and position as without the BOM |
 
 ## Moved

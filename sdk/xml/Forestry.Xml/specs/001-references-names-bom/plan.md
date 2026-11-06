@@ -99,7 +99,7 @@ sdk/xml/Forestry.Xml/
 │       ├── ElementStack.cs           # US2: byte pool + end offsets, full comparison, Push(sequence), TopLength
 │       ├── Extensions.cs             # US2: doc only (no longer used by the stack)
 │       ├── ReaderOptions.cs          # US2: MaxNameLength, DefaultMaxNameLength
-│       ├── ReaderState.cs            # US3: _isByteOrderMarkChecked (rule 22)
+│       ├── ReaderState.cs            # US3: _byteOrderMark (rule 22)
 │       ├── Throwing.cs               # US1–3: Category.NotSupported/Limit, new Markup members
 │       ├── Utf8XmlReader.cs          # US1: ReferenceConstraint, markup structs, HasEscapedValue;
 │       │                             # US2: name budgets, ReadStartTag/ReadEndTag/empty-element pop;
@@ -114,6 +114,8 @@ sdk/xml/Forestry.Xml/
     ├── ReferenceConstraintTests.cs               # US1 (new), constraint as a unit
     ├── DeclarationEncodingConstraintTests.cs     # US3 (new), constraint as a unit
     ├── ProcessingInstructionTargetConstraintTests.cs # US3 (new), with the IConstraint refactor
+    ├── NoConstraintTests.cs                      # US3 (new), with the IConstraint refactor
+    ├── DocumentTypeConstraintTests.cs            # US3 (new), US1's internal-subset check as a constraint
     ├── ReaderOptionsTests.cs                     # US2 (new), MaxDepth setter and enforcement
     ├── Utf8XmlReaderTests.StanForD.cs            # Polish (new), SC-004 end to end
     ├── ReadAllocationTests.cs                    # SC-003, Category=Performance (new, first in this package)
@@ -159,7 +161,7 @@ structs; element stack and names; the BOM step and declaration), so they can be 
 
 ### US3 BOM and encoding (P3)
 
-1. `ReaderState._isByteOrderMarkChecked` in rule 22's six places, and the test helpers.
+1. `ReaderState._byteOrderMark` in rule 22's six places, and the test helpers.
 2. Skip BOM step in `Read()` after the first drained check (R7).
 3. A behaviour-preserving refactor: the opaque readers take a generic `TConstraint : struct,
    IConstraint` (`NoConstraint`, `ProcessingInstructionTargetConstraint`, and
@@ -167,6 +169,15 @@ structs; element stack and names; the BOM step and declaration), so they can be 
    `isProcessingInstruction` (R8).
 4. `DeclarationEncodingConstraint`, the second `IConstraint`, passed by `ReadDeclaration` (R8).
 5. `Throwing`: `Markup.ByteOrderMark`, `Markup.Encoding`.
+
+**Scope note** (developer, 2026-11-06): US3 also carries step 3, a refactor broader than "BOM and
+declaration". The encoding check needs the opaque readers to run a check before commit, and the
+developer preferred one generic way (R8) over a second flag next to `isProcessingInstruction`.
+Changing the opaque readers' signature touches every opaque markup: the processing instruction's
+existing target check and US1's internal-subset check move into constraints, and the comment passes
+`NoConstraint`. Neither the processing instruction nor the document type gains new behaviour; the
+refactor has its own green checkpoint (T063), and each constraint its own unit-test file (T056,
+T057).
 
 ## Documentation changes (D0, G0)
 
@@ -177,7 +188,7 @@ READER.md, in the story that changes the behaviour:
 - **Rule 18** ("Character data ends at `<` or `&`"): character data ends at `<`; references are
   part of the Value and flagged (US1).
 - **Rule 21** (a literal's string excludes `&`): references allowed and flagged (US1).
-- **Rule 22**: add `_isByteOrderMarkChecked` to the list of fields that proved the rule (US3).
+- **Rule 22**: add `_byteOrderMark` to the list of fields that proved the rule (US3).
 - **Glossary**: markup delimits, constraint checks; "evaluate" for both (US3, R8).
 - **Decided, not built yet**: the unsupported exception is designed as far as a category (R6);
   candidate None no longer lists the BOM.

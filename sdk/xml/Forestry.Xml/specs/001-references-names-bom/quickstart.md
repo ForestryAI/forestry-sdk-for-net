@@ -69,10 +69,11 @@ Tests: `test/Utf8XmlReaderTests.ByteOrderMark.cs`, `test/Utf8XmlReaderTests.Decl
 | positions unchanged | `EF BB BF` + `<a>&</a>` | the same line and position as without |
 | split BOM | `EF` + `BB BF<a/>`, `EF BB` + `BF<a/>` | halts until complete, then the same tokens |
 | other BOMs, encodings | [exceptions.md, Story 3](contracts/exceptions.md#story-3-bom-and-encoding) | NotSupported at the listed byte |
-| UTF-8 names | `encoding="UTF-8"`, `"utf-8"`, no encoding | read |
+| UTF-8 names | `encoding="UTF-8"`, `"utf-8"` (StanForD's), no encoding | read |
+| BOM contradicted | `EF BB BF` + `encoding="ISO-8859-1"` | Expected + Encoding at the name |
 
 ## End to end (SC-004)
 
-A hand-written StanForD-shaped document in the tests: a UTF-8 BOM, a declaration with
-`encoding="UTF-8"`, `ButtEndProfileExtrapolationFunction`, and `&amp;` in a text field, read to the
+A hand-written StanForD-shaped document in the tests: a UTF-8 BOM, StanForD's declaration
+`<?xml version="1.0" encoding="utf-8"?>`, `ButtEndProfileExtrapolationFunction`, and `&amp;` in a text field, read to the
 end with default options, whole and split at every byte.

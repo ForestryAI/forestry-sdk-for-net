@@ -71,7 +71,7 @@ any reference state --end of span--> Unknown       (halt, or Incomplete when rea
 | `ProcessingInstructionTargetConstraint` (renamed from `ProcessingInstructionTarget`) | an `IConstraint` (R8); new `MaxLength`; a target byte at that index is Malformed with reason "too long" |
 | `NoConstraint` (new) | an `IConstraint` that is always well-formed: declaration (until T064) and comment |
 | `DocumentTypeConstraint` (new, US3 T063) | an `IConstraint`: NotSupported + DocumentType at a `[` outside quoted literals (an internal subset, FR-006); built in US1 as a check in `ReadDocumentType`, moved here by the refactor |
-| `DeclarationEncodingConstraint` (new) | an `IConstraint` (R8); scans the declaration for `encoding`, `Eq`, quote, name; `OffendingIndex` = the name's first byte when it is not `UTF-8` |
+| `DeclarationEncodingConstraint` (new) | an `IConstraint` (R8); `HasUtf8ByteOrderMark` (init) picks Expected over NotSupported for a contradicting name; scans the declaration for `encoding`, `Eq`, quote, name; `OffendingIndex` = the name's first byte when it is not `UTF-8` |
 
 The `out bool unsupportedCharacter` of `IMarkup.Evaluate` becomes an `out` reason (`None`,
 `UnsupportedCharacter`, `MalformedReference`, `UndeclaredEntity`, `NotSupportedEntity`, and `TooLong` from US2) so a delegate picks the category without another
@@ -82,7 +82,7 @@ scan. The span paths (`_isMultipleSegments == false`) call the same structs.
 | Field | Lifetime | Change |
 |---|---|---|
 | `HasEscapedValue` | one `Read()` | **new**, public get; cleared in step 0, set by `ReadContentCharacterData` and `ReadAttributeValue` from `HasReferences` |
-| `_isByteOrderMarkChecked` | across readers | **new** `ReaderState` field (rule 22's six places); set once the Skip BOM step has decided |
+| `_byteOrderMark` | across readers | **new** `ReaderState` field (rule 22's six places), an internal enum `ByteOrderMark`: `Unchecked` until the Skip BOM step has decided, then `Utf8` (a UTF-8 BOM was skipped) or `None`; the declaration's encoding check reads it |
 | `_elementStack` | across readers | layout changes (below) |
 | `_readerOptions` | options | gains `MaxNameLength` |
 

@@ -88,6 +88,7 @@ namespace Forestry.Xml.Tests
             documentType: false,
             hasSkippedSpacingInStartTag: false,
             hasSkippedAttributeDelimiter: false,
+            byteOrderMark: current != TokenType.None || elementStack.Depth != 0 ? ByteOrderMark.None : ByteOrderMark.Unchecked,  // checked past the start of the document (spec 001 US3, T058)
             currentTokenType: current,
             previousTokenType: previous,
             elementStack: elementStack,

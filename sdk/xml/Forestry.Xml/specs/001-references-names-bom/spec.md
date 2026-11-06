@@ -139,9 +139,13 @@ and encoding name.
    `Read()` halts until the BOM is complete, then the tokens are the same as without it.
 4. **Given** a UTF-16 or UTF-32 BOM (`FE FF`, `FF FE`, `00 00 FE FF`, `FF FE 00 00`) at the start,
    **When** read, **Then** an `XmlException` "not supported" is thrown at line 1, position 1.
-5. **Given** a declaration with `encoding="UTF-8"` (in any letter case), or no encoding, **When**
-   read, **Then** it is read; **Given** `encoding="ISO-8859-1"` or `encoding="UTF-16"`, **Then**
-   it throws "not supported" at the encoding name.
+5. **Given** a declaration with `encoding="UTF-8"` (in any letter case, e.g. StanForD's
+   `<?xml version="1.0" encoding="utf-8"?>`), or no encoding, **When** read, **Then** it is read;
+   **Given** `encoding="ISO-8859-1"` or `encoding="UTF-16"`, **Then** it throws "not supported" at
+   the encoding name.
+6. **Given** a UTF-8 BOM followed by `<?xml version="1.0" encoding="ISO-8859-1"?>`, **When** read,
+   **Then** it throws malformed (Expected + Encoding) at the encoding name: the BOM says UTF-8 and
+   the declaration contradicts it (XML 1.0 §4.3.3).
 
 ---
 
@@ -229,7 +233,10 @@ and encoding name.
   line 1, position 1.
 - **FR-014**: A declaration whose encoding name is not `UTF-8` (compared without letter case, as XML
   1.0 §4.3.3 says) MUST throw "not supported" at the encoding name; a declaration without an
-  encoding is read as UTF-8. The Declaration token's value stays the raw declaration.
+  encoding is read as UTF-8. After a skipped UTF-8 BOM, a name other than `UTF-8` contradicts the
+  BOM, a fatal error by §4.3.3: it MUST throw malformed (Expected + Encoding) at the encoding name
+  instead, so the caller can tell a mislabelled UTF-8 file from one in another encoding
+  (developer, 2026-11-06). The Declaration token's value stays the raw declaration.
 
 **Across stories**
 

@@ -249,7 +249,8 @@ supported").
 ## R7. BOM: a step before the first token
 
 **Decision** (approved by the developer, 2026-11-03): A new pipeline step, **Skip BOM**, after step 1 (Drained?) and before step 2 (Skip
-delimiter), active only while a new `ReaderState` field `_isByteOrderMarkChecked` is false:
+delimiter), active only while a new `ReaderState` field `_byteOrderMark` is `Unchecked` (an
+internal enum `ByteOrderMark`: `Unchecked`, `None`, `Utf8`; developer, 2026-11-06):
 
 - `EF BB BF`: skip 3 bytes with no line tracking (FR-012); finish with `SkipMultipleSpacing`-style
   `TrySkipEmptySegments` so the step leaves the reader on a readable byte (rule 12), then the
@@ -264,8 +265,9 @@ delimiter), active only while a new `ReaderState` field `_isByteOrderMarkChecked
   line 1, position 1 (offset 0). `FF FE` throws at once without waiting for `FF FE 00 00`, since
   both are NotSupported at offset 0.
 - Anything else: nothing skipped.
-- The field is set once the step has decided (skipped, or nothing to skip), so a later reader never
-  checks again and a second `EF BB BF` is never skipped.
+- The field is set once the step has decided: `Utf8` when a UTF-8 BOM was skipped, `None` when
+  there was nothing to skip. A later reader never checks again, a second `EF BB BF` is never
+  skipped, and the declaration's encoding check (R8) knows whether a UTF-8 BOM came first.
 
 The field touches rule 22's six places (the `ReaderState` field and both constructors, the reader's
 field and `ReaderState` property, both reader constructors) and the test helpers that build a
@@ -290,7 +292,21 @@ with `UTF-8` ignoring ASCII letter case on one path: each chunk is compared with
 what is matched so far (no allocation, no separate span and segment versions). Not `| 0x20`, which
 folds more than letters (`0x0D | 0x20` is `-`, `0x18 | 0x20` is `8`, so `UTF\r8` would match;
 developer, 2026-11-03). A different name, or one longer than 5 bytes, throws NotSupported +
-Encoding at the name's first byte. No `encoding`, or text after `encoding` that does
+Encoding at the name's first byte; after a skipped UTF-8 BOM (`_byteOrderMark` is `Utf8`, R7) it
+throws Expected + Encoding there instead (developer, 2026-11-06).
+
+**A UTF-8 BOM contradicted by the declaration**: XML 1.0 §4.3.3 makes it a fatal error, so it is
+malformed, not merely unsupported. The BOM is the stronger evidence (`EF BB BF` at the start of a
+real ISO-8859-1 file would be the text "ï»¿"), so the bytes are almost certainly UTF-8 and the
+declaration stale. Likely causes: a writer emitting a BOM by default (.NET's `UTF8Encoding(true)`,
+or `Encoding.UTF8` with a `StreamWriter`) under a hard-coded declaration, or an editor that
+converted a file to UTF-8 and added the BOM without touching the declaration. The reader still
+never guesses (S0): it throws, and the message (#49's wording) should name both facts, "the byte
+order mark is UTF-8 but the declaration names ISO-8859-1", so the cause can be traced to the
+writer. A reader option to trust the BOM over the declaration is a later decision, once real
+StanForD files show it happens. Without a BOM a non-UTF-8 name stays "not supported": the document
+is well-formed in an encoding this reader does not read, and for ASCII content the bytes cannot
+tell ISO-8859-1 from UTF-8. No `encoding`, or text after `encoding` that does
 not have that shape, throws nothing: the rest of the declaration stays unchecked, as today. The
 Declaration token's `Value` stays the raw declaration.
 

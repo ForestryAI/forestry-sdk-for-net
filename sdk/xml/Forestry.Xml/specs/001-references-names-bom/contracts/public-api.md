@@ -62,7 +62,7 @@ as before. Unlike `JsonReaderOptions`, an explicit 0 is never "default" (researc
 
 ## `ReaderState`
 
-No public change. A new internal field, `_isByteOrderMarkChecked`, is carried like the other
+No public change. A new internal field, `_byteOrderMark` (`Unchecked`, `None`, `Utf8`), is carried like the other
 fields (READER.md rule 22); `ReaderOptions` already carries `MaxNameLength`.
 
 ## `XmlException`

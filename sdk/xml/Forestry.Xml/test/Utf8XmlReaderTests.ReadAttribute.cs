@@ -47,6 +47,7 @@ namespace Forestry.Xml.Tests
             documentType: false,
             hasSkippedSpacingInStartTag: hasSkippedSpacingInStartTag,
             hasSkippedAttributeDelimiter: hasSkippedAttributeDelimiter,
+            byteOrderMark: ByteOrderMark.None,  // past the start of the document (spec 001 US3, T058)
             currentTokenType: current,
             previousTokenType: previous,
             elementStack: ElementStackAtDepth(depth, contentReady: false),
