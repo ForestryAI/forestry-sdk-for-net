@@ -1,6 +1,27 @@
 namespace Forestry.Xml.Reading
 {
     /// <summary>
+    /// What the Skip BOM step decided at the start of the document (spec 001 research R7)
+    /// </summary>
+    internal enum ByteOrderMark : byte
+    {
+        /// <summary>
+        /// The step has not decided yet: the document's first bytes are still to come
+        /// </summary>
+        Unchecked,
+
+        /// <summary>
+        /// No byte order mark: nothing was skipped
+        /// </summary>
+        None,
+
+        /// <summary>
+        /// A UTF-8 byte order mark was skipped, so the declaration may only name UTF-8 (FR-014)
+        /// </summary>
+        Utf8,
+    }
+
+    /// <summary>
     /// The reader state is meant to live over async || sync bounderies to 
     /// reconstruct a reader with debuging, assertions and options fields.
     /// </summary>
@@ -23,6 +44,8 @@ namespace Forestry.Xml.Reading
         internal readonly bool _hasSkippedSpacingInStartTag;
 
         internal readonly bool _hasSkippedAttributeDelimiter;
+
+        internal readonly ByteOrderMark _byteOrderMark;
         
         /// <summary>
         /// Reader state at the start of a document, with optional reader options
@@ -35,6 +58,7 @@ namespace Forestry.Xml.Reading
             _documentType = false;
             _hasSkippedSpacingInStartTag = false;
             _hasSkippedAttributeDelimiter = false;
+            _byteOrderMark = ByteOrderMark.Unchecked;
 
             _currentTokenType = default;
             _previousTokenType = default;
@@ -55,6 +79,7 @@ namespace Forestry.Xml.Reading
             bool documentType,
             bool hasSkippedSpacingInStartTag,
             bool hasSkippedAttributeDelimiter,
+            ByteOrderMark byteOrderMark,
             TokenType currentTokenType,
             TokenType previousTokenType,
             ElementStack elementStack,
@@ -67,6 +92,7 @@ namespace Forestry.Xml.Reading
 
             _hasSkippedSpacingInStartTag = hasSkippedSpacingInStartTag;
             _hasSkippedAttributeDelimiter = hasSkippedAttributeDelimiter;
+            _byteOrderMark = byteOrderMark;
 
             _currentTokenType = currentTokenType;
             _previousTokenType = previousTokenType;

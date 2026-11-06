@@ -17,8 +17,9 @@ cycle (returns `false`: the caller expands the segment(s) and calls again), prod
 
 | # | Step | Issue | What it does | Outcomes |
 |---|---|---|---|---|
-| 0 | Reset | – | `Value` and `ValueSequence` are cleared | continue |
+| 0 | Reset | – | `Value`, `ValueSequence` and `HasEscapedValue` are cleared | continue |
 | 1 | Drained? | – | Nothing left at the reader position | halt; on the last readable segment, throw if there is no root element or an element is not ended |
+| 1a | Skip BOM | #67 | Only while `_byteOrderMark` is `Unchecked` (spec 001 research R7): `EF BB BF` is skipped without line tracking and recorded as `Utf8`; anything else is recorded as `None`. Peeks up to four bytes, commits only the UTF-8 BOM | continue; halt on an incomplete start of a BOM (`EF`, `EF BB`, `FE`, `FF`, `00`, `00 00`, `00 00 FE`) when reading is not completed, or when a skipped BOM drained the segment; throw NotSupported + ByteOrderMark at 1,1 for `FE FF`, `FF FE`, `00 00 FE FF`, Incomplete + RootElement for `EF` or `EF BB` with reading completed |
 | 2 | Skip delimiter | #32, #45 | After an attribute name (current token Attribute) and unless the equals flag is set: skip the whole equals non-terminal `S? '=' S?` up to the first non-spacing byte after `=`, which is not checked. Peeks first, commits only when all of it is there, then sets the equals flag; never sets the spacing flag | continue (skipped, or no delimiter applies); halt when undecided, nothing committed; throw when the first non-spacing byte isn't `=` (Expected), or undecided with reading completed (Incomplete) |
 | 3 | Skip spacing | #34, #40 | Outside content: skip all spacing. In content: skip only spacing-only character data (next non-spacing is `<`). In a start tag: record that spacing was skipped (the spacing flag) | continue; halt when drained or undecided |
 | 4 | Content ready | #22, #40 | `>` after an Element (S3) or an attribute's Value (S5): skip it, content ready = true, clear the spacing flag | continue (never a token); throw after an attribute name (S4: `<a b=>`, reached after `=` is skipped) |
@@ -69,7 +70,6 @@ the Attribute candidate.
 | Step | Issue | Where | Why it matters |
 |---|---|---|---|
 | Ignore optional non-terminals | #33 | before peek | Reader options (comments, etc.); a skip step, never a delegate |
-| Skip BOM | #31 | start of document | Not part of the grammar; no line tracking |
 
 ## 2. Settled rules
 
@@ -199,7 +199,7 @@ the Attribute candidate.
     and its `ReaderState` property; and **both** reader constructors, `Utf8XmlReader.Single.cs`
     and `Utf8XmlReader.Multiple.cs`, which copy it from the state. Missing the constructor copy
     loses the field whenever a reader is reconstructed, i.e. on every piped segment (#24's
-    `_documentType`, #40's spacing flag, #45's equals flag). Test helpers that build a `ReaderState` by named
+    `_documentType`, #40's spacing flag, #45's equals flag, spec 001's `_byteOrderMark`). Test helpers that build a `ReaderState` by named
     arguments need the new argument too.
 23. **`Value` lives for one `Read()` only.** Step 0 clears `Value` and `ValueSequence`, so a
     later cycle sees the previous token's type but not its value (e.g. the attribute name when
@@ -231,13 +231,19 @@ the Attribute candidate.
   is #49's.
 - **Candidate None throws one generic malformed exception** (#48): `Throwing.ThrowUnexpectedMarkup`
   ("… starts no markup allowed here"), an `XmlException` without category or markup. Its cases (second root, text or an end tag outside the root, a document
-  type after the prolog, `<` without a name, markup inside a start tag, a BOM until #31) need
+  type after the prolog, `<` without a name, markup inside a start tag) need
   specific category + markup explanations (rule 24) in their own task.
 - **`/>`'s ElementEnd has an empty `Value`.** Exposing the popped name needs storage in the
   reader; revisit later (#35).
 
 ## 3. Conventions
 
+- **Markup delimits, constraint checks**; "evaluate" is the verb for both. A markup is evaluated to
+  its end (`IMarkup`: `NameMarkup`, `CharacterDataMarkup`, `LiteralMarkup`); a constraint is
+  evaluated over a delimited value, before anything is committed (`IConstraint`:
+  `ProcessingInstructionTargetConstraint`, `DocumentTypeConstraint`, `DeclarationEncodingConstraint`,
+  `NoConstraint`; `ReferenceConstraint` checks one reference inside a markup). After the XML
+  specification's "well-formedness constraint" (spec 001 research R8).
 - State table rows are `S0`, `S1`, … Another task's state is written `#17's S3`.
 - `|` in examples marks a segment boundary.
 - Bugs are written in the same format as tasks, Velocity included.

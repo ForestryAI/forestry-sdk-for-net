@@ -245,7 +245,9 @@ namespace Forestry.Xml.Reading
             Spacing,
             Reference,
             EntityReference,
-            ElementStack
+            ElementStack,
+            ByteOrderMark,
+            Encoding
         }
         #endregion
     }

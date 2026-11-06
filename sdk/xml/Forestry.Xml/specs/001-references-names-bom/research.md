@@ -320,7 +320,9 @@ struct, IConstraint`, with one check-then-throw before commit in each path; `isP
 is removed and no `isDeclaration` is added. The declaration passes `DeclarationEncodingConstraint`,
 the processing instruction `ProcessingInstructionTargetConstraint` (today's
 `ProcessingInstructionTarget`, renamed), the document type `DocumentTypeConstraint` (the internal
-subset check, FR-006), the comment `NoConstraint`. Not a delegate:
+subset check, FR-006; as built it runs once the document type is delimited, like the target check,
+so a document type cut off before its `>` with reading completed is Incomplete rather than not
+supported), the comment `NoConstraint`. Not a delegate:
 `Utf8XmlReader` is a ref struct, so a lambda cannot capture it, and the span and sequence paths
 would need separate delegate types; the generic struct is the idiom the reader already uses in
 `EvaluateMultipleMarkup<T> where T : IMarkup`.

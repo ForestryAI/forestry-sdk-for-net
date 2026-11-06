@@ -26,10 +26,11 @@ A character reference or one of the five predefined entity references inside a V
 |---|---|---|
 | `_state` | `byte` enum | `None` (in text), `Ampersand`, `Hash`, `Decimal`, `Hex`, `HexMarker` (`&#x` seen), `EntityName` |
 | `_codePoint` | `int` | value so far; never above `0x10FFFF` (checked per digit) |
-| `_digits` | `int` | digits seen, leading zeros included (empty number check) |
+| *(no digit count)* | | an empty number is the state itself: `;` straight after `&#` or `&#x` (as built, T070) |
 | `_entityLength` | `int` | bytes of the entity name seen |
 | `_entity` | `byte` enum | which predefined name is being matched: `None` until it is chosen, then `Ampersand`, `LessThan`, `GreaterThan`, `Quote` or `Apostrophe` (compared with `EBNF.AmpersandEntityName`, `LessThanEntityName`, `GreaterThanEntityName`, `QuoteEntityName`, `ApostropheEntityName`); `Other` only after a document type, for a name no predefined name accepts |
 | `HasReferences` | `bool` | at least one complete reference in this Value |
+| `ReferenceStart` | `int` | 0: the constraint starts at the `&`; the markups (`CharacterDataMarkup`, `LiteralMarkup`) keep their own `ReferenceStart`, the `&`'s offset in the value, for a not supported entity (as built, T070) |
 | `IsDocumentType` | `bool` (init) | the reader's `_documentType`: entity names are scanned as whole names |
 | `MaxNameLength` | `int` (init) | bound on an entity name when `IsDocumentType` |
 
@@ -95,7 +96,8 @@ scan. The span paths (`_isMultipleSegments == false`) call the same structs.
 | `TryPush(ReadOnlySequence<byte>)` | – | **new**: same, with `CopyTo` straight into `_names` (no `stackalloc`) |
 | `TryPeek(name)` | compares packed 32-byte prefixes | lengths first, then `SequenceEqual` (span) or `SequenceReader<byte>.IsNext` (sequence); no copy |
 | `TopLength` | – | **new**: `_ends[_depth - 1]` minus the previous end (0 for one name), the end tag's budget (FR-011) |
-| `TryPop(name)` | peek then pop | unchanged contract, full comparison |
+| `TryPop(name)` | peek then pop | unchanged contract, full comparison; a `ReadOnlySequence<byte>` overload too |
+| `CanPush(length)` | – | **new**: the name fits (depth and bytes), checked by `ReadStartTag` before it commits anything (T043, as built) |
 | `Pop()` | unpacks into a caller buffer | `_depth--` behind the empty-stack guard (`InvalidOperationException` when `_depth == 0`), returns nothing |
 | `PackedNameLength` | 4 | removed; `NameBytesCapacity = 2048` |
 

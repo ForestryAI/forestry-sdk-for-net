@@ -42,6 +42,7 @@ namespace Forestry.Xml.Reading
             _documentType = readerState._documentType;
             _hasSkippedSpacingInStartTag = readerState._hasSkippedSpacingInStartTag;
             _hasSkippedAttributeDelimiter = readerState._hasSkippedAttributeDelimiter;
+            _byteOrderMark = readerState._byteOrderMark;
             _currentTokenType = readerState._currentTokenType;
             _previousTokenType = readerState._previousTokenType;
             _elementStack = readerState._elementStack;
@@ -111,13 +112,19 @@ namespace Forestry.Xml.Reading
         /// S3 - rollback
         /// S4 - throw malformed
         /// </remarks>
+        /// <param name="startingTerminal"></param>
+        /// <param name="endingTerminal"></param>
+        /// <param name="tokenType"></param>
+        /// <param name="constraint">checks the delimited value before it is committed (research R8)</param>
         /// <returns></returns>
-        private bool ReadSingleOpaqueValue(
-            ReadOnlySpan<byte> startingTerminal, 
+        private bool ReadSingleOpaqueValue<TConstraint>(
+            ReadOnlySpan<byte> startingTerminal,
             ReadOnlySpan<byte> endingTerminal,
-            TokenType tokenType
-        ) {
-            bool advancement = IgnoreSingleOpaqueValue(startingTerminal, endingTerminal, true, tokenType == TokenType.ProcessInstruction);
+            TokenType tokenType,
+            TConstraint constraint
+        ) where TConstraint : struct, IConstraint
+        {
+            bool advancement = IgnoreSingleOpaqueValue(startingTerminal, endingTerminal, ref constraint, setValue: true);
 
             if (advancement)
             {
@@ -139,15 +146,17 @@ namespace Forestry.Xml.Reading
         /// </remarks>
         /// <param name="startingTerminal"></param>
         /// <param name="endingTerminal"></param>
+        /// <param name="constraint">evaluated over the value after its starting terminal, before
+        /// committing: markup delimits, constraint checks (research R8)</param>
         /// <param name="setValue"></param>
-        /// <param name="isProcessingInstruction">check the target (S5 + S6) before committing</param>
         /// <returns></returns>
-        private bool IgnoreSingleOpaqueValue(
-            ReadOnlySpan<byte> startingTerminal, 
+        private bool IgnoreSingleOpaqueValue<TConstraint>(
+            ReadOnlySpan<byte> startingTerminal,
             ReadOnlySpan<byte> endingTerminal,
-            bool setValue = false,
-            bool isProcessingInstruction = false
-        ) {
+            ref TConstraint constraint,
+            bool setValue = false
+        ) where TConstraint : struct, IConstraint
+        {
             // Local sliced segment variable starting from the current position elimating the need to rollback
             ReadOnlySpan<byte> segment = _segment[_segmentPosition..];
             int endingTerminalIndex = segment.Length < startingTerminal.Length
@@ -167,16 +176,9 @@ namespace Forestry.Xml.Reading
             // S2: set position, line number + position, and value
             ReadOnlySpan<byte> value = segment[..(startingTerminal.Length + endingTerminalIndex + endingTerminal.Length)];
 
-            if (isProcessingInstruction)
+            if (constraint.Evaluate(value[startingTerminal.Length..]) == MarkupState.Malformed)
             {
-                ProcessingInstructionTarget target = new() { MaxLength = _readerOptions.MaxNameLength };
-                MarkupState evaluation = target.Evaluate(value[startingTerminal.Length..]);
-
-                Debug.Assert(evaluation != MarkupState.Unknown, "The value ends with the ending terminal ?> so the scan always ends.");
-                if (evaluation != MarkupState.WellFormed)
-                {
-                    Throwing.ThrowXmlException(ref this, target.IsTooLong ? Throwing.Category.Limit : Throwing.Category.Name, Throwing.Markup.ProcessingInstructionTarget, offset: startingTerminal.Length + target.OffendingIndex);  // S5 + S6
-                }
+                Throwing.ThrowXmlException(ref this, constraint.Category, constraint.Markup, offset: startingTerminal.Length + constraint.OffendingIndex);  // e.g. S5 + S6
             }
 
             AdvanceLineTracking(value);

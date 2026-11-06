@@ -15,6 +15,10 @@
 - `ReaderOptions.MaxNameLength` (default 128 bytes) bounds element names, attribute names,
   processing instruction targets and entity names after a document type; a longer name throws an
   `XmlException` with `Category` "Limit" (spec 001 US2, #66).
+- A UTF-8 byte order mark at the start of a document is skipped without counting it in line
+  positions; a UTF-16 or UTF-32 one throws "not supported"; a declaration naming an encoding other
+  than UTF-8 (in any letter case) throws "not supported", or malformed ("Expected") when a UTF-8
+  byte order mark contradicts it (spec 001 US3, #67, superseding #31).
 
 ### Behavior Changes
 - `&` no longer throws: `GetString()` and the `Forestry.Deserialize.Xml` bridge above it now get

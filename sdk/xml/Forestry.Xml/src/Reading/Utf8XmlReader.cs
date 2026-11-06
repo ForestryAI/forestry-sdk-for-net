@@ -175,6 +175,7 @@ namespace Forestry.Xml.Reading
             documentType: _documentType,
             hasSkippedSpacingInStartTag: _hasSkippedSpacingInStartTag,
             hasSkippedAttributeDelimiter: _hasSkippedAttributeDelimiter,
+            byteOrderMark: _byteOrderMark,
             currentTokenType: _currentTokenType,
             previousTokenType: _previousTokenType,
             elementStack: _elementStack,
@@ -205,6 +206,11 @@ namespace Forestry.Xml.Reading
         /// When attribute delimiter has been skipped and the curren token == Attribute
         /// </summary>
         private bool _hasSkippedAttributeDelimiter;
+
+        /// <summary>
+        /// What the Skip BOM step decided at the start of the document (spec 001 research R7)
+        /// </summary>
+        private ByteOrderMark _byteOrderMark;
 
         /// <summary>
         /// Mutable current token type
@@ -357,7 +363,90 @@ namespace Forestry.Xml.Reading
         }
 
         /// <summary>
-        /// Skip delimiter returning true to continue (i.e. delimiter or nothing skipped) or 
+        /// Skip a UTF-8 byte order mark at the start of the document, without line tracking,
+        /// returning true to continue or false when reading is halted (spec 001 US3, research R7).
+        /// Runs only until it has decided, recorded in <see cref="_byteOrderMark"/>
+        /// </summary>
+        /// <remarks>
+        /// <list type="bullet">
+        /// <item><c>EF BB BF</c>: skipped (FR-012), then the drained check: a document of only a
+        /// BOM is empty</item>
+        /// <item><c>FE FF</c>, <c>FF FE</c> (and so <c>FF FE 00 00</c>), <c>00 00 FE FF</c>: not
+        /// supported at line 1, position 1 (FR-013)</item>
+        /// <item>An incomplete start of one of those at the end of the data halts when reading is
+        /// not completed (C1); when it is, <c>EF</c> or <c>EF BB</c> is an incomplete document,
+        /// and the others are not a BOM: nothing skipped, so they start no markup as today</item>
+        /// <item>Anything else: nothing skipped</item>
+        /// </list>
+        /// </remarks>
+        /// <returns></returns>
+        internal bool SkipByteOrderMark()
+        {
+            if (_byteOrderMark != ByteOrderMark.Unchecked)
+            {
+                return true;
+            }
+
+            Span<byte> peeked = stackalloc byte[4];
+            int count = 0;
+            while (count < peeked.Length && PeekCharacter(count, out byte character))
+            {
+                peeked[count++] = character;
+            }
+
+            ReadOnlySpan<byte> start = peeked[..count];
+
+            if (start.StartsWith(EBNF.Utf8Bom))
+            {
+                _byteOrderMark = ByteOrderMark.Utf8;
+
+                if (_isMultipleSegments)
+                {
+                    AdvanceMultipleSegments(EBNF.Utf8Bom.Length);
+                }
+                else
+                {
+                    _segmentPosition += EBNF.Utf8Bom.Length;
+                }
+
+                // Leave the reader on a readable byte (rule 12): halt, or throw for a document of only a BOM
+                return !(_isMultipleSegments ? IsMultipleSegmentDrained() : IsSingleSegmentDrained());
+            }
+
+            if (start.StartsWith(Utf16BigEndianBom) || start.StartsWith(Utf16LittleEndianBom) || start.StartsWith(Utf32BigEndianBom))
+            {
+                Throwing.ThrowXmlException(ref this, Throwing.Category.NotSupported, Throwing.Markup.ByteOrderMark);
+            }
+
+            bool isIncomplete = IsIncompleteStart(start, EBNF.Utf8Bom);
+            if (isIncomplete || IsIncompleteStart(start, Utf16BigEndianBom) || IsIncompleteStart(start, Utf16LittleEndianBom) || IsIncompleteStart(start, Utf32BigEndianBom))
+            {
+                if (!_isReadingCompleted)
+                {
+                    return false;  // halt, nothing committed
+                }
+
+                if (isIncomplete)
+                {
+                    Throwing.ThrowXmlException(ref this, Throwing.Category.Incomplete, Throwing.Markup.RootElement, offset: RemainingLength);
+                }
+            }
+
+            _byteOrderMark = ByteOrderMark.None;
+            return true;
+
+            static bool IsIncompleteStart(ReadOnlySpan<byte> start, ReadOnlySpan<byte> byteOrderMark) =>
+                start.Length < byteOrderMark.Length && byteOrderMark.StartsWith(start);
+        }
+
+        private static ReadOnlySpan<byte> Utf16BigEndianBom => [0xFE, 0xFF];
+
+        private static ReadOnlySpan<byte> Utf16LittleEndianBom => [0xFF, 0xFE];
+
+        private static ReadOnlySpan<byte> Utf32BigEndianBom => [0x00, 0x00, 0xFE, 0xFF];
+
+        /// <summary>
+        /// Skip delimiter returning true to continue (i.e. delimiter or nothing skipped) or
         /// false when reading is halted
         /// </summary>
         /// <returns></returns>
@@ -674,6 +763,12 @@ namespace Forestry.Xml.Reading
                 goto Halted;
             }
 
+            // Skip a byte order mark at the start of the document (spec 001 US3, research R7)
+            if (!SkipByteOrderMark())
+            {
+                goto Halted;
+            }
+
             // Skip delimiters (potentially bounded by spacing)
             if (!SkipDelimiter())
             {
@@ -934,9 +1029,12 @@ namespace Forestry.Xml.Reading
                 Throwing.ThrowXmlException(ref this, Throwing.Category.Order, Throwing.Markup.Declaration);
             }
 
+            // The encoding name must be UTF-8; after a skipped UTF-8 BOM another name contradicts it (FR-014)
+            DeclarationEncodingConstraint encoding = new() { HasUtf8ByteOrderMark = _byteOrderMark == ByteOrderMark.Utf8 };
+
             return _isMultipleSegments ?
-                ReadMultipleOpaqueValue(EBNF.DeclarationStartingTerminal, EBNF.DeclarationEndingTerminal, TokenType.Declaration) : 
-                ReadSingleOpaqueValue(EBNF.DeclarationStartingTerminal, EBNF.DeclarationEndingTerminal, TokenType.Declaration);
+                ReadMultipleOpaqueValue(EBNF.DeclarationStartingTerminal, EBNF.DeclarationEndingTerminal, TokenType.Declaration, encoding) :
+                ReadSingleOpaqueValue(EBNF.DeclarationStartingTerminal, EBNF.DeclarationEndingTerminal, TokenType.Declaration, encoding);
         }
 
         /// <summary>
@@ -950,16 +1048,9 @@ namespace Forestry.Xml.Reading
                 Throwing.ThrowXmlException(ref this, Throwing.Category.Order, Throwing.Markup.DocumentType);
             }
             
-            // An internal subset is an opaque inside the opaque, delimited by its own '[' and ']':
-            // not supported until that is built (spec 001 FR-006, US1-8), checked before committing
-            if (TryFindInternalSubset(out long subsetOffset))
-            {
-                Throwing.ThrowXmlException(ref this, Throwing.Category.NotSupported, Throwing.Markup.DocumentType, offset: subsetOffset);
-            }
-
             bool advancement =  _isMultipleSegments ?
-                ReadMultipleOpaqueValue(EBNF.DocumentTypeStartingTerminal, EBNF.DocumentTypeEndingTerminal, TokenType.DocumentType) : 
-                ReadSingleOpaqueValue(EBNF.DocumentTypeStartingTerminal, EBNF.DocumentTypeEndingTerminal, TokenType.DocumentType);
+                ReadMultipleOpaqueValue(EBNF.DocumentTypeStartingTerminal, EBNF.DocumentTypeEndingTerminal, TokenType.DocumentType, new DocumentTypeConstraint()) :
+                ReadSingleOpaqueValue(EBNF.DocumentTypeStartingTerminal, EBNF.DocumentTypeEndingTerminal, TokenType.DocumentType, new DocumentTypeConstraint());
 
             if (advancement)
             {
@@ -970,70 +1061,12 @@ namespace Forestry.Xml.Reading
         }
 
         /// <summary>
-        /// Find a <c>[</c> outside quoted literals before the document type's first <c>&gt;</c>
-        /// outside them, i.e. an internal subset; nothing is committed
-        /// </summary>
-        /// <param name="offset">bytes from the committed position to the <c>[</c></param>
-        /// <returns></returns>
-        private bool TryFindInternalSubset(out long offset)
-        {
-            byte quote = 0;
-            offset = 0;
-
-            if (!_isMultipleSegments)
-            {
-                return Scan(_segment[_segmentPosition..], ref quote, ref offset) == true;
-            }
-
-            foreach (ReadOnlyMemory<byte> memory in _sequence.Slice(SequencePosition))
-            {
-                bool? found = Scan(memory.Span, ref quote, ref offset);
-                if (found is not null)
-                {
-                    return found.Value;
-                }
-            }
-
-            return false;  // undecided: the opaque read halts or throws incomplete
-
-            static bool? Scan(ReadOnlySpan<byte> characters, ref byte quote, ref long offset)
-            {
-                foreach (byte character in characters)
-                {
-                    if (quote != 0)
-                    {
-                        if (character == quote)
-                        {
-                            quote = 0;
-                        }
-                    }
-                    else if (character is EBNF.DoubleQuote or EBNF.SingleQuote)
-                    {
-                        quote = character;
-                    }
-                    else if (character == (byte)'[')
-                    {
-                        return true;
-                    }
-                    else if (character == EBNF.GreaterThan)
-                    {
-                        return false;
-                    }
-
-                    offset++;
-                }
-
-                return null;
-            }
-        }
-
-        /// <summary>
         /// Read opaque value from comment non-terminal
         /// </summary>
         /// <returns></returns>
         internal bool ReadComment() => _isMultipleSegments ?
-                ReadMultipleOpaqueValue(EBNF.CommentStartingTerminal, EBNF.CommentEndingTerminal, TokenType.Comment) : 
-                ReadSingleOpaqueValue(EBNF.CommentStartingTerminal, EBNF.CommentEndingTerminal, TokenType.Comment);
+                ReadMultipleOpaqueValue(EBNF.CommentStartingTerminal, EBNF.CommentEndingTerminal, TokenType.Comment, new NoConstraint()) :
+                ReadSingleOpaqueValue(EBNF.CommentStartingTerminal, EBNF.CommentEndingTerminal, TokenType.Comment, new NoConstraint());
 
         /// <summary>
         /// Read opaque value from processing instruction non-terminal
@@ -1043,8 +1076,8 @@ namespace Forestry.Xml.Reading
         /// The target (S5 + S6) is checked before the value is committed (#43)
         /// </remarks>
         internal bool ReadProcessingInstruction() => _isMultipleSegments ?
-                ReadMultipleOpaqueValue(EBNF.ProcessingInstructionStartingTerminal, EBNF.ProcessingInstructionEndingTerminal, TokenType.ProcessInstruction) :
-                ReadSingleOpaqueValue(EBNF.ProcessingInstructionStartingTerminal, EBNF.ProcessingInstructionEndingTerminal, TokenType.ProcessInstruction);
+                ReadMultipleOpaqueValue(EBNF.ProcessingInstructionStartingTerminal, EBNF.ProcessingInstructionEndingTerminal, TokenType.ProcessInstruction, new ProcessingInstructionTargetConstraint { MaxLength = _readerOptions.MaxNameLength }) :
+                ReadSingleOpaqueValue(EBNF.ProcessingInstructionStartingTerminal, EBNF.ProcessingInstructionEndingTerminal, TokenType.ProcessInstruction, new ProcessingInstructionTargetConstraint { MaxLength = _readerOptions.MaxNameLength });
 
         /// <summary>
         /// Read name has a simulated rollback when false and a committed advancement 
@@ -1594,7 +1627,7 @@ namespace Forestry.Xml.Reading
         /// pass is needed.  <c>?</c> is never a <c>NameChar</c>, so stopping at the first
         /// <c>?</c> never cuts a well-formed target short.
         /// </remarks>
-        private struct ProcessingInstructionTarget
+        internal struct ProcessingInstructionTargetConstraint : IConstraint
         {
             /// <summary>
             /// Characters scanned in the target
@@ -1634,11 +1667,20 @@ namespace Forestry.Xml.Reading
             internal bool IsTooLong { get; private set; }
 
             /// <summary>
+            /// Limit when the target is too long, otherwise its naming rules (S5 + S6)
+            /// </summary>
+            public readonly Throwing.Category Category => IsTooLong ? Throwing.Category.Limit : Throwing.Category.Name;
+
+            public readonly Throwing.Markup Markup => Throwing.Markup.ProcessingInstructionTarget;
+
+            readonly int IConstraint.OffendingIndex => OffendingIndex;
+
+            /// <summary>
             /// Evaluate the character terminals after the starting terminal <c>&lt;?</c>
             /// </summary>
             /// <param name="characters"></param>
             /// <returns></returns>
-            internal MarkupState Evaluate(ReadOnlySpan<byte> characters)
+            public MarkupState Evaluate(ReadOnlySpan<byte> characters)
             {
                 foreach (byte character in characters)
                 {
@@ -2230,6 +2272,250 @@ namespace Forestry.Xml.Reading
                     or (>= 0x20 and <= 0xD7FF)
                     or (>= 0xE000 and <= 0xFFFD)
                     or (>= 0x10000 and <= MaxCodePoint);
+        }
+
+        /// <summary>
+        /// A check over an opaque value, evaluated segment by segment after the markup delimited it
+        /// and before anything is committed: markup delimits, constraint checks (spec 001 research
+        /// R8). The opaque readers take one as a generic struct, so the span and sequence paths
+        /// share it without a delegate
+        /// </summary>
+        internal interface IConstraint
+        {
+            /// <summary>
+            /// Evaluate the next chunk of the value after its starting terminal: Unknown to go on,
+            /// WellFormed or Malformed once decided
+            /// </summary>
+            MarkupState Evaluate(ReadOnlySpan<byte> characters);
+
+            /// <summary>
+            /// When malformed, the offending byte's index from the value's first byte after its
+            /// starting terminal
+            /// </summary>
+            int OffendingIndex { get; }
+
+            /// <summary>
+            /// When malformed, why
+            /// </summary>
+            Throwing.Category Category { get; }
+
+            /// <summary>
+            /// When malformed, what
+            /// </summary>
+            Throwing.Markup Markup { get; }
+        }
+
+        /// <summary>
+        /// The constraint of an opaque value with nothing to check, always well-formed
+        /// </summary>
+        internal struct NoConstraint : IConstraint
+        {
+            public readonly MarkupState Evaluate(ReadOnlySpan<byte> characters) => MarkupState.WellFormed;
+
+            public readonly int OffendingIndex => 0;
+
+            public readonly Throwing.Category Category => default;
+
+            public readonly Throwing.Markup Markup => default;
+        }
+
+        /// <summary>
+        /// A document type's internal subset (<c>'[' intSubset ']'</c>) is an opaque inside the
+        /// opaque, delimited by its own <c>[</c> and <c>]</c>: not supported until that is built,
+        /// at the first <c>[</c> outside quoted literals (spec 001 FR-006, US1-8)
+        /// </summary>
+        internal struct DocumentTypeConstraint : IConstraint
+        {
+            private byte _quote;
+
+            private int _scanned;
+
+            public int OffendingIndex { get; private set; }
+
+            public readonly Throwing.Category Category => Throwing.Category.NotSupported;
+
+            public readonly Throwing.Markup Markup => Throwing.Markup.DocumentType;
+
+            public MarkupState Evaluate(ReadOnlySpan<byte> characters)
+            {
+                foreach (byte character in characters)
+                {
+                    int index = _scanned++;
+
+                    if (_quote != 0)
+                    {
+                        if (character == _quote)
+                        {
+                            _quote = 0;
+                        }
+                    }
+                    else if (character is EBNF.DoubleQuote or EBNF.SingleQuote)
+                    {
+                        _quote = character;
+                    }
+                    else if (character == (byte)'[')
+                    {
+                        OffendingIndex = index;
+                        return MarkupState.Malformed;
+                    }
+                    else if (character == EBNF.GreaterThan)
+                    {
+                        return MarkupState.WellFormed;
+                    }
+                }
+
+                return MarkupState.Unknown;
+            }
+        }
+
+        /// <summary>
+        /// The declaration's encoding name must be <c>UTF-8</c>, ignoring ASCII letter case
+        /// (spec 001 FR-014, XML 1.0 §4.3.3, research R8): the first <c>encoding</c> preceded by
+        /// spacing, then <c>S? '=' S?</c>, a quote and the name up to the matching quote. Another
+        /// name is not supported at its first byte, or malformed (Expected) when a skipped UTF-8
+        /// BOM contradicts it. Any other shape is left unchecked, as the rest of the declaration.
+        /// </summary>
+        internal struct DeclarationEncodingConstraint : IConstraint
+        {
+            private enum State : byte
+            {
+                Seeking,
+                Keyword,
+                BeforeEquals,
+                AfterEquals,
+                Name,
+            }
+
+            private static ReadOnlySpan<byte> Keyword => "encoding"u8;
+
+            private static ReadOnlySpan<byte> Utf8Name => "UTF-8"u8;
+
+            private State _state;
+
+            private int _scanned;
+
+            private int _keywordLength;
+
+            private bool _isAfterSpacing;
+
+            private bool _isAfterQuestionMark;
+
+            private byte _quote;
+
+            private int _nameLength;
+
+            /// <summary>
+            /// A UTF-8 byte order mark was skipped, so another name contradicts it (FR-014)
+            /// </summary>
+            public bool HasUtf8ByteOrderMark { get; init; }
+
+            public int OffendingIndex { get; private set; }
+
+            /// <summary>
+            /// Expected when a UTF-8 BOM came first (the declaration contradicts it), otherwise not
+            /// supported (another encoding)
+            /// </summary>
+            public readonly Throwing.Category Category => HasUtf8ByteOrderMark ? Throwing.Category.Expected : Throwing.Category.NotSupported;
+
+            public readonly Throwing.Markup Markup => Throwing.Markup.Encoding;
+
+            public MarkupState Evaluate(ReadOnlySpan<byte> characters)
+            {
+                for (int i = 0; i < characters.Length; i++)
+                {
+                    byte character = characters[i];
+                    int index = _scanned + i;
+
+                    switch (_state)
+                    {
+                        case State.Name:
+                            // One path for a span and for segments: the run up to the quote (or the
+                            // chunk's end) is compared with the matching slice of "UTF-8", letters only
+                            int quote = characters[i..].IndexOf(_quote);
+                            ReadOnlySpan<byte> run = quote < 0 ? characters[i..] : characters[i..(i + quote)];
+
+                            if (_nameLength + run.Length > Utf8Name.Length
+                                || !System.Text.Ascii.EqualsIgnoreCase(run, Utf8Name.Slice(_nameLength, run.Length)))
+                            {
+                                return MarkupState.Malformed;
+                            }
+
+                            _nameLength += run.Length;
+                            if (quote < 0)
+                            {
+                                _scanned += characters.Length;
+                                return MarkupState.Unknown;
+                            }
+
+                            return _nameLength == Utf8Name.Length ? MarkupState.WellFormed : MarkupState.Malformed;
+
+                        case State.Keyword:
+                            if (character == Keyword[_keywordLength])
+                            {
+                                if (++_keywordLength == Keyword.Length)
+                                {
+                                    _state = State.BeforeEquals;
+                                }
+                                break;
+                            }
+
+                            _state = State.Seeking;  // not the keyword: this byte is seeking again
+                            goto case State.Seeking;
+
+                        case State.BeforeEquals:
+                            if (IsSpacing(character))
+                            {
+                                break;
+                            }
+
+                            if (character != EBNF.EqualsSign)
+                            {
+                                return MarkupState.WellFormed;  // another shape, left unchecked
+                            }
+
+                            _state = State.AfterEquals;
+                            break;
+
+                        case State.AfterEquals:
+                            if (IsSpacing(character))
+                            {
+                                break;
+                            }
+
+                            if (character is not (EBNF.DoubleQuote or EBNF.SingleQuote))
+                            {
+                                return MarkupState.WellFormed;  // another shape, left unchecked
+                            }
+
+                            _quote = character;
+                            _state = State.Name;
+                            OffendingIndex = index + 1;  // the name's first byte
+                            break;
+
+                        case State.Seeking:
+                            if (_isAfterQuestionMark && character == EBNF.GreaterThan)
+                            {
+                                return MarkupState.WellFormed;  // '?>' without an encoding
+                            }
+
+                            if (_isAfterSpacing && character == Keyword[0])
+                            {
+                                _state = State.Keyword;
+                                _keywordLength = 1;
+                            }
+                            break;
+                    }
+
+                    _isAfterSpacing = IsSpacing(character);
+                    _isAfterQuestionMark = character == EBNF.QuestionMark;
+                }
+
+                _scanned += characters.Length;
+                return MarkupState.Unknown;
+            }
+
+            private static bool IsSpacing(byte character) =>
+                character is EBNF.Space or EBNF.Tab or EBNF.CarriageReturn or EBNF.LineFeed;
         }
 
         internal interface IMarkup
