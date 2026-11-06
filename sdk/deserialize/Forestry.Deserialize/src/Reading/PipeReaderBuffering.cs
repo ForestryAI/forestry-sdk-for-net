@@ -24,7 +24,12 @@ namespace Forestry.Deserialize.Reading
 
         private bool _isStarting = skipsByteOrderMark;
 
-        private bool _isHolding;
+        /// <summary>
+        /// The pipe handed out a buffer that is not yet given back: <see cref="PipeReader"/> requires an
+        /// advance before the next read, from <see cref="ReadAsync"/> until <see cref="Advance"/> or
+        /// <see cref="Release"/>
+        /// </summary>
+        private bool _isAdvancePending;
 
         /// <summary>
         /// No more bytes follow the buffered ones
@@ -49,7 +54,7 @@ namespace Forestry.Deserialize.Reading
         /// <returns>The refilled copy</returns>
         public readonly async ValueTask<PipeReaderBuffering> ReadAsync(CancellationToken cancellationToken)
         {
-            Debug.Assert(!_isHolding, "Advance before reading again");
+            Debug.Assert(!_isAdvancePending, "Advance before reading again");
             PipeReaderBuffering buffering = this;  // async copy of a struct
 
             ReadResult result = await _pipe.ReadAsync(cancellationToken).ConfigureAwait(false);
@@ -61,7 +66,7 @@ namespace Forestry.Deserialize.Reading
 
             buffering._sequence = result.Buffer;
             buffering._isCompleted = result.IsCompleted;
-            buffering._isHolding = true;
+            buffering._isAdvancePending = true;
             buffering.ReadStarting();
 
             return buffering;
@@ -77,7 +82,7 @@ namespace Forestry.Deserialize.Reading
         /// </param>
         public void Advance(long consumed, bool isExamined)
         {
-            Debug.Assert(_isHolding, "Read before advancing");
+            Debug.Assert(_isAdvancePending, "Read before advancing");
             SequencePosition position = _sequence.GetPosition(consumed);
 
             if (isExamined)
@@ -90,7 +95,7 @@ namespace Forestry.Deserialize.Reading
             }
 
             _sequence = ReadOnlySequence<byte>.Empty;
-            _isHolding = false;
+            _isAdvancePending = false;
         }
 
         /// <summary>
@@ -98,11 +103,11 @@ namespace Forestry.Deserialize.Reading
         /// </summary>
         public void Release()
         {
-            if (_isHolding)
+            if (_isAdvancePending)
             {
                 _pipe.AdvanceTo(_sequence.Start);
                 _sequence = ReadOnlySequence<byte>.Empty;
-                _isHolding = false;
+                _isAdvancePending = false;
             }
         }
 
