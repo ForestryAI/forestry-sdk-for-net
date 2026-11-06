@@ -30,8 +30,9 @@ foreach (Row row in Deserialization.Deserialize(xml, options))
 
 ## Status
 
-Synchronous reading works (spec 001, user story 1); the asynchronous entry points come with user
-story 3. The reader itself is specified in its own package, [Forestry.Xml](../../xml/Forestry.Xml/README.md).
+Synchronous and asynchronous reading work (spec 001, user stories 1 and 3): the same rows from a
+string, bytes, a `Stream` or a `PipeReader`, however the bytes are split. Character and entity
+references are not resolved yet: a member's text keeps them as written (e.g. `&amp;`). The reader itself is specified in its own package, [Forestry.Xml](../../xml/Forestry.Xml/README.md).
 
 ## Tests
 

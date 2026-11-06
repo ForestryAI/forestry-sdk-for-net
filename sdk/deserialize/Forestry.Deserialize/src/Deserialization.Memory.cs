@@ -4,7 +4,7 @@ namespace Forestry.Deserialize
     {
         /// <summary>
         /// Rows from a document as UTF-8 bytes in memory, lazily and synchronously. A UTF-8 byte order
-        /// mark is skipped; the options are locked and their definitions built before this returns, so
+        /// mark is skipped unless the media's reader reads it (research R18); the options are locked and their definitions built before this returns, so
         /// a row type that cannot be defined throws here (FR-008)
         /// </summary>
         /// <param name="utf8"></param>
@@ -16,7 +16,7 @@ namespace Forestry.Deserialize
 
             options.MakeReadOnly();
 
-            if (utf8.Span.StartsWith(Constants.Utf8Bom))
+            if (options.SkipsByteOrderMark && utf8.Span.StartsWith(Constants.Utf8Bom))
             {
                 utf8 = utf8[Constants.Utf8Bom.Length..];
             }

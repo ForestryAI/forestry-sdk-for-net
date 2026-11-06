@@ -1,3 +1,4 @@
+using System.IO.Pipelines;
 using Forestry.Deserialize.Converters;
 using Forestry.Deserialize.Reading;
 
@@ -43,5 +44,20 @@ namespace Forestry.Deserialize.Xml
         /// <param name="utf8"></param>
         /// <returns></returns>
         protected internal override RowEnumerator CreateRowEnumerator(ReadOnlyMemory<byte> utf8) => new XmlRowEnumerator(utf8, this);
+
+        /// <summary>
+        /// False: <c>Utf8XmlReader</c> reads a byte order mark itself and checks it against the declared
+        /// encoding (research R18)
+        /// </summary>
+        protected internal override bool SkipsByteOrderMark => false;
+
+        /// <summary>
+        /// The XML asynchronous row enumerator
+        /// </summary>
+        /// <param name="utf8"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        protected internal override RowAsyncEnumerator CreateRowAsyncEnumerator(PipeReader utf8, CancellationToken cancellationToken) =>
+            new XmlRowAsyncEnumerator(utf8, this, cancellationToken);
     }
 }

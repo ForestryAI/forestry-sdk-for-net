@@ -16,7 +16,7 @@ namespace Forestry.Deserialize.Xml.Tests
     /// <para>
     /// The documents are generated, not written one element per line (A4): a million rows cannot be.
     /// Live heap is process-wide, so this class runs alone (<see cref="MemoryCollection"/>). The async
-    /// case, where the input is not held either, comes with US3 (T066).
+    /// case reads the same generated document as a stream (US3, T066).
     /// </para>
     /// <para>
     /// Slow (10-20 seconds per framework), so it is a performance test: the test project's default
@@ -36,7 +36,7 @@ namespace Forestry.Deserialize.Xml.Tests
         // T070 - quickstart 15 / SC-003 / C1: 1,000 vs 1,000,000 Log rows, rows discarded
         [Theory]
         [InlineData(EntryPoint.Sync)]
-        [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
+        [InlineData(EntryPoint.Async)]
         public void Deserialize_ForAMillionDiscardedRows_ItShould_HoldNoMoreMemoryThanForAThousand(EntryPoint entryPoint)
         {
             // Arrange
@@ -89,7 +89,7 @@ namespace Forestry.Deserialize.Xml.Tests
             entryPoint switch
             {
                 EntryPoint.Sync => Deserialization.Deserialize(document, options),
-                EntryPoint.Async => throw new NotSupportedException("The async entry point comes with US3 (T066)"),
+                EntryPoint.Async => Deserialization.DeserializeAsync(new MemoryStream(document), options).ToBlockingEnumerable(),
                 _ => throw new ArgumentOutOfRangeException(nameof(entryPoint))
             };
 

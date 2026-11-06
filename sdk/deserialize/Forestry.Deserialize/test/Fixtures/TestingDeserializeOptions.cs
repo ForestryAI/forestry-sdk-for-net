@@ -1,3 +1,4 @@
+using System.IO.Pipelines;
 using Forestry.Deserialize.Reading;
 
 namespace Forestry.Deserialize.Tests.Fixtures
@@ -9,6 +10,9 @@ namespace Forestry.Deserialize.Tests.Fixtures
     public sealed class TestingDeserializeOptions : DeserializeOptions
     {
         protected internal override RowEnumerator CreateRowEnumerator(ReadOnlyMemory<byte> utf8) =>
+            throw new NotSupportedException("Core tests read no document");
+
+        protected internal override RowAsyncEnumerator CreateRowAsyncEnumerator(PipeReader utf8, CancellationToken cancellationToken) =>
             throw new NotSupportedException("Core tests read no document");
     }
 }

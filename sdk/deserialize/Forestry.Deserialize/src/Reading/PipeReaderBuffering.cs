@@ -5,137 +5,133 @@ using System.IO.Pipelines;
 namespace Forestry.Deserialize.Reading
 {
     /// <summary>
-    /// Only async reading using <see cref="PipeReader"/>
+    /// Buffered bytes of a <see cref="PipeReader"/> for the async row enumerator (research R2): refill,
+    /// then advance by the bytes consumed, even 0
     /// </summary>
-    internal struct PipeReaderBuffering(PipeReader stream)
+    /// <remarks>
+    /// A struct copied across awaits, as System.Text.Json's buffering is: <see cref="ReadAsync"/> returns
+    /// the refilled copy.
+    /// </remarks>
+    /// <param name="pipe"></param>
+    /// <param name="skipsByteOrderMark">Skip a leading UTF-8 byte order mark (research R18)</param>
+    internal struct PipeReaderBuffering(PipeReader pipe, bool skipsByteOrderMark)
     {
-        private readonly PipeReader _stream = stream;
+        private readonly PipeReader _pipe = pipe;
 
         private ReadOnlySequence<byte> _sequence = ReadOnlySequence<byte>.Empty;
 
         private bool _isCompleted;
 
-        private bool _isStarting = true;
+        private bool _isStarting = skipsByteOrderMark;
 
-        private int _partialReadBytes;
+        private bool _isHolding;
 
         /// <summary>
-        /// Is pipe reader coompleted
+        /// No more bytes follow the buffered ones
         /// </summary>
         public readonly bool IsCompleted => _isCompleted;
 
         /// <summary>
-        /// Buffered bytes
+        /// The buffered bytes may still start a byte order mark to skip: advance by 0 and refill before
+        /// reading
+        /// </summary>
+        public readonly bool IsStarting => _isStarting;
+
+        /// <summary>
+        /// Buffered bytes not yet consumed
         /// </summary>
         public readonly ReadOnlySequence<byte> Bytes => _sequence;
 
         /// <summary>
-        /// Asynchronously read the next buffered bytes from the stream
+        /// Refill: the unconsumed bytes, plus new ones when the last advance examined everything
         /// </summary>
-        /// <param name="_">Unused: the buffering holds its pipe</param>
         /// <param name="cancellationToken"></param>
-        /// <param name="maximum">Maximum bytes with internal buffers</param>
-        /// <returns></returns>
-        public async readonly ValueTask<PipeReaderBuffering> ReadAsync(
-            PipeReader _,
-            CancellationToken cancellationToken,
-            bool maximum = true
-        )
+        /// <returns>The refilled copy</returns>
+        public readonly async ValueTask<PipeReaderBuffering> ReadAsync(CancellationToken cancellationToken)
         {
-            Debug.Assert(_sequence.Equals(ReadOnlySequence<byte>.Empty), "Call ReadAsync only when buffer is empty");
-            PipeReaderBuffering buffering =  this; // async copy with structs
+            Debug.Assert(!_isHolding, "Advance before reading again");
+            PipeReaderBuffering buffering = this;  // async copy of a struct
 
-            int minimumReadSize = _partialReadBytes > 0 ? _partialReadBytes : 0;
-            ReadResult result = await _stream.ReadAtLeastAsync(minimumReadSize, cancellationToken).ConfigureAwait(false);
-
-            buffering._sequence = result.Buffer;
-            buffering._isCompleted = result.IsCompleted;
-            buffering.ReadStarting();
+            ReadResult result = await _pipe.ReadAsync(cancellationToken).ConfigureAwait(false);
 
             if (result.IsCanceled)
             {
                 Throwing.WhenPipeReaderCanceled();
             }
 
+            buffering._sequence = result.Buffer;
+            buffering._isCompleted = result.IsCompleted;
+            buffering._isHolding = true;
+            buffering.ReadStarting();
+
             return buffering;
         }
 
         /// <summary>
-        /// Synchronously read the next buffered bytes from the stream
+        /// Advance by the bytes consumed, even 0
         /// </summary>
-        /// <param name="stream"></param>
-        public void Read(PipeReader stream) => throw new NotImplementedException();
-
-        /// <summary>
-        /// Advance buffering by the number of bytes used
-        /// </summary>
-        /// <param name="bytesUsed"></param>
-        public void Advance(long bytesUsed)
+        /// <param name="consumed">Bytes consumed from <see cref="Bytes"/></param>
+        /// <param name="isExamined">
+        /// Every byte was examined: the next refill waits for new bytes (after <c>Partial</c>). Otherwise
+        /// the unconsumed bytes come back at once (after a row)
+        /// </param>
+        public void Advance(long consumed, bool isExamined)
         {
-            _partialReadBytes = 0;
-            if (bytesUsed == 0)
+            Debug.Assert(_isHolding, "Read before advancing");
+            SequencePosition position = _sequence.GetPosition(consumed);
+
+            if (isExamined)
             {
-                long remaining = _sequence.Length;
-                _partialReadBytes = (int)Math.Min(int.MaxValue, remaining * 2);
+                _pipe.AdvanceTo(position, _sequence.End);
+            }
+            else
+            {
+                _pipe.AdvanceTo(position);
             }
 
-            _stream.AdvanceTo(_sequence.Slice(bytesUsed).Start, _sequence.End);
             _sequence = ReadOnlySequence<byte>.Empty;
+            _isHolding = false;
         }
 
-        public void Dispose()
+        /// <summary>
+        /// Release the pipe's buffer, consuming nothing more
+        /// </summary>
+        public void Release()
         {
-            if (_sequence.Equals(ReadOnlySequence<byte>.Empty))
+            if (_isHolding)
+            {
+                _pipe.AdvanceTo(_sequence.Start);
+                _sequence = ReadOnlySequence<byte>.Empty;
+                _isHolding = false;
+            }
+        }
+
+        /// <summary>
+        /// Skips the UTF-8 byte order mark at the very start, as the memory entry point does, when the
+        /// options ask for it
+        /// </summary>
+        private void ReadStarting()
+        {
+            if (!_isStarting)
             {
                 return;
             }
 
-            _stream.AdvanceTo(_sequence.Start);
-            _sequence = ReadOnlySequence<byte>.Empty;
-        }
+            ReadOnlySpan<byte> bom = Constants.Utf8Bom;
+            Span<byte> start = stackalloc byte[3];
+            int length = (int)Math.Min(_sequence.Length, bom.Length);
+            _sequence.Slice(0, length).CopyTo(start);
 
-        /// <summary>
-        /// Skips the UTF-8 BOM when present
-        /// </summary>
-        private void ReadStarting()
-        {
-            if (_isStarting)
+            if (length < bom.Length && !_isCompleted && bom.StartsWith(start[..length]))
             {
-                _isStarting = false;
+                return;  // a byte order mark not complete yet: IsStarting, decided at the next refill
+            }
 
-                if (_sequence.Length > 0)
-                {
-                    if (_sequence.First.Length >= Constants.Utf8Bom.Length)
-                    {
-                        if (_sequence.First.Span.StartsWith(Constants.Utf8Bom))
-                        {
-                            _sequence = _sequence.Slice((byte)Constants.Utf8Bom.Length);
-                        }
-                    }
-                    else
-                    {
-                        // BOM spans multiple segments
-                        SequencePosition pos = _sequence.Start;
-                        int matched = 0;
-                        while (matched < Constants.Utf8Bom.Length && _sequence.TryGet(ref pos, out ReadOnlyMemory<byte> mem, advance: true))
-                        {
-                            ReadOnlySpan<byte> span = mem.Span;
-                            for (int i = 0; i < span.Length && matched < Constants.Utf8Bom.Length; i++, matched++)
-                            {
-                                if (span[i] != Constants.Utf8Bom[matched])
-                                {
-                                    matched = 0;
-                                    break;
-                                }
-                            }
-                        }
+            _isStarting = false;
 
-                        if (matched == Constants.Utf8Bom.Length)
-                        {
-                            _sequence = _sequence.Slice(Constants.Utf8Bom.Length);
-                        }
-                    }
-                }
+            if (start[..length].SequenceEqual(bom))
+            {
+                _sequence = _sequence.Slice(bom.Length);
             }
         }
     }

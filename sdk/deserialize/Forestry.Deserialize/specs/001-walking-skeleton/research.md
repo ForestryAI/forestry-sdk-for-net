@@ -173,6 +173,10 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   document did not end.
 - **Buffering**: `PipeReaderBuffering` stays as an internal helper of `RowAsyncEnumerator` (UTF-8 BOM
   skip, `IsCompleted` as the final block, doubling the minimum read when a call consumes nothing).
+  As implemented in T065 (2026-11-06, to confirm in code review): after a row the pipe is advanced
+  with only the consumed bytes examined, so the unread ones come back at once; after `Partial` every
+  byte is examined, so the pipe waits for new ones. The doubled minimum read is dropped: it could wait
+  for bytes a writer never sends. Whether the core skips the BOM at all is R18.
   `RowEnumerator` needs no buffering. `IBuffering<TBuffering, TStream>` goes away.
 - **Rejected**:
   - Iterator methods behind each entry point, as System.Text.Json's `DeserializeAsyncEnumerableCore`
@@ -841,3 +845,45 @@ role and name, never its design as a precedent (R0).
 - **Status**: Deferred (a later slice, if measurements or many options instances call for it;
   developer, 2026-11-02). The enumeration decision already lives in the options (T078), so sharing
   can be added underneath without moving it again.
+
+---
+
+## R18. Who skips the UTF-8 byte order mark
+
+- **Finding (US3, 2026-11-06)**: the core skips a leading UTF-8 BOM before any media reader sees the
+  bytes: the memory entry point (`Deserialization.Memory.cs`) and `PipeReaderBuffering` (R2). Since
+  reader spec 001 (#67, merged via #68), `Utf8XmlReader` handles the BOM itself and checks it against
+  the declaration's `encoding`. Stripping it first bypasses that check. A BOM followed by
+  `<?xml version="1.0" encoding="ISO-8859-1"?>` still throws through the core, so nothing wrong is
+  read. But the error is the generic "Not supported: Encoding" instead of the reader's own (the
+  reader alone reports "Malformed markup: expected Encoding").
+- **Why media differ**:
+  - **XML**: the BOM is part of the grammar's business. It works together with the encoding
+    declaration (XML 1.0, Appendix F, detecting the encoding), so it belongs to the reader, which is
+    where reader spec 001 put it.
+  - **JSON**: there is no encoding declaration (RFC 8259: UTF-8 only; a parser may ignore a BOM). A
+    BOM is noise for the layer that opens the stream. `Utf8JsonReader` is a tokenizer you can start
+    on any buffer and resume from a saved state, so it does not know whether it is at the start of a
+    document. It treats a BOM as an invalid token, and `JsonSerializer` and `JsonDocument` skip it
+    before reading. (This is how System.Text.Json behaves; the reasoning is our reading of its design,
+    not a stated one.)
+- **Proposal**: skipping stays a core transport rule, written once (C0, R2), with an opt-out for the
+  media:
+  - `DeserializeOptions` gets `protected internal virtual bool SkipsByteOrderMark => true`, so the
+    default stays as today, which is right for a JSON media on `Utf8JsonReader`;
+  - `DeserializeXmlOptions` overrides it to `false`, because `Utf8XmlReader` handles the BOM;
+  - the memory entry point and `PipeReaderBuffering` skip only when the options say so. Without
+    skipping, the pipe path also needs no "BOM not complete yet" wait (`IsStarting`): the reader
+    halts on an incomplete BOM like on any other incomplete token.
+  - The name is an implementation detail, confirmed in code review (Deferred (implementation)).
+- **Rejected**:
+  - Moving the skip into each media's enumerator. Every media would write the same transport rule
+    again, the drift R2 avoids.
+  - The core never skipping, and every media handling the BOM. A JSON media would then have to strip
+    it in front of `Utf8JsonReader`, which is the same rule written per media again.
+  - Leaving it as is. The XML reader's BOM checks would stay dead code under deserialization, and
+    errors would get less precise.
+- **Tests**: T083 (shells), through the XML package as C3 requires. Once XML opts out, no test reads
+  a document through the core's own skip. The core's tests read no document (C3), so a JSON media's
+  tests will be the first to cover the default.
+- **Status**: Confirmed (developer, 2026-11-06, as worded; found as `Forestry.Xml`'s first caller)

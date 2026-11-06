@@ -2,6 +2,7 @@ using System.Buffers;
 using System.IO.Pipelines;
 using System.Text;
 using Forestry.Deserialize.Xml.Tests.Fixtures;
+using Forestry.Xml;
 using Xunit;
 
 namespace Forestry.Deserialize.Xml.Tests
@@ -16,7 +17,14 @@ namespace Forestry.Deserialize.Xml.Tests
     /// <item><c>Deserialization.DeserializeAsync(PipeReader, DeserializeOptions, CancellationToken = default)</c>
     /// returning <see cref="IAsyncEnumerable{T}"/> of <see cref="Row"/> (FR-001, R3).</item>
     /// <item>A row is handed out when its end tag is read, without waiting for more input (FR-009).</item>
-    /// <item>Input split anywhere, including inside a name or a value, gives the same rows (FR-010).</item>
+    /// <item>Input split anywhere, including inside a name or a value, gives the same rows (FR-010),
+    /// whether the two parts come in one buffer of two segments or in two reads (T064 review).</item>
+    /// <item><c>Deserialization.DeserializeAsync(Stream, DeserializeOptions, CancellationToken = default)</c>,
+    /// the stream read through a <see cref="PipeReader"/> (R3).</item>
+    /// <item>R18 (T083): the media decides whether the core skips a byte order mark; the XML media leaves it
+    /// to <c>Utf8XmlReader</c>, which checks it against the declaration. (a), (b) and (d) already pass
+    /// while the core still skips the mark, and guard that nothing breaks once it does not; (c) fails until
+    /// T085, since the reader never sees the mark.</item>
     /// </list>
     /// The synchronous result is the reference each async result is compared with (SC-001). A read that
     /// waits for input that never comes fails after a timeout instead of hanging the test run.
@@ -24,6 +32,11 @@ namespace Forestry.Deserialize.Xml.Tests
     public sealed class WalkingSkeletonTestsUS3
     {
         private static readonly TimeSpan s_timeout = TimeSpan.FromSeconds(5);
+
+        /// <summary>
+        /// The UTF-8 byte order mark as text: encoded to UTF-8 it is EF BB BF
+        /// </summary>
+        private const string ByteOrderMark = "﻿";
 
         private static DeserializeXmlOptions OptionsWith<TRow>() where TRow : Row
         {
@@ -107,10 +120,24 @@ namespace Forestry.Deserialize.Xml.Tests
             Assert.False(hasMore);
         }
 
-        // T063 - quickstart 7 / US3-3 / FR-010: the document in two buffers, split at every byte position
-        // (inside names, values and tags), gives the same rows
-        [Fact]
-        public async Task DeserializeAsync_ForADocumentSplitAtEveryBytePosition_ItShould_YieldTheSameRows()
+        /// <summary>
+        /// How T063 splits the document in two (T064 review, developer 2026-11-06)
+        /// </summary>
+        public enum Splitting
+        {
+            /// <summary>One read of a buffer made of two segments: the reader across segments</summary>
+            TwoSegments,
+
+            /// <summary>Two reads from a stream: a refill at the split, through the Stream overload</summary>
+            TwoReads
+        }
+
+        // T063 - quickstart 7 / US3-3 / FR-010: the document split in two at every byte position (inside
+        // names, values and tags), as one buffer of two segments or as two reads, gives the same rows
+        [Theory]
+        [InlineData(Splitting.TwoSegments)]
+        [InlineData(Splitting.TwoReads)]
+        public async Task DeserializeAsync_ForADocumentSplitAtEveryBytePosition_ItShould_YieldTheSameRows(Splitting splitting)
         {
             // Arrange
             const string document = """
@@ -127,22 +154,149 @@ namespace Forestry.Deserialize.Xml.Tests
                 """;
             byte[] utf8 = Encoding.UTF8.GetBytes(document);
             List<Row> expected = Deserialization.Deserialize(document, OptionsWith<Log>()).ToList();
-            List<int> failedSplits = [];
+            List<string> failedSplits = [];
 
             // Act
             for (int split = 1; split < utf8.Length; split++)
             {
-                PipeReader reader = PipeReader.Create(TwoSegments(utf8, split));
-                List<Row> rows = await ReadAllAsync(Deserialization.DeserializeAsync(reader, OptionsWith<Log>()));
-
-                if (!SameLogs(expected, rows))
+                IAsyncEnumerable<Row> rows = splitting switch
                 {
-                    failedSplits.Add(split);
+                    Splitting.TwoSegments => Deserialization.DeserializeAsync(PipeReader.Create(TwoSegments(utf8, split)), OptionsWith<Log>()),
+                    Splitting.TwoReads => Deserialization.DeserializeAsync(new TwoReadsStream(utf8, split), OptionsWith<Log>()),
+                    _ => throw new ArgumentOutOfRangeException(nameof(splitting))
+                };
+
+                try
+                {
+                    if (!SameLogs(expected, await ReadAllAsync(rows)))
+                    {
+                        failedSplits.Add($"{split}: other rows");
+                    }
+                }
+                catch (Exception exception)
+                {
+                    failedSplits.Add($"{split}: {exception.GetType().Name}");
                 }
             }
 
             // Assert
             Assert.Empty(failedSplits);
+        }
+
+        // T083 (a) - R18: a byte order mark before a UTF-8 declaration is the reader's to read; the rows
+        // are those of document 1
+        [Theory]
+        [InlineData(EntryPoint.Sync)]
+        [InlineData(EntryPoint.Async)]
+        public void Deserialize_ForAByteOrderMarkAndAUtf8Declaration_ItShould_YieldTheRows(EntryPoint entryPoint)
+        {
+            // Arrange
+            const string document = """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <Root>
+                  <Log>
+                    <LogKey>1</LogKey>
+                    <LogVolume>0.59</LogVolume>
+                  </Log>
+                  <Log>
+                    <LogKey>2</LogKey>
+                    <LogVolume>0.50</LogVolume>
+                  </Log>
+                </Root>
+                """;
+
+            // Act
+            List<Row> rows = EntryPoints.Read(entryPoint, ByteOrderMark + document, OptionsWith<Log>());
+
+            // Assert
+            Assert.Equal([1, 2], rows.Select(row => row.AsType<Log>().LogKey));
+            Assert.Equal([0.59m, 0.50m], rows.Select(row => row.AsType<Log>().LogVolume));
+        }
+
+        // T083 (b) - R18: a byte order mark with no declaration gives the same rows
+        [Theory]
+        [InlineData(EntryPoint.Sync)]
+        [InlineData(EntryPoint.Async)]
+        public void Deserialize_ForAByteOrderMarkWithoutADeclaration_ItShould_YieldTheRows(EntryPoint entryPoint)
+        {
+            // Arrange
+            const string document = """
+                <Root>
+                  <Log>
+                    <LogKey>1</LogKey>
+                    <LogVolume>0.59</LogVolume>
+                  </Log>
+                  <Log>
+                    <LogKey>2</LogKey>
+                    <LogVolume>0.50</LogVolume>
+                  </Log>
+                </Root>
+                """;
+
+            // Act
+            List<Row> rows = EntryPoints.Read(entryPoint, ByteOrderMark + document, OptionsWith<Log>());
+
+            // Assert
+            Assert.Equal([1, 2], rows.Select(row => row.AsType<Log>().LogKey));
+            Assert.Equal([0.59m, 0.50m], rows.Select(row => row.AsType<Log>().LogVolume));
+        }
+
+        // T083 (c) - R18: a byte order mark contradicting the declaration's encoding throws the reader's
+        // own error (Expected Encoding, as Forestry.Xml's T051), not the generic unsupported encoding the
+        // reader reports when it never saw the mark
+        [Theory]
+        [InlineData(EntryPoint.Sync)]
+        [InlineData(EntryPoint.Async)]
+        public void Deserialize_ForAByteOrderMarkContradictingTheDeclaration_ItShould_ThrowTheReadersError(EntryPoint entryPoint)
+        {
+            // Arrange
+            const string document = """
+                <?xml version="1.0" encoding="ISO-8859-1"?>
+                <Root>
+                  <Log>
+                    <LogKey>1</LogKey>
+                    <LogVolume>0.59</LogVolume>
+                  </Log>
+                </Root>
+                """;
+
+            // Act
+            XmlException thrown = Assert.Throws<XmlException>(() => EntryPoints.Read(entryPoint, ByteOrderMark + document, OptionsWith<Log>()));
+
+            // Assert
+            Assert.Equal("Expected", thrown.Category);
+            Assert.Equal("Encoding", thrown.Markup);
+        }
+
+        // T083 (d) - R18: a byte order mark split across the first reads of a stream (after its first or
+        // second byte, or right after it) gives the rows
+        [Theory]
+        [InlineData(1)]
+        [InlineData(2)]
+        [InlineData(3)]
+        public async Task DeserializeAsync_ForAByteOrderMarkSplitAcrossReads_ItShould_YieldTheRows(int split)
+        {
+            // Arrange
+            const string document = """
+                <Root>
+                  <Log>
+                    <LogKey>1</LogKey>
+                    <LogVolume>0.59</LogVolume>
+                  </Log>
+                  <Log>
+                    <LogKey>2</LogKey>
+                    <LogVolume>0.50</LogVolume>
+                  </Log>
+                </Root>
+                """;
+            byte[] utf8 = Encoding.UTF8.GetBytes(ByteOrderMark + document);
+
+            // Act
+            List<Row> rows = await ReadAllAsync(Deserialization.DeserializeAsync(new TwoReadsStream(utf8, split), OptionsWith<Log>()));
+
+            // Assert
+            Assert.Equal([1, 2], rows.Select(row => row.AsType<Log>().LogKey));
+            Assert.Equal([0.59m, 0.50m], rows.Select(row => row.AsType<Log>().LogVolume));
         }
 
         #region helpers
@@ -174,6 +328,54 @@ namespace Forestry.Deserialize.Xml.Tests
             Segment last = first.Append(utf8.AsMemory(split));
 
             return new ReadOnlySequence<byte>(first, 0, last, last.Memory.Length);
+        }
+
+        /// <summary>
+        /// A stream handing out the bytes in two reads, the second starting at the split
+        /// </summary>
+        private sealed class TwoReadsStream(byte[] utf8, int split) : Stream
+        {
+            private int _position;
+
+            public override bool CanRead => true;
+
+            public override bool CanSeek => false;
+
+            public override bool CanWrite => false;
+
+            public override long Length => throw new NotSupportedException();
+
+            public override long Position
+            {
+                get => throw new NotSupportedException();
+                set => throw new NotSupportedException();
+            }
+
+            public override int Read(byte[] buffer, int offset, int count) => Read(buffer.AsSpan(offset, count));
+
+            public override int Read(Span<byte> buffer)
+            {
+                int end = _position < split ? split : utf8.Length;
+                int length = Math.Min(buffer.Length, end - _position);
+
+                utf8.AsSpan(_position, length).CopyTo(buffer);
+                _position += length;
+                return length;
+            }
+
+            public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
+                ValueTask.FromResult(Read(buffer.Span));
+
+            public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
+                Task.FromResult(Read(buffer.AsSpan(offset, count)));
+
+            public override void Flush() { }
+
+            public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+            public override void SetLength(long value) => throw new NotSupportedException();
+
+            public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
         }
 
         private sealed class Segment : ReadOnlySequenceSegment<byte>

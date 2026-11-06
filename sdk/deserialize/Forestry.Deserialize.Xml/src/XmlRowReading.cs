@@ -156,7 +156,12 @@ namespace Forestry.Deserialize.Xml
         /// <summary>
         /// The current token's value as one contiguous span; a value split across segments is copied
         /// </summary>
-        /// <remarks>Joining split values without allocating is the multi-segment task (T068).</remarks>
+        /// <remarks>
+        /// As <c>Utf8JsonReader</c>'s callers do (research R2, T068): it allocates only when a value
+        /// straddles a buffer boundary, never per row. A value whose bytes are not all buffered yet is
+        /// never a token: the reader halts before it and the read returns <see cref="RowState.Partial"/>
+        /// without consuming it. A scratch buffer instead of the copy is a later optimisation.
+        /// </remarks>
         private static ReadOnlySpan<byte> Value(scoped ref Utf8XmlReader reader) =>
             reader.HasValueSequence ? reader.ValueSequence.ToArray() : reader.Value;
 
