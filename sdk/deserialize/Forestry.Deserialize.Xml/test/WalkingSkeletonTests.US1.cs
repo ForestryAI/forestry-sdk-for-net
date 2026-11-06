@@ -1,3 +1,5 @@
+using Forestry.Xml;
+using Forestry.Xml.Reading;
 using Forestry.Deserialize.Xml.Tests.Fixtures;
 using Xunit;
 

@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="$(MSBuildThisFileDirectory)\..\..\Forestry.Deserialize\src\Forestry.Deserialize.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\..\..\xml\Forestry.Xml\src\Forestry.Xml.csproj" />
   </ItemGroup>
 
   <ItemGroup>
