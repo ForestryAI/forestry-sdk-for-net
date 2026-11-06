@@ -1,6 +1,7 @@
 using System.Buffers;
 using Forestry.Deserialize.Reading;
-using Forestry.Deserialize.Xml.Reading;
+using Forestry.Xml;
+using Forestry.Xml.Reading;
 
 namespace Forestry.Deserialize.Xml
 {
@@ -85,12 +86,8 @@ namespace Forestry.Deserialize.Xml
                 return RowState.Partial;
             }
 
-            if (reader.Depth > 0)
-            {
-                // Cut off inside an element: open rows are never handed out
-                Throwing.ThrowXmlException(ref reader, Throwing.Category.Incomplete, Throwing.Markup.Element, offset: reader.RemainingLength);
-            }
-
+            // A document cut off inside an element throws from the reader itself on the final block,
+            // so open rows are never handed out
             return RowState.None;
         }
 

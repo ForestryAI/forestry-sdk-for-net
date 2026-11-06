@@ -1,8 +1,9 @@
 # Forestry Deserialize Xml
 
 The XML media for [Forestry.Deserialize](../Forestry.Deserialize/README.md): `DeserializeXmlOptions`
-chooses XML, and its own span-based reader (`Utf8XmlReader`, not `System.Xml.XmlReader`) reads UTF-8
-forward and feeds the core's pipelines, so each row is handed out as soon as its element ends.
+chooses XML, and the span-based reader from [Forestry.Xml](../../xml/Forestry.Xml/README.md)
+(`Utf8XmlReader`, not `System.Xml.XmlReader`) reads UTF-8 forward and this package feeds its tokens
+to the core's pipelines, so each row is handed out as soon as its element ends.
 StanForD harvester and forwarder exports are the real documents it is developed and tested against,
 but the reader targets XML generally. Parts of the design are adapted from Microsoft's open-source
 .NET runtime; see [THIRD-PARTY-NOTICES.md](../../../THIRD-PARTY-NOTICES.md).
@@ -30,8 +31,7 @@ foreach (Row row in Deserialization.Deserialize(xml, options))
 ## Status
 
 Synchronous reading works (spec 001, user story 1); the asynchronous entry points come with user
-story 3. The reader's grammar is still being reviewed phase by phase against the W3C XML grammar
-([BLOCKING.md](BLOCKING.md)), so its element handling may still change.
+story 3. The reader itself is specified in its own package, [Forestry.Xml](../../xml/Forestry.Xml/README.md).
 
 ## Tests
 
