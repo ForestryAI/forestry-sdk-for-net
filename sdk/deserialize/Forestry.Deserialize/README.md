@@ -51,6 +51,28 @@ foreach (Row row in Deserialization.Deserialize(xml, options))
 returns a lazy `IEnumerable<Row>` that can be enumerated once. Rows are classes, so a plain cast
 gives the typed row.
 
+### Checking and casting rows
+
+`Row.Is<T>()` checks a row's class and `Row.AsType<T>()` gives the typed row. They matter most once
+several row types come from one pass (a later slice), but work the same today:
+
+```csharp
+foreach (Row row in Deserialization.Deserialize(xml, options))
+{
+    if (row.Is<Log>())
+    {
+        Log log = row.AsType<Log>();
+        // use log.LogKey and log.LogVolume
+    }
+}
+```
+
+- `Is<T>()` works as C#'s `is`: it is true for `T` and for classes deriving from it.
+- `AsType<T>()` returns the same instance, with its values already typed: nothing is copied or
+  converted. When the row is not a `T`, it throws an `InvalidCastException` naming both classes
+  by their full names (e.g. `A row of type 'MyApp.Stem' is not a 'MyApp.Log'.`).
+- A plain cast, or C#'s own `is` and `as`, works too; `AsType<T>()` only adds the clearer message.
+
 ### Reading a stream or pipe asynchronously
 
 A large document does not need to be in memory: `DeserializeAsync` reads a `Stream` or a

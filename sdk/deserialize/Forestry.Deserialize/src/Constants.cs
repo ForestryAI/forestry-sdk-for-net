@@ -2,6 +2,9 @@ using System.Collections;
 
 namespace Forestry.Deserialize
 {
+    /// <summary>
+    /// Shared constants and empty enumerators
+    /// </summary>
     public static class Constants
     {
         /// <summary>
