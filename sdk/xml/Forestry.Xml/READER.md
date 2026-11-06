@@ -243,7 +243,9 @@ the Attribute candidate.
   evaluated over a delimited value, before anything is committed (`IConstraint`:
   `ProcessingInstructionTargetConstraint`, `DocumentTypeConstraint`, `DeclarationEncodingConstraint`,
   `NoConstraint`; `ReferenceConstraint` checks one reference inside a markup). After the XML
-  specification's "well-formedness constraint" (spec 001 research R8).
+  specification's "well-formedness constraint" (spec 001 research R8). Markups live in
+  `Utf8XmlReader.Markup.cs`, constraints in `Utf8XmlReader.Constraint.cs`; `Utf8XmlReader.cs`
+  keeps the read pipeline, its steps and the delegates.
 - State table rows are `S0`, `S1`, … Another task's state is written `#17's S3`.
 - `|` in examples marks a segment boundary.
 - Bugs are written in the same format as tasks, Velocity included.
