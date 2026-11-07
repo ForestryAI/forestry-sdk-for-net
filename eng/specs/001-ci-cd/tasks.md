@@ -10,8 +10,8 @@ Dependabot notes as reviewed by the developer on 2026-11-07, plan.md with P1–P
 day, data-model.md, contracts/ci-workflow.md, contracts/release-workflow.md,
 contracts/packaging-gate.md, quickstart.md) and `eng/.specify/memory/constitution.md` 1.0.0.
 
-**Issue**: #71. Each story becomes a sub-issue of #71 (`/speckit-github-taskstoissues`): US1 (with
-Setup and Foundational), US2, US3 (with Polish).
+**Issue**: #71. Each story is a sub-issue of #71: US1 #73 (with Setup and Foundational), US2 #74,
+US3 #75 (with Polish). One issue per story, as in the package silos, not one per task.
 
 **Tests**: The pipeline is tested by the acceptance runs in [quickstart.md](quickstart.md), run on
 the story's own pull request (C6). Package code written here (the option usage tests of US2) follows
@@ -60,7 +60,7 @@ Biometria) beyond removing their `<ComptableVersion>`.
 **Purpose**: The spec's documents reach `main` before any story changes the build.
 
 - [ ] T001 Push branch `eng-001-ci-cd` and open its pull request to `main` with `eng/.specify/`, `eng/README.md`, `eng/specs/001-ci-cd/` and the root `README.md` link; the developer reviews and merges it (no build behaviour changes, so no checks are expected yet)
-- [ ] T002 Create the story sub-issues of #71 with `/speckit-github-taskstoissues` (US1 with Setup and Foundational, US2, US3 with Polish), each issue's Architecture section carrying its story's scope and design decisions (R/P numbers) and a checklist synced with this file
+- [X] T002 Create the story sub-issues of #71 with `/speckit-github-taskstoissues` (US1 with Setup and Foundational, US2, US3 with Polish), each issue's Architecture section carrying its story's scope and design decisions (R/P numbers) and a checklist synced with this file
 
 **Checkpoint**: Spec 001 is on `main`; the board has #71 with three story sub-issues.
 
