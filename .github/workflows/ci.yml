@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   build-test:
-    name: build-test
+    name: build-test (${{ matrix.package }})
     strategy:
       fail-fast: false
       matrix:
@@ -37,7 +37,7 @@ jobs:
       slnx: ${{ matrix.slnx }}
 
   performance:
-    name: performance
+    name: performance (${{ matrix.package }})
     strategy:
       fail-fast: false
       matrix:
