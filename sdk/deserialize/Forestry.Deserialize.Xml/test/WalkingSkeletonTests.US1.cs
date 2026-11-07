@@ -18,7 +18,7 @@ namespace Forestry.Deserialize.Xml.Tests
     /// <item>An unconvertible value throws <see cref="FormatException"/> naming the member, its place (path) and the class (FR-007).</item>
     /// <item>A document cut off inside a row throws the reader's <c>XmlException</c> (spec edge case, R7).</item>
     /// </list>
-    /// Rows are read with a plain cast; <c>AsType&lt;T&gt;()</c> is US2's. Async rows are skipped until US3 (T066).
+    /// Rows are read with a plain cast; <c>AsType&lt;T&gt;()</c> is US2's.
     /// Every shell needs the XML reader's element and text reading (BLOCKING.md phase 2) to pass.
     /// Each test has its own document, one element per line, so what it reads is next to what it asserts.
     /// </remarks>
@@ -34,7 +34,7 @@ namespace Forestry.Deserialize.Xml.Tests
         // T010 - quickstart 1 / US1-1 / FR-003
         [Theory]
         [InlineData(EntryPoint.Sync)]
-        [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
+        [InlineData(EntryPoint.Async)]
         public void Deserialize_ForTwoLogOccurrences_ItShould_YieldTwoRowsInDocumentOrder(EntryPoint entryPoint)
         {
             // Arrange
@@ -67,7 +67,7 @@ namespace Forestry.Deserialize.Xml.Tests
         // T011 - quickstart 2 / US1-2 / FR-005
         [Theory]
         [InlineData(EntryPoint.Sync)]
-        [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
+        [InlineData(EntryPoint.Async)]
         public void Deserialize_ForDataOutsideLogsAndUnknownMembers_ItShould_IgnoreThem(EntryPoint entryPoint)
         {
             // Arrange
@@ -103,7 +103,7 @@ namespace Forestry.Deserialize.Xml.Tests
         // T012 - quickstart 3 / US1-3
         [Theory]
         [InlineData(EntryPoint.Sync)]
-        [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
+        [InlineData(EntryPoint.Async)]
         public void Deserialize_ForARootWithoutLogs_ItShould_YieldNoRowsAndNoError(EntryPoint entryPoint)
         {
             // Arrange + Act
@@ -116,7 +116,7 @@ namespace Forestry.Deserialize.Xml.Tests
         // T013 - spec edge case: an empty element for a member
         [Theory]
         [InlineData(EntryPoint.Sync)]
-        [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
+        [InlineData(EntryPoint.Async)]
         public void Deserialize_ForAnEmptyMemberElement_ItShould_SetNullOrTheDefault(EntryPoint entryPoint)
         {
             // Arrange
@@ -149,7 +149,7 @@ namespace Forestry.Deserialize.Xml.Tests
         // T014 - quickstart 12 / FR-007
         [Theory]
         [InlineData(EntryPoint.Sync)]
-        [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
+        [InlineData(EntryPoint.Async)]
         public void Deserialize_ForAnUnconvertibleValue_ItShould_ThrowNamingMemberPlaceAndClass(EntryPoint entryPoint)
         {
             // Arrange
@@ -174,7 +174,7 @@ namespace Forestry.Deserialize.Xml.Tests
         // T015 - quickstart 14 / spec edge case: a document cut off inside an open row
         [Theory]
         [InlineData(EntryPoint.Sync)]
-        [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
+        [InlineData(EntryPoint.Async)]
         public void Deserialize_ForADocumentCutOffInsideALog_ItShould_ThrowAndNeverHandOutTheOpenRow(EntryPoint entryPoint)
         {
             // Arrange
@@ -205,7 +205,7 @@ namespace Forestry.Deserialize.Xml.Tests
         // T016 - flow 2: a public field member is set like a property
         [Theory]
         [InlineData(EntryPoint.Sync)]
-        [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
+        [InlineData(EntryPoint.Async)]
         public void Deserialize_ForFieldMembers_ItShould_SetTheFields(EntryPoint entryPoint)
         {
             // Arrange
@@ -235,7 +235,7 @@ namespace Forestry.Deserialize.Xml.Tests
         // T017 - flow 2: [Field("Volume")] renames a member
         [Theory]
         [InlineData(EntryPoint.Sync)]
-        [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
+        [InlineData(EntryPoint.Async)]
         public void Deserialize_ForARenamedField_ItShould_SetItFromTheMediaNameOnly(EntryPoint entryPoint)
         {
             // Arrange
@@ -264,7 +264,7 @@ namespace Forestry.Deserialize.Xml.Tests
         // T018 - flows 1 and 2: [Row("Tree")] renames a row
         [Theory]
         [InlineData(EntryPoint.Sync)]
-        [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
+        [InlineData(EntryPoint.Async)]
         public void Deserialize_ForARenamedRow_ItShould_ShredTheMediaNameOnly(EntryPoint entryPoint)
         {
             // Arrange
@@ -289,7 +289,7 @@ namespace Forestry.Deserialize.Xml.Tests
         // T019 - flow 3: the XML default converter for bool accepts 1 and 0 (XML Schema)
         [Theory]
         [InlineData(EntryPoint.Sync)]
-        [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
+        [InlineData(EntryPoint.Async)]
         public void Deserialize_ForXmlSchemaBooleans_ItShould_ConvertOneAndZero(EntryPoint entryPoint)
         {
             // Arrange
@@ -318,7 +318,7 @@ namespace Forestry.Deserialize.Xml.Tests
         // T080 - flow 3: a converter added to the options wins over the XML default (options, media defaults, primitives)
         [Theory]
         [InlineData(EntryPoint.Sync)]
-        [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
+        [InlineData(EntryPoint.Async)]
         public void Deserialize_ForABooleanConverterInTheOptions_ItShould_BeUsedInsteadOfTheXmlDefault(EntryPoint entryPoint)
         {
             // Arrange
@@ -343,7 +343,7 @@ namespace Forestry.Deserialize.Xml.Tests
         // T020 - FR-008 / R5 rule 1: exactly one constructor marked [RowConstructor] is used, whatever its accessibility
         [Theory]
         [InlineData(EntryPoint.Sync)]
-        [InlineData(EntryPoint.Async, Skip = "US3 (T066)")]
+        [InlineData(EntryPoint.Async)]
         public void Deserialize_ForOneMarkedPrivateConstructor_ItShould_ConstructRowsWithIt(EntryPoint entryPoint)
         {
             // Arrange

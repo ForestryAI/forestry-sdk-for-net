@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace Forestry.Deserialize.Xml.Tests
 {
     /// <summary>
@@ -14,9 +16,8 @@ namespace Forestry.Deserialize.Xml.Tests
     /// Runs a document through an entry point and collects the rows (tasks.md T008)
     /// </summary>
     /// <remarks>
-    /// The async branch throws until US3 (T066) so that no test references
-    /// <c>Deserialization.DeserializeAsync</c> before it exists; the theories' async rows are
-    /// skipped with <c>Skip = "US3"</c> until then.
+    /// The async branch reads the document as a stream through <c>Deserialization.DeserializeAsync</c>
+    /// (US3, T066), blocking until every row is read so a theory stays synchronous.
     /// </remarks>
     public static class EntryPoints
     {
@@ -24,7 +25,7 @@ namespace Forestry.Deserialize.Xml.Tests
             entryPoint switch
             {
                 EntryPoint.Sync => Deserialization.Deserialize(xml, options).ToList(),
-                EntryPoint.Async => throw new NotSupportedException("The async entry point comes with US3 (T066)"),
+                EntryPoint.Async => Deserialization.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(xml)), options).ToBlockingEnumerable().ToList(),
                 _ => throw new ArgumentOutOfRangeException(nameof(entryPoint))
             };
     }

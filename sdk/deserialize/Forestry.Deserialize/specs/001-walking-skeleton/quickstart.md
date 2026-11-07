@@ -1,7 +1,8 @@
 # Quickstart: Validating the walking skeleton
 
-Prerequisites: .NET 10 and .NET 9 SDKs; branch `spec-kit-startup`. The shredding scenarios need the
-XML reader's element reading (`Forestry.Deserialize.Xml/BLOCKING.md`, phase 2) before they can pass.
+Prerequisites: .NET 10 and .NET 9 SDKs. The shredding scenarios read through the `Forestry.Xml`
+reader (`sdk/xml/Forestry.Xml`, reader spec 001), which replaced the retired
+`Forestry.Deserialize.Xml/BLOCKING.md` prerequisite (#64).
 
 Shredding scenarios run in the XML package, from `sdk/deserialize/Forestry.Deserialize.Xml`:
 
@@ -48,3 +49,31 @@ through both entry points (sync and async) and read rows by a plain cast.
 | 15 | Generated documents with 1,000 vs 1,000,000 `Log` rows, rows discarded | Memory does not grow with the count | SC-003, C1 |
 
 No fake media (C3, R11); the core's tests reference no media package (C0).
+
+## Results (T075, 2026-11-06, branch `001-us3-async`)
+
+Run on net9.0 and net10.0: core 15 tests, XML 43, both green; performance gate green, sync and async.
+XML scenarios ran through both entry points.
+
+| # | Result | Tests |
+|---|---|---|
+| 1 | Pass | T010 |
+| 2 | Pass | T011 |
+| 3 | Pass | T012 |
+| 4 | Pass | T044 (core) |
+| 5 | Pass | T045 |
+| 6 | Pass | T062 |
+| 7 | Pass, in one buffer of two segments and over two reads | T063 |
+| 8 | Not run: user story 4 (policies) is not implemented | T050 (not written) |
+| 9 | Not run: user story 4 | T051 (not written) |
+| 10 | Not run: user story 4 | T053 (not written) |
+| 11 | Not run: user story 4 | T054 (not written) |
+| 12 | Pass | T014 |
+| 13 | Pass | T021-T026, T079 (core); T076 (XML) |
+| 14 | Pass | T015 |
+| 15 | Pass, sync and async | T070 |
+
+**SC-004 on scenario 1**: confirmed. T010 creates the options, calls `Rows.Add<Log>()` once and
+`Deserialize` once, and converts each row with one cast; nothing else is needed.
+
+Scenarios 8 to 11 are still to run once user story 4 lands (tasks.md T075 stays open until then).

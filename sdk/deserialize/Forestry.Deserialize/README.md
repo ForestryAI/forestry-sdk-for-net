@@ -51,6 +51,49 @@ foreach (Row row in Deserialization.Deserialize(xml, options))
 returns a lazy `IEnumerable<Row>` that can be enumerated once. Rows are classes, so a plain cast
 gives the typed row.
 
+### Checking and casting rows
+
+`Row.Is<T>()` checks a row's class and `Row.AsType<T>()` gives the typed row. They matter most once
+several row types come from one pass (a later slice), but work the same today:
+
+```csharp
+foreach (Row row in Deserialization.Deserialize(xml, options))
+{
+    if (row.Is<Log>())
+    {
+        Log log = row.AsType<Log>();
+        // use log.LogKey and log.LogVolume
+    }
+}
+```
+
+- `Is<T>()` works as C#'s `is`: it is true for `T` and for classes deriving from it.
+- `AsType<T>()` returns the same instance, with its values already typed: nothing is copied or
+  converted. When the row is not a `T`, it throws an `InvalidCastException` naming both classes
+  by their full names (e.g. `A row of type 'MyApp.Stem' is not a 'MyApp.Log'.`).
+- A plain cast, or C#'s own `is` and `as`, works too; `AsType<T>()` only adds the clearer message.
+
+### Reading a stream or pipe asynchronously
+
+A large document does not need to be in memory: `DeserializeAsync` reads a `Stream` or a
+`PipeReader` and returns a lazy `IAsyncEnumerable<Row>`, enumerable once, with the same rows as
+`Deserialize`:
+
+```csharp
+await using FileStream file = File.OpenRead("harvest.hpr");
+
+await foreach (Row row in Deserialization.DeserializeAsync(file, options, cancellationToken))
+{
+    Log log = (Log)row;
+}
+```
+
+- Each row is handed out as soon as its end is read, without waiting for more input.
+- The bytes can be split anywhere, even inside a name or a value: the rows are the same.
+- A stream is left open; a `PipeReader` is the caller's to complete.
+- The options are checked and locked at the call, as with `Deserialize`. The cancellation token,
+  and one passed to `WithCancellation`, cancel a move that waits for bytes.
+
 ### Names, constructors and converters
 
 - **Names**: by default a row matches an element named like its class and a member an element named
@@ -76,14 +119,10 @@ gives the typed row.
 
 ## Status
 
-Spec 001's first user story is done: the synchronous entry points above. Still to come in this
-slice ([tasks.md](specs/001-walking-skeleton/tasks.md)):
-
-- `Row.Is<T>()`, a type check as C#'s `is`, and `Row.AsType<T>()`, a checked cast naming both
-  classes when it fails (US2).
-- Policies attached to types and members, by attribute or by options (US4).
-- Asynchronous entry points over a `Stream` or `PipeReader`, reading without holding the whole
-  document (US3).
+Spec 001's user stories 1 to 3 are done: the synchronous and asynchronous entry points above, and
+`Row.Is<T>()` / `Row.AsType<T>()` (a type check and a checked cast naming both classes when it
+fails). Still to come in this slice ([tasks.md](specs/001-walking-skeleton/tasks.md)): policies
+attached to types and members, by attribute or by options (US4).
 
 Later slices add several row types in one pass and rows that take their ancestors (e.g. a `Log`
 built with its `Stem`).

@@ -1,3 +1,4 @@
+using System.IO.Pipelines;
 using Forestry.Deserialize.Converters;
 using Forestry.Deserialize.Reading;
 
@@ -100,6 +101,21 @@ namespace Forestry.Deserialize
         /// <param name="utf8"></param>
         /// <returns></returns>
         protected internal abstract RowEnumerator CreateRowEnumerator(ReadOnlyMemory<byte> utf8);
+
+        /// <summary>
+        /// The media's asynchronous row enumerator over the UTF-8 bytes of a pipe (research R2)
+        /// </summary>
+        /// <param name="utf8"></param>
+        /// <param name="cancellationToken">Cancels a move waiting for bytes</param>
+        /// <returns></returns>
+        protected internal abstract RowAsyncEnumerator CreateRowAsyncEnumerator(PipeReader utf8, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Whether the core skips a leading UTF-8 byte order mark before the media's reader sees the bytes
+        /// (research R18). True by default, for a reader that does not handle one (e.g. JSON's); a media
+        /// whose reader checks the mark itself (XML's, against the declared encoding) returns false
+        /// </summary>
+        protected internal virtual bool SkipsByteOrderMark => true;
         #endregion
 
         /// <summary>
