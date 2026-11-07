@@ -11,7 +11,7 @@ besides the workflow's own `GITHUB_TOKEN`.
 | # | Step | Local command | Refuses when |
 |---|---|---|---|
 | 1 | Refuse unless on `main` | – | Ref is not `main` |
-| 2 | Calls the phase `build-test.yml` for the package: the very same checks as CI (P10) | `dotnet test <package .slnx> -c Release` | Any failure |
+| 2 | Calls the phase `build-test.yml` for the package: the very same checks as CI (P10) | `dotnet test <package .slnx>` (Debug, P11) | Any failure |
 | 3 | Pack the package, no suffix, release notes required | `dotnet pack <src .csproj> -c Release -p:ContinuousIntegrationBuild=true -p:Release=true` | No dated `CHANGELOG.md` heading for `<Version>` (P3, FR-008); packaging gate |
 | 4 | Version is new | `gh release view <PackageId>/v<Version>` | Release or tag already exists (FR-010) |
 | 5 | Dependencies released | `gh release view <Dependency>/v<DependencyVersion>` per dependency in the `.nuspec` | A dependency version has no release (P6, FR-010) |

@@ -32,13 +32,16 @@ column is what `doc/dev/Pipelines.md` lists.
 
 ## Phase `build-test.yml` (called as job `build-test`)
 
+Builds and tests in the Debug configuration, as a developer's everyday `dotnet test` does, so
+`Debug.Assert` invariants are checked too (P11); `pack.yml` and `release.yml` build Release.
+
 | Step | Local command | Fails when |
 |---|---|---|
 | Checkout | `git clone` | – |
 | `./.github/actions/setup`: .NET from `global.json`, NuGet cache keyed on `eng/packaging/*.props` and `**/*.csproj` | (installed SDK; `dotnet --version` matches `global.json`) | SDK missing |
 | Restore | `dotnet restore <slnx>` | Known vulnerable package (S1) |
-| Build | `dotnet build <slnx> -c Release --no-restore -p:ContinuousIntegrationBuild=true` | Any warning (warnings as errors), a missing XML doc |
-| Test with coverage | `dotnet test <slnx> -c Release --no-build --collect "XPlat Code Coverage" --logger trx` | A failing test; the result names test and framework |
+| Build | `dotnet build <slnx> --no-restore -p:ContinuousIntegrationBuild=true` | Any warning (warnings as errors), a missing XML doc |
+| Test with coverage | `dotnet test <slnx> --no-build --collect "XPlat Code Coverage" --logger trx` | A failing test; the result names test and framework |
 | Upload test results and coverage | – | – |
 
 ## Phase `pack.yml` (called as job `pack`, needs `build-test`)
@@ -53,7 +56,7 @@ column is what `doc/dev/Pipelines.md` lists.
 
 | Step | Local command | Fails when |
 |---|---|---|
-| Performance gate for the package's test project | `dotnet test <test project> -c Release -s <test folder>/Performance.runsettings` | An allocation or memory-growth gate fails (no timing gates, R6.7) |
+| Performance gate for the package's test project | `dotnet test <test project> -s <test folder>/Performance.runsettings` | An allocation or memory-growth gate fails (no timing gates, R6.7) |
 
 ## Not in this workflow
 

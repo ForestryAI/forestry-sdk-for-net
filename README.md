@@ -1,5 +1,7 @@
 # forestry-sdk-for-net
 
+[![ci](https://github.com/ForestryAI/forestry-sdk-for-net/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ForestryAI/forestry-sdk-for-net/actions/workflows/ci.yml)
+
 Forestry SDK for .NET is the public client toolkit for working with Forestry AI — voice and
 text interactions that turn day-to-day forestry operations (harvesting, forwarding, delivery)
 into structured data and answers. This repository hosts the individual client libraries; each

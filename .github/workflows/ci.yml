@@ -1,0 +1,58 @@
+# Orchestrator: decides when CI runs and for which packages, then calls the phases
+# (contract eng/specs/001-ci-cd/contracts/ci-workflow.md, map in eng/README.md).
+# One job per package and phase, so a package's failure shows on its own job only (R7).
+# Adding a package to CI = one entry in each matrix below (FR-015).
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # A newer push to a pull request replaces the older run; runs on main always finish.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build-test:
+    name: build-test (${{ matrix.package }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package: Forestry.Xml
+            slnx: sdk/xml/Forestry.Xml/Forestry.Xml.slnx
+          - package: Forestry.Deserialize
+            slnx: sdk/deserialize/Forestry.Deserialize/Forestry.Deserialize.slnx
+          - package: Forestry.Deserialize.Xml
+            slnx: sdk/deserialize/Forestry.Deserialize.Xml/Forestry.Deserialize.Xml.slnx
+    uses: ./.github/workflows/build-test.yml
+    with:
+      package: ${{ matrix.package }}
+      slnx: ${{ matrix.slnx }}
+
+  performance:
+    name: performance (${{ matrix.package }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package: Forestry.Xml
+            test-folder: sdk/xml/Forestry.Xml/test
+            test-project: sdk/xml/Forestry.Xml/test/Forestry.Xml.Tests.csproj
+          - package: Forestry.Deserialize
+            test-folder: sdk/deserialize/Forestry.Deserialize/test
+            test-project: sdk/deserialize/Forestry.Deserialize/test/Forestry.Deserialize.Tests.csproj
+          - package: Forestry.Deserialize.Xml
+            test-folder: sdk/deserialize/Forestry.Deserialize.Xml/test
+            test-project: sdk/deserialize/Forestry.Deserialize.Xml/test/Forestry.Deserialize.Xml.Tests.csproj
+    uses: ./.github/workflows/performance.yml
+    with:
+      package: ${{ matrix.package }}
+      test-project: ${{ matrix.test-project }}
+      test-folder: ${{ matrix.test-folder }}

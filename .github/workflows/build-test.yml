@@ -1,0 +1,76 @@
+# Phase: restore, build and test one package (contract eng/specs/001-ci-cd/contracts/ci-workflow.md).
+# Called by ci.yml (and later release.yml); not run on its own.
+# Local equivalent (doc/dev/Pipelines.md): dotnet restore|build|test <slnx>, in Debug like an everyday
+# `dotnet test`, so Debug.Assert invariants are checked too (P11).
+name: build-test
+
+on:
+  workflow_call:
+    inputs:
+      package:
+        description: Package name, e.g. Forestry.Xml
+        required: true
+        type: string
+      slnx:
+        description: The package's own solution, e.g. sdk/xml/Forestry.Xml/Forestry.Xml.slnx
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: ${{ inputs.package }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: ./.github/actions/setup
+
+      - name: Restore
+        run: dotnet restore ${{ inputs.slnx }}
+
+      - name: Build
+        run: dotnet build ${{ inputs.slnx }} --no-restore -p:ContinuousIntegrationBuild=true
+
+      - name: Test
+        run: >
+          dotnet test ${{ inputs.slnx }} --no-build
+          --collect "XPlat Code Coverage"
+          --logger "trx;LogFilePrefix=${{ inputs.package }}"
+          --results-directory artifacts/test-results/${{ inputs.package }}
+
+      - name: Upload test results and coverage
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-results-${{ inputs.package }}
+          path: artifacts/test-results/${{ inputs.package }}
+          if-no-files-found: ignore
+
+      # Reporting only (no build logic): failed tests with their target framework, and line coverage.
+      - name: Summary
+        if: always()
+        shell: pwsh
+        run: |
+          $results = "artifacts/test-results/${{ inputs.package }}"
+          "## ${{ inputs.package }}" >> $env:GITHUB_STEP_SUMMARY
+          $trx = Get-ChildItem $results -Filter *.trx -Recurse -ErrorAction SilentlyContinue
+          if (-not $trx) { "No test results (the build or restore failed)." >> $env:GITHUB_STEP_SUMMARY; exit 0 }
+          foreach ($file in $trx) {
+            [xml]$doc = Get-Content $file.FullName
+            $ns = @{ t = 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010' }
+            $counters = (Select-Xml -Xml $doc -XPath '//t:Counters' -Namespace $ns).Node
+            $framework = if ($file.Name -match '_(net[0-9.]+)_') { $Matches[1] } else { 'unknown framework' }
+            "**$framework**: $($counters.passed) passed, $($counters.failed) failed, $($counters.notExecuted) skipped" >> $env:GITHUB_STEP_SUMMARY
+            Select-Xml -Xml $doc -XPath "//t:UnitTestResult[@outcome='Failed']" -Namespace $ns | ForEach-Object {
+              "- Failed: ``$($_.Node.testName)`` ($framework)" >> $env:GITHUB_STEP_SUMMARY
+            }
+          }
+          $coverage = Get-ChildItem $results -Filter coverage.cobertura.xml -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($coverage) {
+            [xml]$cobertura = Get-Content $coverage.FullName
+            $rate = [double]::Parse($cobertura.coverage.'line-rate', [Globalization.CultureInfo]::InvariantCulture)
+            "Line coverage: {0:P1} (reported, no threshold)" -f $rate >> $env:GITHUB_STEP_SUMMARY
+          }
