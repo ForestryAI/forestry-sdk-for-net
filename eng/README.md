@@ -34,21 +34,25 @@ explains them (D0).
 
 | Purpose | Package (`sdk/<pkg>/`) | Root | `eng/` | `.github/` |
 |---|---|---|---|---|
-| SDK version | – | `global.json` | – | `workflows/ci.yml` setup reads `global.json` (*planned*) |
-| Restore, feeds, package versions | `PackageReference` without a version | `NuGet.Config` | `packaging/Directory.Packages.props` (central versions, CPM guard) | `workflows/ci.yml` NuGet cache (*planned*) |
+| SDK version | – | `global.json` | – | `actions/setup` reads `global.json` (*planned*) |
+| Restore, feeds, package versions | `PackageReference` without a version | `NuGet.Config` | `packaging/Directory.Packages.props` (central versions, CPM guard) | `actions/setup` NuGet cache (*planned*) |
 | Compile defaults (frameworks, warnings as errors, XML docs) | `Directory.Build.props` for package-only settings | `Directory.Build.props` (paths, `artifacts/`) | `Directory.Build.Common.props` | – |
 | What CI builds | the package's own `.slnx` | – | – | `workflows/ci.yml` matrix: one job per package (*planned*, R7) |
-| Test, coverage | test `.csproj`, `*.Tests.runsettings` | `Directory.Build.targets` (test traceability) | – | `workflows/ci.yml` test job (*planned*) |
-| Performance gate | `Performance.runsettings`, tests with `Category=Performance` | – | – | `workflows/ci.yml` performance job (*planned*) |
-| Version, release notes | `<Version>` in the `.csproj`, `CHANGELOG.md` | – | – | `workflows/release.yml` checks both (*planned*) |
-| Pack, symbols, SourceLink, package validation | package `README.md` | – | `Directory.Build.Common.props` / `.targets` | `workflows/ci.yml` pack step (*planned*) |
+| Test, coverage | test `.csproj`, `*.Tests.runsettings` | `Directory.Build.targets` (test traceability) | – | `workflows/build-test.yml` (*planned*) |
+| Performance gate | `Performance.runsettings`, tests with `Category=Performance` | – | – | `workflows/performance.yml` (*planned*) |
+| Version, release notes | `<Version>` in the `.csproj`, `CHANGELOG.md` | – | – | `workflows/release.yml` checks both, after `build-test.yml` (*planned*) |
+| Pack, symbols, SourceLink, package validation | package `README.md` | – | `Directory.Build.Common.props` / `.targets` | `workflows/pack.yml` (*planned*) |
 | Publish (preview feed) | – | – | – | `workflows/release.yml`: tag and GitHub release (*planned*) |
 | Dependency updates | – | – | – | `dependabot.yml` (*planned*) |
 | How-to for each purpose | – | `doc/dev/` | – | – |
 
 The pipeline stages that lived in `eng/pipelines/` under Azure DevOps (setup, compile, test,
-performance, pack, publish) become jobs and steps in `.github/workflows/`; the file names above are
-proposals, settled in the plan. `.github/` and `eng/` are committed; only `eng/.claude/` (the local spec-kit skills) is
+performance, pack, publish) become one file per phase in `.github/workflows/`, the GitHub equivalent
+of Azure's job templates: `ci.yml` only decides when and for which packages, and calls the phases
+(`build-test.yml`, `performance.yml`, `pack.yml`) as reusable workflows; `release.yml` calls the same
+`build-test.yml`. Steps every phase repeats (setup) are one composite action in
+`.github/actions/setup/`, the equivalent of Azure's step templates. Reusable workflows cannot sit in
+subfolders of `.github/workflows/`. `.github/` and `eng/` are committed; only `eng/.claude/` (the local spec-kit skills) is
 kept out of git, as in the package silos.
 
 ## Also here

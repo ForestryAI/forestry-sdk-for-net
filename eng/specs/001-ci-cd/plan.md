@@ -8,10 +8,11 @@
 ## Summary
 
 Move the SDK's engineering from Azure DevOps to GitHub for the three walking-skeleton packages
-(`Forestry.Xml`, `Forestry.Deserialize`, `Forestry.Deserialize.Xml`). Two GitHub Actions workflows
-run plain `dotnet` commands a developer can run locally (C3): `ci.yml` checks every pull request and
-push to `main` (compile, test, pack, packaging gate, performance gate, coverage), `release.yml`
-releases one package by hand to a GitHub release (the preview feed, R4). The MSBuild side
+(`Forestry.Xml`, `Forestry.Deserialize`, `Forestry.Deserialize.Xml`). GitHub Actions workflows, split by
+phase (P10), run plain `dotnet` commands a developer can run locally (C3): `ci.yml` checks every
+pull request and push to `main` by calling the phases `build-test.yml`, `performance.yml` and
+`pack.yml` per package (compile, test, coverage, performance gate, pack, packaging gate);
+`release.yml` calls the same `build-test.yml` and then releases one package by hand to a GitHub release (the preview feed, R4). The MSBuild side
 (`Directory.Build.*`, `eng/`) gains what packing and releasing need (symbols, SourceLink,
 deterministic CI builds, package metadata, a CI version suffix, release notes from `CHANGELOG.md`,
 package validation), and the Azure DevOps leftovers are removed (R0).
@@ -90,7 +91,7 @@ revised (with R7), P2-P10 confirmed as written.
 | P7 | Test projects and anything outside `sdk/*/src` get `IsPackable=false` centrally | Only the three libraries are packed |
 | P8 | Coverage: `--collect "XPlat Code Coverage"`, Cobertura files uploaded as artifacts and summarised in the job summary; no threshold | R6.6 |
 | P9 | `Forestry.Deserialize`'s performance run has no tests yet: the gate passes with zero tests (exit 0, checked 2026-11-07) and the plan adds no test there; a memory test is a package-silo follow-up | R6.7, A0 |
-| P10 | Workflow names `ci.yml` and `release.yml`; `dependabot.yml` in `.github/` | `eng/README.md` map |
+| P10 | Workflows split by phase (developer, 2026-11-07, plan review): `ci.yml` only orchestrates (triggers, permissions, package matrix) and calls reusable phase workflows (`on: workflow_call`) `build-test.yml`, `performance.yml`, `pack.yml`; `release.yml` calls `build-test.yml` and adds its own release jobs; repeated setup steps (setup-dotnet from `global.json`, NuGet cache) are one composite action `.github/actions/setup/action.yml`; `dependabot.yml` in `.github/` | The pattern of multi-package SDK repositories (Azure SDK's job and step templates, OpenTelemetry .NET's reusable component workflow); release runs the very same checks as CI instead of a copy; each story adds a small file instead of growing one. Reusable workflows cannot sit in subfolders of `.github/workflows/` |
 
 ## Project Structure
 
@@ -116,9 +117,14 @@ eng/specs/001-ci-cd/
 ```text
 .github/
 ├── dependabot.yml                 # new: nuget (/eng/packaging), github-actions; weekly, grouped
+├── actions/
+│   └── setup/action.yml           # new (US1): composite: setup-dotnet from global.json + NuGet cache
 └── workflows/
-    ├── ci.yml                     # new: pull_request + push to main
-    └── release.yml                # new: workflow_dispatch (package, dry run)
+    ├── ci.yml                     # new (US1): orchestrator: pull_request + push to main, package matrix
+    ├── build-test.yml             # new (US1): phase (workflow_call): restore, build, test, coverage
+    ├── performance.yml            # new (US1): phase (workflow_call): Performance.runsettings
+    ├── pack.yml                   # new (US2): phase (workflow_call): pack, baseline, upload
+    └── release.yml                # new (US3): workflow_dispatch (package, dry run); calls build-test.yml
 
 Directory.Build.props              # reshape: CI build, symbols, package metadata
 Directory.Build.targets            # keep
@@ -152,8 +158,8 @@ a package's own `.slnx` or project; all build behaviour lives in MSBuild files u
 
 ## Story order
 
-1. **US1 Every change is checked**: P1 (matrix), reshaped props (net10.0, audit), removals, `ci.yml` build
-   and test jobs, performance job, coverage, `dependabot.yml`, `global.json`, `doc/dev/` for these.
+1. **US1 Every change is checked**: P1 (matrix), reshaped props (net10.0, audit), removals, the setup
+   action, `ci.yml` calling `build-test.yml` and `performance.yml`, coverage, `dependabot.yml`, `global.json`, `doc/dev/` for these.
 2. **US2 Pack and gate**: symbols, SourceLink, metadata, `IsPackable`, P2, pack job and artifacts,
    option usage tests per package (contract `packaging-gate.md`), package validation wiring (P5,
    inactive until a release).
