@@ -124,7 +124,7 @@ namespace Forestry.Deserialize
         /// Remove <paramref name="item"/> (a change)
         /// </summary>
         /// <param name="item"></param>
-        /// <returns>Whether it was removed</returns>
+        /// <returns>Whether it was removed; <see cref="After"/> is called only then</returns>
         public bool Remove(T item)
         {
             Before();
@@ -159,18 +159,21 @@ namespace Forestry.Deserialize
         public abstract bool IsReadOnly { get; }
 
         /// <summary>
-        /// Before any change, e.g. throw when read-only
+        /// Before every operation that may change the list (set, add, insert, remove, clear), even one
+        /// that turns out to change nothing, e.g. removing an item that is not there; e.g. throw when
+        /// read-only
         /// </summary>
         protected abstract void Before();
 
         /// <summary>
-        /// Before <paramref name="item"/> is added or set
+        /// Before <paramref name="item"/> is set, added or inserted, after <see cref="Before()"/>
         /// </summary>
         /// <param name="item"></param>
         protected virtual void Before(T item) { }
 
         /// <summary>
-        /// After a change
+        /// After an operation went through. Not called when <see cref="Remove"/> did not find the item
+        /// (it returns false); still called after <see cref="Clear"/> on an empty list
         /// </summary>
         protected virtual void After() { }
     }
