@@ -108,21 +108,59 @@ await foreach (Row row in Deserialization.DeserializeAsync(file, options, cancel
 - **Empty elements**: `<LogVolume />` sets `null` where the member allows it, otherwise the type's
   default.
 
+### Changing behavior with policies
+
+Policies change what happens while rows are built, without touching the media. Two kinds, in
+`Forestry.Deserialize.Policies`:
+
+- **Enumeration policies** (`EnumerationPolicy`) act per row: when it is constructed (`Construct`),
+  when each member is set (`Set`), when a completed row may be enumerated (`Enumerate`), and when the
+  enumeration ends (`Clear`). Override only what you need; a policy takes part in exactly the methods
+  it overrides. Each method gets the next step as `next`: call it to keep the default.
+- **Definition policies** (`DefinitionPolicy`) act once, when the options lock, and decide which
+  public properties and fields of a row type are members (`IncludeMember`).
+
+```csharp
+public sealed class AuditingPolicy : EnumerationPolicy
+{
+    public override void Set<T>(Row row, PropertyDefinition<T> property, T value, Action<Row, T> next)
+    {
+        // inspect or change the value, then let the setter run
+        next(row, value);
+    }
+}
+
+DeserializeXmlOptions options = new();
+options.Rows.Add<Log>();
+options.Policies.Add<Log>(new AuditingPolicy());                 // every member of Log
+options.Policies.Add<Log>(nameof(Log.LogKey), new AuditingPolicy()); // only LogKey
+```
+
+- **Attaching**: `[Policy<TPolicy>]` on a row class or member, or through `options.Policies`: for
+  every row type (`Add(policy)`), one type (`Add<TRow>(policy)`) or one member
+  (`Add<TRow>(memberName, policy)`, `Set` only). The options win over attributes; the most specific
+  target wins, and policies added through the options for the same target run in the order added.
+- **Lifetime**: a policy lives as long as its options and may keep state for one enumeration; it is
+  cleared when each enumeration ends. So options with enumeration policies serve one enumeration at
+  a time: use one options instance per concurrent deserialization.
+- Policies are configuration: once the options are used, adding one throws.
+
 ### Failing fast
 
 - Before any byte is read, at the `Deserialize` call: no row type added, a member whose type no
-  converter handles, no constructor that can be chosen, a chosen constructor with parameters, and
-  two row types or two members read from the same element.
+  converter handles, no constructor that can be chosen, a chosen constructor with parameters,
+  two row types or two members read from the same element, and a policy that cannot apply (one on
+  a member overriding more than `Set`, or registered for a type or member the options do not have).
 - While reading: a value that cannot be converted throws a `FormatException` naming the member, its
   path in the document (e.g. `Root/Log/LogKey`) and the class. A document cut off inside a row
   throws, and that row is never handed out.
 
 ## Status
 
-Spec 001's user stories 1 to 3 are done: the synchronous and asynchronous entry points above, and
-`Row.Is<T>()` / `Row.AsType<T>()` (a type check and a checked cast naming both classes when it
-fails). Still to come in this slice ([tasks.md](specs/001-walking-skeleton/tasks.md)): policies
-attached to types and members, by attribute or by options (US4).
+Spec 001's four user stories are done ([tasks.md](specs/001-walking-skeleton/tasks.md)): the
+synchronous and asynchronous entry points, `Row.Is<T>()` / `Row.AsType<T>()` (a type check and a
+checked cast naming both classes when it fails), and policies attached by attribute or by options.
+The policy model is good enough for the POC and expected to move with the next slices (research R19).
 
 Later slices add several row types in one pass and rows that take their ancestors (e.g. a `Log`
 built with its `Stem`).

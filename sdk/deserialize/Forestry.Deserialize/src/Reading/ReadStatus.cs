@@ -3,7 +3,7 @@ namespace Forestry.Deserialize.Reading
     /// <summary>
     /// What a media's read call achieved (research R2)
     /// </summary>
-    public enum RowState : byte
+    public enum ReadStatus : byte
     {
         /// <summary>
         /// No row and nothing more to read: the move returns false

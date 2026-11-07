@@ -104,6 +104,43 @@ namespace Forestry.Deserialize
         }
 
         [DoesNotReturn]
+        public static void WhenMemberPolicyNotSetOnly(Type policyType, Type type, MemberInfo member)
+        {
+            throw new InvalidOperationException(Formatting.Format(Formatting.MemberPolicyNotSetOnly, type.FullName, policyType.Name, member.Name));
+        }
+
+        [DoesNotReturn]
+        public static void WhenDefinitionPolicyOnMember(Type policyType, Type type, MemberInfo member)
+        {
+            throw new InvalidOperationException(Formatting.Format(Formatting.DefinitionPolicyOnMember, type.FullName, policyType.Name, member.Name));
+        }
+
+        [DoesNotReturn]
+        public static void WhenPolicyAttributesAmbiguous(MemberInfo target, string method)
+        {
+            string name = target is Type type ? type.FullName! : $"{target.DeclaringType?.FullName}.{target.Name}";
+            throw new InvalidOperationException(Formatting.Format(Formatting.PolicyAttributesAmbiguous, name, method));
+        }
+
+        [DoesNotReturn]
+        public static void WhenPolicyTypeNotAdded(Type type)
+        {
+            throw new InvalidOperationException(Formatting.Format(Formatting.PolicyTypeNotAdded, type.FullName));
+        }
+
+        [DoesNotReturn]
+        public static void WhenPolicyMemberNotFound(Type type, string member)
+        {
+            throw new InvalidOperationException(Formatting.Format(Formatting.PolicyMemberNotFound, type.FullName, member));
+        }
+
+        [DoesNotReturn]
+        public static void WhenEnumerationRunning()
+        {
+            throw new InvalidOperationException(Formatting.EnumerationRunning);
+        }
+
+        [DoesNotReturn]
         public static void WhenEnumeratedTwice()
         {
             throw new InvalidOperationException(Formatting.EnumeratedTwice);

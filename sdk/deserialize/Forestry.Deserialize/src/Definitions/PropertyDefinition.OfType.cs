@@ -30,7 +30,8 @@ namespace Forestry.Deserialize.Definitions
         /// <param name="row"></param>
         /// <param name="utf8"></param>
         /// <param name="context"></param>
-        internal override void ReadAndSet(Row row, ReadOnlySpan<byte> utf8, in FieldContext context)
+        /// <param name="set">The composed set step, an <c>Action&lt;Row, T&gt;</c></param>
+        internal override void ReadAndSet(Row row, ReadOnlySpan<byte> utf8, in FieldContext context, Delegate set)
         {
             T value;
 
@@ -51,7 +52,21 @@ namespace Forestry.Deserialize.Definitions
                 }
             }
 
-            _setter(row, value);
+            ((Action<Row, T>)set)(row, value);
+        }
+
+        internal override Delegate ComposeSet(IReadOnlyList<Policies.EnumerationPolicy> chain)
+        {
+            Action<Row, T> step = _setter;
+
+            for (int i = chain.Count - 1; i >= 0; i--)
+            {
+                Policies.EnumerationPolicy policy = chain[i];
+                Action<Row, T> next = step;
+                step = (row, value) => policy.Set(row, this, value, next);
+            }
+
+            return step;
         }
 
         /// <summary>

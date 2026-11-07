@@ -66,8 +66,10 @@ namespace Forestry.Deserialize.Definitions
         /// </summary>
         /// <param name="type"></param>
         /// <param name="options"></param>
+        /// <param name="includeMember">Whether a candidate property or field is a member: the definition
+        /// policies' chain (research R19)</param>
         /// <returns></returns>
-        internal static TypeDefinition Create(Type type, DeserializeOptions options)
+        internal static TypeDefinition Create(Type type, DeserializeOptions options, Func<MemberInfo, bool> includeMember)
         {
             ConstructorInfo constructor = ChooseConstructor(type);
 
@@ -80,6 +82,11 @@ namespace Forestry.Deserialize.Definitions
 
             foreach (MemberInfo member in GetMembers(type))
             {
+                if (!includeMember(member))
+                {
+                    continue;  // left out by a definition policy (research R19)
+                }
+
                 Type memberType = member is PropertyInfo property ? property.PropertyType : ((FieldInfo)member).FieldType;
                 Converter? converter = options.ResolveConverter(memberType);
 
@@ -88,7 +95,9 @@ namespace Forestry.Deserialize.Definitions
                     Throwing.WhenMemberWithoutConverter(type, member, memberType);
                 }
 
-                properties.Add(PropertyDefinition.Create(member, memberType, converter));
+                PropertyDefinition definition = PropertyDefinition.Create(member, memberType, converter);
+                definition.Index = properties.Count;
+                properties.Add(definition);
             }
 
             Func<Row> construct = Expression.Lambda<Func<Row>>(Expression.Convert(Expression.New(constructor), typeof(Row))).Compile();

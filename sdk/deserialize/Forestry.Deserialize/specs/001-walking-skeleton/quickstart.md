@@ -39,7 +39,7 @@ through both entry points (sync and async) and read rows by a plain cast.
 | 5 | `Log` without `<LogVolume>` | `LogVolume` has its default | US2-4 |
 | 6 | Document 1 through the pipe entry point | Identical rows; first row handed out at its end token, before the second `Log` is read | US3, FR-009, FR-010 |
 | 7 | Document 1 split into buffers at every byte position | Identical rows | US3-3, FR-010 |
-| 8 | No policies | Defaults: construct and push at start, convert and set members, hand out and pop at the media's end token, no reference kept | US4-1, FR-011 |
+| 8 | No policies | Defaults: construct and push at start, convert and set members, enumerate and pop at the media's end token, no reference kept | US4-1, FR-011 |
 | 9 | Test policy by attribute on `Log` | Acts once per row, in order | US4-2, FR-012 |
 | 10 | Test policy by attribute and by options on the same moment (core) | Only the options' policy acts | US4-3, FR-012 |
 | 11 | Change options after first use (core) | Throws | US4-4, FR-013 |
@@ -64,10 +64,10 @@ XML scenarios ran through both entry points.
 | 5 | Pass | T045 |
 | 6 | Pass | T062 |
 | 7 | Pass, in one buffer of two segments and over two reads | T063 |
-| 8 | Not run: user story 4 (policies) is not implemented | T050 (not written) |
-| 9 | Not run: user story 4 | T051 (not written) |
-| 10 | Not run: user story 4 | T053 (not written) |
-| 11 | Not run: user story 4 | T054 (not written) |
+| 8 | Pass (2026-11-07) | T050; no reference kept: T070 |
+| 9 | Pass (2026-11-07) | T051, T052 |
+| 10 | Pass (2026-11-07) | T053 (core) |
+| 11 | Pass (2026-11-07) | T054 (core) |
 | 12 | Pass | T014 |
 | 13 | Pass | T021-T026, T079 (core); T076 (XML) |
 | 14 | Pass | T015 |
@@ -76,4 +76,4 @@ XML scenarios ran through both entry points.
 **SC-004 on scenario 1**: confirmed. T010 creates the options, calls `Rows.Add<Log>()` once and
 `Deserialize` once, and converts each row with one cast; nothing else is needed.
 
-Scenarios 8 to 11 are still to run once user story 4 lands (tasks.md T075 stays open until then).
+Scenarios 8 to 11 ran on 2026-11-07, branch `001-us4-policies`, when user story 4 landed: core 27 tests, XML 63, both green on net9.0 and net10.0. Every scenario 1-15 now passes.

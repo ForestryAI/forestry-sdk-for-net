@@ -41,7 +41,7 @@ namespace Forestry.Deserialize.Xml
         /// <returns></returns>
         public static XmlAssociation Create(DeserializeOptions options)
         {
-            MethodInfo start = typeof(RowPipelines).GetMethod(nameof(RowPipelines.Pipeline), genericParameterCount: 1, Type.EmptyTypes)!;
+            MethodInfo start = typeof(RowBuilder).GetMethod(nameof(RowBuilder.Start), genericParameterCount: 1, Type.EmptyTypes)!;
             Dictionary<byte[], RowAssociation> rows = new(Utf8NameComparer.Instance);
 
             foreach (Type type in options.Rows)
@@ -70,7 +70,7 @@ namespace Forestry.Deserialize.Xml
                     Throwing.WhenDuplicateRowName(otherRow.Type, type, rowName);
                 }
 
-                Action<RowPipelines> startRow = start.MakeGenericMethod(type).CreateDelegate<Action<RowPipelines>>();
+                Action<RowBuilder> startRow = start.MakeGenericMethod(type).CreateDelegate<Action<RowBuilder>>();
 
                 rows.Add(utf8RowName, new RowAssociation(type, startRow, members));
             }
@@ -83,7 +83,7 @@ namespace Forestry.Deserialize.Xml
         /// </summary>
         internal sealed class RowAssociation
         {
-            public RowAssociation(Type type, Action<RowPipelines> start, Dictionary<byte[], MemberAssociation> members)
+            public RowAssociation(Type type, Action<RowBuilder> start, Dictionary<byte[], MemberAssociation> members)
             {
                 Type = type;
                 Start = start;
@@ -96,9 +96,9 @@ namespace Forestry.Deserialize.Xml
             public Type Type { get; }
 
             /// <summary>
-            /// Calls <c>Pipeline&lt;T&gt;()</c> for the row type, bound once
+            /// Calls <c>Start&lt;T&gt;()</c> for the row type, bound once
             /// </summary>
-            public Action<RowPipelines> Start { get; }
+            public Action<RowBuilder> Start { get; }
 
             private readonly Dictionary<byte[], MemberAssociation>.AlternateLookup<ReadOnlySpan<byte>> _members;
 
@@ -112,7 +112,7 @@ namespace Forestry.Deserialize.Xml
         }
 
         /// <summary>
-        /// A member's element: hands its value to the member pipeline
+        /// A member's element: hands its value to the row builder
         /// </summary>
         /// <param name="member"></param>
         internal sealed class MemberAssociation(MemberInfo member)
@@ -126,15 +126,15 @@ namespace Forestry.Deserialize.Xml
 
             private readonly FieldInfo? _field = member as FieldInfo;
 
-            public void Set(RowPipelines pipelines, ReadOnlySpan<byte> utf8, in FieldContext context)
+            public void Set(RowBuilder builder, ReadOnlySpan<byte> utf8, in FieldContext context)
             {
                 if (_property is not null)
                 {
-                    pipelines.Pipeline(_property, utf8, in context);
+                    builder.Set(_property, utf8, in context);
                 }
                 else
                 {
-                    pipelines.Pipeline(_field!, utf8, in context);
+                    builder.Set(_field!, utf8, in context);
                 }
             }
         }

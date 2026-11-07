@@ -12,6 +12,8 @@ namespace Forestry.Deserialize.Tests
     /// <c>DeserializeOptions.MakeReadOnly()</c> locks the options and builds their row type lookup (what the
     /// first deserialization does, R6), and the internal
     /// <c>DeserializeOptions.TryGetTypeDefinition(Type, out TypeDefinition?)</c> reads that lookup (R5).
+    /// For the review gate T055 (T054), also <c>options.Policies.Add&lt;TRow&gt;(policy)</c> (research R19);
+    /// a change after the options are locked throws <see cref="InvalidOperationException"/> (FR-013).
     /// </remarks>
     public sealed class OptionsTests
     {
@@ -32,6 +34,45 @@ namespace Forestry.Deserialize.Tests
             Assert.True(optionsA.TryGetTypeDefinition(typeof(Log), out TypeDefinition? definitionA));
             Assert.Equal(typeof(Log), definitionA!.Type);
             Assert.False(optionsB.TryGetTypeDefinition(typeof(Log), out _));
+        }
+
+        // T054 - quickstart 11 / US4-4 / FR-013: adding a policy after first use throws
+        [Fact]
+        public void PoliciesAdd_AfterTheOptionsAreLocked_ItShould_Throw()
+        {
+            // Arrange
+            TestingDeserializeOptions options = new();
+            options.Rows.Add<Log>();
+            options.MakeReadOnly();
+
+            // Act + Assert
+            Assert.Throws<InvalidOperationException>(() => options.Policies.Add<Log>(new SetMarkerPolicy()));
+        }
+
+        // T054 - quickstart 11 / US4-4 / FR-013: adding a row type after first use throws
+        [Fact]
+        public void RowsAdd_AfterTheOptionsAreLocked_ItShould_Throw()
+        {
+            // Arrange
+            TestingDeserializeOptions options = new();
+            options.Rows.Add<Log>();
+            options.MakeReadOnly();
+
+            // Act + Assert
+            Assert.Throws<InvalidOperationException>(() => options.Rows.Add<Stem>());
+        }
+
+        // T054 - quickstart 11 / US4-4 / FR-013: adding a converter after first use throws
+        [Fact]
+        public void ConvertersAdd_AfterTheOptionsAreLocked_ItShould_Throw()
+        {
+            // Arrange
+            TestingDeserializeOptions options = new();
+            options.Rows.Add<Log>();
+            options.MakeReadOnly();
+
+            // Act + Assert
+            Assert.Throws<InvalidOperationException>(() => options.Converters.Add(new MarkingInt32Converter()));
         }
     }
 }
