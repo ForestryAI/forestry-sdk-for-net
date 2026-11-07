@@ -43,12 +43,28 @@ namespace Forestry.Deserialize.Definitions
         public Field Field { get; }
 
         /// <summary>
-        /// Convert <paramref name="utf8"/> and set it on <paramref name="row"/>, without boxing
+        /// Position in its type definition's <see cref="TypeDefinition.Properties"/>
+        /// </summary>
+        internal int Index { get; set; }
+
+        /// <summary>
+        /// Convert <paramref name="utf8"/> and set it on <paramref name="row"/> through
+        /// <paramref name="set"/>, without boxing
         /// </summary>
         /// <param name="row"></param>
         /// <param name="utf8"></param>
         /// <param name="context"></param>
-        internal abstract void ReadAndSet(Row row, ReadOnlySpan<byte> utf8, in FieldContext context);
+        /// <param name="set">The composed set step, an <c>Action&lt;Row, T&gt;</c> from <see cref="ComposeSet"/></param>
+        internal abstract void ReadAndSet(Row row, ReadOnlySpan<byte> utf8, in FieldContext context, Delegate set);
+
+        /// <summary>
+        /// Compose the enumeration policies acting on this member's set into one
+        /// <c>Action&lt;Row, T&gt;</c>, the first outermost; the built-in setter when there are none
+        /// (research R19)
+        /// </summary>
+        /// <param name="chain"></param>
+        /// <returns></returns>
+        internal abstract Delegate ComposeSet(IReadOnlyList<Policies.EnumerationPolicy> chain);
 
         /// <summary>
         /// Create the generic definition for the member's type, once when definitions are built

@@ -100,7 +100,7 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
 - **Completing rows (developer, 2026-10-29)**: The media decides when a row is complete. Both XML
   and JSON have an end token for a row (XML's end element, JSON's end of object); on it, the media
   calls the core's `Pipeline()`, which acts on the **top** row of the stack of open rows: it
-  completes that row and runs the type pipeline's policies for it (by default: hand out, retention).
+  completes that row and runs the type pipeline's policies for it (by default: enumerate, retention).
   The override then returns `Complete` with the row. The media holds no reference to rows; they live
   in the core.
 - **End of document (developer, 2026-10-28/29)**: The media knows when its document is done (its
@@ -126,7 +126,7 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   - A value is never split across calls from the core's view: if its bytes are incomplete, the
     override returns `Partial` without consuming them, and the reader sees the whole value next
     time.
-  - It returns as soon as the core has composed a row (`Complete`), so each move hands out one row
+  - It returns as soon as the core has composed a row (`Complete`), so each move enumerates one row
     and US3-2 holds (a row is out before the next row's data is read).
   - Contract: report bytes consumed, even 0, before returning `Partial`, or `PipeReader` throws on
     the next read. With the final-block flag set and its grammar incomplete (e.g. an unclosed
@@ -141,7 +141,7 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
     calls `MakeReadOnly()` itself, and the string entry point goes through it, so there is one call.
     Each later entry point (`DeserializeAsync` over a pipe or stream, T065/T066) would have to
     repeat it, and a missed call shows only as a late error during enumeration instead of at the
-    call. Decide with US3 where locking lives instead: the options lock when they hand out an
+    call. Decide with US3 where locking lives instead: the options lock when they enumerate an
     enumerator (one internal method that locks, then creates the sync or async enumerator), or, if
     definitions are shared (R17), the options lock when first asked for a definition, as
     System.Text.Json does. Either way FR-008 errors still throw at the call.
@@ -159,7 +159,7 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
     on top of its open (partial) `Stem`; rows are kept across cycles until popped;
   - retained rows: completed rows a constructor needs, and rows stored by key for key references
     (e.g. `Contract`, spec 002-005) (R5, R7);
-  - a composed row not yet handed out.
+  - a composed row not yet enumerated.
 - **New implementation**: `RowEnumerator`, `RowAsyncEnumerator`, `RowState` and
   `DeserializationState` are written new. The existing `ReadingStatus`, `IReaderState`,
   `ValueAsyncEnumerable` and `ValueAsyncEnumerator` are deleted. The existing `Deserializer` /
@@ -167,8 +167,8 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   None of them is a design basis (R0).
 - **`Dispose` / `DisposeAsync`**: Cleanup only, in the base enumerators, whether the
   document ended or the caller stopped early (`break`, `First()`, an exception): clear the
-  `DeserializationState` (retained rows such as `Contract`, any open row never handed out), release
-  the pipe's buffer through `PipeReaderBuffering`, drop the media's reader state. It hands out no row
+  `DeserializationState` (retained rows such as `Contract`, any open row never enumerated), release
+  the pipe's buffer through `PipeReaderBuffering`, drop the media's reader state. It enumerates no row
   and runs no policies: a row produced there could never reach the caller, and on an early stop the
   document did not end.
 - **Buffering**: `PipeReaderBuffering` stays as an internal helper of `RowAsyncEnumerator` (UTF-8 BOM
@@ -191,7 +191,7 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
     `RowState`.
   - A shredder class (`RowShredder`) with `Start` / `Value` / `End` / `Finish` (2026-10-26), replaced
     by the two pipelines (R7) and the media's association (R6).
-  - No end moment per row, with the open row handed out when the next row's type arrives
+  - No end moment per row, with the open row enumerated when the next row's type arrives
     (2026-10-28): the media decides when a row is complete (2026-10-29).
 - **Status**: Confirmed (developer, 2026-10-28), all of R2: media enumerator drives, core passive;
   core bases write the moves and the media overrides one read method (signature above, shared by a
@@ -428,7 +428,7 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   ```
   Type pipeline      Pipeline<T>()            retain-in -> construct the new row (parameters from open
                                               or retained rows) -> push it on the open-row stack
-                     Pipeline()               complete the top open row -> hand out (default)
+                     Pipeline()               complete the top open row -> enumerate (default)
                                               -> retain-out -> pop it
   Member pipeline    Pipeline(member, utf8, context)  property definition -> convert (Converter<T>, R14)
                                               -> policies on the typed value -> set (Action<Row, T>)
@@ -436,13 +436,13 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
 
   Both read and write the `DeserializationState` (R2). The member pipeline is generic in `T` per
   property definition (R14); the type pipeline works on rows.
-- **Hand out when the media completes the row (developer, 2026-10-29)**: By default a row is handed
-  out when `Pipeline()` completes it, acting on the top of the open-row stack. On HPR:
+- **Enumerate when the media completes the row (developer, 2026-10-29)**: By default a row is enumerated
+  when `Pipeline()` completes it, acting on the top of the open-row stack. On HPR:
   `Pipeline<Stem>()` pushes a Stem; `Pipeline<Log>()` pushes Log 1 on top and constructs it with
-  the partial Stem; `</Log>` -> `Pipeline()` hands out Log 1; and so on; `</Stem>` -> `Pipeline()`
-  hands out the Stem, after its Logs. The timing is a policy slot: e.g. a policy handing a Stem out
+  the partial Stem; `</Log>` -> `Pipeline()` enumerates Log 1; and so on; `</Stem>` -> `Pipeline()`
+  enumerates the Stem, after its Logs. The timing is a policy slot: e.g. a policy enumerating a Stem
   when its first child row starts gives Stems before their Logs (all Stem fields precede the first
-  Log in both local HPR samples); a row handed out early must not change afterwards.
+  Log in both local HPR samples); a row enumerated early must not change afterwards.
 - **Attachment and precedence (Confirmed, developer 2026-10-26)**: Policies attach to type, property
   and parameter definitions, and options-wide, by attribute and through the options; options win.
   Most specific first:
@@ -464,21 +464,20 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   - **Convert and set** each member as handed over (`Pipeline(member, utf8, context)`): conversion
     to the member's `T` by its effective converter, then its setter (R14). Creating `Field`
     metadata is a separate slot, off by default (R4, opt-in).
-  - **Hand out** the top open row when the media completes it (`Pipeline()`), then pop it, if its
+  - **Enumerate** the top open row when the media completes it (`Pipeline()`), then pop it, if its
     type was added explicitly; rows of types added only for a constructor are popped without being
-    handed out (R12).
+    enumerated (R12).
   - **Retain** the latest completed row of each type a constructor needs that is not an open
     ancestor (R5). Open ancestors such as a partial `Stem` need no retention: they
     are on the open-row stack.
-  - **Drop the core's reference** to every other row once it is handed out: the caller may keep the
+  - **Drop the core's reference** to every other row once it is enumerated: the caller may keep the
     row, but the core holds nothing it does not need, so memory stays flat (C1). This is not
     `Dispose`, which clears whatever is still retained at the end or on an early stop (R2).
 - **Retention**: Applies to completed rows only; open rows stay on the stack until their
   `Pipeline()`. A completed row a parameter definition asks for is retained until it is replaced
   (latest of type) or the deserialization ends (whole-document retention). A retention policy may hold a row
   longer, never shorter than a constructor needs; a policy that would release too early fails when
-  definitions are built. A row handed out while still retained must not change after it is handed
-  out.
+  definitions are built. A row enumerated while still retained must not change after it is enumerated.
 - **StanForD as policies, not code**: e.g. `Contract` stored by key for the whole document and
   resolved through key members (R5, key references). All Stem fields precede the first Log in both local Rottne HPR samples (verified
   2026-10-26; check other makers' files before relying on it).
@@ -486,10 +485,10 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   read yet fails fast (S1), instead of silently getting a default. In the POC (developer,
   2026-10-26).
 - **Edge cases for later (developer, 2026-10-28), Deferred (spec 002/003)**:
-  - A member value for a row already handed out: only possible with an early hand-out policy (e.g. a
-    Stem field after its first Log); proposed to fail fast, since a handed-out row must not change.
+  - A member value for a row already enumerated: only possible with an early enumeration policy (e.g. a
+    Stem field after its first Log); proposed to fail fast, since an enumerated row must not change.
   - A document cut off inside a row: the media's reader sees it (unclosed elements at the final
-    block) and throws; rows still open are cleared by `Dispose`, never handed out.
+    block) and throws; rows still open are cleared by `Dispose`, never enumerated.
 - **Slot order (developer, 2026-10-29)**:
   - **Minimal order for this slice (Confirmed)**: only the slots with built-in defaults that 001
     uses:
@@ -497,7 +496,7 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
     ```
     Pipeline<T>()                      construct (constructor delegate, no parameters in 001) -> [push]
     Pipeline(member, utf8, context)    convert (Converter<T>) -> set (Action<Row, T>); Field metadata slot off
-    Pipeline()                         [complete the top row] -> hand out -> [pop]
+    Pipeline()                         [complete the top row] -> enumerate -> [pop]
     ```
 
     Slots are policy points; bracketed steps are fixed mechanics of the open-row stack, not slots
@@ -506,13 +505,13 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
     can break that pairing. Spec US4's test policy plugs into one of the slots (attached by attribute
     and by options, for precedence and read-only options).
   - **Full catalogue and order: Deferred (spec 002/003)**: retention in and out (lifetime),
-    parameter resolution and the fail-fast check, early hand-out (e.g. a Stem at its first child),
+    parameter resolution and the fail-fast check, early enumeration (e.g. a Stem at its first child),
     typed-value policies on members (validate, transform), and whatever else two classes and real
     HPR data bring. Listed from real cases there, not guessed now. Known so far:
     - a **construct** slot that stays a seam for the fail-fast check, a fallback when no row of a
       parameter's type exists, a custom factory or pooling, and filtering (which needs a "skipped"
       marker on the stack so the occurrence's members are ignored);
-    - a **store** slot at completion, after hand-out: keep the completed row by one or many keys (a
+    - a **store** slot at completion, after enumeration: keep the completed row by one or many keys (a
       dictionary), e.g. `Contract`; the keys are only known once the row's members are read, so
       keyed placement cannot happen at push;
     - a **resolve** slot in the member pipeline, between convert and set: look a key up in a store
@@ -520,12 +519,12 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
     - for key references, one attribute on the referencing member, e.g.
       `[Reference(typeof(Contract), Key = nameof(Contract.ObjectKey))]` (name Deferred), expanding
       when definitions are built into three single-purpose policies, each overridable by options:
-      add the referenced type (not handed out), store it by key (owned by the referenced type, one
+      add the referenced type (not enumerated), store it by key (owned by the referenced type, one
       store shared by every referencing member), resolve on this member (owned by the referencing
       member).
   - **Holds whatever the order**: the type pipeline is about construction: the type definition
     arrives fully configured with its parameter and property definitions, so `Pipeline<T>()`
-    constructs and pushes; retention is a lifetime policy around hand-out and pop, not
+    constructs and pushes; retention is a lifetime policy around enumeration and pop, not
     construction.
 - **Slicing (developer, 2026-10-29)**: Both pipelines, their slots, precedence and read-only options
   land in this slice, tested with a test policy (spec US4). Retention of completed rows and the
@@ -533,7 +532,7 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
   001's parameterless constructors (FR-008 rejects constructors with parameters in this slice):
   with no parameters, there is nothing to retain and nothing for the fail-fast policy to check.
 - **Status**: Two pipelines, media association before them Confirmed (developer, 2026-10-28);
-  hand-out by default when the media completes the top open row, timing as a policy slot Confirmed
+  enumeration by default when the media completes the top open row, timing as a policy slot Confirmed
   (developer, 2026-10-29); emit on the next type Rejected (2026-10-29); attachment, precedence,
   fail-fast policy Confirmed (2026-10-26); built-in defaults Confirmed (developer, 2026-10-29); edge
   cases Deferred (spec 002/003); slicing and the minimal slot order for this slice Confirmed (developer, 2026-10-29); full policy
@@ -640,7 +639,7 @@ role and name, never its design as a precedent (R0).
   automatically yet; it becomes active with spec 002/003.
 - **Only explicitly added types are enumerated (developer, 2026-10-30)**: by default, rows of a type
   added only because a constructor needs it are constructed and used (on the open-row stack,
-  retained), but not handed out. Adding the type explicitly makes its rows come out too. A hand-out
+  retained), but not enumerated. Adding the type explicitly makes its rows come out too. An enumeration
   policy can change this (R7). The options decide this (`Enumerates(Type)`), not the type
   definition: a definition is metadata about the type and knows nothing of how one options
   instance registered it (developer, 2026-11-02).
@@ -772,12 +771,12 @@ role and name, never its design as a precedent (R0).
 - **Question**: A row member whose type is a nested class read from a structure in the document,
   e.g. StanForD's `StemCoordinates` (`Latitude`, `Longitude`, `Altitude` child elements plus
   attributes) or `LogMeasurement`. It acts like a flat record owned by its row: not a row of its own,
-  not handed out, not retained (raised by the developer, 2026-10-30).
+  not enumerated, not retained (raised by the developer, 2026-10-30).
 - **Not to confuse with** a nested class read from one value, which only needs a converter (R14).
 - **Questions the slice must answer**:
   - **Handover**: the member is several values, so while its row is open the media hands over the
     nested type's members; the open-row stack needs a non-row frame for the nested object, set on its
-    parent when its end token arrives, never handed out.
+    parent when its end token arrives, never enumerated.
   - **Association**: the media must know the nested type's members only inside its structure (paths,
     R13), where the same names elsewhere mean something else.
   - **Flatness and storage**: keep a nested object on the row (whoever writes rows flattens it, e.g.
@@ -887,3 +886,161 @@ role and name, never its design as a precedent (R0).
   a document through the core's own skip. The core's tests read no document (C3), so a JSON media's
   tests will be the first to cover the default.
 - **Status**: Confirmed (developer, 2026-11-06, as worded; found as `Forestry.Xml`'s first caller)
+
+---
+
+## R19. The policy surface of user story 4
+
+- **Question (US4, 2026-11-07)**: R7 fixes the moments policies act at, their built-in defaults and
+  the precedence; FR-012 says policies attach by attribute and through the options. Nothing said what
+  a policy is in code, where it lives, how it is attached, or what becomes of the policies left from
+  before spec 001 (R10, T060). The US4 shells call that surface, so it was settled here first (C5).
+- **Status**: Confirmed for the POC (developer, 2026-11-07): "good enough right now; the logic can be
+  polished later". Reached over several reworks the same day (history at the end); expect it to move
+  again with spec 002/003, when a second row class and real HPR data show what policies need.
+
+### Terms (recalibrated during the US4 review)
+
+| Before | Now | Why |
+|---|---|---|
+| `RowEnumerator` / `RowAsyncEnumerator` | `MediaRowEnumerator` / `MediaRowAsyncEnumerator` | abstract towards a concrete media; "Media" says who derives from it (developer's preference over "Base") |
+| `RowPipelines`, `Pipeline<T>()`, `Pipeline(member, …)`, `Pipeline()` | `RowBuilder`, `Start<T>()`, `Set(member, …)`, `Complete()` | the media drives the building of a row the same way for every row type: create it, set its members, complete an entity that no longer changes; "pipelines" was unclear |
+| `RowState` (`None`, `Partial`, `Complete`) | `ReadStatus` | the outcome of one media read call, not the row's state, and not kept between calls; avoids `System.IO.Pipelines.ReadResult` |
+| pipeline policies and slots | `EnumerationPolicy` and its virtual methods | a policy is general to the enumeration and overrides what it needs; no slot vocabulary |
+
+The renames of existing types are refactors covered by today's tests (T092, before T056). R7's "two
+pipelines" stays as the history of the idea; the code speaks of building rows.
+
+### Two groups of policies
+
+Both derive from a common `Policy` base, in `src/Policies/` (namespace `Forestry.Deserialize.Policies`,
+as converters have their own):
+
+- **Definition policies** act once, when the options lock, and shape the definitions: whether a
+  property or field is a member, and later how a media name is adjusted or validated (R8). Their
+  result is the definition.
+- **Enumeration policies** act while rows are built and enumerated. They get the definitions as
+  read-only context; what they change is the row.
+
+### Enumeration policies
+
+- **`EnumerationPolicy`**, with a typed `EnumerationPolicy<TRow>` whose methods take and return
+  `TRow`. Virtual methods, each at a moment of `RowBuilder`, each with the built-in step as `next`:
+
+  | Moment | Method | Built-in (`next`) |
+  |---|---|---|
+  | `Start<T>()` | `Row Construct(TypeDefinition type, Func<Row> next)` | the chosen constructor |
+  | `Set(member, …)`, after the converter | `void Set<T>(Row row, PropertyDefinition<T> property, T value, Action<Row, T> next)` | the setter |
+  | `Complete()` | `Row? Enumerate(Row row, TypeDefinition type, Func<Row, Row?> next)` | the row when the options enumerate its type (`Enumerates(Type)`, R12), else null |
+  | the enumeration ends | `void Clear()` | nothing |
+
+  Converting stays the converters' (R14), with their own precedence. Field metadata has no surface
+  yet (off, R4, R15). The base implementations only call `next`.
+- **"Enumerate", not "hand out"**: named after the slice 001 code review's `options.Enumerates(Type)`:
+  a completed row is a potential item of the enumeration. "Hand out" in this document and in spec.md
+  is renamed (T090).
+- **A policy takes part in exactly the methods it overrides**: when the options lock, the core checks
+  each method's declaring type once per policy. `Policies.Add<Log>(policy)` with only `Set`
+  overridden acts on every member of `Log` and leaves construction to whatever else applies.
+- **Each method is resolved on its own** with R7's precedence (most specific first: option for the
+  member, option for the type, attribute on the member, attribute on the type, options-wide,
+  built-in). A type can take its `Construct` from an attribute and its `Set` from the options.
+- **Chains, within the winning level only**: policies added through the options for the same target
+  form a chain per method, in the order added, the first outermost; the last `next` is the built-in
+  step. A policy may wrap `next`, replace it or change its result. Levels never chain: when the
+  options have a policy for a method and target, attributes for it do not act (US4-3). By attribute,
+  one policy per target: .NET does not guarantee the order of attributes.
+- **Instances on the options, living as long as the options**: options are the user's personalized
+  configuration, and a user may have several in play. `options.Policies.Add<Log>(new MyPolicy(…))`
+  registers an instance; one attached by attribute is created once when the options lock and is
+  owned by them. Locking (FR-013) keeps the configuration valid once used; it does not move policies
+  elsewhere.
+- **Composed once, when the options lock**, per type and member; nothing is created per enumeration
+  and nothing allocated per row (that is why `Enumerate`'s `next` takes the row).
+- **`Clear()` between enumerations**: at the end of each enumeration (end, early stop, after a
+  throw), the enumerator calls `Clear()` once on every enumeration policy that applies to its
+  options, so no state carries into the next enumeration. A policy may keep state across the rows of
+  one enumeration (e.g. later, `Contract` rows by key, R7) and drop it there.
+- **One enumeration at a time per options with enumeration policies (developer, 2026-11-07)**: two
+  simultaneous enumerations would share a policy's state, and the first to end would `Clear()` the
+  other's. When enumeration policies apply, an enumeration that starts while another is still running
+  on the same options throws `InvalidOperationException`, telling the caller to use one options
+  instance per concurrent deserialization. Options without enumeration policies stay freely
+  shareable (R6). Documenting the rule without throwing was rejected: the failure would be silent and
+  depend on timing.
+- **The fixed mechanics stay outside every policy** (R7): `Start<T>()` always pushes what `Construct`
+  returns, and `Complete()` always pops the row its `Start<T>()` pushed, whatever `Enumerate` returns.
+- **The definitions hold no enumeration policies**: the locked options map types and members to
+  them, and tests and tools read that resolution from the options:
+  `options.Policies.Applying(TypeDefinition)` and `Applying(PropertyDefinition)`, the enumeration
+  policies acting on that definition in chain order, empty when only the built-in steps apply. This
+  keeps definitions pure descriptions of a type, which R17 could later share between equal options.
+
+### Definition policies
+
+- **`DefinitionPolicy`**, with the same pattern: a virtual method per decision, taking part in what
+  it overrides, chained through the options, `next` reaching the built-in default.
+- **Member inclusion** replaces both `IIgnorePropertyPolicy` and `IIncludeFieldPolicy` (T060):
+  `bool IncludeMember(TypeDefinition type, MemberInfo member, Func<MemberInfo, bool> next)`, asked
+  once per candidate property or field when the definition is built. Built-in: today's behavior, a
+  public property or field is a member, properties and fields alike (T016); a member whose type no
+  converter handles still fails (FR-008). The old pair came from System.Text.Json's opposite defaults
+  (properties opt out, fields opt in); with one default here, one direction is enough.
+- **Naming**: `NamingPolicy` is removed with T060; a naming decision arrives when R8's move brings
+  name resolution into the core.
+- **Targets**: options-wide or a type (by options or by attribute on the class); no member target.
+
+### Attaching
+
+- **By attribute**: `[Policy<TPolicy>]` (`TPolicy : Policy, new()`), deriving from a non-generic
+  `PolicyAttribute` in `src/Attributes/`. On a class: an enumeration or definition policy for the
+  type; on a property or field: an enumeration policy for that member.
+- **Through the options**: `options.Policies`, locked with the options (FR-013), instances of both
+  groups: `Add(policy)` options-wide, `Add<TRow>(policy)` for a type, `Add<TRow>(memberName, policy)`
+  for a property or field by its C# name (`nameof(Log.LogKey)`), enumeration policies only.
+- **A member target takes `Set` only**: an enumeration policy on a member overriding anything else
+  throws when the options lock (FR-008).
+
+### Tests
+
+- **Recording fixtures (T049)**: a recording enumeration policy overriding `Construct`, `Set`,
+  `Enumerate` and `Clear` appends e.g. "construct Log", "set LogKey=1", "enumerate Log", "clear" to a
+  log scoped to the running test through `AsyncLocal`, so parallel tests, sync or async, never mix
+  records. It calls `next`, so rows stay as without it.
+- Chains (T087), a `Set`-only policy (T088), member inclusion (T089) and the lifetime (T091: cleared
+  once per enumeration, at the end, on an early stop and after a throw; the same instance serving the
+  next enumeration; an overlapping enumeration throwing).
+
+### Rejected
+
+- One class per moment (the first draft): a policy needing several moments would be split across
+  classes with no shared view of the row.
+- Chaining across precedence levels: US4-3 requires only the options' policies to act.
+- Ignore-for-properties and include-for-fields: opposite defaults for members the code treats alike.
+- A pipeline policy created per deserialization from a type or factory, with `Dispose()` (the
+  version confirmed first): options are the user's configuration, so policies are instances on them,
+  cleared between enumerations.
+- Enumeration policies listed on the definitions: definitions describe a type; the options hold the
+  user's configuration.
+- A `Field` metadata policy now: nothing in this slice asks for it.
+
+### As implemented (T056-T060, 2026-11-07)
+
+- `IncludeMember(Type type, MemberInfo member, Func<MemberInfo, bool> next)` takes the row's `Type`:
+  the definition does not exist yet while its members are chosen.
+- `EnumerationPolicy<TRow>` is not built yet: no test covers it; it comes with one.
+- `options.Policies` is a `PolicyCollection` (a type named `Policies` would clash with the namespace).
+- Also rejected when the options lock (FR-008): more than one attribute on a target overriding the
+  same method, a definition policy on a member, a policy registered for a row type not added or for a
+  member the type does not have.
+- The natural end of an enumeration clears its policies too, not only disposing the enumerator.
+
+### Names and history
+
+- **Names**: `Policy`, `EnumerationPolicy`, `DefinitionPolicy`, the method names,
+  `Policies.Add`/`Applying`, `[Policy<T>]`, `MediaRowEnumerator`, `RowBuilder`, `ReadStatus`:
+  Deferred (implementation), confirmed in code review.
+- **History (2026-11-07)**: first draft, one class per slot; reworked to definition and pipeline
+  policies with one base class each and chains; then per-deserialization instances with `Dispose()`,
+  confirmed; reopened while reviewing the shells (terms, where policies live, `Clear()`, overlap);
+  confirmed for the POC as above.

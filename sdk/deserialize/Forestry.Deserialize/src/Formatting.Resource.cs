@@ -27,6 +27,18 @@ namespace Forestry.Deserialize
 
         internal static string ConstructorHasParameters => GetResourceString(nameof(ConstructorHasParameters), @"Type '{0}': its chosen constructor has parameters, which this version does not support.");
 
+        internal static string MemberPolicyNotSetOnly => GetResourceString(nameof(MemberPolicyNotSetOnly), @"Type '{0}': the policy '{1}' on member '{2}' may only override Set; attach it to the type instead.");
+
+        internal static string DefinitionPolicyOnMember => GetResourceString(nameof(DefinitionPolicyOnMember), @"Type '{0}': the definition policy '{1}' cannot be attached to member '{2}'; attach it to the type or options-wide.");
+
+        internal static string PolicyAttributesAmbiguous => GetResourceString(nameof(PolicyAttributesAmbiguous), @"'{0}' has more than one policy attribute overriding {1}: attributes have no order, so add them through the options instead.");
+
+        internal static string PolicyTypeNotAdded => GetResourceString(nameof(PolicyTypeNotAdded), @"A policy is registered for '{0}', which is not a row type added to the options.");
+
+        internal static string PolicyMemberNotFound => GetResourceString(nameof(PolicyMemberNotFound), @"A policy is registered for member '{1}' of '{0}', which is not one of its members.");
+
+        internal static string EnumerationRunning => GetResourceString(nameof(EnumerationRunning), @"These options have enumeration policies and are already used by a running enumeration; policies keep state for one enumeration at a time, so use another options instance for a concurrent deserialization.");
+
         internal static string MemberWithoutConverter => GetResourceString(nameof(MemberWithoutConverter), @"Type '{0}': member '{1}' of type '{2}' has no converter; add one to the options.");
 
         internal static string NoConverter => GetResourceString(nameof(NoConverter), @"No converter handles type '{0}'.");

@@ -6,10 +6,10 @@ namespace Forestry.Deserialize.Reading
 {
     /// <summary>
     /// Asynchronous row enumerator over a <see cref="PipeReader"/>. The core writes the moves; a media
-    /// derives from it and overrides <see cref="Read"/>, driving its own reader and the core's pipelines
+    /// derives from it and overrides <see cref="Read"/>, driving its own reader and the core's row builder
     /// (research R2). One row per move
     /// </summary>
-    public abstract class RowAsyncEnumerator : IAsyncEnumerator<Row>
+    public abstract class MediaRowAsyncEnumerator : IAsyncEnumerator<Row>
     {
         /// <summary>
         /// Row enumerator over the bytes of a pipe
@@ -17,14 +17,14 @@ namespace Forestry.Deserialize.Reading
         /// <param name="pipe">UTF-8 bytes of the document</param>
         /// <param name="options"></param>
         /// <param name="cancellationToken">Cancels a move waiting for bytes</param>
-        protected RowAsyncEnumerator(PipeReader pipe, DeserializeOptions options, CancellationToken cancellationToken)
+        protected MediaRowAsyncEnumerator(PipeReader pipe, DeserializeOptions options, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(pipe);
             ArgumentNullException.ThrowIfNull(options);
 
             _buffering = new PipeReaderBuffering(pipe, options.SkipsByteOrderMark);
             _cancellationToken = cancellationToken;
-            Pipelines = new RowPipelines(options);
+            Builder = new RowBuilder(options);
         }
 
         private PipeReaderBuffering _buffering;
@@ -34,9 +34,9 @@ namespace Forestry.Deserialize.Reading
         private bool _isDone;
 
         /// <summary>
-        /// The core's pipelines for this deserialization, for a media's shared reading class
+        /// The core's row builder for this deserialization, for a media's shared reading class
         /// </summary>
-        protected RowPipelines Pipelines { get; }
+        protected RowBuilder Builder { get; }
 
         /// <summary>
         /// Current row
@@ -51,13 +51,13 @@ namespace Forestry.Deserialize.Reading
         /// <param name="row">The row completed during the call</param>
         /// <param name="consumed">Bytes consumed, reported even when 0</param>
         /// <returns></returns>
-        protected abstract RowState Read(ReadOnlySequence<byte> bytes, bool isFinalBlock, out Row? row, out long consumed);
+        protected abstract ReadStatus Read(ReadOnlySequence<byte> bytes, bool isFinalBlock, out Row? row, out long consumed);
 
         /// <summary>
         /// A row of type <typeparamref name="T"/> starts
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        protected void Pipeline<T>() where T : Row => Pipelines.Pipeline<T>();
+        protected void Start<T>() where T : Row => Builder.Start<T>();
 
         /// <summary>
         /// A property of the top open row has this UTF-8 value
@@ -65,8 +65,8 @@ namespace Forestry.Deserialize.Reading
         /// <param name="property"></param>
         /// <param name="utf8"></param>
         /// <param name="context"></param>
-        protected void Pipeline(PropertyInfo property, ReadOnlySpan<byte> utf8, in FieldContext context) =>
-            Pipelines.Pipeline(property, utf8, in context);
+        protected void Set(PropertyInfo property, ReadOnlySpan<byte> utf8, in FieldContext context) =>
+            Builder.Set(property, utf8, in context);
 
         /// <summary>
         /// A field of the top open row has this UTF-8 value
@@ -74,14 +74,14 @@ namespace Forestry.Deserialize.Reading
         /// <param name="field"></param>
         /// <param name="utf8"></param>
         /// <param name="context"></param>
-        protected void Pipeline(FieldInfo field, ReadOnlySpan<byte> utf8, in FieldContext context) =>
-            Pipelines.Pipeline(field, utf8, in context);
+        protected void Set(FieldInfo field, ReadOnlySpan<byte> utf8, in FieldContext context) =>
+            Builder.Set(field, utf8, in context);
 
         /// <summary>
         /// The top open row is complete
         /// </summary>
         /// <returns>The row to hand out, or null</returns>
-        protected Row? Pipeline() => Pipelines.Pipeline();
+        protected Row? Complete() => Builder.Complete();
 
         /// <summary>
         /// Move to the next row: refill, read, advance by the bytes consumed (even 0), refill again
@@ -100,13 +100,13 @@ namespace Forestry.Deserialize.Reading
                     continue;
                 }
 
-                RowState state;
+                ReadStatus state;
                 Row? row;
 
                 try
                 {
                     state = Read(_buffering.Bytes, _buffering.IsCompleted, out row, out long consumed);
-                    _buffering.Advance(consumed, isExamined: state == RowState.Partial);
+                    _buffering.Advance(consumed, isExamined: state == ReadStatus.Partial);
                 }
                 catch
                 {
@@ -116,13 +116,14 @@ namespace Forestry.Deserialize.Reading
 
                 switch (state)
                 {
-                    case RowState.Complete when row is not null:
+                    case ReadStatus.Complete when row is not null:
                         Current = row;
                         return true;
-                    case RowState.Complete:
+                    case ReadStatus.Complete:
                         continue;  // a row only a constructor needs: not handed out
-                    case RowState.None:
+                    case ReadStatus.None:
                         _isDone = true;
+                        Builder.Clear();  // the enumeration ended: its policies are cleared now
                         break;
                     default:
                         if (_buffering.IsCompleted)
@@ -146,7 +147,7 @@ namespace Forestry.Deserialize.Reading
             _isDone = true;
             _buffering.Release();
             Current = null!;
-            Pipelines.Clear();
+            Builder.Clear();
             GC.SuppressFinalize(this);
 
             return ValueTask.CompletedTask;

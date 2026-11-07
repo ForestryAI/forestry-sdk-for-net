@@ -8,7 +8,7 @@ namespace Forestry.Deserialize.Xml
     /// The XML media's asynchronous row enumerator: the core writes the moves over the pipe, this
     /// override reads with the same reading as the synchronous one (research R2)
     /// </summary>
-    internal sealed class XmlRowAsyncEnumerator : RowAsyncEnumerator
+    internal sealed class XmlRowAsyncEnumerator : MediaRowAsyncEnumerator
     {
         public XmlRowAsyncEnumerator(PipeReader utf8, DeserializeXmlOptions options, CancellationToken cancellationToken)
             : base(utf8, options, cancellationToken)
@@ -18,7 +18,7 @@ namespace Forestry.Deserialize.Xml
 
         private readonly XmlRowReading _reading;
 
-        protected override RowState Read(ReadOnlySequence<byte> bytes, bool isFinalBlock, out Row? row, out long consumed) =>
-            _reading.Read(Pipelines, bytes, isFinalBlock, out row, out consumed);
+        protected override ReadStatus Read(ReadOnlySequence<byte> bytes, bool isFinalBlock, out Row? row, out long consumed) =>
+            _reading.Read(Builder, bytes, isFinalBlock, out row, out consumed);
     }
 }

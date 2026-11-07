@@ -1,4 +1,4 @@
-using Forestry.Deserialize.Definitions;
+using Forestry.Deserialize.Policies;
 
 namespace Forestry.Deserialize.Reading
 {
@@ -18,9 +18,9 @@ namespace Forestry.Deserialize.Reading
         /// <summary>
         /// Push a constructed row
         /// </summary>
-        /// <param name="typeDefinition"></param>
+        /// <param name="chains"></param>
         /// <param name="row"></param>
-        public void Push(TypeDefinition typeDefinition, Row row) => _openRows.Push(new OpenRow(typeDefinition, row));
+        public void Push(TypeChains chains, Row row) => _openRows.Push(new OpenRow(chains, row));
 
         /// <summary>
         /// Top open row
@@ -42,10 +42,10 @@ namespace Forestry.Deserialize.Reading
         public void Clear() => _openRows.Clear();
 
         /// <summary>
-        /// An open row and its definition
+        /// An open row and its definition with the composed policies
         /// </summary>
-        /// <param name="TypeDefinition"></param>
+        /// <param name="Chains"></param>
         /// <param name="Row"></param>
-        internal readonly record struct OpenRow(TypeDefinition TypeDefinition, Row Row);
+        internal readonly record struct OpenRow(TypeChains Chains, Row Row);
     }
 }

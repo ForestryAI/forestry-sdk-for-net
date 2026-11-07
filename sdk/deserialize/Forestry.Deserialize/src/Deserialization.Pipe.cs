@@ -66,7 +66,7 @@ namespace Forestry.Deserialize
         /// completed here.
         /// </para>
         /// <para>
-        /// The media creates the <see cref="RowAsyncEnumerator"/> and does not know who owns the pipe, so the
+        /// The media creates the <see cref="MediaRowAsyncEnumerator"/> and does not know who owns the pipe, so the
         /// extra clean-up lives in <see cref="OwningRowAsyncEnumerator"/>: completing an owned pipe, and
         /// disposing the source that links the entry point's and the enumeration's cancellation tokens.
         /// With neither to clean up, the media's enumerator is returned as it is.
@@ -95,7 +95,25 @@ namespace Forestry.Deserialize
                     ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, enumerationToken)
                     : null;
                 CancellationToken token = linked?.Token ?? (enumerationToken.CanBeCanceled ? enumerationToken : cancellationToken);
-                RowAsyncEnumerator rows = options.CreateRowAsyncEnumerator(pipe, token);
+                MediaRowAsyncEnumerator rows;
+
+                try
+                {
+                    rows = options.CreateRowAsyncEnumerator(pipe, token);
+                }
+                catch
+                {
+                    // e.g. another enumeration is running on options with enumeration policies (R19):
+                    // nothing was read, so what this call created is released here
+                    linked?.Dispose();
+
+                    if (isPipeOwned)
+                    {
+                        pipe.Complete();
+                    }
+
+                    throw;
+                }
 
                 return linked is null && !isPipeOwned ? rows : new OwningRowAsyncEnumerator(rows, isPipeOwned ? pipe : null, linked);
             }
@@ -109,7 +127,7 @@ namespace Forestry.Deserialize
         /// <param name="pipe">The pipe to complete, or null when the caller owns it</param>
         /// <param name="linked">The linked cancellation source to dispose, or null</param>
         private sealed class OwningRowAsyncEnumerator(
-            RowAsyncEnumerator rows,
+            MediaRowAsyncEnumerator rows,
             PipeReader? pipe,
             CancellationTokenSource? linked) : IAsyncEnumerator<Row>
         {

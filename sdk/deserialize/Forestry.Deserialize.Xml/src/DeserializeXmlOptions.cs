@@ -43,7 +43,7 @@ namespace Forestry.Deserialize.Xml
         /// </summary>
         /// <param name="utf8"></param>
         /// <returns></returns>
-        protected internal override RowEnumerator CreateRowEnumerator(ReadOnlyMemory<byte> utf8) => new XmlRowEnumerator(utf8, this);
+        protected internal override MediaRowEnumerator CreateRowEnumerator(ReadOnlyMemory<byte> utf8) => new XmlRowEnumerator(utf8, this);
 
         /// <summary>
         /// False: <c>Utf8XmlReader</c> reads a byte order mark itself and checks it against the declared
@@ -57,7 +57,7 @@ namespace Forestry.Deserialize.Xml
         /// <param name="utf8"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        protected internal override RowAsyncEnumerator CreateRowAsyncEnumerator(PipeReader utf8, CancellationToken cancellationToken) =>
+        protected internal override MediaRowAsyncEnumerator CreateRowAsyncEnumerator(PipeReader utf8, CancellationToken cancellationToken) =>
             new XmlRowAsyncEnumerator(utf8, this, cancellationToken);
     }
 }

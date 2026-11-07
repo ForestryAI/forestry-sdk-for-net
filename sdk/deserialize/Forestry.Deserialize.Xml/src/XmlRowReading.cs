@@ -7,7 +7,7 @@ namespace Forestry.Deserialize.Xml
 {
     /// <summary>
     /// The XML media's reading, shared by its sync and async row enumerators (research R2): rebuilds
-    /// the reader from its saved state each call, turns elements and text into the core's pipeline
+    /// the reader from its saved state each call, turns elements and text into the core's row builder
     /// calls, and returns as soon as a row is completed
     /// </summary>
     /// <remarks>
@@ -47,7 +47,7 @@ namespace Forestry.Deserialize.Xml
 
         private readonly Stack<int> _pathMarks = new();
 
-        public RowState Read(RowPipelines pipelines, ReadOnlySequence<byte> bytes, bool isFinalBlock, out Row? row, out long consumed)
+        public ReadStatus Read(RowBuilder builder, ReadOnlySequence<byte> bytes, bool isFinalBlock, out Row? row, out long consumed)
         {
             row = null;
             Utf8XmlReader reader = new(bytes, isFinalBlock, _readerState);
@@ -57,22 +57,22 @@ namespace Forestry.Deserialize.Xml
                 switch (reader.TokenType)
                 {
                     case TokenType.Element:
-                        StartElement(pipelines, ref reader);
+                        StartElement(builder, ref reader);
                         break;
                     case TokenType.Value:
                         if (_member is not null && reader.Depth == _memberDepth)
                         {
-                            SetMember(pipelines, reader.Depth, Value(ref reader));
+                            SetMember(builder, reader.Depth, Value(ref reader));
                             _memberHasValue = true;
                         }
                         break;
                     case TokenType.ElementEnd:
-                        row = EndElement(pipelines, ref reader, out bool completed);
+                        row = EndElement(builder, ref reader, out bool completed);
                         if (completed && row is not null)
                         {
                             _readerState = reader.ReaderState;
                             consumed = reader.Position;
-                            return RowState.Complete;
+                            return ReadStatus.Complete;
                         }
                         break;
                 }
@@ -83,15 +83,15 @@ namespace Forestry.Deserialize.Xml
 
             if (!isFinalBlock)
             {
-                return RowState.Partial;
+                return ReadStatus.Partial;
             }
 
             // A document cut off inside an element throws from the reader itself on the final block,
             // so open rows are never handed out
-            return RowState.None;
+            return ReadStatus.None;
         }
 
-        private void StartElement(RowPipelines pipelines, ref Utf8XmlReader reader)
+        private void StartElement(RowBuilder builder, ref Utf8XmlReader reader)
         {
             ReadOnlySpan<byte> name = PushPath(ref reader);
             int depth = reader.Depth;
@@ -113,12 +113,12 @@ namespace Forestry.Deserialize.Xml
 
             if (association.TryGetRow(name, out XmlAssociation.RowAssociation? row))
             {
-                row.Start(pipelines);
+                row.Start(builder);
                 _openRows.Push((depth, row));
             }
         }
 
-        private Row? EndElement(RowPipelines pipelines, ref Utf8XmlReader reader, out bool completed)
+        private Row? EndElement(RowBuilder builder, ref Utf8XmlReader reader, out bool completed)
         {
             completed = false;
             int depth = reader.Depth;  // after the end tag
@@ -128,7 +128,7 @@ namespace Forestry.Deserialize.Xml
             {
                 if (!_memberHasValue)
                 {
-                    SetMember(pipelines, _memberDepth, []);  // empty element
+                    SetMember(builder, _memberDepth, []);  // empty element
                 }
 
                 _member = null;
@@ -136,7 +136,7 @@ namespace Forestry.Deserialize.Xml
             else if (_openRows.TryPeek(out (int Depth, XmlAssociation.RowAssociation Row) open) && depth == open.Depth - 1)
             {
                 _openRows.Pop();
-                row = pipelines.Pipeline();
+                row = builder.Complete();
                 completed = true;
             }
 
@@ -144,13 +144,13 @@ namespace Forestry.Deserialize.Xml
             return row;
         }
 
-        private void SetMember(RowPipelines pipelines, int depth, ReadOnlySpan<byte> utf8)
+        private void SetMember(RowBuilder builder, int depth, ReadOnlySpan<byte> utf8)
         {
             ReadOnlySpan<byte> path = _path.AsSpan(0, _pathLength);
             ReadOnlySpan<byte> name = path[(path.LastIndexOf(PathSeparator) + 1)..];
             FieldContext context = new(depth, name, path);
 
-            _member!.Set(pipelines, utf8, in context);
+            _member!.Set(builder, utf8, in context);
         }
 
         /// <summary>
@@ -159,7 +159,7 @@ namespace Forestry.Deserialize.Xml
         /// <remarks>
         /// As <c>Utf8JsonReader</c>'s callers do (research R2, T068): it allocates only when a value
         /// straddles a buffer boundary, never per row. A value whose bytes are not all buffered yet is
-        /// never a token: the reader halts before it and the read returns <see cref="RowState.Partial"/>
+        /// never a token: the reader halts before it and the read returns <see cref="ReadStatus.Partial"/>
         /// without consuming it. A scratch buffer instead of the copy is a later optimisation.
         /// </remarks>
         private static ReadOnlySpan<byte> Value(scoped ref Utf8XmlReader reader) =>

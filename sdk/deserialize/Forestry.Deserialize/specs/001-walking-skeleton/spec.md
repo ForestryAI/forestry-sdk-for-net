@@ -104,7 +104,7 @@ synchronous result.
 
 ### User Story 4 - Change behavior with policies (Priority: P2)
 
-Behavior at a row's lifecycle moments (in this slice: construction, member set, hand-out) is set by
+Behavior at a row's lifecycle moments (in this slice: construction, member set, enumeration) is set by
 policies. Built-in defaults give Story 1's behavior. The developer can attach a policy to a type or
 a property, by attribute on the class or through the options; options win over attributes.
 
@@ -118,7 +118,7 @@ acts.
 
 1. **Given** no policies attached, **When** Story 1's document is deserialized, **Then** the built-in
    defaults apply: a row is constructed at its start, members are set as they are read, and the row
-   is handed out at its end (the media's end token for it) and not kept by deserialization
+   is enumerated at its end (the media's end token for it) and not kept by deserialization
    afterwards.
 2. **Given** a policy attached to `Log` by attribute, **When** deserialized, **Then** it acts at its
    lifecycle moment for each `Log` row, in document order.
@@ -153,7 +153,7 @@ acts.
   package's entry point, passing the options of a media to which classes extending `Row` were
   added; from in-memory input (synchronous) or a stream or pipe (asynchronous). The entry point
   takes no type argument and returns the abstract `Row`.
-- **FR-002**: Deserialization MUST only hand out rows of the classes the developer added explicitly
+- **FR-002**: Deserialization MUST only enumerate rows of the classes the developer added explicitly
   through the options; it never creates a class named or chosen by the document, and never scans
   assemblies.
 - **FR-003**: Deserialization MUST produce exactly one row per occurrence of the class, in document
@@ -175,7 +175,7 @@ acts.
   the rest of the document.
 - **FR-010**: Synchronous and asynchronous input with the same content, however it is split into
   buffers, MUST produce the same rows.
-- **FR-011**: In this slice, construction, member set (convert, set) and hand-out MUST be policy
+- **FR-011**: In this slice, construction, member set (convert, set) and enumeration MUST be policy
   points; the open-row stack's push, completion and pop are fixed. Other moments (child row start,
   retention, storing by key, resolving a key) come with later slices (research R7). Built-in
   default policies MUST give FR-003 to FR-005.
