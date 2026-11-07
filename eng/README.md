@@ -37,7 +37,7 @@ explains them (D0).
 | SDK version | – | `global.json` | – | `workflows/ci.yml` setup reads `global.json` (*planned*) |
 | Restore, feeds, package versions | `PackageReference` without a version | `NuGet.Config` | `packaging/Directory.Packages.props` (central versions, CPM guard) | `workflows/ci.yml` NuGet cache (*planned*) |
 | Compile defaults (frameworks, warnings as errors, XML docs) | `Directory.Build.props` for package-only settings | `Directory.Build.props` (paths, `artifacts/`) | `Directory.Build.Common.props` | – |
-| What CI builds | – | – | CI solution (*planned*, R7) | `workflows/ci.yml` builds it (*planned*) |
+| What CI builds | the package's own `.slnx` | – | – | `workflows/ci.yml` matrix: one job per package (*planned*, R7) |
 | Test, coverage | test `.csproj`, `*.Tests.runsettings` | `Directory.Build.targets` (test traceability) | – | `workflows/ci.yml` test job (*planned*) |
 | Performance gate | `Performance.runsettings`, tests with `Category=Performance` | – | – | `workflows/ci.yml` performance job (*planned*) |
 | Version, release notes | `<Version>` in the `.csproj`, `CHANGELOG.md` | – | – | `workflows/release.yml` checks both (*planned*) |

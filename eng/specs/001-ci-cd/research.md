@@ -139,9 +139,19 @@ Dependabot.
 - **Options**: (a) one solution file listing the packages in scope (e.g. `eng/Forestry.Ci.slnx`):
   adding a package to CI is one line (FR-015); (b) a traversal project (`Microsoft.Build.Traversal`,
   already named in `global.json`); (c) a list of the packages' own `.slnx` in the workflow.
-- **Recommendation**: (a). One local command builds and tests exactly what CI does (C3); no extra
-  MSBuild SDK.
-- **Status**: Confirmed by the developer, 2026-11-07
+- **Recommendation** (first): (a). One local command builds and tests exactly what CI does (C3); no
+  extra MSBuild SDK.
+- **Revised in the plan review** (developer, 2026-11-07): (c). The packages are building blocks:
+  some are integrated (`Forestry.Xml` → `Forestry.Deserialize.Xml`, later StanForD), others stand
+  alone (Raindrop, Turn, Biometria later). One solution would tie them together: a failure in one
+  would turn every pull request red, against C1 and the purpose of `eng/` (`eng/README.md`).
+  Instead `ci.yml` runs a matrix with one job per package, each on the package's own `.slnx`, the
+  same command the developer runs locally (C3). Adding a package is one matrix line (FR-015). An
+  integrated package's job builds the packages it references from source, so a reader change is
+  tested by the reader's tests and through the bridge's tests in the same pull request. Every
+  package runs on every pull request for now; running only changed packages (and their
+  dependents) is deferred until the number of packages makes it worth a dependency map.
+- **Status**: Confirmed by the developer (revised to (c)), 2026-11-07
 
 ## R8. Target frameworks
 
