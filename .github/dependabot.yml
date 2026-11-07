@@ -1,0 +1,36 @@
+# Dependency updates as reviewed pull requests (eng constitution S1; research "Dependabot notes").
+# Security alerts and security updates are separate repository settings (Settings → Security).
+version: 2
+updates:
+  - package-ecosystem: nuget
+    # Central package versions live in eng/packaging/, not in the default place (note 1)
+    directories:
+      - /eng/packaging
+      - /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      test-packages:
+        patterns:
+          - Microsoft.NET.Test.Sdk
+          - xunit*
+          - coverlet.*
+      microsoft-extensions:
+        patterns:
+          - Microsoft.Extensions.*
+    ignore:
+      # A library's dependency is its consumers' minimum: stay on the supported framework's line (note 4)
+      - dependency-name: Microsoft.Extensions.*
+        update-types: [version-update:semver-major]
+      - dependency-name: System.*
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns:
+          - "*"

@@ -1,4 +1,4 @@
-# Biometria SDK for .Net - Building
+# Forestry SDK for .NET - Building
 
 # Projects
 Every library requires a ```.csproj``` to spell out what the library does and any specific requirements.  The ```Directory.Build.props``` in the library are read before and ```Directory.Build.targets``` after the ```.csproj```.
@@ -13,7 +13,7 @@ That MSBuild grabs **properties** is misleading because the properties are not j
 
 ### Root
 The root ```Directory.Build.props``` has smart tricks:
-- paths that point out engineering and only Biometria libraries
+- paths that point out engineering and only Forestry libraries
 - default profiles e.g. Debug, any CPU and platform
 - singular artifacts spot rather than per library
 - packaging (central package management CPM)
@@ -40,7 +40,7 @@ The engineering  ```Directory.Build.Common.props``` sets these generic categorie
 - kind e.g. client or test
 - defaults e.g. lastest language version
 - code analysis
-- metadata e.g. company == Biometria
+- metadata e.g. company == Forestry
 - support Net frameworks
 - references internal SDK library dependencies 
 
@@ -54,27 +54,17 @@ Currently the root build doesn't do much than track where test assemblies origin
 - tooling that consumes metadata
 
 ### Engineering
-Here build guidelines are enforced.  Any PowerShell script from MSBuild references ```scripts/Set-Environment.ps1``` constructs a PowerShell environment.  Good documentation to have handy is [PowerShell state](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables?view=powershell-7.5#psscriptroot) variables.
+Here build guidelines are enforced: central package management may not be disabled (FSDK00001, see [eng/packaging/README.md](../../eng/packaging/README.md)).
 
 #### Package version
-Every package has the following version format:
+Every package has its own version, by hand in its `.csproj` (`<Version>`), next to its `CHANGELOG.md`
+(eng spec 001, R2):
 ```
 MAJOR.MINOR.PATCH-PRERELEASE
 ```
-Use the ```.csproj``` to define the version in ```Version``` property.
-
-MSBuild replaces any prerelease identifier (e.g. ```beta```) with a `alpha.yyyyMMdd.r` ensuring a unique build identification during development. That date derives from either today's date or a property named `BUILD_IDENTIFICATION` delegated from the CI pipeline's build number (see ```globals.yml```).
-
-TODO: Auto version bumping in the ```.csproj``` and change log.
+While APIs still move, versions are `1.0.0-beta.N` (R3). Each release has a `CHANGELOG.md` entry for
+its version; releasing is described in [Pipelines.md](Pipelines.md).
 
 ## Pipelines
-Biometria uses [Azure Pipelines](https://learn.microsoft.com/azure/devops/pipelines/) for each library with minimal input per package.  Here is layout of Yaml directives:
-
-- sdk/{library}/ci.yml
-  - eng/pipelines/stages/library.yml
-    - eng/pipelines/variables/globals.yml
-    - eng/pipelines/jobs/ci.yml
-    
-      Where generic pipelines feed into repo-specific pipelines (jobs, stegs etc.)
-    - eng/pipelines/stages/release.yml
-
+CI runs on GitHub Actions: see [Pipelines.md](Pipelines.md) for what runs when and the local command
+behind every step, and [eng/README.md](../../eng/README.md) for which layer owns each CI/CD purpose.

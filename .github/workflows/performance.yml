@@ -1,0 +1,36 @@
+# Phase: the performance gate of one package (contract eng/specs/001-ci-cd/contracts/ci-workflow.md).
+# Called by ci.yml; not run on its own. Runs only tests with the trait Category=Performance, which gate
+# allocations and memory growth, never timings: shared runners are noisy (R6.7).
+# Local equivalent (doc/dev/Pipelines.md): dotnet test <test project> -s <test folder>/Performance.runsettings
+name: performance
+
+on:
+  workflow_call:
+    inputs:
+      package:
+        description: Package name, e.g. Forestry.Xml
+        required: true
+        type: string
+      test-project:
+        description: The package's test project
+        required: true
+        type: string
+      test-folder:
+        description: The folder holding the test project's Performance.runsettings
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  performance:
+    name: ${{ inputs.package }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: ./.github/actions/setup
+
+      - name: Performance gate
+        run: dotnet test ${{ inputs.test-project }} -s ${{ inputs.test-folder }}/Performance.runsettings

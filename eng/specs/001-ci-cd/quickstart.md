@@ -16,12 +16,13 @@ matrix):
 
 ```bash
 dotnet restore sdk/xml/Forestry.Xml/Forestry.Xml.slnx
-dotnet build sdk/xml/Forestry.Xml/Forestry.Xml.slnx -c Release --no-restore
-dotnet test sdk/xml/Forestry.Xml/Forestry.Xml.slnx -c Release --no-build
+dotnet build sdk/xml/Forestry.Xml/Forestry.Xml.slnx --no-restore
+dotnet test sdk/xml/Forestry.Xml/Forestry.Xml.slnx --no-build
+dotnet test sdk/xml/Forestry.Xml/test/Forestry.Xml.Tests.csproj --no-build -s sdk/xml/Forestry.Xml/test/Performance.runsettings
 dotnet pack sdk/xml/Forestry.Xml/Forestry.Xml.slnx -c Release -p:VersionSuffixCi=0
 ```
 
-Expected: no warnings, all tests pass, `artifacts/packages/Release/` holds a `.nupkg` and `.snupkg`
+Expected: no warnings, all tests pass (tests in Debug, packing in Release, P11), `artifacts/packages/Release/` holds a `.nupkg` and `.snupkg`
 for the package, versioned `<Version>.ci.0`.
 
 ## US1 Every change is checked

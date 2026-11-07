@@ -16,6 +16,13 @@
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
+    <!-- Known vulnerable packages, direct or transitive, fail restore through TreatWarningsAsErrors (eng constitution S1) -->
+    <PropertyGroup>
+        <NuGetAudit>true</NuGetAudit>
+        <NuGetAuditMode>all</NuGetAuditMode>
+        <NuGetAuditLevel>low</NuGetAuditLevel>
+    </PropertyGroup>
+
     <!-- TODO: Code analysis rule sets with StyleCop.Analyzers -->
     <PropertyGroup Condition="'$(IsClientLibrary)' == 'true'">
     </PropertyGroup>    
@@ -29,10 +36,11 @@
         <NeutralLanguage>en-US</NeutralLanguage>
     </PropertyGroup>
 
-    <!-- Net Frameworks -->
+    <!-- Supported target frameworks: the current LTS, plus the newest release when it is newer;
+         a version out of support is dropped (eng constitution, spec 001 R8). Support dates are in global.json -->
     <PropertyGroup>
         <LatestTargetFramework>net10.0</LatestTargetFramework>
-        <RequiredTargetFrameworks>$(LatestTargetFramework);net9.0;</RequiredTargetFrameworks>
+        <RequiredTargetFrameworks>$(LatestTargetFramework)</RequiredTargetFrameworks>
 
         <TargetFrameworks>$(RequiredTargetFrameworks)</TargetFrameworks>
     </PropertyGroup>

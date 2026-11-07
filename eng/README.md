@@ -29,21 +29,21 @@ in [`doc/dev/`](../doc/dev/), and the rules are in this silo's constitution
 package inherits; `.github/` only runs the commands a developer runs locally (C3); `doc/dev/`
 explains them (D0).
 
-> Draft from spec 001 ([research](specs/001-ci-cd/research.md)). Entries marked *planned* do not
-> exist yet.
+> From spec 001 ([research](specs/001-ci-cd/research.md)). Entries marked *planned* come in later
+> stories (packing in US2, releasing in US3).
 
 | Purpose | Package (`sdk/<pkg>/`) | Root | `eng/` | `.github/` |
 |---|---|---|---|---|
-| SDK version | – | `global.json` | – | `actions/setup` reads `global.json` (*planned*) |
-| Restore, feeds, package versions | `PackageReference` without a version | `NuGet.Config` | `packaging/Directory.Packages.props` (central versions, CPM guard) | `actions/setup` NuGet cache (*planned*) |
+| SDK version | – | `global.json` | – | `actions/setup` reads `global.json` |
+| Restore, feeds, package versions | `PackageReference` without a version | `NuGet.Config` | `packaging/Directory.Packages.props` (central versions, CPM guard) | `actions/setup` NuGet cache |
 | Compile defaults (frameworks, warnings as errors, XML docs) | `Directory.Build.props` for package-only settings | `Directory.Build.props` (paths, `artifacts/`) | `Directory.Build.Common.props` | – |
-| What CI builds | the package's own `.slnx` | – | – | `workflows/ci.yml` matrix: one job per package (*planned*, R7) |
-| Test, coverage | test `.csproj`, `*.Tests.runsettings` | `Directory.Build.targets` (test traceability) | – | `workflows/build-test.yml` (*planned*) |
-| Performance gate | `Performance.runsettings`, tests with `Category=Performance` | – | – | `workflows/performance.yml` (*planned*) |
+| What CI builds | the package's own `.slnx` | – | – | `workflows/ci.yml` matrix: one job per package (R7) |
+| Test, coverage | test `.csproj`, `*.Tests.runsettings` | `Directory.Build.targets` (test traceability) | – | `workflows/build-test.yml` |
+| Performance gate | `Performance.runsettings`, tests with `Category=Performance` | – | – | `workflows/performance.yml` |
 | Version, release notes | `<Version>` in the `.csproj`, `CHANGELOG.md` | – | – | `workflows/release.yml` checks both, after `build-test.yml` (*planned*) |
 | Pack, symbols, SourceLink, package validation | package `README.md` | – | `Directory.Build.Common.props` / `.targets` | `workflows/pack.yml` (*planned*) |
 | Publish (preview feed) | – | – | – | `workflows/release.yml`: tag and GitHub release (*planned*) |
-| Dependency updates | – | – | – | `dependabot.yml` (*planned*) |
+| Dependency updates | – | – | – | `dependabot.yml` |
 | How-to for each purpose | – | `doc/dev/` | – | – |
 
 The pipeline stages that lived in `eng/pipelines/` under Azure DevOps (setup, compile, test,
