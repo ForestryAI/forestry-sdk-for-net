@@ -1,3 +1,5 @@
+using Xunit;
+
 namespace Forestry.Deserialize.Tests;
 
 // Throwaway for eng spec 001 quickstart US1 step 2 (T019): CI must name this failing test.
