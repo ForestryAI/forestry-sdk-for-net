@@ -5,7 +5,7 @@ namespace Forestry.Turn.Tests
     public class IntentionContentTests
     {
         [Fact]
-        public async void When_AsyncCopyingString_ItShould_CreateByteArray()
+        public async Task When_AsyncCopyingString_ItShould_CreateByteArray()
         {
             // Arrange
             IntentionContent value = IntentionContent.Create("value");
