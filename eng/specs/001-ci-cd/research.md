@@ -117,6 +117,9 @@ so its package depends on theirs (spec Story 3, scenario 4).
    non-standard name, with a test-only conditional `ItemGroup`). `dependabot.yml` lists
    `/eng/packaging` explicitly, and US1 checks that the first Dependabot run updates both files; if
    it does not, the support file is folded into `Directory.Packages.props`.
+   **Found on the first run (2026-11-07)**: Dependabot looks for a project or solution in each listed
+   folder and does not search below it, so `/` and `/eng/packaging` gave "No project files found"
+   and no pull requests. See R9.
 2. **Pull request noise.** Updates are grouped (test packages; GitHub Actions), weekly, with a cap on
    open pull requests.
 3. **Major versions.** The first wave includes breaking jumps of stale test packages (e.g.
@@ -168,3 +171,24 @@ Dependabot.
   this spec.
 - **Status**: Confirmed by the developer, 2026-11-07
 
+## R9. Dependency updates and per-package needs
+
+- **Facts** (read from the repositories, 2026-11-09):
+  - **Azure SDK for .NET**: Dependabot for npm only, pull requests off (alerts only); no NuGet entry
+    and no Renovate config in the usual places, so how its NuGet versions get updated is not visible
+    from the repository. Every dependency is stated explicitly in
+    `eng/centralpackagemanagement/` (`Directory.Packages.props`, `Directory.Support.Packages.props`,
+    others). A package with its own needs gets `overrides/<PackageName>.Packages.props`, imported
+    automatically by project name; a library-specific dependency needs a .NET architect's approval
+    and a version override is short-lived, with an issue tracking its removal.
+  - **OpenTelemetry .NET**: Renovate; its `dependabot.yml` is kept only for scanners.
+- **Decision for the POC** (developer, 2026-11-09: Dependabot is fine for a POC): keep Dependabot,
+  listing `/sdk/*/*` so a new package needs no change, and `/.github/actions/setup` for the actions
+  in the composite action. Dependabot only proposes; versions stay stated explicitly in
+  `eng/packaging/`, as in Azure.
+- **Open risk**: a monorepo's packages may need different dependencies, and one central file gives
+  them all the same version. Today the three packages in scope have no package dependencies (A1),
+  so nothing diverges yet. When one must, adopt Azure's override pattern (one file per package,
+  developer's approval), and re-evaluate Renovate then, or sooner if Dependabot cannot handle
+  `.slnx` entry points or the imported support file.
+- **Status**: Open until the first Dependabot run with `/sdk/*/*` is checked

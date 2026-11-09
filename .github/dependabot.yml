@@ -3,10 +3,10 @@
 version: 2
 updates:
   - package-ecosystem: nuget
-    # Central package versions live in eng/packaging/, not in the default place (note 1)
+    # Dependabot looks for a solution or project in each listed folder and does not search below it,
+    # so point it at the package folders (each holds a .slnx). Versions stay in eng/packaging/ (R9).
     directories:
-      - /eng/packaging
-      - /
+      - /sdk/*/*
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
@@ -27,7 +27,10 @@ updates:
         update-types: [version-update:semver-major]
 
   - package-ecosystem: github-actions
-    directory: /
+    # / covers .github/workflows/; a composite action's folder has to be listed itself
+    directories:
+      - /
+      - /.github/actions/setup
     schedule:
       interval: weekly
     groups:
