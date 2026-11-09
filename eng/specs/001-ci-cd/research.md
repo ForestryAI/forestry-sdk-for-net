@@ -154,6 +154,10 @@ Dependabot.
   tested by the reader's tests and through the bridge's tests in the same pull request. Every
   package runs on every pull request for now; running only changed packages (and their
   dependents) is deferred until the number of packages makes it worth a dependency map.
+- **Widened after the first Dependabot updates** (developer, 2026-11-09): `Forestry.Raindrop` and
+  `Forestry.Turn` joined the `build-test` matrix. They share the central versions, and Dependabot's
+  #78 was green while it broke Turn's build (xUnit1048), since CI did not build Turn. They have no
+  performance tests, so no `performance` entry, and they are not packed or released in this spec.
 - **Status**: Confirmed by the developer (revised to (c)), 2026-11-07
 
 ## R8. Target frameworks
@@ -191,4 +195,7 @@ Dependabot.
   so nothing diverges yet. When one must, adopt Azure's override pattern (one file per package,
   developer's approval), and re-evaluate Renovate then, or sooner if Dependabot cannot handle
   `.slnx` entry points or the imported support file.
-- **Status**: Open until the first Dependabot run with `/sdk/*/*` is checked
+- **Result** (2026-11-09): the run with `/sdk/*/*` accepted the `.slnx` entry points and opened #78-#81,
+  changing both files in `eng/packaging/`, so the support file stays. All merged, after Turn's
+  `async void` test was fixed (#82).
+- **Status**: Confirmed by the developer, 2026-11-09
