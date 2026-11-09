@@ -13,7 +13,9 @@ is mapped in [eng/README.md](../../eng/README.md); the decisions behind this pag
 | A push to `main` (a merged pull request) | `ci.yml`, the same |
 | Weekly | Dependabot opens grouped pull requests for NuGet packages and GitHub Actions; each is checked by `ci.yml` like any change |
 
-A newer push to a pull request cancels its older run; runs on `main` always finish.
+A newer push to a pull request cancels its older run. On `main` a running run finishes, but GitHub
+keeps only one waiting: when pull requests are merged in quick succession the waiting run is
+replaced, so some show as cancelled and the latest commit is the one that runs.
 
 ## How the workflows are built
 
@@ -75,8 +77,11 @@ and records the support dates; net11.0 is added once released.
 
 ## Adding a package to CI
 
-Add one entry to each matrix in `.github/workflows/ci.yml` (its `slnx` for `build-test`; its test
-project and folder for `performance`). Nothing else changes.
+Add one entry to the `build-test` matrix in `.github/workflows/ci.yml` (its `slnx`), and one to the
+`performance` matrix (its test project and folder) if it has performance tests. Nothing else changes.
+
+Check every package that uses the central versions in `eng/packaging/`: a Dependabot update reaches
+all of them, and CI only proves it for the packages in the matrix.
 
 ## Repository settings (done by a maintainer)
 

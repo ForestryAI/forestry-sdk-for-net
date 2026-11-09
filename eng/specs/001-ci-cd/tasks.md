@@ -47,6 +47,9 @@ PR #68). Then one branch per story from `main` (`eng-001-us1-checks`, `eng-001-u
 | `Forestry.Deserialize` | `sdk/deserialize/Forestry.Deserialize/Forestry.Deserialize.slnx` | `sdk/deserialize/Forestry.Deserialize/test/Forestry.Deserialize.Tests.csproj` |
 | `Forestry.Deserialize.Xml` | `sdk/deserialize/Forestry.Deserialize.Xml/Forestry.Deserialize.Xml.slnx` | `sdk/deserialize/Forestry.Deserialize.Xml/test/Forestry.Deserialize.Xml.Tests.csproj` |
 
+`Forestry.Raindrop` and `Forestry.Turn` are also in `ci.yml`'s `build-test` matrix (R7, 2026-11-09);
+they are not packed or released here.
+
 ## Not in this spec
 
 nuget.org publishing (a later spec), running only changed packages (R7), a coverage threshold (R6.6),
@@ -104,7 +107,7 @@ FR-007, FR-013; R5, R6, R7; P1, P8).
 - [X] T017 [P] [US1] Update `eng/README.md`: drop *planned* from the rows that now exist (SDK version, restore and cache, what CI builds, test and coverage, performance gate, dependency updates), and add a status badge for `ci.yml` to the root `README.md`
 - [X] T018 [US1] **Review gate**: the developer reviews the diff of T003–T017 (depends on T003–T017)
 - [X] T019 [US1] Push `eng-001-us1-checks`, open its pull request to `main`, and run quickstart.md "US1" steps 1–3 and 5 on it (a deliberately failing test and a deliberate warning in throwaway commits, reverted before merge); all jobs green at the end, under 10 minutes (SC-001) (depends on T018)
-- [ ] T020 [US1] After the developer merges: check the run on `main` (quickstart US1 step 4) and, after Dependabot's first weekly run, that its pull requests change `eng/packaging/Directory.Packages.props` and `eng/packaging/Directory.Support.Packages.props`; if the support file is not updated, fold it into `Directory.Packages.props` in a follow-up pull request (Dependabot note 1); delete branch `eng-001-us1-checks` (depends on T019)
+- [X] T020 [US1] After the developer merges: check the run on `main` (quickstart US1 step 4) and, after Dependabot's first weekly run, that its pull requests change `eng/packaging/Directory.Packages.props` and `eng/packaging/Directory.Support.Packages.props`; if the support file is not updated, fold it into `Directory.Packages.props` in a follow-up pull request (Dependabot note 1); delete branch `eng-001-us1-checks` (depends on T019)
 - [ ] T021 [US1] Ask the developer to switch on Dependabot alerts and security updates in the repository's Settings → Security, and to make the `build-test` jobs required checks for `main` (repository settings are the developer's)
 
 **Checkpoint**: Every pull request shows one green or red job per package (US1 done, MVP).

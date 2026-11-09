@@ -169,6 +169,8 @@ project on another machine by following the README, and read a document with it.
   `Forestry.Deserialize` and `Forestry.Deserialize.Xml` (developer, 2026-11-07). Other packages
   (`Forestry.Raindrop`, `Forestry.Turn`, `Forestry.StanForD`, `Forestry.PapiNet`) are added when
   their silo is ready, each by adding it to the scope, not by changing the pipeline.
+  `Forestry.Raindrop` and `Forestry.Turn` are also checked (build and test, not packed or released),
+  because they share the central package versions (developer, 2026-11-09, R7).
 
 ### Key Entities
 

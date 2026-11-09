@@ -23,6 +23,8 @@ and `test-folder`; every phase job starts with `actions/checkout` and then the c
 | `Forestry.Xml` | `sdk/xml/Forestry.Xml/Forestry.Xml.slnx` |
 | `Forestry.Deserialize` | `sdk/deserialize/Forestry.Deserialize/Forestry.Deserialize.slnx` |
 | `Forestry.Deserialize.Xml` | `sdk/deserialize/Forestry.Deserialize.Xml/Forestry.Deserialize.Xml.slnx` |
+| `Forestry.Raindrop` (`build-test` only) | `sdk/raindrop/Forestry.Raindrop/Forestry.Raindrop.slnx` |
+| `Forestry.Turn` (`build-test` only) | `sdk/turn/Forestry.Turn/Forestry.Turn.slnx` |
 
 Each job below runs once per matrix entry (`fail-fast: false`, so one package's failure does not
 hide another's result).
