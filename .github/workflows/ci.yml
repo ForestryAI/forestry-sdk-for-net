@@ -33,6 +33,8 @@ jobs:
             slnx: sdk/deserialize/Forestry.Deserialize/Forestry.Deserialize.slnx
           - package: Forestry.Deserialize.Xml
             slnx: sdk/deserialize/Forestry.Deserialize.Xml/Forestry.Deserialize.Xml.slnx
+          - package: Forestry.StanForD
+            slnx: sdk/stanford/Forestry.StanForD/Forestry.StanForD.slnx
           # Checked but not released in spec 001: they share the central package versions (FR-015)
           - package: Forestry.Raindrop
             slnx: sdk/raindrop/Forestry.Raindrop/Forestry.Raindrop.slnx
