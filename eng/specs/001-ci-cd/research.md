@@ -187,7 +187,7 @@ Dependabot.
     and a version override is short-lived, with an issue tracking its removal.
   - **OpenTelemetry .NET**: Renovate; its `dependabot.yml` is kept only for scanners.
 - **Decision for the POC** (developer, 2026-11-09: Dependabot is fine for a POC): keep Dependabot,
-  listing `/sdk/*/*` so a new package needs no change, and `/.github/actions/setup` for the actions
+  listing `/sdk/*/*` so a new package needs no change, and `/eng/actions/setup` for the actions
   in the composite action. Dependabot only proposes; versions stay stated explicitly in
   `eng/packaging/`, as in Azure.
 - **Open risk**: a monorepo's packages may need different dependencies, and one central file gives

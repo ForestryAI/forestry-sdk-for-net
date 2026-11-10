@@ -1,0 +1,38 @@
+# Finds the package's last GitHub release, used as the baseline for breaking changes (spec 001 P5).
+# The repository must be checked out first, and the job needs contents: read.
+name: Last release baseline
+description: Downloads the last GitHub release's .nupkg of a package and gives the argument for dotnet pack.
+
+inputs:
+  package:
+    description: Package name, e.g. Forestry.Xml
+    required: true
+  token:
+    description: Token for reading releases
+    required: true
+
+outputs:
+  argument:
+    description: -p:PackageValidationBaselinePath=<file>, empty when the package has no release
+    value: ${{ steps.find.outputs.argument }}
+
+runs:
+  using: composite
+  steps:
+    - name: Find the last release
+      id: find
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        PACKAGE: ${{ inputs.package }}
+      run: |
+        tag=$(gh release list --limit 100 --json tagName,createdAt \
+          --jq "[.[] | select(.tagName | startswith(\"$PACKAGE/v\"))] | sort_by(.createdAt) | last | .tagName // \"\"")
+        if [ -n "$tag" ]; then
+          version="${tag#"$PACKAGE/v"}"
+          gh release download "$tag" --pattern "$PACKAGE.$version.nupkg" --dir artifacts/baseline
+          echo "argument=-p:PackageValidationBaselinePath=$PWD/artifacts/baseline/$PACKAGE.$version.nupkg" >> "$GITHUB_OUTPUT"
+          echo "Comparing with $tag"
+        else
+          echo "No release of $PACKAGE yet: nothing to compare with"
+        fi

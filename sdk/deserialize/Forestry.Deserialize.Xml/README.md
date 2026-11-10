@@ -18,6 +18,17 @@ foreach (Row row in Deserialization.Deserialize(xml, options))
 }
 ```
 
+## Try the preview
+
+Preview packages are attached to this repository's
+[GitHub releases](https://github.com/ForestryAI/forestry-sdk-for-net/releases), with no sign-in needed.
+Download `Forestry.Deserialize.Xml.<version>.nupkg` from the latest `Forestry.Deserialize.Xml/v…` release, and the same from the latest `Forestry.Xml/v…` and `Forestry.Deserialize/v…` releases it depends on, into a folder, then:
+
+```bash
+dotnet nuget add source <folder> -n forestry-preview
+dotnet add package Forestry.Deserialize.Xml --prerelease
+```
+
 ## How elements become rows
 
 - An element named like a row type (its class name, or its `[Row]` name) starts a row, wherever it

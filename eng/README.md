@@ -29,20 +29,17 @@ in [`doc/dev/`](../doc/dev/), and the rules are in this silo's constitution
 package inherits; `.github/` only runs the commands a developer runs locally (C3); `doc/dev/`
 explains them (D0).
 
-> From spec 001 ([research](specs/001-ci-cd/research.md)). Entries marked *planned* come with
-> releasing (US3).
-
 | Purpose | Package (`sdk/<pkg>/`) | Root | `eng/` | `.github/` |
 |---|---|---|---|---|
-| SDK version | – | `global.json` | – | `actions/setup` reads `global.json` |
-| Restore, feeds, package versions | `PackageReference` without a version | `NuGet.Config` | `packaging/Directory.Packages.props` (central versions, CPM guard) | `actions/setup` NuGet cache |
+| SDK version | – | `global.json` | `actions/setup` reads `global.json` | every phase uses it |
+| Restore, feeds, package versions | `PackageReference` without a version | `NuGet.Config` | `packaging/Directory.Packages.props` (central versions, CPM guard), `actions/setup` NuGet cache | – |
 | Compile defaults (frameworks, warnings as errors, XML docs) | `Directory.Build.props` for package-only settings | `Directory.Build.props` (paths, `artifacts/`) | `Directory.Build.Common.props` | – |
 | What CI builds | the package's own `.slnx` | – | – | `workflows/ci.yml` matrix: one job per package (R7) |
 | Test, coverage | test `.csproj`, `*.Tests.runsettings` | `Directory.Build.targets` (test traceability) | – | `workflows/build-test.yml` |
 | Performance gate | `Performance.runsettings`, tests with `Category=Performance` | – | – | `workflows/performance.yml` |
-| Version, release notes | `<Version>` in the `.csproj`, `CHANGELOG.md` | – | – | `workflows/release.yml` checks both, after `build-test.yml` (*planned*) |
+| Version, release notes | `<Version>` in the `.csproj`, `CHANGELOG.md` | – | – | `workflows/release.yml` checks both, after `build-test.yml` |
 | Pack, symbols, SourceLink, package validation | package `README.md`, `IsShippingLibrary` in its `Directory.Build.props` | – | `Directory.Build.Common.props` / `.targets` | `workflows/pack.yml` |
-| Publish (preview feed) | – | – | – | `workflows/release.yml`: tag and GitHub release (*planned*) |
+| Publish (preview feed) | – | – | – | `workflows/release.yml`: tag and GitHub release |
 | Dependency updates | – | – | – | `dependabot.yml` |
 | How-to for each purpose | – | `doc/dev/` | – | – |
 
@@ -51,8 +48,11 @@ performance, pack, publish) become one file per phase in `.github/workflows/`, t
 of Azure's job templates: `ci.yml` only decides when and for which packages, and calls the phases
 (`build-test.yml`, `performance.yml`, `pack.yml`) as reusable workflows; `release.yml` calls the same
 `build-test.yml`. Steps every phase repeats (setup) are one composite action in
-`.github/actions/setup/`, the equivalent of Azure's step templates. Reusable workflows cannot sit in
-subfolders of `.github/workflows/`. `.github/` and `eng/` are committed; only `eng/.claude/` (the local spec-kit skills) is
+`eng/actions/setup/`, the equivalent of Azure's step templates, and `eng/actions/baseline/` finds a
+package's last release.
+
+GitHub only reads workflows (reusable ones too) and `dependabot.yml` from `.github/`, with no subfolders
+in `workflows/`, so `.github/` holds just those. Composite actions can live anywhere, so they live here. `.github/` and `eng/` are committed; only `eng/.claude/` (the local spec-kit skills) is
 kept out of git, as in the package silos.
 
 ## Also here

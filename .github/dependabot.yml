@@ -27,10 +27,11 @@ updates:
         update-types: [version-update:semver-major]
 
   - package-ecosystem: github-actions
-    # / covers .github/workflows/; a composite action's folder has to be listed itself
+    # / covers .github/workflows/; a composite action's folder has to be listed itself (they live in eng/actions/)
     directories:
       - /
-      - /.github/actions/setup
+      - /eng/actions/setup
+      - /eng/actions/baseline
     schedule:
       interval: weekly
     groups:

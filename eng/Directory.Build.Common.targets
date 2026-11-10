@@ -9,6 +9,34 @@
         <PackageVersion>$(Version)</PackageVersion>
     </PropertyGroup>
 
+    <!-- Release notes from the package's CHANGELOG.md (eng constitution C1, spec 001 P3). With -p:Release=true the
+         version must have a dated heading, "## <Version> (yyyy-MM-dd)", so the same check runs locally and in release.yml -->
+    <Target Name="ReadReleaseNotes" BeforeTargets="GenerateNuspec" Condition="'$(IsPackable)' == 'true' and '$(IsShippingLibrary)' == 'true'">
+        <PropertyGroup>
+            <_ReleaseVersion>$(Version)</_ReleaseVersion>
+            <_ReleaseVersion Condition="'$(_VersionBeforeCi)' != ''">$(_VersionBeforeCi)</_ReleaseVersion>
+            <_ChangelogPath>$(MSBuildProjectDirectory)/../CHANGELOG.md</_ChangelogPath>
+            <_ChangelogText Condition="Exists('$(_ChangelogPath)')">$([System.IO.File]::ReadAllText('$(_ChangelogPath)'))</_ChangelogText>
+            <_ReleaseVersionPattern>$([System.Text.RegularExpressions.Regex]::Escape('$(_ReleaseVersion)'))</_ReleaseVersionPattern>
+            <_ChangelogHeadingFound>$([System.Text.RegularExpressions.Regex]::IsMatch('$(_ChangelogText)', '(?m)^## $(_ReleaseVersionPattern) \('))</_ChangelogHeadingFound>
+            <_ChangelogHeadingDated>$([System.Text.RegularExpressions.Regex]::IsMatch('$(_ChangelogText)', '(?m)^## $(_ReleaseVersionPattern) \(\d{4}-\d{2}-\d{2}\)'))</_ChangelogHeadingDated>
+        </PropertyGroup>
+
+        <Error Condition="'$(Release)' == 'true' and '$(_ChangelogHeadingFound)' != 'True'" Code="FSDK00002"
+               Text="FSDK00002: $(_ChangelogPath) has no heading for version $(_ReleaseVersion): expected '## $(_ReleaseVersion) (yyyy-MM-dd)'" />
+        <Error Condition="'$(Release)' == 'true' and '$(_ChangelogHeadingFound)' == 'True' and '$(_ChangelogHeadingDated)' != 'True'" Code="FSDK00003"
+               Text="FSDK00003: the heading for version $(_ReleaseVersion) in $(_ChangelogPath) has no release date: replace (Unreleased) with (yyyy-MM-dd)" />
+
+        <PropertyGroup Condition="'$(_ChangelogHeadingFound)' == 'True'">
+            <PackageReleaseNotes>$([System.Text.RegularExpressions.Regex]::Replace('$(_ChangelogText)', '(?s)\A.*?(?m:^)## $(_ReleaseVersionPattern) \([^)]*\)[^\n]*\n(.*?)(?:(?m:^)## .*)?\z', '$1').Trim())</PackageReleaseNotes>
+        </PropertyGroup>
+
+        <WriteLinesToFile Condition="'$(_ChangelogHeadingFound)' == 'True'"
+                          File="$(ArtifactsDir)release-notes/$(PackageId).md"
+                          Lines="$([MSBuild]::Escape('$(PackageReleaseNotes)'))"
+                          Overwrite="true" />
+    </Target>
+
     <Target Name="EnforceCentralPackageManagement" BeforeTargets="Restore;Build;CollectPackageReferences">
         <!-- Guard against disabling CPM -->
         <Error

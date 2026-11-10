@@ -1,0 +1,178 @@
+# Releases one package to the preview feed: a tag and a prerelease GitHub release with its packages
+# (contract eng/specs/001-ci-cd/contracts/release-workflow.md). Started by hand from main, dry run by default.
+# The only workflow that can publish (eng constitution C0), and only its release job can write (S0).
+# Local equivalent of the checks (doc/dev/Pipelines.md): dotnet pack <project> -c Release -p:Release=true
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Package to release
+        required: true
+        type: choice
+        options:
+          - Forestry.Xml
+          - Forestry.Deserialize
+          - Forestry.Deserialize.Xml
+      dry-run:
+        description: Check and pack only, publish nothing
+        required: true
+        type: boolean
+        default: true
+
+  # A manual run is only offered once this file is on main, so changes to it are tried here as a dry run
+  # of Forestry.Xml, without the checks that depend on the version's release state (C6)
+  pull_request:
+    branches: [main]
+    paths:
+      - .github/workflows/release.yml
+      - .github/workflows/build-test.yml
+      - eng/Directory.Build.Common.targets
+      - eng/actions/**
+
+permissions:
+  contents: read
+
+jobs:
+  resolve:
+    name: resolve
+    runs-on: ubuntu-latest
+    outputs:
+      package: ${{ steps.resolve.outputs.package }}
+      slnx: ${{ steps.resolve.outputs.slnx }}
+      project: ${{ steps.resolve.outputs.project }}
+    steps:
+      - name: Resolve the package, refuse any branch but main
+        id: resolve
+        shell: bash
+        env:
+          PACKAGE: ${{ inputs.package || 'Forestry.Xml' }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::A release runs from main only, not $GITHUB_REF"
+            exit 1
+          fi
+          case "$PACKAGE" in
+            Forestry.Xml) folder=sdk/xml/Forestry.Xml ;;
+            Forestry.Deserialize) folder=sdk/deserialize/Forestry.Deserialize ;;
+            Forestry.Deserialize.Xml) folder=sdk/deserialize/Forestry.Deserialize.Xml ;;
+            *) echo "::error::Unknown package $PACKAGE"; exit 1 ;;
+          esac
+          {
+            echo "package=$PACKAGE"
+            echo "slnx=$folder/$PACKAGE.slnx"
+            echo "project=$folder/src/$PACKAGE.csproj"
+          } >> "$GITHUB_OUTPUT"
+
+  # The very same checks as CI: the phase itself, not a copy of its steps (P10)
+  checks:
+    name: checks
+    needs: resolve
+    uses: ./.github/workflows/build-test.yml
+    with:
+      package: ${{ needs.resolve.outputs.package }}
+      slnx: ${{ needs.resolve.outputs.slnx }}
+
+  pack:
+    name: pack
+    needs: [resolve, checks]
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    env:
+      PACKAGE: ${{ needs.resolve.outputs.package }}
+      PROJECT: ${{ needs.resolve.outputs.project }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: ./eng/actions/setup
+
+      - name: Read the version
+        id: version
+        shell: bash
+        run: echo "version=$(dotnet msbuild "$PROJECT" -getProperty:Version)" >> "$GITHUB_OUTPUT"
+
+      - name: Refuse a version already released
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if gh release view "$PACKAGE/v$VERSION" > /dev/null 2>&1; then
+            echo "::error::$PACKAGE $VERSION is already released"
+            exit 1
+          fi
+
+      - uses: ./eng/actions/baseline
+        id: baseline
+        with:
+          package: ${{ needs.resolve.outputs.package }}
+          token: ${{ github.token }}
+
+      # -p:Release=true refuses a version without a dated CHANGELOG heading (FSDK00002, FSDK00003)
+      - name: Pack
+        shell: bash
+        env:
+          RELEASE_ARGUMENT: ${{ github.event_name == 'workflow_dispatch' && '-p:Release=true' || '' }}
+          BASELINE_ARGUMENT: ${{ steps.baseline.outputs.argument }}
+        run: dotnet pack "$PROJECT" -c Release -p:ContinuousIntegrationBuild=true $RELEASE_ARGUMENT $BASELINE_ARGUMENT
+
+      - name: Refuse a dependency without a release
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          nupkg="artifacts/packages/Release/$PACKAGE/$PACKAGE.$VERSION.nupkg"
+          status=0
+          while read -r id version; do
+            [ -z "$id" ] && continue
+            if ! gh release view "$id/v$version" > /dev/null 2>&1; then
+              echo "::error::$PACKAGE depends on $id $version, which has no release"
+              status=1
+            fi
+          done < <(unzip -p "$nupkg" '*.nuspec' | grep -oE '<dependency id="Forestry\.[^"]+" version="[^"]+"' | sed -E 's/<dependency id="([^"]+)" version="([^"]+)"/\1 \2/' | sort -u)
+          exit $status
+
+      - name: Upload packages and release notes
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-${{ needs.resolve.outputs.package }}
+          path: |
+            artifacts/packages/Release/
+            artifacts/release-notes/
+          if-no-files-found: error
+
+  release:
+    name: release
+    needs: [resolve, pack]
+    if: github.event_name == 'workflow_dispatch' && inputs.dry-run == false && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      PACKAGE: ${{ needs.resolve.outputs.package }}
+      VERSION: ${{ needs.pack.outputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Download packages and release notes
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-${{ needs.resolve.outputs.package }}
+          path: release
+
+      - name: Create the tag and the GitHub release
+        shell: bash
+        run: |
+          prerelease=""
+          case "$VERSION" in *-*) prerelease="--prerelease" ;; esac
+          gh release create "$PACKAGE/v$VERSION" \
+            "release/packages/Release/$PACKAGE/$PACKAGE.$VERSION.nupkg" \
+            "release/packages/Release/$PACKAGE/$PACKAGE.$VERSION.snupkg" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "$PACKAGE $VERSION" \
+            --notes-file "release/release-notes/$PACKAGE.md" \
+            $prerelease

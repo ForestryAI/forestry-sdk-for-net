@@ -26,26 +26,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: ./.github/actions/setup
+      - uses: ./eng/actions/setup
 
       # The last GitHub release of this package, if any, is the baseline for breaking changes (P5)
-      - name: Find the last release
+      - uses: ./eng/actions/baseline
         id: baseline
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PACKAGE: ${{ inputs.package }}
-        run: |
-          tag=$(gh release list --limit 100 --json tagName,createdAt \
-            --jq "[.[] | select(.tagName | startswith(\"$PACKAGE/v\"))] | sort_by(.createdAt) | last | .tagName // \"\"")
-          if [ -n "$tag" ]; then
-            version="${tag#"$PACKAGE/v"}"
-            gh release download "$tag" --pattern "$PACKAGE.$version.nupkg" --dir artifacts/baseline
-            echo "argument=-p:PackageValidationBaselinePath=$PWD/artifacts/baseline/$PACKAGE.$version.nupkg" >> "$GITHUB_OUTPUT"
-            echo "Comparing with $tag"
-          else
-            echo "No release of $PACKAGE yet: nothing to compare with"
-          fi
+        with:
+          package: ${{ inputs.package }}
+          token: ${{ github.token }}
 
       - name: Pack
         run: >

@@ -3,7 +3,7 @@
 **Files** (P10): `ci.yml` orchestrates; each phase is a reusable workflow (`on: workflow_call`) in
 `.github/workflows/`, called once per matrix entry with inputs `package`, `slnx`, `test-project`
 and `test-folder`; every phase job starts with `actions/checkout` and then the composite action
-`./.github/actions/setup` (setup-dotnet from `global.json`, NuGet cache).
+`./eng/actions/setup` (setup-dotnet from `global.json`, NuGet cache).
 
 | File | Kind | Story |
 |---|---|---|
@@ -11,7 +11,7 @@ and `test-folder`; every phase job starts with `actions/checkout` and then the c
 | `build-test.yml` | Phase: restore, build, test, coverage, summary | US1 |
 | `performance.yml` | Phase: performance gate | US1 |
 | `pack.yml` | Phase: pack, package validation, upload | US2 |
-| `.github/actions/setup/action.yml` | Composite action: setup-dotnet, NuGet cache | US1 |
+| `eng/actions/setup/action.yml` | Composite action: setup-dotnet, NuGet cache | US1 |
 
 **Triggers**: `pull_request` (branches: `main`), `push` (branches: `main`).
 **Permissions**: `contents: read` for the whole workflow (S0).
@@ -40,7 +40,7 @@ Builds and tests in the Debug configuration, as a developer's everyday `dotnet t
 | Step | Local command | Fails when |
 |---|---|---|
 | Checkout | `git clone` | – |
-| `./.github/actions/setup`: .NET from `global.json`, NuGet cache keyed on `eng/packaging/*.props` and `**/*.csproj` | (installed SDK; `dotnet --version` matches `global.json`) | SDK missing |
+| `./eng/actions/setup`: .NET from `global.json`, NuGet cache keyed on `eng/packaging/*.props` and `**/*.csproj` | (installed SDK; `dotnet --version` matches `global.json`) | SDK missing |
 | Restore | `dotnet restore <slnx>` | Known vulnerable package (S1) |
 | Build | `dotnet build <slnx> --no-restore -p:ContinuousIntegrationBuild=true` | Any warning (warnings as errors), a missing XML doc |
 | Test with coverage | `dotnet test <slnx> --no-build --collect "XPlat Code Coverage" --logger trx` | A failing test; the result names test and framework |

@@ -13,6 +13,17 @@ The design is specified with spec-kit: the rules are in the
 [research.md](specs/001-walking-skeleton/research.md). Some of the design is adapted from
 Microsoft's open-source .NET runtime; see [THIRD-PARTY-NOTICES.md](../../../THIRD-PARTY-NOTICES.md).
 
+## Try the preview
+
+Preview packages are attached to this repository's
+[GitHub releases](https://github.com/ForestryAI/forestry-sdk-for-net/releases), with no sign-in needed.
+Download `Forestry.Deserialize.<version>.nupkg` from the latest `Forestry.Deserialize/v…` release into a folder, then:
+
+```bash
+dotnet nuget add source <folder> -n forestry-preview
+dotnet add package Forestry.Deserialize --prerelease
+```
+
 ## Packages
 
 - **Forestry.Deserialize**: the media-agnostic core: rows, options, type definitions, converters and

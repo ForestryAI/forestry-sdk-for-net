@@ -1,4 +1,4 @@
-# Steps every phase repeats (the GitHub equivalent of an Azure DevOps step template).
+# Steps every phase repeats (the GitHub equivalent of an Azure DevOps step template); lives in eng/ because a composite action can.
 # Local equivalent: install the .NET SDK named in global.json (`dotnet --version` matches it).
 name: Setup .NET
 description: Installs the .NET SDK pinned in global.json and restores the NuGet package cache.
