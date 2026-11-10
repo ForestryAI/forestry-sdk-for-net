@@ -1,4 +1,5 @@
 <!-- https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-sln#migrate -->
 <Solution>
   <Project Path="src/Forestry.StanForD.csproj" />
+  <Project Path="test/Forestry.StanForD.Tests.csproj" />
 </Solution>
