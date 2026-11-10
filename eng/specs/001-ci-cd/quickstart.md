@@ -66,3 +66,24 @@ for the package, versioned `<Version>.ci.0`.
 
    Without `gh`, the `.nupkg` is downloaded from the release page in a browser; no sign-in needed.
    Expected: the package restores and a small read loop runs on net10.0.
+
+## Results (2026-11-10)
+
+| Step | Result |
+|---|---|
+| US1 1 | Six jobs green in under a minute (#76); eleven since pack (#84), all pull request runs under 10 minutes once started |
+| US1 2 | A throwaway failing test turned only `build-test (Forestry.Deserialize)` red, naming the test (#76) |
+| US1 3 | A throwaway compiler warning failed the Build step of Forestry.Xml and Forestry.Deserialize.Xml (#76) |
+| US1 4 | CI green on `main` after each merge |
+| US1 5 | The failing test reproduced locally: 1 failed, 27 passed (#76) |
+| US1 6 | The first run found no projects; fixed with `/sdk/*/*` (#77). The rerun opened #78-#81, changing both files in `eng/packaging/` |
+| US2 1 | Packages from a run (#84): CI suffix, README, metadata, `.snupkg`, SourceLink with `/_/` |
+| US2 2 | A throwaway public class without XML docs failed the build with CS1591, naming the member (#84) |
+| US2 3 | Every row in `contracts/packaging-gate.md` has its tests |
+| US3 1-3 | `Forestry.Xml` dated (#86), dry run 42783211307, real run 42783580530: tag `Forestry.Xml/v1.0.0-beta.1` and a prerelease with both packages and the notes |
+| US3 4 | Dry run for the same version (42784459229): refused, "Forestry.Xml 1.0.0-beta.1 is already released" |
+| US3 5 | Dry run for `Forestry.Deserialize` with an `Unreleased` heading (42784463317): refused, FSDK00003 |
+| US3 6 | Clean folder, no sign-in: installed and read a document on net10.0 (the time for a reviewer new to the API is not measured) |
+
+Not exercised yet: the comparison with a last release (the first release has no predecessor; it runs on the
+next one) and the dependency refusal for a package that has dependencies.

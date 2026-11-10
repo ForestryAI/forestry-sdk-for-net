@@ -164,8 +164,8 @@ FR-012; R2–R5, R6.10, R6.13; P3, P4, P6; contract `release-workflow.md`).
 - [X] T041 [P] [US3] Update `doc/dev/Pipelines.md` (how to release: date the CHANGELOG heading, merge, run `release.yml` with dry run, then without; what it refuses), `eng/README.md` (drop *planned* for the version, release and publish rows) (D0)
 - [X] T042 [US3] **Review gate**: the developer reviews the diff of T036–T041, edits the two new CHANGELOGs (T037) (depends on T036–T041)
 - [X] T043 [US3] Push `eng-001-us3-release`, open its pull request: `ci.yml` green and `release.yml`'s pull request dry run green (packages and notes as artifacts, no tag); run `dotnet pack sdk/xml/Forestry.Xml/src/Forestry.Xml.csproj -c Release -p:Release=true` locally to see FSDK00003 on today's `Unreleased` heading; after merge delete the branch (depends on T042)
-- [ ] T044 [US3] First release, with the developer: date `Forestry.Xml`'s `## 1.0.0-beta.1` heading in a small pull request; after merge run `release.yml` for `Forestry.Xml` with `dry-run: true`, then `false`: tag `Forestry.Xml/v1.0.0-beta.1` and a prerelease with `.nupkg`, `.snupkg` and the notes; run it again and see it refused (quickstart US3 steps 1–5) (depends on T043)
-- [ ] T045 [US3] Reviewer check on another machine or a clean folder without the repository: follow `sdk/xml/Forestry.Xml/README.md` "Try the preview", install, read a small document on net10.0, in under 10 minutes (quickstart US3 step 6, SC-003) (depends on T044)
+- [X] T044 [US3] First release, with the developer: date `Forestry.Xml`'s `## 1.0.0-beta.1` heading in a small pull request; after merge run `release.yml` for `Forestry.Xml` with `dry-run: true`, then `false`: tag `Forestry.Xml/v1.0.0-beta.1` and a prerelease with `.nupkg`, `.snupkg` and the notes; run it again and see it refused (quickstart US3 steps 1–5) (depends on T043)
+- [X] T045 [US3] Reviewer check on another machine or a clean folder without the repository: follow `sdk/xml/Forestry.Xml/README.md` "Try the preview", install, read a small document on net10.0, in under 10 minutes (quickstart US3 step 6, SC-003) (depends on T044)
 
 **Checkpoint**: `Forestry.Xml` 1.0.0-beta.1 is on the preview feed; the other two follow when the developer dates their headings (Deserialize before Deserialize.Xml, P6).
 
@@ -173,8 +173,8 @@ FR-012; R2–R5, R6.10, R6.13; P3, P4, P6; contract `release-workflow.md`).
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T046 Run quickstart.md end to end on `main` and record the results (dates, run links) in `eng/specs/001-ci-cd/quickstart.md`
-- [ ] T047 Check `doc/dev/`, `eng/README.md` and this spec's documents against the workflows and MSBuild files (G0); mark the spec's status Implemented and close #71 and its sub-issues
+- [X] T046 Run quickstart.md end to end on `main` and record the results (dates, run links) in `eng/specs/001-ci-cd/quickstart.md`
+- [X] T047 Check `doc/dev/`, `eng/README.md` and this spec's documents against the workflows and MSBuild files (G0); mark the spec's status Implemented and close #71 and its sub-issues
 - [ ] T048 Propose to the developer the follow-ups found: package silos' A0 amendment (net10.0), a performance test for `Forestry.Deserialize`, adding net11.0 once released (R8), the nuget.org spec, any rejected value T027 found unrejected
 
 ---

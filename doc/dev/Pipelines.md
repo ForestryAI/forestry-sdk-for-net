@@ -125,5 +125,8 @@ all of them, and CI only proves it for the packages in the matrix.
 
 ## Repository settings (done by a maintainer)
 
-- Settings → Security: Dependabot alerts and security updates on.
-- Settings → Branches: the `build-test` jobs required before merging to `main`.
+- Settings → Advanced Security: Dependabot alerts and security updates, Secret Protection and push
+  protection on.
+- Settings → Rules → Rulesets → `main`: the five `build-test` jobs required before merging; deleting
+  `main` and force-pushing to it blocked. A required name must match a job exactly: renaming a job in
+  `ci.yml` means updating this list.
