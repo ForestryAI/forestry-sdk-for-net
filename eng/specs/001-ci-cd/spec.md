@@ -4,8 +4,7 @@
 
 **Created**: 2026-11-07
 
-**Status**: Draft (clarifications answered and research reviewed and confirmed by the developer,
-2026-11-07; spec review before `/speckit-plan`)
+**Status**: Implemented (2026-11-10): US1 #73, US2 #74, US3 #75; `Forestry.Xml` 1.0.0-beta.1 released
 
 **Issue**: #71 is this spec's feature (it also records the engineering constitution 1.0.0); its
 stories become sub-issues once tasks exist.
