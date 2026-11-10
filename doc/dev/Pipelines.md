@@ -88,7 +88,8 @@ Notes:
   then run the pack with the last release's `.nupkg` as the baseline and
   `-p:ApiCompatGenerateSuppressionFile=true`. That writes `CompatibilitySuppressions.xml` next to the
   project, accepting exactly those differences; it is reviewed in the pull request. Once the version
-  is released it becomes the new baseline, so delete the file with the next version bump.
+  is released it becomes the new baseline and every later pack fails with "Unnecessary suppressions
+  found", so delete the file in the first pull request after the release.
 - **Reading a failure**: open the failed job; the *Summary* tab lists failed tests with their target
   framework and the line coverage. Test results and coverage files are attached to the run as
   artifacts (`test-results-<Package>`).
