@@ -92,7 +92,7 @@ revised (with R7), P2-P10 confirmed as written.
 | P8 | Coverage: `--collect "XPlat Code Coverage"`, Cobertura files uploaded as artifacts and summarised in the job summary; no threshold | R6.6 |
 | P9 | `Forestry.Deserialize`'s performance run has no tests yet: the gate passes with zero tests (exit 0, checked 2026-11-07) and the plan adds no test there; a memory test is a package-silo follow-up | R6.7, A0 |
 | P11 | Tests run in the Debug configuration (`build-test.yml`, `performance.yml`, the local gate); packing and releasing build Release (developer, 2026-11-07, during US1) | `Forestry.Xml` has a test that checks a `Debug.Assert` fires, which only a Debug build can pass; Debug is also what a developer's everyday `dotnet test` runs (C3) and checks more invariants |
-| P10 | Workflows split by phase (developer, 2026-11-07, plan review): `ci.yml` only orchestrates (triggers, permissions, package matrix) and calls reusable phase workflows (`on: workflow_call`) `build-test.yml`, `performance.yml`, `pack.yml`; `release.yml` calls `build-test.yml` and adds its own release jobs; repeated setup steps (setup-dotnet from `global.json`, NuGet cache) are one composite action `.github/actions/setup/action.yml`; `dependabot.yml` in `.github/` | The pattern of multi-package SDK repositories (Azure SDK's job and step templates, OpenTelemetry .NET's reusable component workflow); release runs the very same checks as CI instead of a copy; each story adds a small file instead of growing one. Reusable workflows cannot sit in subfolders of `.github/workflows/` |
+| P10 | Workflows split by phase (developer, 2026-11-07, plan review): `ci.yml` only orchestrates (triggers, permissions, package matrix) and calls reusable phase workflows (`on: workflow_call`) `build-test.yml`, `performance.yml`, `pack.yml`; `release.yml` calls `build-test.yml` and adds its own release jobs; repeated setup steps (setup-dotnet from `global.json`, NuGet cache) are one composite action `eng/actions/setup/action.yml`; `dependabot.yml` in `.github/` | The pattern of multi-package SDK repositories (Azure SDK's job and step templates, OpenTelemetry .NET's reusable component workflow); release runs the very same checks as CI instead of a copy; each story adds a small file instead of growing one. Reusable workflows cannot sit in subfolders of `.github/workflows/` |
 
 ## Project Structure
 
@@ -118,8 +118,6 @@ eng/specs/001-ci-cd/
 ```text
 .github/
 ├── dependabot.yml                 # new: nuget (/eng/packaging), github-actions; weekly, grouped
-├── actions/
-│   └── setup/action.yml           # new (US1): composite: setup-dotnet from global.json + NuGet cache
 └── workflows/
     ├── ci.yml                     # new (US1): orchestrator: pull_request + push to main, package matrix
     ├── build-test.yml             # new (US1): phase (workflow_call): restore, build, test, coverage
@@ -135,6 +133,7 @@ package.json                       # remove
 README.md                          # links eng/README.md (done)
 
 eng/
+├── actions/setup/, baseline/      # composite actions the workflows call (moved from .github/ 2026-11-10)
 ├── README.md                      # map, updated as files land
 ├── Directory.Build.Common.props   # reshape: net10.0 only, metadata, docs, IsPackable, audit
 ├── Directory.Build.Common.targets  # reshape: CI suffix (P2), release notes (P3); keep FSDK00001

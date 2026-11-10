@@ -23,6 +23,17 @@ while (reader.Read())
 }
 ```
 
+## Try the preview
+
+Preview packages are attached to this repository's
+[GitHub releases](https://github.com/ForestryAI/forestry-sdk-for-net/releases), with no sign-in needed.
+Download `Forestry.Xml.<version>.nupkg` from the latest `Forestry.Xml/v…` release into a folder, then:
+
+```bash
+dotnet nuget add source <folder> -n forestry-preview
+dotnet add package Forestry.Xml --prerelease
+```
+
 ## Status
 
 Reads declarations, document types, comments, processing instructions, elements (including empty

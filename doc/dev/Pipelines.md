@@ -11,6 +11,8 @@ is mapped in [eng/README.md](../../eng/README.md); the decisions behind this pag
 |---|---|
 | A pull request to `main` is opened or updated | `ci.yml`: build and test, the performance gate, and packing (nothing is published) |
 | A push to `main` (a merged pull request) | `ci.yml`, the same |
+| Started by hand (Actions → release → Run workflow) | `release.yml`: checks, packs and publishes one package |
+| A pull request changing `release.yml`, `build-test.yml` or `Directory.Build.Common.targets` | `release.yml` as a dry run of `Forestry.Xml` |
 | Weekly | Dependabot opens grouped pull requests for NuGet packages and GitHub Actions; each is checked by `ci.yml` like any change |
 
 A newer push to a pull request cancels its older run. On `main` a running run finishes, but GitHub
@@ -21,14 +23,21 @@ replaced, so some show as cancelled and the latest commit is the one that runs.
 
 ```text
 .github/
-├── actions/setup/action.yml   setup steps every phase repeats: .NET from global.json, NuGet cache
 ├── workflows/
 │   ├── ci.yml                 decides WHEN and FOR WHICH PACKAGES; calls the phases
 │   ├── build-test.yml         phase: restore, build, test, coverage, summary
 │   ├── performance.yml        phase: the performance gate
-│   └── pack.yml               phase: pack, compare with the last release, keep the packages
+│   ├── pack.yml               phase: pack, compare with the last release, keep the packages
+│   └── release.yml            by hand: one package to the preview feed
 └── dependabot.yml             weekly dependency updates
+
+eng/actions/
+├── setup/action.yml           setup steps every phase repeats: .NET from global.json, NuGet cache
+└── baseline/action.yml        finds the package's last GitHub release, for breaking changes
 ```
+
+GitHub only reads workflows and `dependabot.yml` from `.github/`. Composite actions can live anywhere,
+so the shared steps sit in `eng/` and a step refers to them by path (`uses: ./eng/actions/setup`).
 
 - **`ci.yml` is the orchestrator.** It holds the triggers, the permissions (read-only) and one
   *matrix* per phase: a list of the packages in scope. GitHub runs the phase once per package, as
@@ -78,6 +87,26 @@ Notes:
 - **Reading a failure**: open the failed job; the *Summary* tab lists failed tests with their target
   framework and the line coverage. Test results and coverage files are attached to the run as
   artifacts (`test-results-<Package>`).
+
+## Releasing a package
+
+The preview feed is this repository's GitHub releases. To release:
+
+1. In the package's `CHANGELOG.md`, change the heading from `## 1.0.0-beta.1 (Unreleased)` to the date
+   (`## 1.0.0-beta.1 (2026-11-10)`), and merge that to `main`. For the next one, raise `<Version>` in
+   its `.csproj` and add a new heading.
+2. Actions → **release** → Run workflow: choose the package, leave **dry-run** on. It runs the checks
+   and packs, publishing nothing; its packages and notes are attached to the run.
+3. Run it again with **dry-run** off. It creates the tag `<Package>/v<Version>` and a prerelease GitHub
+   release with the `.nupkg`, the `.snupkg` and the changelog section as notes.
+
+Locally, `dotnet pack <src project> -c Release -p:Release=true` applies the same changelog check.
+
+It refuses: any branch but `main`; a version without a dated heading (FSDK00002, FSDK00003); a version
+already released; a dependency without a release, so `Forestry.Xml` and `Forestry.Deserialize` are
+released before `Forestry.Deserialize.Xml`.
+
+A release is never redone: a fix gets a new version.
 
 ## Target frameworks and SDK
 
