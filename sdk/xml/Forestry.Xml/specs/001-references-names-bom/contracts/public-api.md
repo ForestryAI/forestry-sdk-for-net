@@ -74,6 +74,7 @@ No new members. `Category` gains two values a caller can test: `"NotSupported"` 
 
 - `Extensions.Pack` / `Unpack` stay public and unchanged (whether `Extensions` stays public is out
   of scope); their doc no longer refers to the element stack.
-- `GetString()`, `TryGetString()`, `TryGetBoolean()` return the raw bytes; unescaping getters are
-  out of scope (C3).
+- `GetString()`, `TryGetString()`, `TryGetBoolean()` do not resolve references; unescaping getters
+  are out of scope (C3). Their contract was settled after this spec, in 1.0.0-beta.2 (`CHANGELOG.md`):
+  `GetString()` now returns a string.
 - `TokenType`: no new token; a reference is never a token.

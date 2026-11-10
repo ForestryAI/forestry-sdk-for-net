@@ -1,5 +1,20 @@
 # Release History
 
+## 1.0.0-beta.2 (2026-11-10)
+
+### Behavior Changes
+- `Utf8XmlReader.GetString()` and `TryGetString()` work on every token, following #28: the text of a
+  Value, the name of an element, attribute or end tag, the whole markup of a declaration, document
+  type, comment or processing instruction, and an empty string for `/>`. They used to throw on
+  anything but a Value.
+- `TryGetString()` and `TryGetBoolean()` return false instead of throwing: `TryGetString()` before
+  the first token or for invalid UTF-8, `TryGetBoolean()` on any token but a Value.
+
+### Breaking Changes
+- `Utf8XmlReader.GetString()` returns a decoded `string` instead of the raw `ReadOnlySpan<byte>`
+  (#28). The bytes are still in `Value` and `ValueSequence`. It throws an `InvalidOperationException`
+  with a message before the first token or when the value is not valid UTF-8.
+
 ## 1.0.0-beta.1 (2026-11-10)
 
 ### Features Added
