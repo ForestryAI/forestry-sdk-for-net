@@ -1,5 +1,14 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+    <!-- CI packs never collide with a release: 1.0.0-beta.1.ci.42, or 1.0.0-ci.42 (spec 001 P2).
+         The SDK's VersionSuffix cannot be used because each .csproj sets Version -->
+    <PropertyGroup Condition="'$(VersionSuffixCi)' != ''">
+        <_VersionBeforeCi>$(Version)</_VersionBeforeCi>
+        <Version Condition="$(_VersionBeforeCi.Contains('-'))">$(_VersionBeforeCi).ci.$(VersionSuffixCi)</Version>
+        <Version Condition="!$(_VersionBeforeCi.Contains('-'))">$(_VersionBeforeCi)-ci.$(VersionSuffixCi)</Version>
+        <PackageVersion>$(Version)</PackageVersion>
+    </PropertyGroup>
+
     <Target Name="EnforceCentralPackageManagement" BeforeTargets="Restore;Build;CollectPackageReferences">
         <!-- Guard against disabling CPM -->
         <Error

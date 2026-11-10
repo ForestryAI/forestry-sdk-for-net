@@ -46,7 +46,9 @@ Builds and tests in the Debug configuration, as a developer's everyday `dotnet t
 | Test with coverage | `dotnet test <slnx> --no-build --collect "XPlat Code Coverage" --logger trx` | A failing test; the result names test and framework |
 | Upload test results and coverage | – | – |
 
-## Phase `pack.yml` (called as job `pack`, needs `build-test`)
+## Phase `pack.yml` (called as job `pack`, for the packages released; independent of `build-test`)
+
+Built apart so that one package's failure never hides another's package (R7).
 
 | Step | Local command | Fails when |
 |---|---|---|
