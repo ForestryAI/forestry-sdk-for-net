@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Default test run (referenced by the test project): performance tests, trait Category=Performance,
+  are left out because they are slow. They are a gate at the end of every user story (tasks.md):
+  dotnet test -s Performance.runsettings
+-->
+<RunSettings>
+  <RunConfiguration>
+    <TestCaseFilter>Category!=Performance</TestCaseFilter>
+  </RunConfiguration>
+</RunSettings>
