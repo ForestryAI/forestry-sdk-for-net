@@ -118,7 +118,8 @@ constitution, not this one.
 
 ## Additional Constraints
 
-- **A0** (Code quality): Targets net9 and net10.
+- **A0** (Code quality): Targets the SDK's supported target frameworks, as defined in the engineering
+  constitution (`eng/.specify/memory/constitution.md`, Definitions).
 - **A1** (Architecture): No third-party NuGet dependencies.
 - **A3** (Workflow): Builds follow the SDK's shared engineering (`Directory.Build.props`, `eng/`,
   `doc/dev/`), referenced, not copied. CI/CD, packaging and publishing to NuGet are SDK-wide work,
@@ -153,8 +154,13 @@ constitution, not this one.
 
 ## Amendments
 
+- **2.0.0** (2026-11-10, confirmed by the developer, takes effect on merge to `main`). Reason: net9.0
+  left Microsoft support on 2026-11-10 and the SDK now targets net10.0 only (engineering spec 001,
+  research R8).
+  - A0 redefined: from naming net9 and net10 to the engineering silo's definition "Supported target
+    frameworks", so a new .NET release needs no amendment here.
 - **1.0.0** (2026-11-03, agreed by the developer in #64, takes effect on merge to `main`). First
   version, from the reader rules moved out of the deserialization constitution (#50, "Moved to the
   reader silo") and the reader's own decisions in #64.
 
-**Version**: 1.0.0 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-03
+**Version**: 2.0.0 | **Ratified**: 2026-11-03 | **Last Amended**: 2026-11-10

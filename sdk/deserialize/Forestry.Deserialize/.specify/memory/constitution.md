@@ -121,7 +121,8 @@ Workflow). Terms are defined under Definitions.
 
 ## Additional Constraints
 
-- **A0** (Code quality): Targets net9 and net10.
+- **A0** (Code quality): Targets the SDK's supported target frameworks, as defined in the engineering
+  constitution (`eng/.specify/memory/constitution.md`, Definitions).
 - **A1** (Architecture): No third-party NuGet dependencies in the deserialization package.
 - **A3** (Workflow): Builds follow the SDK's shared engineering (`Directory.Build.props`, `eng/`,
   `doc/dev/`), referenced, not copied, including CI/CD.
@@ -163,6 +164,11 @@ Workflow). Terms are defined under Definitions.
 
 ## Amendments
 
+- **3.0.0** (2026-11-10, confirmed by the developer, takes effect on merge to `main`). Reason: net9.0
+  left Microsoft support on 2026-11-10 and the SDK now targets net10.0 only (engineering spec 001,
+  research R8).
+  - A0 redefined: from naming net9 and net10 to the engineering silo's definition "Supported target
+    frameworks", so a new .NET release needs no amendment here.
 - **2.1.0** (2026-11-02, proposed and approved by the developer during the US1 code review, takes
   effect on merge to `main`). Reason: a shared document (`Document1`) used by throwing and non-throwing tests hid
   what each test reads, and unlabelled steps made tests slower to review (C4).
@@ -189,4 +195,4 @@ Workflow). Terms are defined under Definitions.
     value of a row" to metadata about a member; values live on the row's typed members (research
     R4).
 
-**Version**: 2.1.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-11-02
+**Version**: 3.0.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-11-10
