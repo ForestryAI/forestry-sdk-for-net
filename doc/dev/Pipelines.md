@@ -9,7 +9,7 @@ is mapped in [eng/README.md](../../eng/README.md); the decisions behind this pag
 
 | Event | What runs |
 |---|---|
-| A pull request to `main` is opened or updated | `ci.yml`: build and test, and the performance gate, for every package |
+| A pull request to `main` is opened or updated | `ci.yml`: build and test, the performance gate, and packing (nothing is published) |
 | A push to `main` (a merged pull request) | `ci.yml`, the same |
 | Weekly | Dependabot opens grouped pull requests for NuGet packages and GitHub Actions; each is checked by `ci.yml` like any change |
 
@@ -25,7 +25,8 @@ replaced, so some show as cancelled and the latest commit is the one that runs.
 ├── workflows/
 │   ├── ci.yml                 decides WHEN and FOR WHICH PACKAGES; calls the phases
 │   ├── build-test.yml         phase: restore, build, test, coverage, summary
-│   └── performance.yml        phase: the performance gate
+│   ├── performance.yml        phase: the performance gate
+│   └── pack.yml               phase: pack, compare with the last release, keep the packages
 └── dependabot.yml             weekly dependency updates
 ```
 
@@ -54,6 +55,7 @@ Run from the repository root. `<slnx>` is the package's own solution, e.g.
 | build-test | Build | `dotnet build <slnx> --no-restore` | Any compiler warning (warnings are errors) |
 | build-test | Test with coverage | `dotnet test <slnx> --no-build --collect "XPlat Code Coverage"` | A failing test |
 | performance | Performance gate | `dotnet test <test folder>/<Package>.Tests.csproj -s <test folder>/Performance.runsettings` | An allocation or memory-growth gate fails |
+| pack | Pack | `dotnet pack <slnx> -c Release -p:VersionSuffixCi=0` | A missing XML doc on a public member; a breaking change against the last release |
 
 Notes:
 
@@ -65,6 +67,14 @@ Notes:
   passes the gate with zero tests.
 - **CI adds `-p:ContinuousIntegrationBuild=true`** to the build: it only normalises file paths in
   the output (deterministic builds); the build behaves the same.
+- **Packing**: only a library that sets `IsShippingLibrary` in its own `Directory.Build.props` is
+  packed and held to the packaging gate. Each gets a `.nupkg` and a `.snupkg` under
+  `artifacts/packages/Release/<Package>/`, downloadable from the run (`packages-<Package>`).
+- **The CI suffix**: `-p:VersionSuffixCi=<n>` turns `1.0.0-beta.1` into `1.0.0-beta.1.ci.<n>`, so a CI
+  package never collides with a release. A real release packs without it.
+- **Breaking changes**: once a package has a GitHub release, `pack` passes that release's `.nupkg` as
+  `-p:PackageValidationBaselinePath=<file>` and the SDK compares the public API with it. Until then it
+  says "nothing to compare with".
 - **Reading a failure**: open the failed job; the *Summary* tab lists failed tests with their target
   framework and the line coverage. Test results and coverage files are attached to the run as
   artifacts (`test-results-<Package>`).
@@ -77,8 +87,9 @@ and records the support dates; net11.0 is added once released.
 
 ## Adding a package to CI
 
-Add one entry to the `build-test` matrix in `.github/workflows/ci.yml` (its `slnx`), and one to the
-`performance` matrix (its test project and folder) if it has performance tests. Nothing else changes.
+Add one entry to the `build-test` matrix in `.github/workflows/ci.yml` (its `slnx`), one to the
+`performance` matrix (its test project and folder) if it has performance tests, and one to the `pack`
+matrix if it is released (and set `IsShippingLibrary`, once its public members have XML docs).
 
 Check every package that uses the central versions in `eng/packaging/`: a Dependabot update reaches
 all of them, and CI only proves it for the packages in the matrix.

@@ -235,6 +235,9 @@ namespace Forestry.Deserialize
                 Throwing.WhenNoRowTypes();
             }
 
+            // A failed build leaves the options unlocked: forget what it resolved (a converter may have been added since)
+            _resolvedConverters = null;
+
             Dictionary<Type, TypeDefinition> typeDefinitions = [];
 
             foreach (Type type in Rows)

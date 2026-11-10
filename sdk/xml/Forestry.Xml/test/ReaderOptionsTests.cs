@@ -63,6 +63,43 @@ namespace Forestry.Xml.Tests
         }
         #endregion
 
+        #region packaging gate (eng spec 001 T023)
+        /// <summary>
+        /// Default cell of <c>MaxDepth</c>: never set, 64 nested elements read and the 65th start
+        /// tag throws Limit + Element
+        /// </summary>
+        [Fact]
+        public void MaxDepth_Default_ItShould_ReadSixtyFourLevelsAndThrowAtTheNext()
+        {
+            // Arrange
+            static string Nested(int levels) =>
+                string.Concat(Enumerable.Repeat("<a>", levels)) + string.Concat(Enumerable.Repeat("</a>", levels));
+
+            // Act
+            List<TokenType> tokens = ReadToEnd(Nested(64), default);
+            XmlException thrown = Assert.Throws<XmlException>(() => ReadToEnd(Nested(65), default));
+
+            // Assert
+            Assert.Equal(128, tokens.Count);
+            Assert.Equal("Limit", thrown.Category);
+            Assert.Equal("Element", thrown.Markup);
+        }
+
+        /// <summary>
+        /// Override cell of <c>MaxNameLength</c>: the upper bound, the element stack's 2048 name
+        /// bytes, can be set
+        /// </summary>
+        [Fact]
+        public void MaxNameLength_Override_ForTheCapacity_ItShould_BeAccepted()
+        {
+            // Act
+            ReaderOptions options = new() { MaxNameLength = ElementStack.NameBytesCapacity };
+
+            // Assert
+            Assert.Equal(2048, options.MaxNameLength);
+        }
+        #endregion
+
         #region enforcement
         /// <summary>
         /// Never set, <c>MaxDepth</c> gets the default: three nested elements read

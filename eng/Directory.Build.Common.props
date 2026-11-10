@@ -29,9 +29,9 @@
 
     <!-- Metadata -->
     <PropertyGroup>
-        <Company>Forestry</Company>
+        <Company>Forestry-AI</Company>
         <Product>Forestry SDK for .NET</Product>
-        <Authors>Coders</Authors>
+        <Authors>Forestry-AI</Authors>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <NeutralLanguage>en-US</NeutralLanguage>
     </PropertyGroup>
@@ -43,6 +43,43 @@
         <RequiredTargetFrameworks>$(LatestTargetFramework)</RequiredTargetFrameworks>
 
         <TargetFrameworks>$(RequiredTargetFrameworks)</TargetFrameworks>
+    </PropertyGroup>
+
+    <!-- Packing: only a library that sets IsShippingLibrary (in its own Directory.Build.props) is packed and
+         held to the packaging gate (eng constitution C2, C4; spec 001 P7) -->
+    <PropertyGroup Condition="'$(IsShippingLibrary)' == 'true' and '$(IsTestProject)' != 'true'">
+        <IsPackable>true</IsPackable>
+
+        <!-- A missing XML doc is an error through TreatWarningsAsErrors -->
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+        <!-- Symbols and SourceLink (the SDK has SourceLink built in) -->
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+        <!-- Compared with the last release when PackageValidationBaselinePath is passed (spec 001 P5) -->
+        <EnablePackageValidation>true</EnablePackageValidation>
+
+        <RepositoryUrl>https://github.com/ForestryAI/forestry-sdk-for-net</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <_PackageFolder>$([MSBuild]::MakeRelative('$(RepoRoot)', '$(MSBuildProjectDirectory)/..').Replace('\', '/'))</_PackageFolder>
+        <PackageProjectUrl>$(RepositoryUrl)/tree/main/$(_PackageFolder)</PackageProjectUrl>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(IsShippingLibrary)' == 'true' and '$(IsTestProject)' != 'true'">
+        <None Include="$(MSBuildProjectDirectory)/../README.md" Pack="true" PackagePath="/" Visible="false" />
+    </ItemGroup>
+
+    <PropertyGroup Condition="'$(IsShippingLibrary)' != 'true' or '$(IsTestProject)' == 'true'">
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <!-- Deterministic paths in anything built on GitHub Actions (eng constitution C4) -->
+    <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     </PropertyGroup>
 
     <!-- Client libraries -->

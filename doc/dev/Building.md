@@ -62,6 +62,10 @@ Every package has its own version, by hand in its `.csproj` (`<Version>`), next 
 ```
 MAJOR.MINOR.PATCH-PRERELEASE
 ```
+Packing settings (symbols, SourceLink, repository and README metadata, XML docs) are shared in
+`eng/Directory.Build.Common.props` and apply to a library that sets `IsShippingLibrary` in its own
+`Directory.Build.props`; anything else is not packable.
+
 While APIs still move, versions are `1.0.0-beta.N` (R3). Each release has a `CHANGELOG.md` entry for
 its version; releasing is described in [Pipelines.md](Pipelines.md).
 

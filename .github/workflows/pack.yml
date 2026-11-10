@@ -1,0 +1,62 @@
+# Phase: pack one package and run the packaging gate's package checks
+# (contract eng/specs/001-ci-cd/contracts/ci-workflow.md). Called by ci.yml; not run on its own.
+# Nothing is published here: the packages are kept as run artifacts.
+# Local equivalent (doc/dev/Pipelines.md): dotnet pack <slnx> -c Release -p:VersionSuffixCi=0
+name: pack
+
+on:
+  workflow_call:
+    inputs:
+      package:
+        description: Package name, e.g. Forestry.Xml
+        required: true
+        type: string
+      slnx:
+        description: The package's own solution, e.g. sdk/xml/Forestry.Xml/Forestry.Xml.slnx
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  pack:
+    name: ${{ inputs.package }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: ./.github/actions/setup
+
+      # The last GitHub release of this package, if any, is the baseline for breaking changes (P5)
+      - name: Find the last release
+        id: baseline
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE: ${{ inputs.package }}
+        run: |
+          tag=$(gh release list --limit 100 --json tagName,createdAt \
+            --jq "[.[] | select(.tagName | startswith(\"$PACKAGE/v\"))] | sort_by(.createdAt) | last | .tagName // \"\"")
+          if [ -n "$tag" ]; then
+            version="${tag#"$PACKAGE/v"}"
+            gh release download "$tag" --pattern "$PACKAGE.$version.nupkg" --dir artifacts/baseline
+            echo "argument=-p:PackageValidationBaselinePath=$PWD/artifacts/baseline/$PACKAGE.$version.nupkg" >> "$GITHUB_OUTPUT"
+            echo "Comparing with $tag"
+          else
+            echo "No release of $PACKAGE yet: nothing to compare with"
+          fi
+
+      - name: Pack
+        run: >
+          dotnet pack ${{ inputs.slnx }} -c Release
+          -p:ContinuousIntegrationBuild=true
+          -p:VersionSuffixCi=${{ github.run_number }}
+          ${{ steps.baseline.outputs.argument }}
+
+      - name: Upload packages
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: packages-${{ inputs.package }}
+          path: artifacts/packages/Release/
+          if-no-files-found: error

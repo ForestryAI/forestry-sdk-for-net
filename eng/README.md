@@ -29,8 +29,8 @@ in [`doc/dev/`](../doc/dev/), and the rules are in this silo's constitution
 package inherits; `.github/` only runs the commands a developer runs locally (C3); `doc/dev/`
 explains them (D0).
 
-> From spec 001 ([research](specs/001-ci-cd/research.md)). Entries marked *planned* come in later
-> stories (packing in US2, releasing in US3).
+> From spec 001 ([research](specs/001-ci-cd/research.md)). Entries marked *planned* come with
+> releasing (US3).
 
 | Purpose | Package (`sdk/<pkg>/`) | Root | `eng/` | `.github/` |
 |---|---|---|---|---|
@@ -41,7 +41,7 @@ explains them (D0).
 | Test, coverage | test `.csproj`, `*.Tests.runsettings` | `Directory.Build.targets` (test traceability) | – | `workflows/build-test.yml` |
 | Performance gate | `Performance.runsettings`, tests with `Category=Performance` | – | – | `workflows/performance.yml` |
 | Version, release notes | `<Version>` in the `.csproj`, `CHANGELOG.md` | – | – | `workflows/release.yml` checks both, after `build-test.yml` (*planned*) |
-| Pack, symbols, SourceLink, package validation | package `README.md` | – | `Directory.Build.Common.props` / `.targets` | `workflows/pack.yml` (*planned*) |
+| Pack, symbols, SourceLink, package validation | package `README.md`, `IsShippingLibrary` in its `Directory.Build.props` | – | `Directory.Build.Common.props` / `.targets` | `workflows/pack.yml` |
 | Publish (preview feed) | – | – | – | `workflows/release.yml`: tag and GitHub release (*planned*) |
 | Dependency updates | – | – | – | `dependabot.yml` |
 | How-to for each purpose | – | `doc/dev/` | – | – |
