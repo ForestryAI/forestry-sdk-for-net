@@ -35,6 +35,10 @@ namespace Forestry.Xml
         internal static string WhenNotPositive => GetResourceString(nameof(WhenNotPositive), @"Value {0} named {1} is not positive");
 
         internal static string WhenAbove => GetResourceString(nameof(WhenAbove), @"Value {0} named {1} is above {2}");
+
+        internal static string WhenNoTokenRead => GetResourceString(nameof(WhenNoTokenRead), @"No token has been read: a value can only be got after Read() has returned true");
+
+        internal static string WhenValueNotUtf8 => GetResourceString(nameof(WhenValueNotUtf8), @"The value is not valid UTF-8");
         #endregion
     }
 }

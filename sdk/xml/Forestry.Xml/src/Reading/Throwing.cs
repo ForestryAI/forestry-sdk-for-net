@@ -75,6 +75,18 @@ namespace Forestry.Xml.Reading
         {
             throw new InvalidOperationException(Formatting.Format(Formatting.WhenAbove, value, name, maximum));
         }
+
+        [DoesNotReturn]
+        public static void WhenNoTokenRead()
+        {
+            throw new InvalidOperationException(Formatting.WhenNoTokenRead);
+        }
+
+        [DoesNotReturn]
+        public static void WhenValueNotUtf8(DecoderFallbackException exception)
+        {
+            throw new InvalidOperationException(Formatting.WhenValueNotUtf8, exception);
+        }
         #endregion
 
         #region exception formatting
