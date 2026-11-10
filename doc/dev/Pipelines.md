@@ -84,6 +84,11 @@ Notes:
 - **Breaking changes**: once a package has a GitHub release, `pack` passes that release's `.nupkg` as
   `-p:PackageValidationBaselinePath=<file>` and the SDK compares the public API with it. Until then it
   says "nothing to compare with".
+- **An intended breaking change**: list it under `### Breaking Changes` in the package's `CHANGELOG.md`,
+  then run the pack with the last release's `.nupkg` as the baseline and
+  `-p:ApiCompatGenerateSuppressionFile=true`. That writes `CompatibilitySuppressions.xml` next to the
+  project, accepting exactly those differences; it is reviewed in the pull request. Once the version
+  is released it becomes the new baseline, so delete the file with the next version bump.
 - **Reading a failure**: open the failed job; the *Summary* tab lists failed tests with their target
   framework and the line coverage. Test results and coverage files are attached to the run as
   artifacts (`test-results-<Package>`).
