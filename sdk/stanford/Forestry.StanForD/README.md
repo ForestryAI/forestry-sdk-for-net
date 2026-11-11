@@ -1,30 +1,40 @@
 # Forestry StanForD
 
-C# types for [StanForD](https://www.skogforsk.se/) — the data format standard published by
-Skogforsk for forest machine data exchange (harvesters, forwarders). Skogforsk publish several
-StanForD document families; this package's `Metrics`/common types are shared building blocks
-those families are built from.
+Turns [StanForD](https://www.skogforsk.se/) Harvesting documents into flat rows for big data analysis.
+StanForD is the XML standard published by Skogforsk for exchanging forest machine data.
 
-For how the package is put together — how much of a given type is generated versus written by
-hand, and what's verified against the real schema versus assumed — see
-[ARCHITECTURE.md](ARCHITECTURE.md).
+Production StanForD is big data: machines produce documents every day, and some are very large. The
+analysis is grouped, usually by an actor (an operator, a machine, a contract and the parties behind
+it), over time. So instead of mirroring StanForD's deep XML hierarchy as C# objects, this package
+shreds each document into flat rows. Rows suit a column-based format such as Parquet, read by Azure
+Data Explorer in this POC, but the final format is yours: JSON, CSV, another format, or an application
+using the rows directly.
+
+For how the package is put together, see [ARCHITECTURE.md](ARCHITECTURE.md).
+
+## What a row gives you
+
+Every row is:
+
+- **Identified globally**: the machine key (a GUID) plus the machine's own running-number keys for
+  stems, logs and loaded definitions (contract, species group, product, operator).
+- **Timestamped**: from the creation or modification time of the definitions it references, so the
+  data stays historical and can be partitioned.
+- **Flat**: members are single values (numbers, `Guid`, `DateTimeOffset`, ...), one per column. StanForD
+  elements that repeat by name, such as several log volumes, are told apart by their attributes and
+  land in their own members.
 
 ## Scope
 
-Two things worth being explicit about:
-
-- **This covers StanForD's XML format only.** An older, non-XML StanForD format is still in
-  circulation for some machines/workflows; it is out of scope for this package entirely.
-- **The document-level libraries don't exist yet.** StanForD's XML format spans several distinct
-  document families — Harvesting, Forwarding, Quality, and Production Instructions — each with its
-  own schema built on the shared common definitions. Only the common definitions and a small
-  number of hand-picked example types (`MachineType`) exist here so far; none of the four
-  document-family libraries have been started.
+- **Harvesting (`hpr`) only.** Harvesting holds the most valuable metrics (the value of cut products,
+  how much of a contract has been cut over time) and the widest range of questions, so it shows
+  everything the package does on its own. Forwarding, Quality and Production Instructions documents
+  are out of scope for now.
+- **XML only.** StanForD's older, non-XML format is out of scope.
+- **Rows, not storage.** Writing rows to storage (e.g. Azure Blob) is done by whoever enumerates them.
 
 ## Status
 
-Very early. `schemas/` holds the real Skogforsk-published common-definitions schema across 11
-versions (`V1p0` through `V4p1`); `src/` has exactly two real types (`MachineType`,
-`Metrics/DiameterUnitType`) built against it, plus a shared `ValidationExtensions.Validate()`
-helper for catching required-but-missing data that serialization alone won't. See
-ARCHITECTURE.md's Status section for the precise, current list.
+Very early. Spec 001 ([#90](https://github.com/ForestryAI/forestry-sdk-for-net/issues/90)) is
+starting: identification, timestamps and conditional mapping as policies, then the Log and Stem row
+types. `schemas/` holds Skogforsk's common-definitions schema in 11 versions (`V1p0` to `V4p1`).
