@@ -1,5 +1,6 @@
 using Forestry.Deserialize.Definitions;
 using Forestry.Deserialize.Policies;
+using Forestry.Deserialize.Reading;
 
 namespace Forestry.Deserialize.Tests.Fixtures
 {
@@ -9,7 +10,7 @@ namespace Forestry.Deserialize.Tests.Fixtures
     /// </summary>
     public sealed class ConstructMarkerPolicy : EnumerationPolicy
     {
-        public override Row Construct(TypeDefinition type, Func<Row> next) => next();
+        public override Row Construct(TypeDefinition type, DeserializationContext context, Func<DeserializationContext, Row> next) => next(context);
     }
 
     /// <summary>
@@ -17,7 +18,7 @@ namespace Forestry.Deserialize.Tests.Fixtures
     /// </summary>
     public sealed class OtherConstructMarkerPolicy : EnumerationPolicy
     {
-        public override Row Construct(TypeDefinition type, Func<Row> next) => next();
+        public override Row Construct(TypeDefinition type, DeserializationContext context, Func<DeserializationContext, Row> next) => next(context);
     }
 
     /// <summary>
@@ -25,7 +26,7 @@ namespace Forestry.Deserialize.Tests.Fixtures
     /// </summary>
     public sealed class SetMarkerPolicy : EnumerationPolicy
     {
-        public override void Set<T>(Row row, PropertyDefinition<T> property, T value, Action<Row, T> next) => next(row, value);
+        public override void Set<T>(ContextRow row, PropertyDefinition<T> property, T value, DeserializationContext context, Action<ContextRow, T> next) => next(row, value);
     }
 
     /// <summary>
@@ -33,7 +34,7 @@ namespace Forestry.Deserialize.Tests.Fixtures
     /// </summary>
     public sealed class OtherSetMarkerPolicy : EnumerationPolicy
     {
-        public override void Set<T>(Row row, PropertyDefinition<T> property, T value, Action<Row, T> next) => next(row, value);
+        public override void Set<T>(ContextRow row, PropertyDefinition<T> property, T value, DeserializationContext context, Action<ContextRow, T> next) => next(row, value);
     }
 
     /// <summary>

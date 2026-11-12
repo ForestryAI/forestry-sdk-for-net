@@ -8,9 +8,9 @@ gets an XML doc comment (D0). Nothing is published yet, so breaking 001's surfac
 
 | Before (001, R19) | After | Spec |
 |---|---|---|
-| `Row Construct(TypeDefinition type, Func<Row> next)` | `Row Construct(TypeDefinition type, DeserializationContext context, Func<Row> next)` | FR-005 |
-| `void Set<T>(Row row, PropertyDefinition<T> property, T value, Action<Row, T> next)` | `void Set<T>(ContextRow row, PropertyDefinition<T> property, T value, DeserializationContext context, Action<Row, T> next)` | FR-005, FR-007 |
-| `Row? Enumerate(Row row, TypeDefinition type, Func<Row, Row?> next)` | `void Complete(ContextRow row, DeserializationContext context, Action next)`; decisions are actions on `row` | FR-003, FR-003a |
+| `Row Construct(TypeDefinition type, Func<Row> next)` | `Row Construct(TypeDefinition type, DeserializationContext context, Func<DeserializationContext, Row> next)` | FR-005 |
+| `void Set<T>(Row row, PropertyDefinition<T> property, T value, Action<Row, T> next)` | `void Set<T>(ContextRow row, PropertyDefinition<T> property, T value, DeserializationContext context, Action<ContextRow, T> next)` | FR-005, FR-007 |
+| `Row? Enumerate(Row row, TypeDefinition type, Func<Row, Row?> next)` | `void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)`; decisions are actions on `row` | FR-003, FR-003a |
 | `void Clear()` | `void Clear(DeserializationContext context)`, before the context is emptied | FR-001 |
 
 Precedence, chains, attaching and member targets (`Set` only) are unchanged from R19, and so is

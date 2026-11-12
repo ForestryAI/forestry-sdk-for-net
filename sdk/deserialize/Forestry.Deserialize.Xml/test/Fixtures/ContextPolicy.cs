@@ -36,16 +36,16 @@ namespace Forestry.Deserialize.Xml.Tests.Fixtures
         /// </summary>
         public Action<DeserializationContext>? OnClear { get; init; }
 
-        public override void Set<T>(ContextRow row, PropertyDefinition<T> property, T value, DeserializationContext context, Action<Row, T> next)
+        public override void Set<T>(ContextRow row, PropertyDefinition<T> property, T value, DeserializationContext context, Action<ContextRow, T> next)
         {
             OnSet?.Invoke(row, property, value, context);
-            next(row.Row, value);
+            next(row, value);
         }
 
-        public override void Complete(ContextRow row, DeserializationContext context, Action next)
+        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
         {
             OnComplete?.Invoke(row, context);
-            next();
+            next(row);
         }
 
         public override void Clear(DeserializationContext context) => OnClear?.Invoke(context);

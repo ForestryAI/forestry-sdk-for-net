@@ -1,4 +1,5 @@
 using Forestry.Deserialize.Definitions;
+using Forestry.Deserialize.Reading;
 
 namespace Forestry.Deserialize.Policies
 {
@@ -8,8 +9,8 @@ namespace Forestry.Deserialize.Policies
     /// </summary>
     internal sealed class TypeChains(
         TypeDefinition definition,
-        Func<Row> construct,
-        Func<Row, Row?> enumerate,
+        Func<DeserializationContext, Row> construct,
+        Action<ContextRow> complete,
         Delegate[] setters,
         IReadOnlyList<EnumerationPolicy> applying)
     {
@@ -18,21 +19,21 @@ namespace Forestry.Deserialize.Policies
         /// <summary>
         /// Construct a row: the composed chain, or the built-in constructor
         /// </summary>
-        public Func<Row> Construct { get; } = construct;
+        public Func<DeserializationContext, Row> Construct { get; } = construct;
 
         /// <summary>
-        /// The row to enumerate, or null: the composed chain, or the built-in decision
+        /// The completion: the composed chain, or the built-in step that does nothing
         /// </summary>
-        public Func<Row, Row?> Enumerate { get; } = enumerate;
+        public Action<ContextRow> Complete { get; } = complete;
 
         /// <summary>
-        /// One <c>Action&lt;Row, T&gt;</c> per property definition, by its index: the composed chain, or
-        /// the built-in setter
+        /// One <c>Action&lt;ContextRow, T&gt;</c> per property definition, by its index: the composed
+        /// chain, or the built-in setter
         /// </summary>
         public Delegate[] Setters { get; } = setters;
 
         /// <summary>
-        /// Enumeration policies acting on construction or enumeration, in chain order
+        /// Enumeration policies acting on construction or completion, in chain order
         /// </summary>
         public IReadOnlyList<EnumerationPolicy> Applying { get; } = applying;
     }

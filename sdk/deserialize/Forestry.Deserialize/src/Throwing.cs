@@ -153,6 +153,63 @@ namespace Forestry.Deserialize
         }
         #endregion
 
+        #region Deserialization context (spec 002)
+        [DoesNotReturn]
+        public static void WhenUnknownMember(Type rowType, string memberName)
+        {
+            throw new ArgumentException(Formatting.Format(Formatting.UnknownMember, rowType.FullName, memberName), nameof(memberName));
+        }
+
+        [DoesNotReturn]
+        public static void WhenMemberValueOfOtherType(Type rowType, PropertyDefinition property, Type valueType)
+        {
+            throw new ArgumentException(Formatting.Format(Formatting.MemberValueOfOtherType, rowType.FullName, property.Name, property.MemberType.Name, valueType.Name));
+        }
+
+        [DoesNotReturn]
+        public static void WhenSetAfterEnumerated(Type rowType, string memberName)
+        {
+            throw new InvalidOperationException(Formatting.Format(Formatting.SetAfterEnumerated, rowType.FullName, memberName));
+        }
+
+        [DoesNotReturn]
+        public static void WhenCompletionActionOutsideCompletion(Type rowType, string action)
+        {
+            throw new InvalidOperationException(Formatting.Format(Formatting.CompletionActionOutsideCompletion, rowType.FullName, action));
+        }
+
+        [DoesNotReturn]
+        public static void WhenCompletionActionTwice(Type rowType, string action)
+        {
+            throw new InvalidOperationException(Formatting.Format(Formatting.CompletionActionTwice, rowType.FullName, action));
+        }
+
+        [DoesNotReturn]
+        public static void WhenReleaseNotAllowed(Type rowType, bool isOpen, bool isReleased)
+        {
+            string reason = isOpen ? Formatting.ReleaseOpen : isReleased ? Formatting.ReleaseTwice : Formatting.ReleaseNotKept;
+            throw new InvalidOperationException(Formatting.Format(Formatting.ReleaseNotAllowed, rowType.FullName, reason));
+        }
+
+        [DoesNotReturn]
+        public static void WhenReleaseUntilEnd(Type rowType)
+        {
+            throw new InvalidOperationException(Formatting.Format(Formatting.ReleaseUntilEnd, rowType.FullName));
+        }
+
+        [DoesNotReturn]
+        public static void WhenContextLimitReached(int limit, IEnumerable<Reading.ContextRow> kept)
+        {
+            string perType = string.Join(", ", kept
+                .GroupBy(row => row.Definition.Type.Name)
+                .OrderByDescending(group => group.Count())
+                .ThenBy(group => group.Key, StringComparer.Ordinal)
+                .Select(group => $"{group.Key} ({group.Count()})"));
+
+            throw new Reading.DeserializationContextLimitException(Formatting.Format(Formatting.ContextLimitReached, limit, perType));
+        }
+        #endregion
+
         #region Rows (FR-006)
         [DoesNotReturn]
         public static void WhenRowNotOfType(Type rowType, Type type)

@@ -54,13 +54,13 @@ namespace Forestry.Deserialize.Definitions
         /// <param name="row"></param>
         /// <param name="utf8"></param>
         /// <param name="context"></param>
-        /// <param name="set">The composed set step, an <c>Action&lt;Row, T&gt;</c> from <see cref="ComposeSet"/></param>
-        internal abstract void ReadAndSet(Row row, ReadOnlySpan<byte> utf8, in FieldContext context, Delegate set);
+        /// <param name="set">The composed set step, an <c>Action&lt;ContextRow, T&gt;</c> from <see cref="ComposeSet"/></param>
+        internal abstract void ReadAndSet(ContextRow row, ReadOnlySpan<byte> utf8, in FieldContext context, Delegate set);
 
         /// <summary>
         /// Compose the enumeration policies acting on this member's set into one
-        /// <c>Action&lt;Row, T&gt;</c>, the first outermost; the built-in setter when there are none
-        /// (research R19)
+        /// <c>Action&lt;ContextRow, T&gt;</c>, the first outermost; the built-in step sets the member and
+        /// marks it set (research R19, spec 002 R22)
         /// </summary>
         /// <param name="chain"></param>
         /// <returns></returns>

@@ -174,6 +174,24 @@ Statuses use spec 001's vocabulary: **Proposed**, **Confirmed**, **Rejected**, *
   deferred until needed; policies on one row keep running in their defined chain order.
 - **Status**: Confirmed (developer, 2026-11-12)
 
+### As implemented (US1, T019-T031, 2026-11-12)
+
+For code review (names and shapes Deferred (implementation)):
+
+- **`next` takes what the step needs**, so chains are composed once and allocate nothing per row:
+  `Construct(TypeDefinition, DeserializationContext, Func<DeserializationContext, Row> next)`,
+  `Set<T>(ContextRow, PropertyDefinition<T>, T, DeserializationContext, Action<ContextRow, T> next)`,
+  `Complete(ContextRow, DeserializationContext, Action<ContextRow> next)`, `Clear(DeserializationContext)`.
+  The contract's `Func<Row>`, `Action<Row, T>` and `Action` would have needed a closure per call.
+- **`Rows<TRow>()` returns a snapshot** (a list sorted by construction order), so a release during a
+  query cannot change it; `Release` therefore removes the row from the kept list at once.
+- **`ContextRow`** also exposes `Definition` (its `TypeDefinition`); the built-in set step marks the
+  member set; `Set<TValue>` uses the member's own setter (no set policies) and throws
+  `ArgumentException` when `TValue` is not the member's type.
+- **Limit exception**: `DeserializationContextLimitException : InvalidOperationException`, in
+  `Forestry.Deserialize.Reading`.
+- **Recording fixtures** keep 001's record words (`enumerate Log` at completion).
+
 ## R27. The reading position (Rejected)
 
 - **Question**: FR-009 asked for the node name, path and depth during any policy call.
