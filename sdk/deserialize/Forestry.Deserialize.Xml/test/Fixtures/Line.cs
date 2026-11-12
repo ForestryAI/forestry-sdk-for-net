@@ -10,5 +10,7 @@ namespace Forestry.Deserialize.Xml.Tests.Fixtures
         public int OrderNumber { get; set; }
 
         public string? Note { get; set; }
+
+        public decimal WeightAmount { get; set; }
     }
 }

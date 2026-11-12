@@ -241,8 +241,10 @@ a line with three prices.
 
 - **FR-012**: Rows of several added types MUST be open at the same time when their nodes nest, each
   completing at its own end, inner rows first, in one read of the document.
-- **FR-013**: A member node MUST set the innermost open row that has that member; when the same
-  member node appears again in that row, the last value wins.
+- **FR-013**: A member node MUST set the innermost open row that has that member, and only as a
+  direct child of that row's node; when the same member node appears again in that row, the last
+  value wins. A value inside a wrapper node is reached through a policy: the wrapper is a row type
+  that is not enumerated and sets what its parent needs (research R29).
 - **FR-014**: Each row in the context MUST record its parent: the innermost open row when it is
   constructed (none for a row with no open row around it).
 - **FR-015**: A policy MUST be able to find a row's parent, its children and its siblings (rows with

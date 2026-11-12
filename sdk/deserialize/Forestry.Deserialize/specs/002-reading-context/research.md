@@ -232,30 +232,36 @@ For code review (names and shapes Deferred (implementation)):
 
 - **Wrappers are common in real data** (hpr sample, checked 2026-11-12): `Stem > StemCoordinates >
   Latitude`, `Stem > SingleTreeProcessedStem > DBH`, `Log > LogMeasurement > LogDiameter`,
-  `Stem > BoomPositioning > BoomAngle`. 001's rule (a member is a direct child of its row's
-  element, R13 A) cannot reach them.
-- **Proposal: members through wrappers (FR-013 as written)**: an element that is not a row, at any
-  depth, is matched against the open rows' members from the innermost row outward; the first row
-  that has the member gets it. Wrappers that match nothing are passed through (their children are
-  still read). A repeated name falls under Q1 (last wins). Attributes count only on a row's own
-  element (US3).
-- **Wrappers with meaning become row types** (developer, 2026-11-12): when a wrapper tells repeated
-  values apart, it is added as a row type that is not enumerated, and policies combine it with its
-  children through the context:
+  `Stem > BoomPositioning > BoomAngle`.
+- **Decision (developer, 2026-11-12, option A): members are direct children of their row's
+  element** (001's rule, R13 A). A value inside a wrapper is reached only through a policy: the
+  wrapper is added as a row type that is not enumerated, and its `Complete` policy sets what the
+  parent needs, e.g. `SingleTreeProcessedStem` with member `DBH` copies it onto the open `Stem`.
+  An element that is neither a row nor a direct-child member sets nothing; rows inside it are still
+  found by name (R13 A), so a `Log` inside `SingleTreeProcessedStem` still has the `Stem` as parent.
+  With direct children, the innermost open row that has the member (FR-013) is always the row whose
+  element is the member's parent, so the core needs no search.
+- **Wrappers with meaning work the same way**: when a wrapper tells repeated values apart, its
+  policy combines it with its children through the context:
   - `BoomPositioning` (attribute `boomPositioningCategory`, members `BoomAngle`, `BoomExtension`):
-    being the innermost open row, it receives its own `BoomAngle`; its `Complete` policy sets the
-    parent `Stem`'s `FellingBoomAngle` when the category is "Felling".
+    its `Complete` policy sets the parent `Stem`'s `FellingBoomAngle` when the category is
+    "Felling".
   - `LogMeasurement` (attribute `logMeasurementCategory`) around `LogDiameter` rows (attribute
     `logDiameterCategory` and own value): a `LogDiameter` policy reads its parent `LogMeasurement`
     (open, its attribute already set) and the `Log` above it, and sets e.g.
     `MachineOverBarkDiameter` from the combination.
   This is #95's conditional mapping, built from containment (US2), named and own values (US3) and
   policies (US1); no core feature for conditions.
-- **Alternative**: keep direct children only; every wrapper, meaningful or not, becomes a row type
-  (a `SingleTreeProcessedStem` row only to reach `DBH`).
+- **Rejected (developer, 2026-11-12)**: members at any depth (option C, the first proposal). Implicit
+  and unbounded: any number of wrappers could hold `OrderNumber`, a member would pick up an element
+  meaning something else (`<Order><Customer><History><OrderNumber>`), and nothing in the row type
+  says where its value comes from.
+- **Deferred**: explicit relative paths on a member, e.g. `[Field("SingleTreeProcessedStem/DBH")]`
+  (option B, R13 B), and C# attribute helpers that create these wrapper row types and policies in the
+  background, once StanForD shows the policies are repetitive (developer, 2026-11-12).
 - **Empty and bare nodes (FR-002, edge case; developer 2026-11-12)**: a row element starts its row
   at its start tag, as in 001, whether or not it turns out empty: its presence may be a flag.
-- **Status**: Confirmed (developer, 2026-11-12)
+- **Status**: Confirmed (developer, 2026-11-12, option A)
 
 ## R30. Named values and own value (US3)
 

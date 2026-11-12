@@ -40,7 +40,7 @@ dotnet test Forestry.Deserialize.Xml/test -s Forestry.Deserialize.Xml/test/Perfo
 | 12 | two policies both calling `Enumerate` on one row | | the second throws, naming the action | FR-003a |
 | 13 | more kept rows than `MaxContextRows` | small limit | throws with the limit, kept rows per type and how to raise it; `Clear` once, context emptied | FR-011a |
 | 14 | many enumerated rows, a few kept | Performance trait | memory flat in the number of rows | SC-005 |
-| 15 | `<Order><Details><OrderNumber>5</OrderNumber></Details></Order>` | defaults | 5 set on the order through the wrapper | FR-013, R29 |
+| 15 | `<Order><Details><OrderNumber>5</OrderNumber></Details></Order>` | defaults; then `Details` as a row type, not enumerated, copying `OrderNumber` onto its parent | not set (0) by default; 5 with the `Details` policy | FR-013, R29 |
 | 16 | `<Line><Measurement unit="kg"><Amount>3</Amount></Measurement></Line>` | `Measurement` row type, not enumerated; its policy sets the parent | `Line.WeightAmount` = 3; no `Measurement` row | FR-013, FR-016, R29 |
 
 ## Done when

@@ -120,34 +120,35 @@ policy on `Order` copies the site key from the context onto each order (quicksta
 ## Phase 3: User Story 2 - Containment: parent-child and sibling relationships (Priority: P1)
 
 **Goal**: Nested row types complete inner first in one pass; each row records its parent
-(`ContainerRelationship`); policies find parent, children and siblings; members are found through
-wrapper elements; wrappers with meaning work as row types.
+(`ContainerRelationship`); policies find parent, children and siblings; members are direct
+children of their row's node, and values inside wrappers are reached through wrapper row types and
+policies (R29, option A).
 
 **Independent Test**: One site, two orders, each with two lines; `Order` and `Line` come out in
 completion order, each line's parent is its order.
 
 ### Test shells for User Story 2 ⚠️
 
-- [ ] T032 [P] [US2] Fixtures in `Forestry.Deserialize.Xml/test/Fixtures/`: `Part.cs` (nested in itself, `int PartNumber`), `Measurement.cs` (`string? Unit` and `decimal Amount`, both child elements), `Line.cs` gains `decimal WeightAmount`, `Order.cs` gains a `Details` wrapper case; policies in `ContainmentPolicies.cs` (keep lines; ask for siblings, children and parent and record what they found; a `Measurement` completion policy setting `WeightAmount` on its parent when `Unit` is "kg", not enumerated)
-- [ ] T033 [US2] Test shell, US2-1 (quickstart 3): two `Line` rows before their `Order`, each with its own members, in `Forestry.Deserialize.Xml/test/DeserializationContextTests.US2.cs`
-- [ ] T034 [US2] Test shell, US2-2 / FR-002 (quickstart 8): `OrderNumber` after the last line is set on the order; an empty `<Line />` is a row like any other (enumerated, its members unset), in `DeserializationContextTests.US2.cs`
-- [ ] T035 [US2] Test shell, US2-3: a `Price`-like row not enumerated inside an enumerated `Line` sees the line open when it completes (use `Measurement` until US3), in `DeserializationContextTests.US2.cs`
-- [ ] T036 [US2] Test shell, US2-4 / C2: several row types come out of one forward pass; the async entry point over a counting stream reads each byte once, in `DeserializationContextTests.US2.cs`
-- [ ] T037 [US2] Test shell, US2-5 / US2-6 (quickstart 9): the third kept line finds the first two as siblings, closed, with the order as parent; the order's completion policy finds all kept lines as children, and none when they are not kept, in `DeserializationContextTests.US2.cs`
-- [ ] T038 [US2] Test shell, FR-014 / FR-015: the outermost row has no parent (`ParentId` null); a kept line whose order was not kept finds no parent after the order completed, in `DeserializationContextTests.US2.cs`
-- [ ] T039 [US2] Test shell, edge case: a `Part` nested in a `Part` gives two rows, inner first, the inner one's parent the outer one, in `DeserializationContextTests.US2.cs`
-- [ ] T040 [US2] Test shells, R29 (quickstart 15, 16): `<Order><Details><OrderNumber>5</OrderNumber></Details></Order>` sets 5 on the order through the wrapper; `<Line><Measurement><Unit>kg</Unit><Amount>3</Amount></Measurement></Line>` gives `Line.WeightAmount` 3 and no `Measurement` row; a member name under two wrappers in one row keeps the last value, in `DeserializationContextTests.US2.cs`
-- [ ] T041 [US2] **Test review gate**: the developer reviews T032-T040 on the board before T042 (C4)
+- [X] T032 [P] [US2] Fixtures in `Forestry.Deserialize.Xml/test/Fixtures/`: `Part.cs` (nested in itself, `int PartNumber`), `Measurement.cs` (`string? Unit` and `decimal Amount`, both child elements), `Line.cs` gains `decimal WeightAmount`; policies written in place with US1's test-only `ContextPolicy` (no `ContainmentPolicies.cs`, as in US1); the `Details` and `Extra` wrappers are plain elements in the documents
+- [X] T033 [US2] Test shell, US2-1 (quickstart 3): two `Line` rows before their `Order`, each with its own members, in `Forestry.Deserialize.Xml/test/DeserializationContextTests.US2.cs`
+- [X] T034 [US2] Test shell, US2-2 / FR-002 (quickstart 8): `OrderNumber` after the last line is set on the order; an empty `<Line />` is a row like any other (enumerated, its members unset), in `DeserializationContextTests.US2.cs`
+- [X] T035 [US2] Test shell, US2-3: a `Price`-like row not enumerated inside an enumerated `Line` sees the line open when it completes (use `Measurement` until US3), in `DeserializationContextTests.US2.cs`
+- [X] T036 [US2] Test shell, US2-4 / C2: several row types come out of one forward pass; the async entry point over a counting stream reads each byte once, in `DeserializationContextTests.US2.cs`
+- [X] T037 [US2] Test shell, US2-5 / US2-6 (quickstart 9): the third kept line finds the first two as siblings, closed, with the order as parent; the order's completion policy finds all kept lines as children, and none when they are not kept, in `DeserializationContextTests.US2.cs`
+- [X] T038 [US2] Test shell, FR-014 / FR-015: the outermost row has no parent (`ParentId` null); a kept line whose order was not kept finds no parent after the order completed, in `DeserializationContextTests.US2.cs`
+- [X] T039 [US2] Test shell, edge case: a `Part` nested in a `Part` gives two rows, inner first, the inner one's parent the outer one, in `DeserializationContextTests.US2.cs`
+- [X] T040 [US2] Test shells, R29 option A (quickstart 15, 16): `<Order><Details><OrderNumber>5</OrderNumber></Details></Order>` leaves `OrderNumber` unset (0) by default; with fixture `Details` (`int OrderNumber`) added as a row type, not enumerated, whose policy copies `OrderNumber` onto its parent, the order gets 5; `<Line><Measurement><Unit>kg</Unit><Amount>3</Amount></Measurement></Line>` gives `Line.WeightAmount` 3 and no `Measurement` row, in `DeserializationContextTests.US2.cs`
+- [X] T041 [US2] **Test review gate**: the developer reviews T032-T040 on the board before T042 (C4) (developer, 2026-11-12: passed with one change: members stay direct children of their row's element, values inside wrappers are reached through wrapper row types and policies (R29 option A); T040 reworked, a `Details` fixture added, the two-wrappers test removed)
 
 ### Implementation for User Story 2
 
-- [ ] T042 [US2] Add `ContainerRelationship` (`long Id`, `long? ParentId`) in `Forestry.Deserialize/src/Reading/ContainerRelationship.cs` and `ContextRow.Container`; `RowBuilder.Start<T>()` assigns the next id and the innermost open row's id as parent (R21) (depends on T041)
-- [ ] T043 [US2] Add `Parent(row)`, `Children(row)`, `Siblings(row)` to `Forestry.Deserialize/src/Reading/DeserializationContext.cs`, by parent id among open and kept rows; a row that left the context is not found (FR-015) (depends on T042)
-- [ ] T044 [US2] Change `Forestry.Deserialize.Xml/src/XmlRowReading.cs` and `XmlAssociation.cs` (R29): a non-row element at any depth is matched against the open rows' members from the innermost outward, the first that has it gets it; elements that match nothing are passed through (their children still read); remove the direct-child depth check (depends on T041)
-- [ ] T045 [US2] XML doc comments (D0) for `ContainerRelationship`, `Container` and the new context methods (depends on T043)
-- [ ] T046 [US2] Run `dotnet test` on both test projects: T033-T040 pass on both entry points, US1 and spec 001 still green; then the performance gate passes (depends on T044, T045)
+- [X] T042 [US2] Add `ContainerRelationship` (`long Id`, `long? ParentId`) in `Forestry.Deserialize/src/Reading/ContainerRelationship.cs` and `ContextRow.Container`; `RowBuilder.Start<T>()` assigns the next id and the innermost open row's id as parent (R21) (depends on T041) (2026-11-12: done; `ContainerRelationship` is a `readonly record struct (long Id, long? ParentId)`, the id being the construction order)
+- [X] T043 [US2] Add `Parent(row)`, `Children(row)`, `Siblings(row)` to `Forestry.Deserialize/src/Reading/DeserializationContext.cs`, by parent id among open and kept rows; a row that left the context is not found (FR-015) (depends on T042) (2026-11-12: done; snapshots like `Rows<TRow>()`; rows with no parent are siblings of each other)
+- [X] T044 [US2] Check `Forestry.Deserialize.Xml/src/XmlRowReading.cs` against R29 option A: members stay direct children of their row's element (001's depth check stays); an element that is neither a row nor a direct-child member sets nothing, and rows inside it are still found by name (as today); no code change expected, the T040 shells confirm it (depends on T041) (2026-11-12: checked, no code change: the depth check already keeps members to direct children and rows are found by name inside wrappers; T040 passes)
+- [X] T045 [US2] XML doc comments (D0) for `ContainerRelationship`, `Container` and the new context methods (depends on T043)
+- [X] T046 [US2] Run `dotnet test` on both test projects: T033-T040 pass on both entry points, US1 and spec 001 still green; then the performance gate passes (depends on T044, T045) (2026-11-12: passed on net10.0: core 44, XML 162, 0 build warnings; performance gate 4 of 4. One fix in the test helper only: T036's counting stream wraps a `MemoryStream` instead of deriving from one, whose async reads called its sync reads and counted each byte twice)
 
-**Checkpoint**: Containment relationships and wrappers work; US1 unaffected.
+**Checkpoint**: Containment relationships work, wrappers through row types and policies; US1 unaffected.
 
 ---
 
@@ -200,8 +201,8 @@ a line with three prices (quickstart 10).
   signatures, so 001's policy tests turn red between T025 and T029
 - **US2 (Phase 3)**: depends on US1 (the context and `ContextRow` it extends); its shells can be
   written while US1 is implemented
-- **US3 (Phase 4)**: depends on US1; independent of US2 except T052, which needs R29's wrappers
-  (T044)
+- **US3 (Phase 4)**: depends on US1; independent of US2 except T052, which uses R29's wrapper row type
+  (`Measurement`)
 - **Polish (Phase 5)**: after the stories it documents
 
 ### Within Each Story
@@ -241,7 +242,7 @@ T024 MaxContextRows  T028 Row shallow copy
 ### Incremental Delivery
 
 1. US1 → the context, actions, isolation, limit
-2. US2 → containment and wrappers (unblocks #95's wrapper cases such as `BoomPositioning`)
+2. US2 → containment, wrappers through row types and policies (unblocks #95's wrapper cases such as `BoomPositioning`)
 3. US3 → attributes and `[Content]` (completes #95: `LogMeasurement` / `LogDiameter`)
 
 ## Notes

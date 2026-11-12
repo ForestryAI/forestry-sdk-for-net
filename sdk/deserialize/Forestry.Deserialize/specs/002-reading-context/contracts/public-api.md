@@ -87,7 +87,8 @@ and how to raise it; `Clear` runs once and the context is emptied.
   attributes are ignored.
 - Text directly inside a row element sets its `[Content]` member; the last text wins; with no text
   by completion it is set empty (and marked set).
-- A non-row element at any depth sets the innermost open row that has a member of its name;
-  wrappers that match nothing are passed through (R29). A repeated member element sets the member
-  again (last wins). Wrappers that tell values apart are added as row types (e.g. `BoomPositioning`,
-  `LogMeasurement`).
+- A member element is a direct child of its row's element (001, R13 A); an element that is neither a
+  row nor such a member sets nothing, and rows inside it are still found by name. A repeated member element sets the
+  member again (last wins). A value inside a wrapper is reached through a policy: the wrapper is
+  added as a row type that is not enumerated (e.g. `Details`, `BoomPositioning`, `LogMeasurement`)
+  and its policy sets what the parent needs (R29).

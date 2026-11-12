@@ -21,8 +21,9 @@ namespace Forestry.Deserialize.Reading
     /// </remarks>
     public sealed class ContextRow
     {
-        internal ContextRow(DeserializationContext context, Policies.TypeChains chains, Row row, long sequence)
+        internal ContextRow(DeserializationContext context, Policies.TypeChains chains, Row row, long sequence, long? parentId)
         {
+            Container = new ContainerRelationship(sequence, parentId);
             Context = context;
             Chains = chains;
             Definition = chains.Definition;
@@ -64,6 +65,12 @@ namespace Forestry.Deserialize.Reading
         /// The row type's definition
         /// </summary>
         public TypeDefinition Definition { get; }
+
+        /// <summary>
+        /// Where the row sits in the document's containment: its id and its parent's (spec 002 US2). Other
+        /// relationship groups add their own relationships later (research R21)
+        /// </summary>
+        public ContainerRelationship Container { get; }
 
         /// <summary>
         /// Open from its construction until its completion

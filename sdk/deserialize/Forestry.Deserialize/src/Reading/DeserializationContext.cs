@@ -114,6 +114,58 @@ namespace Forestry.Deserialize.Reading
         }
 
         /// <summary>
+        /// The row that was open around <paramref name="row"/> when it was constructed, while it is still in
+        /// the context (open or kept); null for a row with no parent, or whose parent left (FR-015)
+        /// </summary>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        public ContextRow? Parent(ContextRow row)
+        {
+            ArgumentNullException.ThrowIfNull(row);
+
+            if (row.Container.ParentId is not long parentId)
+            {
+                return null;
+            }
+
+            foreach (ContextRow candidate in InContext())
+            {
+                if (candidate.Sequence == parentId)
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// The rows whose parent is <paramref name="row"/>, still in the context, oldest first: at a row's
+        /// completion, its children that policies kept (FR-015)
+        /// </summary>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        public IEnumerable<ContextRow> Children(ContextRow row)
+        {
+            ArgumentNullException.ThrowIfNull(row);
+
+            return WithParent(row.Sequence, except: null);
+        }
+
+        /// <summary>
+        /// The other rows with the same parent as <paramref name="row"/>, still in the context, oldest first
+        /// (FR-015); rows with no parent are siblings of each other
+        /// </summary>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        public IEnumerable<ContextRow> Siblings(ContextRow row)
+        {
+            ArgumentNullException.ThrowIfNull(row);
+
+            return WithParent(row.Container.ParentId, except: row);
+        }
+
+        /// <summary>
         /// A kept, closed row leaves the context; at most once, and not for a row kept until the end
         /// </summary>
         /// <param name="row"></param>
@@ -134,7 +186,7 @@ namespace Forestry.Deserialize.Reading
         /// <returns></returns>
         internal ContextRow Push(Policies.TypeChains chains, Row row)
         {
-            ContextRow contextRow = new(this, chains, row, _nextSequence++);
+            ContextRow contextRow = new(this, chains, row, _nextSequence++, _open.Count > 0 ? _open[^1].Sequence : null);
             _open.Add(contextRow);
             return contextRow;
         }
@@ -199,6 +251,53 @@ namespace Forestry.Deserialize.Reading
             Completing = null;
             _open.Clear();
             _kept.Clear();
+        }
+
+        /// <summary>
+        /// Every row in the context that is not released: kept, being completed, open
+        /// </summary>
+        /// <returns></returns>
+        private IEnumerable<ContextRow> InContext()
+        {
+            foreach (ContextRow row in _kept)
+            {
+                if (!row.IsReleased)
+                {
+                    yield return row;
+                }
+            }
+
+            if (Completing is { IsReleased: false } completing)
+            {
+                yield return completing;
+            }
+
+            foreach (ContextRow row in _open)
+            {
+                yield return row;
+            }
+        }
+
+        /// <summary>
+        /// A snapshot of the rows in the context with this parent id, oldest first
+        /// </summary>
+        /// <param name="parentId"></param>
+        /// <param name="except"></param>
+        /// <returns></returns>
+        private List<ContextRow> WithParent(long? parentId, ContextRow? except)
+        {
+            List<ContextRow> rows = [];
+
+            foreach (ContextRow candidate in InContext())
+            {
+                if (candidate.Container.ParentId == parentId && !ReferenceEquals(candidate, except))
+                {
+                    rows.Add(candidate);
+                }
+            }
+
+            rows.Sort(static (x, y) => x.Sequence.CompareTo(y.Sequence));
+            return rows;
         }
 
         private static void AddRows<TRow>(List<ContextRow> source, List<ContextRow> rows) where TRow : Row
