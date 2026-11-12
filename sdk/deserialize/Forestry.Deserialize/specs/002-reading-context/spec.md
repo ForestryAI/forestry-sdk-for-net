@@ -1,4 +1,4 @@
-# Feature Specification: Reading context
+# Feature Specification: Deserialization context
 
 **Feature Branch**: `deserialize-002-context`
 
@@ -6,7 +6,7 @@
 
 **Status**: Draft
 
-**Input**: User description: "Reading context (short name: reading-context). Source: GitHub issue
+**Input**: User description: "Deserialization context (short name: reading-context). Source: GitHub issue
 ForestryAI/forestry-sdk-for-net#99, 'Specify phase input': US1 Contextual rows and a reading
 context, US2 Several nested row types in one pass, US3 Attributes and own content as members.
 The package stays generic: it knows nothing of any standard's names, keys or policies, nor of any
@@ -31,7 +31,8 @@ enumerated, US3 made media-neutral; the needs that drove this spec are under Dri
   last value wins).
 - Q: Should there be a limit on how many rows the context may hold? → A: Yes, a generic limit
   option with a default (S1); going past it throws an exception that explains which limit was
-  reached, how many rows were held and by which row types, and how to raise the limit.
+  reached, how many rows were held and by which row types, and how to raise the limit. (Refined in
+  plan review: only kept rows count, default 100; FR-011a.)
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -43,9 +44,9 @@ hand-written documents through a real media reader (constitution C3). Examples u
 `Site > Order > Line > Price` shape; nothing in the package depends on these names or on how any
 one standard uses them.
 
-### User Story 1 - Contextual rows and a reading context (Priority: P1)
+### User Story 1 - Contextual rows and a deserialization context (Priority: P1)
 
-Each enumeration has a **reading context** that policies share. A row is **contextual** while it is
+Each enumeration has a **deserialization context** that policies share. A row is **contextual** while it is
 in the context. Every row is in the context from its construction until its completion (it is
 **open**). At completion its policy makes two separate decisions:
 
@@ -54,11 +55,12 @@ in the context. Every row is in the context from its construction until its comp
   it, or stays until the enumeration ends.
 
 Any combination is valid: a row can come out and stay, stay without coming out, come out and
-leave, or neither. Policies read the context: the rows open around the current one, the rows kept
-in it, and where in the document reading is.
+leave, or neither. Policies read the context: the rows open around the current one and the rows
+kept in it. Where reading is in the media (names, paths) stays the media's; policies learn where
+they are from rows (parent, ancestors).
 
 **Why this priority**: Without a shared context, every policy keeps its own state, policies cannot
-see each other's rows, and options with enumeration policies serve one enumeration at a time. Any
+see each other's rows, and state outlives the enumeration it belongs to. Any
 rule that relates rows to each other (a child taking a key from its parent, a row referring to one
 read earlier) reads from it.
 
@@ -90,8 +92,9 @@ order.
    later order's policy reads it, **Then** it can tell `SiteKey` is set.
 9. **Given** a closed row whose document had no node for one of its members, **When** a policy
    reads it, **Then** it can tell that member was never set, although the row is closed.
-10. **Given** one options instance with enumeration policies, **When** two documents are
-   deserialized at the same time, **Then** each gets its own context and both give the right rows.
+10. **Given** one options instance with enumeration policies and an enumeration running, **When**
+   a second enumeration starts on it, **Then** it throws, telling the caller to use one options
+   instance per concurrent deserialization (001's rule, kept).
 11. **Given** an `Order` that is enumerated and kept, **When** the consumer changes a member of the
     order it received, **Then** a later line's policy reading that order from the context sees the
     value as read from the document (isolation).
@@ -170,9 +173,10 @@ a line with three prices.
   it.
 - A row type and a member of another row type read from the same node name: fails before any byte
   is read (as today for two row types or two members from one node).
-- A bare node of a row type, one that would set no member (XML: `<Line />`, no attributes, no
-  content, no children): no row is constructed, nothing is placed in the context and its policy is
-  not called. A node with any named value or own value is not bare (US3-4).
+- An empty or bare node of a row type (XML: `<Line />` or `<Line></Line>`): a row like any other,
+  since its presence may carry meaning (e.g. a flag). It is constructed and in the context while
+  open, and by default enumerated and leaves at completion; anything else (e.g. setting a member on
+  its parent instead) is a policy's.
 - The same member node twice in one row (e.g. two `Note` nodes in one `Line`): the last value
   wins; a policy can see the member is already set (FR-007) before the second value arrives.
 - Two policies on one row both decide whether it comes out (or both set its lifetime, or both
@@ -185,21 +189,20 @@ a line with three prices.
   emptied.
 - Many rows kept (e.g. tens of lookup rows): held for the enumeration only; nothing stays after
   completion unless a policy keeps it (C1).
-- More rows in the context than the limit allows (e.g. a wrong document with millions of kept
-  rows): throws with an explanation of the limit and how to raise it, and the context is emptied
+- More kept rows than the limit allows (e.g. a wrong document with millions of kept rows): throws
+  with the limit, the kept rows per row type and how to raise it, and the context is emptied
   (FR-011a, FR-001).
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-**The reading context and contextual rows (US1)**
+**The deserialization context and contextual rows (US1)**
 
-- **FR-001**: Each enumeration MUST have its own reading context, created when it starts and emptied
+- **FR-001**: Each enumeration MUST have its own deserialization context, created when it starts and emptied
   when it ends (end, early stop or throw), after the policies' end-of-enumeration step.
 - **FR-002**: Every row MUST be in the context, open, from its construction until its completion,
-  whether or not it will be enumerated. A bare node of a row type (one that would set no member)
-  constructs no row.
+  whether or not it will be enumerated, including rows of empty or bare nodes.
 - **FR-003**: At a row's completion its policy MUST decide whether the row is enumerated, and
   separately its lifetime in the context: leave now (default), stay until a policy releases it, or
   stay until the enumeration ends. Neither decision depends on the other. A row type with no
@@ -220,15 +223,17 @@ a line with three prices.
   set by a policy (FR-005).
 - **FR-008**: A policy MUST be able to see the rows open around the current one (its ancestors),
   innermost first.
-- **FR-009**: A policy MUST be able to see where reading is (node name, path and depth).
+- **FR-009**: (Removed 2026-11-12: a media position such as an XML path would tie policies to one
+  media, FR-020; policies learn where they are from rows, FR-008 and FR-015.)
 - **FR-010**: A query MUST never see the context change while it runs; a release during a query
   takes effect after it.
-- **FR-011**: One options instance MUST serve several enumerations at the same time when its
-  policies keep their state in the context.
-- **FR-011a**: The number of rows in the context MUST be limited by a generic option with a
-  default (S1; the value is a plan decision). Going past it MUST throw an exception that explains
-  which limit was reached, how many rows the context held and of which row types, and how to raise
-  the limit.
+- **FR-011**: Options with enumeration policies MUST serve one enumeration at a time, as in spec
+  001: a second one starting while another runs throws. Serving several at once is deferred until
+  needed.
+- **FR-011a**: The number of rows kept in the context MUST be limited by a generic option with a
+  default (S1; 100, research R28); open rows do not count. Going past it MUST throw an exception
+  that gives the limit, the kept rows per row type, and how to raise the limit; the enumeration then
+  ends as on any throw (FR-001).
 
 **Containment (US2)**
 
@@ -255,7 +260,7 @@ a line with three prices.
 
 - **FR-019**: The deserialization package MUST NOT depend on any standard's names, keys or rules;
   the meaning of rows in the context and their lifetimes is the developer's policies'.
-- **FR-020**: The reading context MUST NOT depend on any one media; how a media exposes a node's
+- **FR-020**: The deserialization context MUST NOT depend on any one media; how a media exposes a node's
   named values and own value is the media's (C0).
 
 **Isolation (US1)**
@@ -266,8 +271,7 @@ a line with three prices.
 
 ### Key Entities
 
-- **Reading context**: per enumeration; holds the open rows, the rows policies kept (closed), and
-  the reading position.
+- **Deserialization context**: per enumeration; holds the open rows and the rows policies kept (closed).
 - **Contextual row**: any row while it is in the context, open or kept; independent of whether it
   is enumerated.
 - **Parent, children, siblings**: relationships from containment; a row's parent is the innermost
@@ -289,8 +293,8 @@ a line with three prices.
 - **SC-001**: A document with a site, orders and lines gives exactly its orders and lines, each
   carrying the site's key, with no `Site` row out and the document read once.
 - **SC-002**: After every enumeration end (natural, early stop, throw), the context holds zero rows.
-- **SC-003**: Two enumerations on one options instance at the same time give the same rows as run
-  one after the other.
+- **SC-003**: The same options instance gives the same rows in two enumerations run one after the
+  other: nothing kept in the context carries over.
 - **SC-004**: A line with three prices told apart by named values gives three rows with both named
   values and the own value each.
 - **SC-005**: Memory held during an enumeration grows only with open rows and rows policies keep,
@@ -321,7 +325,7 @@ At the plan gate, check that the generic requirements still cover these items.
   (structure; XML, JSON, YAML), **keys and references** (matching values; CSV, SQL, Parquet, and
   also within nested documents) and **graphs** (a relationship is itself a row type). This spec
   covers containment only; keys and references come next and start from querying by member
-  values (FR-006); graphs after. One format may use several groups. The reading context is shared
+  values (FR-006); graphs after. One format may use several groups. The deserialization context is shared
   by all groups; each adds its own way to find related rows, and may set its own defaults (e.g.
   whether a row with no policy comes out and how long it stays).
 - Forward references (a row referring to one not read yet) are out of scope; containment has
@@ -330,7 +334,8 @@ At the plan gate, check that the generic requirements still cover these items.
   in this spec; they will build on the context.
 - Conditions on named values are not a core feature: a developer's policy over rows in the context
   covers them.
-- Today's rule that options with enumeration policies serve one enumeration at a time (R19) is
-  replaced by FR-011.
+- Today's rule that options with enumeration policies serve one enumeration at a time (R19) stays
+  (FR-011, developer 2026-11-12); policies still get the context, so lifting the rule later needs
+  no change to their shape.
 - XML is the only media built in this spec; it exposes attributes as named values and an element's
   text as its own value. Other media map their own constructs when they are added.

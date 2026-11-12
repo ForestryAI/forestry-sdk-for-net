@@ -1,4 +1,4 @@
-# Specification Quality Checklist: Reading context
+# Specification Quality Checklist: Deserialization context
 
 **Purpose**: Validate specification completeness and quality before proceeding to planning
 **Created**: 2026-11-11
@@ -61,7 +61,12 @@
   (FR-013); unmatched named values are ignored (US3-3); enumerated and lifetime are decided per row
   at completion. Also confirmed: same node name for a row type and a member fails at lock (members
   are flattened to primitives, so a node is either a row or a member, never both); a member set by
-  an empty node counts as set (FR-007). Confirmed: a bare row-type node (no
-  named values, no own value, no children) constructs no row and is not placed in the context;
-  a node with named values still gives a row (US3-4). Added as an edge case and to FR-002.
+  an empty node counts as set (FR-007).
+- Changed by the developer 2026-11-12 (plan review): an empty or bare row-type node is a row like
+  any other (its presence may be a flag); default add to and remove from the context, other
+  handling by policies. Replaces the earlier "bare node constructs no row" (edge case, FR-002).
+  Context limit default: about 100 rows (research R28). Concurrent enumerations on one options
+  instance deferred: 001's guard stays (FR-011, US1-10 and SC-003 rewritten).
+  FR-009 (policies see the media position) removed: a media path would tie policies to one
+  media; policies learn where they are from rows (research R27, Rejected).
 - Items marked incomplete require spec updates before `/speckit-clarify` or `/speckit-plan`
