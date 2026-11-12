@@ -53,6 +53,95 @@ namespace Forestry.Deserialize.Xml.Tests
             Assert.InRange(millionGrowth - thousandGrowth, long.MinValue, AllowedGrowth);
         }
 
+        // T017 - spec 002 SC-005 / C1 (quickstart 14): 10 sites kept in the deserialization context, then
+        // 1,000 vs 1,000,000 lines enumerated and not kept; memory grows with what is kept, not with the lines
+        [Theory]
+        [InlineData(EntryPoint.Sync)]
+        [InlineData(EntryPoint.Async)]
+        public void Deserialize_ForAMillionLinesAndTenKeptSites_ItShould_HoldNoMoreMemoryThanForAThousand(EntryPoint entryPoint)
+        {
+            // Arrange
+            byte[] thousand = GenerateSitesAndLines(10, 1_000);
+            byte[] million = GenerateSitesAndLines(10, 1_000_000);
+
+            // Act
+            long thousandGrowth = GrowthWhileReadingLines(entryPoint, thousand, 1_000);
+            long millionGrowth = GrowthWhileReadingLines(entryPoint, million, 1_000_000);
+
+            // Assert
+            Assert.InRange(thousandGrowth, long.MinValue, AllowedGrowth);
+            Assert.InRange(millionGrowth, long.MinValue, AllowedGrowth);
+            Assert.InRange(millionGrowth - thousandGrowth, long.MinValue, AllowedGrowth);
+        }
+
+        /// <summary>
+        /// Read every row with sites kept until the end and not enumerated, discarding each line, and
+        /// return how much the live heap grew between the first line and the last
+        /// </summary>
+        /// <param name="entryPoint"></param>
+        /// <param name="document"></param>
+        /// <param name="count">Number of lines in the document</param>
+        /// <returns></returns>
+        private static long GrowthWhileReadingLines(EntryPoint entryPoint, byte[] document, int count)
+        {
+            DeserializeXmlOptions options = new();
+            options.Rows.Add<Site>().Add<Line>();
+            options.Policies.Add<Site>(new ContextPolicy
+            {
+                OnComplete = (row, context) =>
+                {
+                    row.Enumerate(false);
+                    row.Keep(Forestry.Deserialize.Reading.Lifetime.UntilEnd);
+                }
+            });
+
+            using IEnumerator<Row> rows = Rows(entryPoint, document, options).GetEnumerator();
+
+            Assert.True(rows.MoveNext());
+            long first = LiveBytes();
+            int read = 1;
+
+            while (read < count && rows.MoveNext())
+            {
+                read++;
+            }
+
+            long last = LiveBytes();
+
+            Assert.Equal(count, read);
+            Assert.False(rows.MoveNext());
+
+            return last - first;
+        }
+
+        /// <summary>
+        /// A UTF-8 document with <paramref name="sites"/> <c>Site</c> rows, then <paramref name="lines"/>
+        /// <c>Line</c> rows, each with a distinct number
+        /// </summary>
+        /// <param name="sites"></param>
+        /// <param name="lines"></param>
+        /// <returns></returns>
+        private static byte[] GenerateSitesAndLines(int sites, int lines)
+        {
+            using MemoryStream stream = new(lines * 48);
+
+            stream.Write("<Root>"u8);
+
+            for (int i = 0; i < sites; i++)
+            {
+                stream.Write(Encoding.UTF8.GetBytes($"<Site><SiteKey>{i}</SiteKey></Site>"));
+            }
+
+            for (int i = 0; i < lines; i++)
+            {
+                stream.Write(Encoding.UTF8.GetBytes($"<Line><LineNumber>{i}</LineNumber></Line>"));
+            }
+
+            stream.Write("</Root>"u8);
+
+            return stream.ToArray();
+        }
+
         /// <summary>
         /// Read every row, discarding each, and return how much the live heap grew between the first
         /// row and the last, while the enumeration is still open

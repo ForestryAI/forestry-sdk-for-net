@@ -103,7 +103,9 @@ Statuses use spec 001's vocabulary: **Proposed**, **Confirmed**, **Rejected**, *
   whether or not a policy calls `next`.
 - **Each action at most once (FR-003a)**: the flags in R21; a second `Enumerate`, `Keep` or
   `Release` on the same row throws `InvalidOperationException` naming the row type, the action and
-  that a policy already took it. `Enumerate` and `Keep` are only valid during `Complete`;
+  that a policy already took it. `Enumerate` and `Keep` are only valid on the row being completed, during its own completion (not
+  on an open parent from a child's policy, nor on a row whose completion is over; developer
+  2026-11-12);
   `Release` only on a kept, closed row.
 - **Alternatives**: return a small decision struct (two policies would silently overwrite each
   other, which FR-003a forbids); keep `Enumerate` returning `Row?` and add `Keep` (two methods for
@@ -134,6 +136,8 @@ Statuses use spec 001's vocabulary: **Proposed**, **Confirmed**, **Rejected**, *
   direction open); `init`-only members set by the package (constrains how rows are written, same
   gap); a documented contract only (the failure the developer wanted to avoid). Only the copy
   covers both directions without constraining row classes.
+- **Policies no longer change rows that came out** (developer, 2026-11-12, R26): so the copy only
+  has to cover the consumer-to-context direction; the other direction is a throw.
 - **Status**: Confirmed (developer, 2026-11-12)
 
 ## R26. Policies reach the context through a parameter
@@ -157,7 +161,11 @@ Statuses use spec 001's vocabulary: **Proposed**, **Confirmed**, **Rejected**, *
 
 - **Updating members (FR-005)**: `row.Set(nameof(Site.ContactName), value)` (typed overload by
   `PropertyDefinition<T>` too) uses the member's setter and sets its bit (Q2). Plain C# assignment
-  to the row still works but is not tracked as set; documented on `IsSet`.
+  to the row still works but is not tracked as set; documented on `IsSet`. Setting a member of a
+  row already enumerated throws `InvalidOperationException` naming the row type and the member: a
+  row that came out no longer changes (developer, 2026-11-12, as 001 R7; no scenario found where a
+  policy needs to change one, since the consumer would never see it). Open rows and kept rows that
+  did not come out can be updated (e.g. totals on a kept `Machine`).
 - **Queries never see the context change (FR-010)**: `Release` marks the row released; queries skip
   released rows, and the kept list is compacted after the policy call returns. Queries iterate by
   index over the count taken when they start.

@@ -29,7 +29,7 @@ dotnet test Forestry.Deserialize.Xml/test -s Forestry.Deserialize.Xml/test/Perfo
 | 1 | `<Site><SiteKey>7</SiteKey><Order>..</Order><Order>..</Order></Site>` | `Site` kept, not enumerated; `Order` policy copies `SiteKey` | two `Order` rows carrying 7; no `Site` row | US1-1, US1-2, SC-001 |
 | 2 | `<Site><Contact><Name>A</Name></Contact><Order>..</Order></Site>` | `Contact` copies `Name` onto the open site, not enumerated, not kept | the order's policy finds no contact; the site carries `A` | US1-3 |
 | 3 | `<Order><Line>..</Line><Line>..</Line></Order>` | defaults | `Line`, `Line`, `Order`; the line policy sees the open order | US1-4, US2-1 |
-| 4 | same as 3, `Order` enumerated and kept | consumer changes its order; a later policy updates the context's | the context still has the document's value; the consumer's copy is unchanged | US1-11, US1-12, FR-021 |
+| 4 | same as 3, `Order` enumerated and kept | consumer changes its order; a later policy tries to update the context's | the context still has the document's value; the policy's update throws (a row that came out no longer changes) | US1-11, US1-12, FR-005, FR-021 |
 | 5 | `<Site><Order>..</Order><SiteKey>7</SiteKey><Order>..</Order></Site>` | order policy checks `IsSet(SiteKey)` | false for the first order, true for the second | US1-8 |
 | 6 | any, stopped early, cut off, or throwing in a policy | kept rows | `Clear` once; context empty afterwards | US1-6, SC-002 |
 | 7 | two documents | one options instance, one after the other; then overlapping | same rows each time, nothing carried over; the overlapping start throws | US1-10, SC-003 |

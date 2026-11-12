@@ -98,8 +98,8 @@ order.
 11. **Given** an `Order` that is enumerated and kept, **When** the consumer changes a member of the
     order it received, **Then** a later line's policy reading that order from the context sees the
     value as read from the document (isolation).
-12. **Given** an `Order` that is enumerated and kept, **When** a later policy updates that order in
-    the context, **Then** the order the consumer received is unchanged (isolation).
+12. **Given** an `Order` that is enumerated and kept, **When** a later policy sets one of its members,
+    **Then** it throws: a row that came out no longer changes (FR-005).
 13. **Given** a `Line` that is enumerated and not kept, **When** the consumer receives it, **Then**
     a query of the context no longer finds it.
 
@@ -214,7 +214,9 @@ a line with three prices.
 - **FR-004**: A row whose policy does not keep it at completion MUST leave the context then, before
   it is handed out if it is enumerated.
 - **FR-005**: A policy MUST be able to release a kept row and update the members of a row in the
-  context.
+  context that has not been enumerated (open rows, and kept rows that did not come out). Setting a
+  member of a row that has been enumerated MUST throw, naming the row type and the member: a row
+  that came out no longer changes (developer, 2026-11-12; as spec 001 research R7).
 - **FR-006**: A policy MUST be able to query the context's rows by row type and by the values of
   one or more members, and tell open from closed rows.
 - **FR-007**: A policy MUST be able to tell which members of a row in the context have been set,
@@ -266,8 +268,8 @@ a line with three prices.
 **Isolation (US1)**
 
 - **FR-021**: An enumerated row MUST be isolated from the context (**isolation**): what the consumer
-  does to the row it received never reaches the context or later rows, and what policies do to the
-  context after the row is handed out never reaches the consumer's row.
+  does to the row it received never reaches the context or later rows. Policies cannot change it
+  afterwards either (FR-005).
 
 ### Key Entities
 
@@ -280,8 +282,8 @@ a line with three prices.
   independent of open or closed.
 - **Actions taken**: which actions (enumerate, set lifetime, release) policies have taken on a row;
   each at most once.
-- **Isolation**: an enumerated row and the context never affect each other once the row is handed
-  out.
+- **Isolation**: once a row is handed out, the consumer's changes never reach the context, and
+  policies can no longer change it (FR-005).
 - **Enumerated**: a policy's decision at completion that the row comes out.
 - **Lifetime**: how long a row stays in the context after completion, decided by policies: none
   (default), until a policy releases it, or until the enumeration ends.
@@ -330,6 +332,10 @@ At the plan gate, check that the generic requirements still cover these items.
   whether a row with no policy comes out and how long it stays).
 - Forward references (a row referring to one not read yet) are out of scope; containment has
   none.
+- A row and its policies only have what has been read so far (developer, 2026-11-12). This is not
+  an XML limitation: any single forward pass (C2) has it, whatever the media, and so would standard
+  C# deserialization read forward. An open ancestor's members that come after the current row are
+  not set yet; set members (FR-007) let a policy tell, and decide what to do (e.g. fail fast, S1).
 - Ancestors as constructor parameters and key references (walking skeleton's later slices) are not
   in this spec; they will build on the context. Spec 001's guard stays: a row type whose chosen
   constructor has parameters fails when the options lock (001 FR-008), so no relationship can come
