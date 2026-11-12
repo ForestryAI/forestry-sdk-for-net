@@ -1,0 +1,247 @@
+---
+
+description: "Task list for the deserialization context (spec 002)"
+---
+
+# Tasks: Deserialization context
+
+**Input**: Design documents from `specs/002-reading-context/` (plan.md, spec.md, research.md R20-R31,
+data-model.md, contracts/public-api.md, quickstart.md) and `.specify/memory/constitution.md` 3.0.0.
+
+**Prerequisites**: every research item is Confirmed or Rejected (research.md, 2026-11-12).
+
+**Tests**: Required (constitution C4), as in spec 001. In every story phase: test shells first, one
+per acceptance scenario, quickstart row or edge case; then a **test review gate** (the developer
+reviews the shells on the board before any code); then implementation. A story's shells may not
+compile until its implementation declares the surface they call (accepted in 001).
+
+- **XML shells are theories over both entry points** (`[InlineData(EntryPoint.Sync)]`,
+  `[InlineData(EntryPoint.Async)]`) through `Forestry.Deserialize.Xml/test/EntryPoints.cs`, so sync
+  and async agree.
+- **Each test reads its own local document**, one element per line, with `// Arrange`, `// Act`,
+  `// Assert` comments (A4).
+- **Performance gate at the end of every story**: `dotnet test -s Performance.runsettings` on both
+  test projects (001's convention).
+- **Fixtures use neutral names** (`Site`, `Contact`, `Order`, `Line`, `Price`, `Reference`, ...);
+  nothing in the package or its tests depends on StanForD (FR-019, R31).
+
+**Organization**: Phases by user story in priority order: US1 (P1), US2 (P1), US3 (P2). No
+Foundational phase: C4 puts every story's shells before any of its code (as in 001). US1 replaces
+001's `DeserializationState` and policy signatures, so US2 and US3 build on it.
+
+## Format: `[ID] [P?] [Story] Description`
+
+- **[P]**: Can run in parallel (different files, no dependencies on incomplete tasks)
+- **[Story]**: The user story the task belongs to (US1, US2, US3)
+- Paths are relative to `sdk/deserialize/`: the core is `Forestry.Deserialize/`, the media package
+  is `Forestry.Deserialize.Xml/`
+
+## External prerequisites
+
+- None. `Forestry.Xml` already gives `Attribute` and `Value` tokens (research R30, checked
+  2026-11-12).
+
+## Not in this slice
+
+- Keys and references, graphs, forward references, and the `Relationship<TRelationship>()` lookup
+  (spec Assumptions, R21).
+- Several enumerations at once on one options instance (FR-011: 001's guard stays).
+- The reading position for policies (R27, Rejected; FR-009 removed).
+- Ancestors as constructor parameters (spec Assumptions).
+- S1 limits other than kept rows (depth, value length), carried from 001 (plan Complexity Tracking).
+- Names marked Deferred (implementation): `ContextRow`, `ContainerRelationship`, `Lifetime` values,
+  `MaxContextRows`, the limit exception type, `[Content]`, the options method for the own value.
+  The names below are the research examples, confirmed in code review.
+
+---
+
+## Phase 1: Setup
+
+None: the projects, test projects, runsettings and `EntryPoints` helper exist from spec 001.
+
+---
+
+## Phase 2: User Story 1 - Contextual rows and a deserialization context (Priority: P1) 🎯 MVP
+
+**Goal**: Each enumeration has a public `DeserializationContext`; policies get it as a parameter,
+decide at completion whether a row is enumerated and how long it stays (each action at most once),
+query rows, see set members, and enumerated rows are isolated from the context.
+
+**Independent Test**: A `Site` with a `SiteKey` and two `Order`s; `Site` kept and not enumerated; a
+policy on `Order` copies the site key from the context onto each order (quickstart 1).
+
+### Test shells for User Story 1 ⚠️
+
+- [ ] T001 [P] [US1] Fixtures in `Forestry.Deserialize.Xml/test/Fixtures/`: `Site.cs` (`int SiteKey`, `string? Name`, `string? ContactName`), `Contact.cs` (`string? Name`), `Order.cs` (`int OrderNumber`, `int SiteKey`, `string? Note`), `Line.cs` (`int LineNumber`, `int OrderNumber`, `string? Note`), `WideRow.cs` (70 `int` members `M00`-`M69`, for the bitmap above 64 members, "one `ulong` inline for up to 64 members, an extra `ulong[]` only for types with more"), and test policies in `ContextPolicies.cs` (keep and do not enumerate `Site` with `Lifetime.UntilEnd`; copy `SiteKey` from the kept site onto each `Order`; copy `Contact.Name` onto the open `Site` through `context.Ancestors(row)`, not enumerated, not kept; enumerate and keep `Order`; a configurable recording policy reporting what it saw)
+- [ ] T002 [US1] Test shell, US1-1 / US1-2 / SC-001 (quickstart 1): no `Site` row comes out, two `Order` rows carry `SiteKey` 7, document read once, in `Forestry.Deserialize.Xml/test/DeserializationContextTests.US1.cs`
+- [ ] T003 [US1] Test shell, US1-3 (quickstart 2): the contact's name is on the site; a later order's policy finds no `Contact` in `context.Rows<Contact>()`, in `DeserializationContextTests.US1.cs`
+- [ ] T004 [US1] Test shell, US1-4 / US1-7 (quickstart 3): a `Line` policy finds its `Order` open (`IsOpen` true) through `context.Ancestors(row)`; rows come out `Line`, `Line`, `Order`, in `DeserializationContextTests.US1.cs`
+- [ ] T005 [US1] Test shell, US1-5: an `Order` enumerated and kept is found closed by a later row's policy although it came out, in `DeserializationContextTests.US1.cs`
+- [ ] T006 [US1] Test shell, US1-6 / SC-002 (quickstart 6): with rows kept, after a natural end, an early stop, a throw in a policy, and a document cut off inside a row, `Clear(context)` ran exactly once per enumeration and the context held zero rows when it ran out (the recording policy records the count `Clear` saw before emptying, and a later enumeration on the same options finds none), in `DeserializationContextTests.US1.cs`
+- [ ] T007 [US1] Test shell, US1-8 / US1-9 (quickstart 5): `IsSet(nameof(Site.SiteKey))` is false for the first order's policy and true for the second when `SiteKey` comes after the first order; on a closed row with no node for a member it stays false; a member set by an empty node and one set by a policy through `row.Set(...)` count as set (FR-007, Q2), in `DeserializationContextTests.US1.cs`
+- [ ] T008 [US1] Test shell, FR-007 / R22: `WideRow` with members `M00`, `M63`, `M64` and `M69` in the document reports exactly those as set; `IsSet("NoSuchMember")` throws naming the member and the row type, in `DeserializationContextTests.US1.cs`
+- [ ] T009 [US1] Test shell, US1-11 / US1-12 / US1-13 / FR-021 (quickstart 4): the consumer changing its `Order` does not change the value a later `Line` policy reads from the context; a later policy's `row.Set(...)` on the kept order does not change the consumer's row; a `Line` enumerated and not kept is not in `context.Rows<Line>()` when the consumer receives it (checked from the next row's policy), in `DeserializationContextTests.US1.cs`
+- [ ] T010 [US1] Test shell, FR-003a (quickstart 12): two policies both calling `row.Enumerate(...)` on one row throw `InvalidOperationException` naming the row type and the action; likewise two `Keep`; `Enumerate` or `Keep` outside `Complete` throws; `Release` twice, on an open row, or on a row kept `UntilEnd` throws, in `DeserializationContextTests.US1.cs`
+- [ ] T011 [US1] Test shell, Q1 / FR-013: a repeated member node in one row leaves the last value, and a `Set` policy receiving the `ContextRow` sees `IsSet` true before the second value is set, in `DeserializationContextTests.US1.cs`
+- [ ] T012 [US1] Test shell, FR-003 defaults (Q3): a row type with no policy is enumerated and leaves the context; a policy that only calls `Keep(Lifetime.UntilReleased)` still gets the default "enumerated when its type was added", in `DeserializationContextTests.US1.cs`
+- [ ] T013 [US1] Test shells, edge cases / FR-005 / FR-010: `context.Rows<T>()` for a type never kept is empty (no throw); a row kept `UntilReleased` and released by a later policy is not seen by queries after it; a `Release` while iterating `Rows<T>()` does not change that iteration, only later ones, in `DeserializationContextTests.US1.cs`
+- [ ] T014 [US1] Test shell, FR-011a (quickstart 13): with `MaxContextRows = 3` and four kept rows the enumeration throws the limit exception, whose message contains the limit (3), the kept rows per row type and the words `MaxContextRows`; open rows do not count (a document nesting five rows deep with nothing kept passes); `Clear` ran once and the context is empty, in `DeserializationContextTests.US1.cs`
+- [ ] T015 [US1] Test shell, US1-10 / SC-003 (quickstart 7): two enumerations one after the other on one options instance give the same rows, the second seeing no rows kept by the first; 001's overlap tests (T091 in `Forestry.Deserialize.Xml/test/WalkingSkeletonTests.US4.cs`) stay as US1-10, updated only for the new `Clear(context)` signature, in `DeserializationContextTests.US1.cs`
+- [ ] T016 [P] [US1] Core test shells in `Forestry.Deserialize/test/DeserializeOptionsTests.cs`: `MaxContextRows` defaults to 100 ("Default **100**"); changing it after the options lock throws (FR-013 of 001); in `Forestry.Deserialize/test/DefinitionValidationTests.cs`: a type definition looks up a member index by C# member name, and an unknown name is not found
+- [ ] T017 [P] [US1] Performance test shell, SC-005 / C1 (quickstart 14): 1,000,000 `Line` rows enumerated and not kept plus 10 kept rows; memory sampled every 100,000 rows stays flat, trait `Category=Performance`, in `Forestry.Deserialize.Xml/test/MemoryTests.cs`
+- [ ] T018 [US1] **Test review gate**: the developer reviews T001-T017 on the board and closes the review task before T019 (C4)
+
+### Implementation for User Story 1
+
+- [ ] T019 [P] [US1] Add `Lifetime` in `Forestry.Deserialize/src/Reading/Lifetime.cs`: values "`Leave` (default), `UntilReleased`, `UntilEnd`" (data-model.md) (depends on T018)
+- [ ] T020 [US1] Add `ContextRow` in `Forestry.Deserialize/src/Reading/ContextRow.cs`: `Row`, its `TypeDefinition`, `IsOpen`, set members as "`ulong`, plus `ulong[]` above 64 members" by property `Index`, actions-taken flags (`Enumerated`, `Lifetime`, `Released`), the enumerated decision and lifetime; `IsSet(string)` / `IsSet(PropertyDefinition)`, `Set<TValue>(string, TValue)` through the member's setter marking its bit, `Enumerate(bool)` and `Keep(Lifetime)` valid only during completion and at most once, throwing otherwise (R21-R23) (depends on T019)
+- [ ] T021 [US1] Add `DeserializationContext` in `Forestry.Deserialize/src/Reading/DeserializationContext.cs`, replacing `Forestry.Deserialize/src/Reading/DeserializationState.cs` (delete it): open-row stack of `ContextRow`, kept list oldest first, `Rows<TRow>()` (open and kept, released skipped, iterating by index over the count taken at start), `Current`, `Ancestors(row)` innermost first, `Release(row)` marking and compacting after the policy call, kept-row limit check when a row is kept, `Clear()` emptying (R20, R26, R28) (depends on T020)
+- [ ] T022 [P] [US1] Add the limit exception and messages in `Forestry.Deserialize/src/Throwing.cs` and `Forestry.Deserialize/src/Formatting.Resource.cs`: limit and value, kept rows per row type, "Raise MaxContextRows on the options"; at-most-once and wrong-moment action messages naming row type and action; `IsSet` unknown member (R23, R28) (depends on T018)
+- [ ] T023 [P] [US1] Add the member name-to-index lookup to `Forestry.Deserialize/src/Definitions/TypeDefinition.cs` (R22) (depends on T018)
+- [ ] T024 [P] [US1] Add `MaxContextRows` (default 100, locked with the options) to `Forestry.Deserialize/src/DeserializeOptions.cs` (R28); keep `BeginEnumeration` / `EndEnumeration` and the overlap guard in `Forestry.Deserialize/src/DeserializeOptions.Caching.cs` (FR-011) (depends on T018)
+- [ ] T025 [US1] Change `Forestry.Deserialize/src/Policies/EnumerationPolicy.cs`: `Construct(TypeDefinition, DeserializationContext, Func<Row>)`, `Set<T>(ContextRow, PropertyDefinition<T>, T, DeserializationContext, Action<Row, T>)`, `Complete(ContextRow, DeserializationContext, Action)` replacing `Enumerate`, `Clear(DeserializationContext)`; update the override check and XML docs (remove the remark that `Enumerate` returns the row) (R23, R26) (depends on T021)
+- [ ] T026 [US1] Compose the new chains in `Forestry.Deserialize/src/Policies/PolicyResolver.cs` and `Forestry.Deserialize/src/Policies/TypeChains.cs`: `Complete` chain with a built-in `next` that does nothing; `Set` chain passing the `ContextRow` and context (depends on T025)
+- [ ] T027 [US1] Rework `Forestry.Deserialize/src/Reading/RowBuilder.cs`: `Start<T>()` creates and pushes a `ContextRow`; `Set` marks the member's bit (empty values included); `Complete()` follows R24 (pop; run the `Complete` chain; default untaken decisions to "enumerated when the type was added, lifetime `Leave`"; if kept, add to the kept list with the limit check; if enumerated, return it, a shallow copy when also kept; a row not kept has left before it is returned); `Clear()` calls every policy's `Clear(context)` once, then empties the context (R24, R25) (depends on T021, T026)
+- [ ] T028 [P] [US1] Add an internal shallow copy (`MemberwiseClone`) to `Forestry.Deserialize/src/Rows/Row.cs` (R25) (depends on T018)
+- [ ] T029 [US1] Update 001's policy fixtures and tests to the new signatures: `Forestry.Deserialize.Xml/test/Fixtures/RecordingPolicy.cs`, `RecordingSetPolicy.cs`, `Forestry.Deserialize/test/Fixtures/MarkerPolicies.cs`, `Forestry.Deserialize/test/PolicyPrecedenceTests.cs`, `Forestry.Deserialize/test/PolicyOptionsTests.cs`, `Forestry.Deserialize.Xml/test/WalkingSkeletonTests.US4.cs` (`Enumerate` → `Complete` with actions, `Clear()` → `Clear(context)`); records stay as before (depends on T027)
+- [ ] T030 [US1] XML doc comments (D0) on every new or changed public member: `DeserializationContext`, `ContextRow`, `Lifetime`, `MaxContextRows`, the limit exception, the `EnumerationPolicy` methods; `IsSet` documents that plain C# assignment is not tracked (depends on T027)
+- [ ] T031 [US1] Run `dotnet test` on both test projects: T002-T016 pass on both entry points, every spec 001 test still green; then the performance gate `dotnet test -s Performance.runsettings` on both test projects passes, T017 included (depends on T029, T030)
+
+**Checkpoint**: The deserialization context works end to end; MVP of this spec.
+
+---
+
+## Phase 3: User Story 2 - Containment: parent-child and sibling relationships (Priority: P1)
+
+**Goal**: Nested row types complete inner first in one pass; each row records its parent
+(`ContainerRelationship`); policies find parent, children and siblings; members are found through
+wrapper elements; wrappers with meaning work as row types.
+
+**Independent Test**: One site, two orders, each with two lines; `Order` and `Line` come out in
+completion order, each line's parent is its order.
+
+### Test shells for User Story 2 ⚠️
+
+- [ ] T032 [P] [US2] Fixtures in `Forestry.Deserialize.Xml/test/Fixtures/`: `Part.cs` (nested in itself, `int PartNumber`), `Measurement.cs` (`string? Unit` and `decimal Amount`, both child elements), `Line.cs` gains `decimal WeightAmount`, `Order.cs` gains a `Details` wrapper case; policies in `ContainmentPolicies.cs` (keep lines; ask for siblings, children and parent and record what they found; a `Measurement` completion policy setting `WeightAmount` on its parent when `Unit` is "kg", not enumerated)
+- [ ] T033 [US2] Test shell, US2-1 (quickstart 3): two `Line` rows before their `Order`, each with its own members, in `Forestry.Deserialize.Xml/test/DeserializationContextTests.US2.cs`
+- [ ] T034 [US2] Test shell, US2-2 / FR-002 (quickstart 8): `OrderNumber` after the last line is set on the order; an empty `<Line />` is a row like any other (enumerated, its members unset), in `DeserializationContextTests.US2.cs`
+- [ ] T035 [US2] Test shell, US2-3: a `Price`-like row not enumerated inside an enumerated `Line` sees the line open when it completes (use `Measurement` until US3), in `DeserializationContextTests.US2.cs`
+- [ ] T036 [US2] Test shell, US2-4 / C2: several row types come out of one forward pass; the async entry point over a counting stream reads each byte once, in `DeserializationContextTests.US2.cs`
+- [ ] T037 [US2] Test shell, US2-5 / US2-6 (quickstart 9): the third kept line finds the first two as siblings, closed, with the order as parent; the order's completion policy finds all kept lines as children, and none when they are not kept, in `DeserializationContextTests.US2.cs`
+- [ ] T038 [US2] Test shell, FR-014 / FR-015: the outermost row has no parent (`ParentId` null); a kept line whose order was not kept finds no parent after the order completed, in `DeserializationContextTests.US2.cs`
+- [ ] T039 [US2] Test shell, edge case: a `Part` nested in a `Part` gives two rows, inner first, the inner one's parent the outer one, in `DeserializationContextTests.US2.cs`
+- [ ] T040 [US2] Test shells, R29 (quickstart 15, 16): `<Order><Details><OrderNumber>5</OrderNumber></Details></Order>` sets 5 on the order through the wrapper; `<Line><Measurement><Unit>kg</Unit><Amount>3</Amount></Measurement></Line>` gives `Line.WeightAmount` 3 and no `Measurement` row; a member name under two wrappers in one row keeps the last value, in `DeserializationContextTests.US2.cs`
+- [ ] T041 [US2] **Test review gate**: the developer reviews T032-T040 on the board before T042 (C4)
+
+### Implementation for User Story 2
+
+- [ ] T042 [US2] Add `ContainerRelationship` (`long Id`, `long? ParentId`) in `Forestry.Deserialize/src/Reading/ContainerRelationship.cs` and `ContextRow.Container`; `RowBuilder.Start<T>()` assigns the next id and the innermost open row's id as parent (R21) (depends on T041)
+- [ ] T043 [US2] Add `Parent(row)`, `Children(row)`, `Siblings(row)` to `Forestry.Deserialize/src/Reading/DeserializationContext.cs`, by parent id among open and kept rows; a row that left the context is not found (FR-015) (depends on T042)
+- [ ] T044 [US2] Change `Forestry.Deserialize.Xml/src/XmlRowReading.cs` and `XmlAssociation.cs` (R29): a non-row element at any depth is matched against the open rows' members from the innermost outward, the first that has it gets it; elements that match nothing are passed through (their children still read); remove the direct-child depth check (depends on T041)
+- [ ] T045 [US2] XML doc comments (D0) for `ContainerRelationship`, `Container` and the new context methods (depends on T043)
+- [ ] T046 [US2] Run `dotnet test` on both test projects: T033-T040 pass on both entry points, US1 and spec 001 still green; then the performance gate passes (depends on T044, T045)
+
+**Checkpoint**: Containment relationships and wrappers work; US1 unaffected.
+
+---
+
+## Phase 4: User Story 3 - A node's own values as members (Priority: P2)
+
+**Goal**: A row type takes members from its element's attributes (named values) and its own text
+(a member marked `[Content]`).
+
+**Independent Test**: A `Price` row type with two attribute members and one `[Content]` member over
+a line with three prices (quickstart 10).
+
+### Test shells for User Story 3 ⚠️
+
+- [ ] T047 [P] [US3] Fixtures in `Forestry.Deserialize.Xml/test/Fixtures/`: `Price.cs` (`string? Currency` as `[Field("currency")]`, `string? Kind` as `[Field("kind")]`, `[Content] decimal Amount`), `Reference.cs` (`string? Type` as `[Field("type")]`, `[Content] string? Value`), `PriceWithDuplicateName.cs` (two members named `currency`), `MeasurementByAttribute.cs` (`[Row("Measurement")]`, `[Field("unit")] string? Unit`, `decimal Amount`), leaving US2's `Measurement.cs` unchanged
+- [ ] T048 [US3] Test shell, US3-1 / US3-2 / SC-004 (quickstart 10): a line with three `<Price currency=".." kind="..">..</Price>` gives three rows, each with both attributes converted and the amount, in `Forestry.Deserialize.Xml/test/DeserializationContextTests.US3.cs`
+- [ ] T049 [US3] Test shell, US3-3: an attribute no member matches, and a prefixed `xsi:` attribute, are ignored, in `DeserializationContextTests.US3.cs`
+- [ ] T050 [US3] Test shell, US3-4 / FR-017 (quickstart 11): `<Reference type="external" />` sets `Type`; `Value` is empty and `IsSet(nameof(Reference.Value))` is true; text around child elements leaves the last text, in `DeserializationContextTests.US3.cs`
+- [ ] T051 [US3] Test shell, FR-018: `PriceWithDuplicateName` fails when the options lock, naming both members (001's duplicate-name check); a document with the same name as attribute and child element sets the member twice, last wins (Q1), in `DeserializationContextTests.US3.cs`
+- [ ] T052 [US3] Test shell, R29 with attributes: `<Line><Measurement unit="kg"><Amount>3</Amount></Measurement></Line>` gives `Line.WeightAmount` 3 (the attribute is set when `Amount` arrives), in `DeserializationContextTests.US3.cs`
+- [ ] T053 [P] [US3] Core test shells in `Forestry.Deserialize/test/DefinitionValidationTests.cs`: two `[Content]` members fail when the options lock, naming the class; the own-value member set through the options wins as any option does (R30)
+- [ ] T054 [US3] **Test review gate**: the developer reviews T047-T053 on the board before T055 (C4)
+
+### Implementation for User Story 3
+
+- [ ] T055 [P] [US3] Add `[Content]` in `Forestry.Deserialize/src/Attributes/ContentAttribute.cs` and the options method for the own-value member in `Forestry.Deserialize/src/DeserializeOptions.cs`; `TypeDefinition` resolves at most one own-value member, more than one failing at lock (R30) (depends on T054)
+- [ ] T056 [US3] Extend `Forestry.Deserialize.Xml/src/XmlAssociation.cs`: attribute names share the member name lookup of each row type; expose the own-value member (R30) (depends on T055)
+- [ ] T057 [US3] Extend `Forestry.Deserialize.Xml/src/XmlRowReading.cs`: `Attribute` and `Value` tokens on a row's own element set its members; text directly inside a row element sets its own-value member, last text wins; at the row's end, if no text arrived, set the own-value member empty (marked set) before `Complete()` (R30, FR-017) (depends on T056)
+- [ ] T058 [US3] XML doc comments (D0) for `[Content]` and the options method (depends on T055)
+- [ ] T059 [US3] Run `dotnet test` on both test projects: T048-T053 pass on both entry points, US1, US2 and spec 001 still green; then the performance gate passes (depends on T057, T058)
+
+**Checkpoint**: All three stories work independently.
+
+---
+
+## Phase 5: Polish & Cross-Cutting Concerns
+
+- [ ] T060 [P] How-to section "The deserialization context" in `Forestry.Deserialize/README.md` (D0): keeping and enumerating rows, set members, containment, wrappers as row types, attributes and `[Content]`, the kept-row limit; update "Changing behavior with policies" for `Complete` and the context parameter
+- [ ] T061 [P] Update `Forestry.Deserialize/CHANGELOG.md` and `Forestry.Deserialize.Xml/CHANGELOG.md` (breaking: `Enumerate` replaced by `Complete`, policy methods take the context)
+- [ ] T062 [P] Mark spec 001's research R19 `Enumerate` and the one-row `DeserializationState` as superseded by this spec's R20, R23 and R26, and add "As implemented" notes to this spec's research.md for names settled in code review (G0)
+- [ ] T063 Walk every row of `quickstart.md` against the tests (1-16) and set spec.md's status from Draft to Implemented (depends on T059)
+
+---
+
+## Dependencies & Execution Order
+
+### Phase Dependencies
+
+- **Setup (Phase 1)**: none
+- **US1 (Phase 2)**: shells, review gate, then implementation; replaces 001's state and policy
+  signatures, so 001's policy tests turn red between T025 and T029
+- **US2 (Phase 3)**: depends on US1 (the context and `ContextRow` it extends); its shells can be
+  written while US1 is implemented
+- **US3 (Phase 4)**: depends on US1; independent of US2 except T052, which needs R29's wrappers
+  (T044)
+- **Polish (Phase 5)**: after the stories it documents
+
+### Within Each Story
+
+- Test shells, then the **test review gate**, then implementation (C4)
+- Core types before the builder, the builder before the media, then docs, then the test run and
+  performance gate
+
+### Parallel Opportunities
+
+- US1: T001, T016, T017 (different projects and files); after the gate T019, T022, T023, T024, T028
+- US2: T032 alongside US1's implementation; after the gate T042 and T044
+- US3: T047 and T053; after the gate T055 alongside nothing else in US3 (T056-T057 follow it)
+- Polish: T060, T061, T062
+
+## Parallel Example: User Story 1
+
+```text
+# Shells, in parallel:
+T001 fixtures (Forestry.Deserialize.Xml/test/Fixtures/)
+T016 core shells (Forestry.Deserialize/test/)
+T017 performance shell (Forestry.Deserialize.Xml/test/MemoryTests.cs)
+
+# After the review gate (T018), in parallel:
+T019 Lifetime        T022 Throwing/messages     T023 member index lookup
+T024 MaxContextRows  T028 Row shallow copy
+```
+
+## Implementation Strategy
+
+### MVP First (User Story 1 Only)
+
+1. US1 shells, review gate, implementation (T001-T031)
+2. **Stop and validate**: quickstart 1-7 and 12-14; spec 001 still green
+3. Unblocks StanForD #93 (identification) and #94 (timestamps) for rows kept at the document level
+
+### Incremental Delivery
+
+1. US1 → the context, actions, isolation, limit
+2. US2 → containment and wrappers (unblocks #95's wrapper cases such as `BoomPositioning`)
+3. US3 → attributes and `[Content]` (completes #95: `LogMeasurement` / `LogDiameter`)
+
+## Notes
+
+- [P] tasks touch different files and depend on no incomplete task
+- Each review gate is a board task the developer closes (C4, C5); story issues on the board carry
+  scope and design decisions in their Architecture section and are kept in sync with this file
+- Names marked Deferred (implementation) are confirmed in code review
+- Commit after each task or logical group
