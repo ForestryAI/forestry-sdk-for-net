@@ -56,7 +56,7 @@ Foundational phase: C4 puts every story's shells before any of its code (as in 0
   from policies for now; later, policies may be created when type definitions are built.
 - S1 limits other than kept rows (depth, value length), carried from 001 (plan Complexity Tracking).
 - Names marked Deferred (implementation): `ContextRow`, `ContainerRelationship`, `Lifetime` values,
-  `MaxContextRows`, the limit exception type, `[Content]`, the options method for the own value.
+  `MaxContextRows`, the limit exception type, `[XmlAttributeValue]`, `[XmlTextValue]`, `TextValue<TRow>`.
   The names below are the research examples, confirmed in code review.
 
 ---
@@ -154,30 +154,31 @@ completion order, each line's parent is its order.
 
 ## Phase 4: User Story 3 - A node's own values as members (Priority: P2)
 
-**Goal**: A row type takes members from its element's attributes (named values) and its own text
-(a member marked `[Content]`).
+**Goal**: A row type takes members from its element's attributes (named values) and its own text,
+declared with the XML package's attributes (`[XmlAttributeValue]`, `[XmlTextValue]`); the core gets
+no source vocabulary (R30).
 
-**Independent Test**: A `Price` row type with two attribute members and one `[Content]` member over
+**Independent Test**: A `Price` row type with two attribute members and one text member over
 a line with three prices (quickstart 10).
 
 ### Test shells for User Story 3 ⚠️
 
-- [ ] T047 [P] [US3] Fixtures in `Forestry.Deserialize.Xml/test/Fixtures/`: `Price.cs` (`string? Currency` as `[Field("currency")]`, `string? Kind` as `[Field("kind")]`, `[Content] decimal Amount`), `Reference.cs` (`string? Type` as `[Field("type")]`, `[Content] string? Value`), `PriceWithDuplicateName.cs` (two members named `currency`), `MeasurementByAttribute.cs` (`[Row("Measurement")]`, `[Field("unit")] string? Unit`, `decimal Amount`), leaving US2's `Measurement.cs` unchanged
-- [ ] T048 [US3] Test shell, US3-1 / US3-2 / SC-004 (quickstart 10): a line with three `<Price currency=".." kind="..">..</Price>` gives three rows, each with both attributes converted and the amount, in `Forestry.Deserialize.Xml/test/DeserializationContextTests.US3.cs`
-- [ ] T049 [US3] Test shell, US3-3: an attribute no member matches, and a prefixed `xsi:` attribute, are ignored, in `DeserializationContextTests.US3.cs`
-- [ ] T050 [US3] Test shell, US3-4 / FR-017 (quickstart 11): `<Reference type="external" />` sets `Type`; `Value` is empty and `IsSet(nameof(Reference.Value))` is true; text around child elements leaves the last text, in `DeserializationContextTests.US3.cs`
-- [ ] T051 [US3] Test shell, FR-018: `PriceWithDuplicateName` fails when the options lock, naming both members (001's duplicate-name check); a document with the same name as attribute and child element sets the member twice, last wins (Q1), in `DeserializationContextTests.US3.cs`
-- [ ] T052 [US3] Test shell, R29 with attributes: `<Line><Measurement unit="kg"><Amount>3</Amount></Measurement></Line>` gives `Line.WeightAmount` 3 (the attribute is set when `Amount` arrives), in `DeserializationContextTests.US3.cs`
-- [ ] T053 [P] [US3] Core test shells in `Forestry.Deserialize/test/DefinitionValidationTests.cs`: two `[Content]` members fail when the options lock, naming the class; the own-value member set through the options wins as any option does (R30)
-- [ ] T054 [US3] **Test review gate**: the developer reviews T047-T053 on the board before T055 (C4)
+- [X] T047 [P] [US3] Fixtures in `Forestry.Deserialize.Xml/test/Fixtures/`: `Price.cs` (`[XmlAttributeValue("currency")] string? Currency`, `[XmlAttributeValue("kind")] string? Kind`, `[XmlTextValue] decimal Amount`), `Reference.cs` (`[XmlAttributeValue("type")] string? Type`, `[XmlTextValue] string? Value`), `PriceWithDuplicateName.cs` (two `[XmlAttributeValue("currency")]` members), `PriceWithTwoTextValues.cs` (two `[XmlTextValue]` members), `PriceWithTextOption.cs` (`[XmlTextValue] decimal Amount`, `decimal Other`), `MeasurementByAttribute.cs` (`[Row("Measurement")]`, `[XmlAttributeValue("unit")] string? Unit`, `decimal Amount`), leaving US2's `Measurement.cs` unchanged
+- [X] T048 [US3] Test shell, US3-1 / US3-2 / SC-004 (quickstart 10): a line with three `<Price currency=".." kind="..">..</Price>` gives three rows, each with both attributes converted and the amount, in `Forestry.Deserialize.Xml/test/DeserializationContextTests.US3.cs`
+- [X] T049 [US3] Test shell, US3-3: an attribute no member matches, and a prefixed `xsi:` attribute, are ignored, in `DeserializationContextTests.US3.cs`
+- [X] T050 [US3] Test shell, US3-4 / FR-017 (quickstart 11): `<Reference type="external" />` sets `Type`; `Value` is empty and `IsSet(nameof(Reference.Value))` is true; text around child elements leaves the last text, in `DeserializationContextTests.US3.cs`
+- [X] T051 [US3] Test shells, FR-018: `PriceWithDuplicateName` fails when the options lock, naming both members; a child element `<currency>` does not set the attribute member `Currency`, which keeps the attribute's value, in `DeserializationContextTests.US3.cs`
+- [X] T052 [US3] Test shell, R29 with attributes: `<Line><Measurement unit="kg"><Amount>3</Amount></Measurement></Line>` gives `Line.WeightAmount` 3 (the attribute is set when `Amount` arrives), in `DeserializationContextTests.US3.cs`
+- [X] T053 [US3] Test shells, FR-018 / R30 (XML, not core: sources are the media's): `PriceWithTwoTextValues` fails when the options lock, naming the class; `options.TextValue<PriceWithTextOption>(nameof(Other))` wins over `[XmlTextValue]` on `Amount`, in `DeserializationContextTests.US3.cs`
+- [X] T054 [US3] **Test review gate**: the developer reviews T047-T053 on the board before T055 (C4) (developer, 2026-11-12: passed with changes: last text wins for now, joining text around child elements deferred (R30); each member has one source, declared with the XML package's own attributes, not the core's (R30, FR-016-FR-018); T051 flipped, T053 moved to the XML tests; `[Row]`/`[Field]` debt recorded on #103)
 
 ### Implementation for User Story 3
 
-- [ ] T055 [P] [US3] Add `[Content]` in `Forestry.Deserialize/src/Attributes/ContentAttribute.cs` and the options method for the own-value member in `Forestry.Deserialize/src/DeserializeOptions.cs`; `TypeDefinition` resolves at most one own-value member, more than one failing at lock (R30) (depends on T054)
-- [ ] T056 [US3] Extend `Forestry.Deserialize.Xml/src/XmlAssociation.cs`: attribute names share the member name lookup of each row type; expose the own-value member (R30) (depends on T055)
-- [ ] T057 [US3] Extend `Forestry.Deserialize.Xml/src/XmlRowReading.cs`: `Attribute` and `Value` tokens on a row's own element set its members; text directly inside a row element sets its own-value member, last text wins; at the row's end, if no text arrived, set the own-value member empty (marked set) before `Complete()` (R30, FR-017) (depends on T056)
-- [ ] T058 [US3] XML doc comments (D0) for `[Content]` and the options method (depends on T055)
-- [ ] T059 [US3] Run `dotnet test` on both test projects: T048-T053 pass on both entry points, US1, US2 and spec 001 still green; then the performance gate passes (depends on T057, T058)
+- [X] T055 [P] [US3] Add `XmlAttributeValueAttribute` and `XmlTextValueAttribute` in `Forestry.Deserialize.Xml/src/` and `TextValue<TRow>(string memberName)` on `Forestry.Deserialize.Xml/src/DeserializeXmlOptions.cs` (locked with the options; options win over the attribute) (R30) (depends on T054) (2026-11-12: done, names as proposed)
+- [X] T056 [US3] Extend `Forestry.Deserialize.Xml/src/XmlAssociation.cs`: per row type, child-element members (no marker, or `[Field]`), attribute members (`[XmlAttributeValue]`) and at most one text member, each looked up by name in its own map; duplicates per source and more than one text member fail when the options lock (R30, FR-018) (depends on T055) (2026-11-12: done; a type or member named in `TextValue` that the options do not have fails at lock too)
+- [X] T057 [US3] Extend `Forestry.Deserialize.Xml/src/XmlRowReading.cs`: `Attribute` and `Value` tokens on a row's own element set its attribute members; text directly inside a row element sets its text member, last text wins; at the row's end, if no text arrived, set the text member empty (marked set) before `Complete()` (R30, FR-017) (depends on T056) (2026-11-12: done; spacing-only text is never a token (the reader skips it), so indentation does not set a text member)
+- [X] T058 [US3] XML doc comments (D0) for the two XML attributes and `TextValue<TRow>` (depends on T055)
+- [X] T059 [US3] Run `dotnet test` on both test projects: T048-T053 pass on both entry points, US1, US2 and spec 001 still green; then the performance gate passes (depends on T057, T058) (2026-11-12: passed on net10.0: core 44, XML 180 (US3 9 methods x 2 entry points), 0 build warnings; performance gate 4 of 4)
 
 **Checkpoint**: All three stories work independently.
 
@@ -185,7 +186,7 @@ a line with three prices (quickstart 10).
 
 ## Phase 5: Polish & Cross-Cutting Concerns
 
-- [ ] T060 [P] How-to section "The deserialization context" in `Forestry.Deserialize/README.md` (D0): keeping and enumerating rows, set members, containment, wrappers as row types, attributes and `[Content]`, the kept-row limit; update "Changing behavior with policies" for `Complete` and the context parameter
+- [ ] T060 [P] How-to section "The deserialization context" in `Forestry.Deserialize/README.md` (D0): keeping and enumerating rows, set members, containment, wrappers as row types, attributes and element text with the XML package's attributes, the kept-row limit; update "Changing behavior with policies" for `Complete` and the context parameter
 - [ ] T061 [P] Update `Forestry.Deserialize/CHANGELOG.md` and `Forestry.Deserialize.Xml/CHANGELOG.md` (breaking: `Enumerate` replaced by `Complete`, policy methods take the context)
 - [ ] T062 [P] Mark spec 001's research R19 `Enumerate` and the one-row `DeserializationState` as superseded by this spec's R20, R23 and R26, and add "As implemented" notes to this spec's research.md for names settled in code review (G0)
 - [ ] T063 Walk every row of `quickstart.md` against the tests (1-16) and set spec.md's status from Draft to Implemented (depends on T059)
@@ -215,7 +216,7 @@ a line with three prices (quickstart 10).
 
 - US1: T001, T016, T017 (different projects and files); after the gate T019, T022, T023, T024, T028
 - US2: T032 alongside US1's implementation; after the gate T042 and T044
-- US3: T047 and T053; after the gate T055 alongside nothing else in US3 (T056-T057 follow it)
+- US3: T047; after the gate T055, then T056-T057 in order
 - Polish: T060, T061, T062
 
 ## Parallel Example: User Story 1
@@ -243,7 +244,7 @@ T024 MaxContextRows  T028 Row shallow copy
 
 1. US1 → the context, actions, isolation, limit
 2. US2 → containment, wrappers through row types and policies (unblocks #95's wrapper cases such as `BoomPositioning`)
-3. US3 → attributes and `[Content]` (completes #95: `LogMeasurement` / `LogDiameter`)
+3. US3 → attributes and element text, declared with the XML package's attributes (completes #95: `LogMeasurement` / `LogDiameter`)
 
 ## Notes
 

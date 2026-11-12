@@ -23,7 +23,7 @@ Queries (FR-006, FR-008, FR-015): `Rows<TRow>()`, `Current`, `Ancestors(row)`, `
 | Field | Meaning |
 |---|---|
 | Row | The developer's row (the original, R25) |
-| Definition | Its type definition (member names, indexes, own-value member) |
+| Definition | Its type definition (member names, indexes) |
 | IsOpen | True until `Complete()` pops it |
 | Set members | Bitmap by property index: `ulong`, plus `ulong[]` above 64 members (R22) |
 | Actions taken | Flags: `Enumerated`, `Lifetime`, `Released` (R23, FR-003a) |
@@ -55,7 +55,6 @@ have a second kind of relationship (R21).
 | Adds | Meaning |
 |---|---|
 | Member index by name | C# member name to property index, for `IsSet` and `Set` |
-| Own-value member | At most one, from the own-value attribute or the options; more than one fails at lock |
 
 ## Options (changed, R26, R28)
 
@@ -70,7 +69,7 @@ have a second kind of relationship (R21).
 row node starts (even empty) -> Start<T>(): construct (Construct chain), new context row
                               (id, parent id), push
 member node / named value  -> Set(member, utf8, context): convert, set, mark its bit
-own value                  -> Set(own-value member, ...): same
+attribute / element text   -> Set(member, ...): the XML association maps them to members (R30)
 node ends                  -> Complete(): pop (closed); Complete chain; defaults for
                               untaken decisions; kept -> kept list (limit checked);
                               enumerated -> handed out (a copy when also kept)

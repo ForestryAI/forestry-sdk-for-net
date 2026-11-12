@@ -35,8 +35,8 @@ dotnet test Forestry.Deserialize.Xml/test -s Forestry.Deserialize.Xml/test/Perfo
 | 7 | two documents | one options instance, one after the other; then overlapping | same rows each time, nothing carried over; the overlapping start throws | US1-10, SC-003 |
 | 8 | `<Order><Line/>..<OrderNumber>5</OrderNumber></Order>` | defaults | the empty line is a row like any other (enumerated, empty); 5 set on the order | FR-002, US2-2 |
 | 9 | `<Order>` with three kept lines | line policy asks for siblings | the third finds the first two, parent the order | US2-5, US2-6 |
-| 10 | `<Line><Price currency="EUR" kind="net">0.59</Price>..x3</Line>` | `Price` with two attribute members and `[Content]` | three rows, each with both values and the price | US3-1, US3-2, SC-004 |
-| 11 | `<Reference type="external" />` | `Reference` with `[Content]` | `type` set; content empty | US3-4 |
+| 10 | `<Line><Price currency="EUR" kind="net">0.59</Price>..x3</Line>` | `Price` with two `[XmlAttributeValue]` members and an `[XmlTextValue]` member | three rows, each with both values and the price | US3-1, US3-2, SC-004 |
+| 11 | `<Reference type="external" />` | `Reference` with an `[XmlAttributeValue]` and an `[XmlTextValue]` member | `type` set; content empty | US3-4 |
 | 12 | two policies both calling `Enumerate` on one row | | the second throws, naming the action | FR-003a |
 | 13 | more kept rows than `MaxContextRows` | small limit | throws with the limit, kept rows per type and how to raise it; `Clear` once, context emptied | FR-011a |
 | 14 | many enumerated rows, a few kept | Performance trait | memory flat in the number of rows | SC-005 |

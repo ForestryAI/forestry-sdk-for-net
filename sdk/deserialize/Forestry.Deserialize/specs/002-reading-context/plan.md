@@ -15,7 +15,7 @@ set-members bitmap and the actions policies took (R20-R22). Completion becomes t
 decisions taken as actions, each at most once, with containment defaults (R23, R24). Rows both
 enumerated and kept are handed out as shallow copies (R25). Policies receive the context as a
 parameter; options with enumeration policies still serve one enumeration at a time (R26). The XML media adds
-attributes as named values and a designated own-value member; empty nodes are rows like any other
+attributes and element text as members, declared with its own attributes (R30); empty nodes are rows like any other
 (R29, R30). A limit on rows in the context fails fast with an explanatory exception (R28).
 
 All design decisions are in [research.md](research.md), each Proposed until the developer decides
@@ -58,14 +58,14 @@ Checked against constitution 3.0.0.
 
 | Rule | Pre-research | Post-design | Notes |
 |---|---|---|---|
-| C0 Media-agnostic | Pass | Pass | The context, actions and own-value designation are core and media-neutral; attributes and text are the XML package's (R29, R30). |
+| C0 Media-agnostic | Pass | Pass | The context and actions are core and media-neutral; where a value comes from (attributes, text) is declared with the XML package's own attributes, not the core's (R29, R30). |
 | C1 Partial deserialization | Pass | Pass | Not-kept rows leave at completion; parents held by id so a kept row never holds a left parent (R21); limit on rows held (R28); SC-005 test. |
 | C2 Single pass | Pass | Pass | Nesting and relationships in one pass; no forward references (spec Assumptions). |
 | C3 Real media reader | Pass | Pass | Scenarios through the XML reader; core tests need no document (R31). |
 | C4 Test-first | Pass | Pass | Shells per story before code; test review task on the board (tasks.md). |
 | C5 Design ownership | Pass | Pass | Every R20-R31 item Proposed; tasks wait for decisions. |
 | C6 Working example first | Pass | Pass | No pooling or indexed store; list plus LINQ (spec Assumptions). |
-| D0 Public documentation | Pass | Pass | New public types (`DeserializationContext`, `ContextRow`, `Lifetime`, the limit option, the own-value attribute) get XML docs; a how-to page on the deserialization context. |
+| D0 Public documentation | Pass | Pass | New public types (`DeserializationContext`, `ContextRow`, `Lifetime`, the limit option, the XML package's source attributes) get XML docs; a how-to page on the deserialization context. |
 | S0 Developer-chosen types | Pass | Pass | Unchanged: only added row types are constructed. |
 | S1 Fail fast | **Deviation (001)** | **Partly met** | Context limit added (R28); actions taken twice throw (R23). Other 001 limits (depth, value length) still postponed as in 001. |
 | A0 / A1 / A3 / A4 | Pass | Pass | net10, no third-party NuGet, shared build, A4 test layout. |
@@ -105,16 +105,17 @@ Forestry.Deserialize/
 │   ├── Policies/
 │   │   ├── EnumerationPolicy.cs     # context parameter; Complete replaces Enumerate (R23, R26)
 │   │   ├── PolicyResolver.cs, TypeChains.cs  # compose Complete
-│   ├── Attributes/ContentAttribute.cs  # new, own-value member (R30; name Deferred)
-│   ├── Definitions/TypeDefinition.cs   # own-value member, member index by name (R22, R30)
+│   ├── Definitions/TypeDefinition.cs   # member index by name (R22)
 │   ├── DeserializeOptions*.cs       # limit option (R28)
 │   └── Rows/Row.cs                  # internal shallow copy (R25)
-└── test/                            # bitmap, at-most-once, limit option, own-value validation
+└── test/                            # limit option, member index lookup
 
 Forestry.Deserialize.Xml/
 ├── src/
 │   ├── XmlRowReading.cs             # attributes, own text (R30)
-│   └── XmlAssociation.cs            # attribute and own-value lookups (R30)
+│   ├── XmlAssociation.cs            # attribute and text members, per-source duplicate checks (R30)
+│   ├── XmlAttributeValueAttribute.cs, XmlTextValueAttribute.cs  # new (R30; names Deferred)
+│   └── DeserializeXmlOptions.cs     # TextValue<TRow>(memberName) (R30)
 └── test/
     ├── DeserializationContextTests.US1.cs   # US1 + isolation + limit
     ├── DeserializationContextTests.US2.cs   # containment

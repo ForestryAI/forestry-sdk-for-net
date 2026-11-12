@@ -265,21 +265,44 @@ For code review (names and shapes Deferred (implementation)):
 
 ## R30. Named values and own value (US3)
 
-- **Named values**: in XML, attributes of a row's element. They match the row type's members by
-  the same names as child elements (C# name, or `[Field("name")]`), so one name space per row
-  type. FR-018 (a named value and a child node setting the same member fail at lock) is then 001's
-  existing duplicate-name check: two members cannot share a name. A document carrying the same
-  name as attribute and child sets the member twice, and the last wins (Q1). Attribute values go
-  through the member's converter like any value; unmatched attributes are ignored (US3-3).
-  Namespace-prefixed attributes (`xsi:...`) never match (names compare as written).
-- **Own value**: one member per row type marked with a core attribute, e.g. `[Content]` (name
-  Deferred), or through the options. More than one fails at lock. In XML, text directly inside the
-  row's element; with mixed content (text around child elements) each text segment sets it and the
-  last wins. If no text arrived by the row's completion, the own-value member is set empty and
-  marked set, as for empty member nodes (US3-4, FR-017, FR-007; developer 2026-11-12).
-- **Generic in the core** (FR-020): the core only knows "a member designated for the own value";
-  where it comes from is the media's. Reader: `Forestry.Xml` already gives `Attribute` and `Value`
-  tokens (checked 2026-11-12), so nothing waits on the XML silo.
+- **Decision (developer, 2026-11-12): where a value comes from is the media's, declared with the
+  media's own attributes.** Association belongs to the media (spec 001 R6), so the core gets no
+  source vocabulary (no `[Content]`, no named-value attribute); it still receives a member and UTF-8
+  bytes through `RowBuilder.Set`, as in 001. As in .NET, where `XmlSerializer` has `[XmlAttribute]`,
+  `[XmlElement]` and `[XmlText]` and System.Text.Json its own `[JsonPropertyName]`, each media package
+  brings its attributes.
+- **Each member has one source** (FR-018), in XML (names Deferred (implementation)):
+
+  | Source | Declared in `Forestry.Deserialize.Xml` | Matched against |
+  |---|---|---|
+  | child element (default) | nothing, or the core's `[Field("name")]` as today | direct child elements (R29) |
+  | attribute (named value) | `[XmlAttributeValue("currency")]` | the row element's own attributes |
+  | element text (own value) | `[XmlTextValue]`, or `options.TextValue<TRow>(memberName)` on `DeserializeXmlOptions` (options win) | text directly inside the row element |
+
+  A child element never sets an attribute member and an attribute never sets a child-element
+  member. Two members with the same name from the same source, or two text members, fail when the
+  options lock (the XML association's duplicate check, per source). Attribute values go through the
+  member's converter; unmatched attributes are ignored (US3-3); prefixed attributes (`xsi:...`)
+  compare as written.
+- **Own value**: with mixed content the last text wins (joining deferred, below). If no text arrived
+  by the row's end, the XML reading sets the text member empty before `Complete()`, so it is marked
+  set as for empty member nodes (US3-4, FR-017, FR-007).
+- **Rejected (developer, 2026-11-12)**: one name space where a name matches an attribute or a child
+  element (the first proposal): a child `<currency>` would overwrite the attribute a row type author
+  meant; and source attributes in the core (`[Content]`, `[NamedValue]`), which would mix XML
+  vocabulary into the deserialization package and break later.
+- **Known debt, recorded**: the core's `[Row]` and `[Field]` are names the media interprets (R8);
+  moving naming to media-specific attributes is a breaking decision for later (#103).
+- **Deferred (developer, 2026-11-12): joining text around child elements.** With mixed content
+  (`<Reference>first<Extra />second</Reference>`) the last text wins for now, which StanForD never
+  meets (its text elements have no child elements). .NET joins the pieces: `XmlSerializer` appends
+  each text node to a single `[XmlText] string` (`firstsecond`; a `string[]` gets one entry per
+  piece; `[XmlAnyElement]` or `XmlNode[]` keep full mixed content), and `XElement.Value` returns
+  all text. Joining means copying the UTF-8 pieces into a rented buffer until the row ends (as R15
+  foresaw for dimensions), then converting once. The T050 mixed-content test pins today's behavior and
+  changes when joining arrives.
+- **Reader**: `Forestry.Xml` already gives `Attribute` and `Value` tokens (checked 2026-11-12), so
+  nothing waits on the XML silo.
 - **Status**: Confirmed (developer, 2026-11-12)
 
 ## R31. Test placement and fixtures

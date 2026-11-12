@@ -142,8 +142,9 @@ of one another.
 ### User Story 3 - A node's own values as members (Priority: P2)
 
 A developer's row type takes members not only from child nodes but from values the node carries
-itself: named values on the node, and the node's own value. How a media exposes these is the
-media's (C0); in XML they are attributes and the element's text, e.g.
+itself: named values on the node, and the node's own value. Where a member's value comes from is
+declared with the media's own annotations, not the core's (C0; developer 2026-11-12); in XML they are
+attributes and the element's text, e.g.
 `<Price currency="EUR" kind="net">0.59</Price>` gives a `Price` row with both named values and the
 value.
 
@@ -253,12 +254,14 @@ a line with three prices.
 
 **A node's own values (US3)**
 
-- **FR-016**: A named value on a node MUST set the member of the row that node starts whose name
-  matches the value's name (or the name given for it), converted like any member.
-- **FR-017**: A row type MAY designate one member for its node's own value, converted like any
-  member; a node with no own value sets it empty, as for empty member nodes today.
-- **FR-018**: A row type whose named value and child node would set the same member MUST fail
-  before any byte is read.
+- **FR-016**: A named value on a node MUST set only the member the media maps to that named value
+  (in XML, a member marked as coming from that attribute), converted like any member.
+- **FR-017**: A row type MAY have one member the media maps to its node's own value (in XML, a
+  member marked as the element's text), converted like any member; a node with no own value sets it
+  empty, as for empty member nodes today.
+- **FR-018**: Each member MUST take its value from one source (child node, named value or own
+  value), declared with the media's annotations; two members of one row type with the same name
+  from the same source, or two own-value members, MUST fail before any byte is read.
 
 **Generic**
 
@@ -349,4 +352,6 @@ At the plan gate, check that the generic requirements still cover these items.
   (FR-011, developer 2026-11-12); policies still get the context, so lifting the rule later needs
   no change to their shape.
 - XML is the only media built in this spec; it exposes attributes as named values and an element's
-  text as its own value. Other media map their own constructs when they are added.
+  text as its own value, declared with the XML package's attributes. Other media bring their own
+  annotations when they are added. The core's `[Row]` and `[Field]` are names the media interprets
+  (spec 001 R8); moving them to the media packages is a later, breaking decision (#103).

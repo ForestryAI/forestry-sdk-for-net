@@ -61,16 +61,20 @@ keys spec (R21).
 | Member | Behavior | Spec |
 |---|---|---|
 | `int MaxContextRows` | Maximum kept rows (open rows do not count); default 100; locked with the options | FR-011a |
-| Own-value member by options, e.g. `Content<TRow>(memberName)` | Same as the attribute | FR-017 |
 
 Going past the limit throws an exception giving the limit and value, the kept rows per row type,
 and how to raise it; `Clear` runs once and the context is emptied.
 
-## Attributes (new, R30)
+## XML attributes and options (new, `Forestry.Deserialize.Xml`, R30)
 
-| Attribute | On | Meaning |
+Where a member's value comes from is the media's (C0); the core gets no source vocabulary.
+
+| Member | On | Meaning |
 |---|---|---|
-| `[Content]` | Property or field | The member set from the node's own value; at most one per type (fails at lock) |
+| `[XmlAttributeValue("name")]` | Property or field | Set only from the row element's attribute of that name; two such members with one name fail at lock |
+| `[XmlTextValue]` | Property or field | Set only from the text directly inside the row element; more than one per type fails at lock |
+| `DeserializeXmlOptions.TextValue<TRow>(memberName)` | Options | Same as `[XmlTextValue]`; wins over it |
+| (none, or the core's `[Field("name")]`) | Property or field | Set only from a direct child element (R29) |
 
 ## Row builder (changed, media-facing, R24)
 
@@ -83,10 +87,10 @@ and how to raise it; `Clear` runs once and the context is emptied.
 ## XML media (behavior, R29, R30)
 
 - A row element starts its row at its start tag, empty or not (its presence may be a flag).
-- Attributes of a row element set members by name (C# name or `[Field]`), converted; unmatched
-  attributes are ignored.
-- Text directly inside a row element sets its `[Content]` member; the last text wins; with no text
-  by completion it is set empty (and marked set).
+- Attributes of a row element set only members marked `[XmlAttributeValue]` with that name,
+  converted; unmatched attributes are ignored; a child element never sets such a member.
+- Text directly inside a row element sets its `[XmlTextValue]` member; the last text wins; with no
+  text by the row's end it is set empty (and marked set) before `Complete()`.
 - A member element is a direct child of its row's element (001, R13 A); an element that is neither a
   row nor such a member sets nothing, and rows inside it are still found by name. A repeated member element sets the
   member again (last wins). A value inside a wrapper is reached through a policy: the wrapper is

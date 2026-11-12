@@ -32,25 +32,76 @@ namespace Forestry.Deserialize.Xml
         /// Associate the row types added to <paramref name="options"/>, which must be read-only
         /// </summary>
         /// <remarks>
-        /// The names are resolved here from <see cref="RowAttribute"/> and <see cref="FieldAttribute"/>,
-        /// or the class and member names. That is generic, not XML: resolving them moves to the core's
-        /// definitions as a media name, and this reads it (Deferred, research R8). Matching the name and
-        /// the duplicate checks stay here, since they depend on how XML matches.
+        /// <para>
+        /// Each member has one source (spec 002 R30, FR-018): an attribute of the row's element
+        /// (<see cref="XmlAttributeValueAttribute"/>), the element's text (<see cref="XmlTextValueAttribute"/>
+        /// or <see cref="DeserializeXmlOptions.TextValue{TRow}(string)"/>, the options winning), or by
+        /// default a direct child element. Each source has its own name lookup and duplicate check.
+        /// </para>
+        /// <para>
+        /// Row and child-element names are resolved here from <see cref="RowAttribute"/> and
+        /// <see cref="FieldAttribute"/>, or the class and member names: core annotations the media
+        /// interprets (research R8), a known debt (#103).
+        /// </para>
         /// </remarks>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static XmlAssociation Create(DeserializeOptions options)
+        public static XmlAssociation Create(DeserializeXmlOptions options)
         {
             MethodInfo start = typeof(RowBuilder).GetMethod(nameof(RowBuilder.Start), genericParameterCount: 1, Type.EmptyTypes)!;
             Dictionary<byte[], RowAssociation> rows = new(Utf8NameComparer.Instance);
+
+            foreach (Type type in options.TextValues.Keys)
+            {
+                if (!options.Rows.Contains(type))
+                {
+                    Throwing.WhenTextValueTypeNotAdded(type);
+                }
+            }
 
             foreach (Type type in options.Rows)
             {
                 TypeDefinition typeDefinition = options.ThrowingGetTypeDefinition(type);
                 Dictionary<byte[], MemberAssociation> members = new(Utf8NameComparer.Instance);
+                Dictionary<byte[], MemberAssociation> attributes = new(Utf8NameComparer.Instance);
+                MemberAssociation? text = null;
+                bool textByOptions = options.TextValues.TryGetValue(type, out string? textMemberName);
+
+                if (textByOptions && !typeDefinition.Properties.Any(property => property.Name == textMemberName))
+                {
+                    Throwing.WhenTextValueMemberNotFound(type, textMemberName!);
+                }
 
                 foreach (PropertyDefinition property in typeDefinition.Properties)
                 {
+                    bool isText = textByOptions
+                        ? property.Name == textMemberName
+                        : property.Member.IsDefined(typeof(XmlTextValueAttribute), inherit: false);
+
+                    if (isText)
+                    {
+                        if (text is not null)
+                        {
+                            Throwing.WhenMoreThanOneTextValue(type, text.Member, property.Member);
+                        }
+
+                        text = new MemberAssociation(property.Member);
+                        continue;
+                    }
+
+                    if (property.Member.GetCustomAttribute<XmlAttributeValueAttribute>(inherit: false) is { } attribute)
+                    {
+                        byte[] utf8AttributeName = Encoding.UTF8.GetBytes(attribute.Name);
+
+                        if (attributes.TryGetValue(utf8AttributeName, out MemberAssociation? otherAttribute))
+                        {
+                            Throwing.WhenDuplicateAttributeName(type, otherAttribute.Member, property.Member, attribute.Name);
+                        }
+
+                        attributes.Add(utf8AttributeName, new MemberAssociation(property.Member));
+                        continue;
+                    }
+
                     string memberName = property.Member.GetCustomAttribute<FieldAttribute>(inherit: false)?.Name is { Length: > 0 } fieldName ? fieldName : property.Member.Name;
                     byte[] utf8MemberName = Encoding.UTF8.GetBytes(memberName);
 
@@ -72,23 +123,46 @@ namespace Forestry.Deserialize.Xml
 
                 Action<RowBuilder> startRow = start.MakeGenericMethod(type).CreateDelegate<Action<RowBuilder>>();
 
-                rows.Add(utf8RowName, new RowAssociation(type, startRow, members));
+                rows.Add(utf8RowName, new RowAssociation(type, startRow, members, attributes, text));
             }
 
             return new XmlAssociation(rows);
         }
 
         /// <summary>
-        /// A row type's element: start a row of it, find its members by element name
+        /// A row type's element: start a row of it, find its members by child element name, by attribute
+        /// name, and its text member
         /// </summary>
         internal sealed class RowAssociation
         {
-            public RowAssociation(Type type, Action<RowBuilder> start, Dictionary<byte[], MemberAssociation> members)
+            public RowAssociation(
+                Type type,
+                Action<RowBuilder> start,
+                Dictionary<byte[], MemberAssociation> members,
+                Dictionary<byte[], MemberAssociation> attributes,
+                MemberAssociation? text)
             {
                 Type = type;
                 Start = start;
                 _members = members.GetAlternateLookup<ReadOnlySpan<byte>>();
+                _attributes = attributes.GetAlternateLookup<ReadOnlySpan<byte>>();
+                Text = text;
             }
+
+            private readonly Dictionary<byte[], MemberAssociation>.AlternateLookup<ReadOnlySpan<byte>> _attributes;
+
+            /// <summary>
+            /// The member set from the element's text, if any
+            /// </summary>
+            public MemberAssociation? Text { get; }
+
+            /// <summary>
+            /// Member whose value has this attribute name on the row's element
+            /// </summary>
+            /// <param name="name"></param>
+            /// <param name="member"></param>
+            /// <returns></returns>
+            public bool TryGetAttribute(ReadOnlySpan<byte> name, [NotNullWhen(true)] out MemberAssociation? member) => _attributes.TryGetValue(name, out member);
 
             /// <summary>
             /// The row type
