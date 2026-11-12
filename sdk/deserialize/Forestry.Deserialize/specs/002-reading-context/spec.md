@@ -331,7 +331,10 @@ At the plan gate, check that the generic requirements still cover these items.
 - Forward references (a row referring to one not read yet) are out of scope; containment has
   none.
 - Ancestors as constructor parameters and key references (walking skeleton's later slices) are not
-  in this spec; they will build on the context.
+  in this spec; they will build on the context. Spec 001's guard stays: a row type whose chosen
+  constructor has parameters fails when the options lock (001 FR-008), so no relationship can come
+  from a constructor yet. Relationships are expressed with policies for now; later, policies may be
+  created when type definitions are built (e.g. from constructor parameters or attributes).
 - Conditions on named values are not a core feature: a developer's policy over rows in the context
   covers them.
 - Today's rule that options with enumeration policies serve one enumeration at a time (R19) stays

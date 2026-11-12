@@ -22,8 +22,9 @@ compile until its implementation declares the surface they call (accepted in 001
   `// Assert` comments (A4).
 - **Performance gate at the end of every story**: `dotnet test -s Performance.runsettings` on both
   test projects (001's convention).
-- **Fixtures use neutral names** (`Site`, `Contact`, `Order`, `Line`, `Price`, `Reference`, ...);
-  nothing in the package or its tests depends on StanForD (FR-019, R31).
+- **Fixtures use neutral names** (`Site`, `Contact`, `Order`, `Line`, `Price`, `Reference`, ...):
+  nothing in the package depends on a particular media (FR-020), and relationships between rows
+  come only from containment, i.e. physical nesting, in this slice (US2, spec Assumptions; R31).
 
 **Organization**: Phases by user story in priority order: US1 (P1), US2 (P1), US3 (P2). No
 Foundational phase: C4 puts every story's shells before any of its code (as in 001). US1 replaces
@@ -47,7 +48,12 @@ Foundational phase: C4 puts every story's shells before any of its code (as in 0
   (spec Assumptions, R21).
 - Several enumerations at once on one options instance (FR-011: 001's guard stays).
 - The reading position for policies (R27, Rejected; FR-009 removed).
-- Ancestors as constructor parameters (spec Assumptions).
+- Ancestors as constructor parameters (spec Assumptions). 001's guard stays: a chosen constructor
+  with parameters fails when the options lock (`Forestry.Deserialize/src/Definitions/TypeDefinition.cs`,
+  test `Deserialize_ForAConstructorWithParameters_ItShould_ThrowBeforeAnyByteIsRead` in
+  `Forestry.Deserialize/test/DefinitionValidationTests.cs`); 001's T023 note that it "becomes an
+  accepted one" from spec 002/003 is deferred to the constructor-parameters slice. Relationships come
+  from policies for now; later, policies may be created when type definitions are built.
 - S1 limits other than kept rows (depth, value length), carried from 001 (plan Complexity Tracking).
 - Names marked Deferred (implementation): `ContextRow`, `ContainerRelationship`, `Lifetime` values,
   `MaxContextRows`, the limit exception type, `[Content]`, the options method for the own value.
