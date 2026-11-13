@@ -142,6 +142,10 @@ assumed.
 - **Watch**: the real documents are 3.5. If the two latest Harvesting versions are 4.0 and 4.1,
   they fall outside the window and need the policy's ignore option, or a wider window, until US5
   confirms which Harvesting versions exist.
+- **Schema files (developer, 2026-11-13)**: `schemas/` keeps only the latest version, V4p1, for the
+  POC (`schemas/README.md`); "latest only" applies to the schema files, not to the documents read,
+  which stay FR-019's window. Row types follow V4p1; the 3.5 documents have no 3.5 schema file in
+  the repository, so a type is checked against the real documents, not against a 3.5 schema (A2).
 
 ## R7. Extensions and overrides (new)
 

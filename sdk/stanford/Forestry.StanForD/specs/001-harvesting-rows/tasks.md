@@ -79,7 +79,7 @@ start now), the cross-silo prerequisites D1-D2, then US2, US4, US3, US7.
 **Goal**: Know which Harvesting values change while the machine works, starting with the contract
 start date (#96). **Independent Test**: findings written with sources and reviewed by the developer.
 
-- [ ] T008 [P] [US5] Add the Harvesting schemas (`HarvestedProduction` 3.5 and the latest versions) from Skogforsk to `schemas/` and list which versions exist in `schemas/README.md` (FR-019, R6)
+- [X] T008 [P] [US5] Add the Harvesting schemas from Skogforsk to `schemas/` and list which versions exist in `schemas/README.md` (FR-019, R6) (2026-11-13: the developer added the StanForD 2010 schemas at the latest version, V4p1, `HarvestedProduction` included, and removed the older common definitions; "latest only" applies to the schema files, not the documents read; listed in `schemas/README.md`)
 - [ ] T009 [US5] Compare `ObjectDefinition/StartDate` and `ObjectModificationDate` across the real documents of one contract over several days, and record whether the start date changes when cutting restarts, with sources, in `specs/001-harvesting-rows/findings-us5.md`
 - [ ] T010 [US5] Fill the timestamps-per-definition table (created once or modifiable, element names, seen in real documents) from the schemas and documents in `specs/001-harvesting-rows/findings-us5.md` and update research.md R4
 - [ ] T011 [US5] Confirm which two Harvesting schema versions are the latest and whether the real documents (3.5) fall inside them; update spec.md Assumptions and research.md R6

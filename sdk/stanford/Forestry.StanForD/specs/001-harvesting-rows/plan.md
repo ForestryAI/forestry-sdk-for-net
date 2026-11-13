@@ -52,7 +52,7 @@ nested rows of several types (D1), and attributes and a row's own content as mem
 | D0 Documentation | XML docs, README and ARCHITECTURE updated per story | Pass (tasks) |
 | S0 No silently wrong values | Strict by default; unmatched and duplicate occurrences fail (R5) | Pass |
 | A1 References | Forestry.Deserialize and Forestry.Deserialize.Xml only | Pass |
-| A2 Schemas | Real documents are version 3.5 while FR-019 says latest; a version constraint policy is proposed (R6) | **Open: developer decides** |
+| A2 Schemas | `schemas/` keeps V4p1 only, for the POC (developer, 2026-11-13); real documents are 3.5, read within FR-019's window by the version constraint policy (R6); types are checked against the real documents | Pass (schema files decided; the document window is US5's T011) |
 | A4 Tests | Fragments in tests; real documents end-to-end only, not committed (R8) | Pass |
 
 **Post-design re-check**: no violations. Answered by the developer (2026-11-11): an `Id` string

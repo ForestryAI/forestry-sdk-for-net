@@ -264,7 +264,9 @@ the stems and logs in the document, and every member traces to a use in a query 
 - **FR-019**: StanForD 2010 Harvesting XML documents of the two latest schema versions are in
   scope (developer, 2026-11-11). A document outside them fails by default, or is read anyway by
   option, decided from the version attribute on the root element. The window is counted in
-  versions, not years: Skogforsk sets no upgrade time.
+  versions, not years: Skogforsk sets no upgrade time. Which schema files row types follow is a
+  separate decision: only the latest, V4p1, is kept in `schemas/` for the POC (developer,
+  2026-11-13).
 - **FR-020**: Extension elements (earmarked for the sending program) are not interpreted by this
   package; another package (e.g. for Biometria) can add its own rules for them to the same
   deserialization.
@@ -310,7 +312,8 @@ the stems and logs in the document, and every member traces to a use in a query 
   (constitution C4); how they are built is decided in the plan.
 - Real Harvesting documents are supplied by the developer; none are in the repository yet. Tests
   use short handwritten fragments; real documents back end-to-end tests (constitution A4).
-- The Harvesting schema is added to `schemas/` before User Stories 5 and 7.
+- `schemas/` holds the StanForD 2010 schemas at the latest version only, V4p1, Harvesting's
+  `HarvestedProduction` included (developer, 2026-11-13); older versions are not kept for the POC.
 - Which Harvesting schema versions are the two latest is confirmed in User Story 5; the real
   documents found are version 3.5.
 - Until User Story 5 answers otherwise, the contract start date is taken as given in the document.
