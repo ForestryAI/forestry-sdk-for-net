@@ -188,8 +188,8 @@ a line with three prices (quickstart 10).
 
 - [X] T060 [P] How-to section "The deserialization context" in `Forestry.Deserialize/README.md` (D0): keeping and enumerating rows, set members, containment, wrappers as row types, attributes and element text with the XML package's attributes, the kept-row limit; update "Changing behavior with policies" for `Complete` and the context parameter (2026-11-13: done, section "Rows that need each other: the deserialization context" with an XML subsection for wrappers, attributes and text; policies section, intro, failing fast and status aligned)
 - [X] T061 [P] Update `Forestry.Deserialize/CHANGELOG.md` and `Forestry.Deserialize.Xml/CHANGELOG.md` (breaking: `Enumerate` replaced by `Complete`, policy methods take the context) (2026-11-13: done; nothing was released, so both stay under 1.0.0-beta.1 (Unreleased): spec 002 under Features Added, and the reshaped policy surface under Other Changes rather than Breaking Changes)
-- [ ] T062 [P] Mark spec 001's research R19 `Enumerate` and the one-row `DeserializationState` as superseded by this spec's R20, R23 and R26, and add "As implemented" notes to this spec's research.md for names settled in code review (G0)
-- [ ] T063 Walk every row of `quickstart.md` against the tests (1-16) and set spec.md's status from Draft to Implemented (depends on T059)
+- [X] T062 [P] Mark spec 001's research R19 `Enumerate` and the one-row `DeserializationState` as superseded by this spec's R20, R23 and R26, and add "As implemented" notes to this spec's research.md for names settled in code review (G0) (2026-11-13: done; spec 001 research R2 and R19 and its data model carry "superseded by spec 002" notes; spec 002 research has "As implemented" notes for US1 (under R26) and for US2 and US3 (before R31))
+- [X] T063 Walk every row of `quickstart.md` against the tests (1-16) and set spec.md's status from Draft to Implemented (depends on T059) (2026-11-13: done; every row 1-16 mapped to its tests in quickstart.md's walk-through, all passing on net10.0: core 44, XML 180, performance gate 4 of 4; spec status Implemented)
 
 ---
 

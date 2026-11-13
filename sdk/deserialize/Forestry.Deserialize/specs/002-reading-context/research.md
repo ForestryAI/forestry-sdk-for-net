@@ -305,6 +305,27 @@ For code review (names and shapes Deferred (implementation)):
   nothing waits on the XML silo.
 - **Status**: Confirmed (developer, 2026-11-12)
 
+## As implemented (US2, US3, 2026-11-12)
+
+For code review (names and shapes Deferred (implementation)); US1's notes are under R26.
+
+- **R21**: `ContainerRelationship` is a `public readonly record struct ContainerRelationship(long Id, long?
+  ParentId)` on `ContextRow.Container`; the id is the construction order within the enumeration.
+- **R26 (US2)**: `Parent`, `Children` and `Siblings` search the rows still in the context (kept, the
+  row being completed, open) and return snapshots like `Rows<TRow>()`; rows with no parent are
+  siblings of each other.
+- **R29**: no change to `XmlRowReading` was needed for option A: its depth check already keeps
+  members to direct children, and rows are found by name inside wrappers (T044).
+- **R30**: in `Forestry.Deserialize.Xml`: `XmlAttributeValueAttribute(string name)`,
+  `XmlTextValueAttribute`, and `DeserializeXmlOptions.TextValue<TRow>(string memberName)`, which
+  replaces `[XmlTextValue]` for that type (a member it displaces falls back to a child element).
+  `XmlAssociation` keeps three lookups per row type; besides the per-source duplicates and two text
+  members, a `TextValue` for a type not added or a member the type does not have fails at lock.
+  `XmlRowReading` treats the Value after an Attribute token as the attribute's value; spacing-only
+  text is never a token (the reader skips it), so indentation sets no text member.
+- **Tests**: T036's counting stream wraps a `MemoryStream` rather than deriving from one, whose
+  async reads call its own sync reads and would count every byte twice.
+
 ## R31. Test placement and fixtures
 
 - Shredding scenarios (US1-US3, edge cases) in `Forestry.Deserialize.Xml.Tests`, one file per

@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-11
 
-**Status**: Draft
+**Status**: Implemented (2026-11-13; US1 #100, US2 #101, US3 #102)
 
 **Input**: User description: "Deserialization context (short name: reading-context). Source: GitHub issue
 ForestryAI/forestry-sdk-for-net#99, 'Specify phase input': US1 Contextual rows and a reading
