@@ -3,6 +3,9 @@ using System.Xml.Serialization;
 
 namespace Forestry.StanForD
 {
+    /// <summary>
+    /// A StanForD 2010 machine (element <c>Machine</c>), identified by its <see cref="MachineKey"/>
+    /// </summary>
     [XmlType("Machine")]
     public class MachineType
     {
