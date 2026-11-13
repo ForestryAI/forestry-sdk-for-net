@@ -7,41 +7,41 @@ Members marked *(US7)* wait on the query groups (US6) and carry a trace to their
 
 ## Enumerated rows
 
-### Stem
+Drafted in `src/` during US5 (2026-11-13, [findings-us5.md](findings-us5.md)); the code is the
+source of each member's StanForD origin (its doc comment). Each row has four regions:
+**identification**, **partitioning**, **metrics** and **dimensions**. Members copied from a common
+definition sit next to the key that refers to it. Set by: *name* = read directly by element name;
+*policy* = set by an identification, partition or conditional-mapping policy (none written yet).
 
-| Member | Type | Source | Set by | Trace (C3) |
-|---|---|---|---|---|
-| `Id` | `string` | `{machine key}-{stem key}` | Identification, when `StemKey` is set | identification (C1), joins |
-| `MachineKey` | `Guid` | `Machine/MachineKey` | Identification | identification (C1) |
-| `StemKey` | `long` | `Stem/StemKey` | name | identification (C1) |
-| `ObjectKey` | `long` | `Stem/ObjectKey` | name | contract filters/groupings |
-| `SubObjectKey` | `long` | `Stem/SubObjectKey` | name | *(US7)* |
-| `SpeciesGroupKey` | `long` | `Stem/SpeciesGroupKey` | name | species group groupings |
-| `OperatorKey` | `long` | `Stem/OperatorKey` | name | operator comparisons |
-| `ObjectStartDate` | `DateTimeOffset` | `ObjectDefinition/StartDate` | Timestamps | timeline, partition candidate |
-| `ObjectModificationDate` | `DateTimeOffset?` | `ObjectDefinition/ObjectModificationDate` | Timestamps | history (C2) |
-| `SpeciesGroupModificationDate` | `DateTimeOffset?` | `SpeciesGroupDefinition/SpeciesGroupModificationDate` | Timestamps | history (C2) |
-| `DocumentCreationDate` | `DateTimeOffset` | `HarvestedProductionHeader/CreationDate` | Timestamps | fallback timestamp, partition candidate |
-| further members | | e.g. `StemNumber`, `DBH`, coordinates, boom positions | | *(US7)* |
+### Stem (`src/Stem.cs`)
 
-### Log
+| Region | Members | Set by |
+|---|---|---|
+| identification | `Id` (`string`, `{machine key "N"}-{stem key}`), `StemKey` (`int`), `MachineKey` (`Guid`) | `StemKey` name; others policy |
+| partitioning | `HarvestingCreationTime` (`DateTimeOffset`, UTC, header `CreationDate`), `ContractNumber` (`string`) | policy |
+| metrics | `ProcessingCategory`, `Latitude`, `Longitude` (signed `decimal` degrees), `Altitude`, `CoordinateReferenceSystem`, `BoomAngleFelling`, `BoomAngleLastLogCut`, `BoomExtensionFelling`, `BoomExtensionLastLogCut` (`int`; 65535 is the schema's default value) | name or policy (coordinates and boom positions sit below the stem) |
+| dimensions | `ObjectKey`, `ObjectName`, `SpeciesGroupKey`, `SpeciesGroupName`, `OperatorKey`, `OperatorBusinessName` | keys by name; names by policy from the definitions |
 
-| Member | Type | Source | Set by | Trace (C3) |
-|---|---|---|---|---|
-| `Id` | `string` | `{machine key}-{stem key}-{log key}` | Identification, when `LogKey` is set | identification (C1), joins |
-| `MachineKey` | `Guid` | `Machine/MachineKey` | Identification | identification (C1) |
-| `StemKey` | `long` | enclosing `Stem/StemKey` | Identification | identification (C1) |
-| `LogKey` | `int` | `Log/LogKey` | name | identification (C1) |
-| `ProductKey` | `long` | `Log/ProductKey` | name | product value groupings |
-| `ObjectStartDate` | `DateTimeOffset` | via its stem | Timestamps | timeline |
-| `DocumentCreationDate` | `DateTimeOffset` | header | Timestamps | fallback timestamp |
-| `VolumeM3sobMachine` | `decimal?` | `LogVolume` [`logVolumeCategory`=`m3sob`, `logMeasurementCategory`=`Machine`] | Conditional mapping | product value |
-| `VolumeM3subMachine` | `decimal?` | `LogVolume` [`m3sub`, `Machine`] | Conditional mapping | product value |
-| `VolumeM3PriceMachine` | `decimal?` | `LogVolume` [`m3 (price)`, `Machine`] | Conditional mapping | product value |
-| `DiameterButtOb` ... `DiameterTopUb` (8) | `int?` | `LogDiameter` [`logDiameterCategory`; enclosing `LogMeasurement` `logMeasurementCategory`=`Machine`] | Conditional mapping | measurement quality |
-| `LogLength` | `int?` | `LogMeasurement/LogLength`, via the `LogMeasurement` context row | Conditional mapping | product value |
+### Log (`src/Log.cs`)
 
-Member names for conditional members are examples; final names are decided at US7.
+| Region | Members | Set by |
+|---|---|---|
+| identification | `Id` (`string`, `{machine key "N"}-{stem key}-{log key}`), `LogKey`, `StemKey` (`int`), `MachineKey` (`Guid`) | `LogKey` name; others policy |
+| partitioning | `HarvestingCreationTime`, `ContractNumber` | policy |
+| metrics | `MachineVolumeOverBark`, `MachineVolumeUnderBark`, `MachineVolumePrice` (`decimal`); `MachineLength` and eight `MachineDiameter…` members (`int`, 0 when not measured) | conditional mapping |
+| dimensions | `DiameterUnit`, `LengthUnit`, `VolumeUnit` (root attributes, not converted); `ObjectName`; `ProductKey`, `ProductName`, `ProductNamespace`, `ProductVersion`; `CuttingReason`; `TopSawing`; `FindButtEndFunction` | `ProductKey`, `TopSawing`, `FindButtEndFunction` by name; others policy |
+
+### Common definitions (`src/*Definition.cs`, `src/Machine.cs`)
+
+| Row | Identification | Members the rows copy |
+|---|---|---|
+| `Machine` | `MachineKey` | — |
+| `ObjectDefinition` | `Id`, `ObjectKey`, `MachineKey` | `ObjectName`, `ContractNumber` |
+| `SpeciesGroupDefinition` | `Id`, `SpeciesGroupKey`, `MachineKey` | `SpeciesGroupName` |
+| `OperatorDefinition` | `Id`, `OperatorKey`, `MachineKey` | `OperatorBusinessName` (from `ContactInformation`, by policy; never personal details) |
+| `ProductDefinition` | `Id`, `ProductKey`, `MachineKey` | `ProductName`, `ProductNamespace` (`ProductInfo`), `ProductVersion` (from `ClassifiedProductDefinition`, by policy) |
+
+Traces to query groups (C3) are added at US7, after US6.
 
 ## Context rows (internal, never enumerated)
 
@@ -50,13 +50,13 @@ the list to grow (research R2).
 
 | Row | Members read | Used by |
 |---|---|---|
-| `HarvestedProduction` (root) | `Version` (attribute, D2) | Schema version constraint (R6) |
-| `HarvestedProductionHeader` | `CreationDate` | Timestamps |
+| `HarvestedProduction` (root) | `DiameterUnit`, `LengthUnit`, `VolumeUnit` (attributes); `Version` only after the POC | unit dimensions on Log |
+| `HarvestedProductionHeader` | `CreationDate` | partitioning (`HarvestingCreationTime`, UTC) |
 | `Machine` | `MachineKey`, `MachineUserID` | Identification |
-| `ObjectDefinition` | `ObjectKey`, `StartDate`, `ObjectModificationDate` | Identification (defined keys), Timestamps |
-| `SpeciesGroupDefinition` | `SpeciesGroupKey`, `SpeciesGroupModificationDate` | Identification, Timestamps |
-| `ProductDefinition` | `ProductKey`, `ProductCreationDate` | Identification, Timestamps |
-| `OperatorDefinition` | `OperatorKey` only (never contact details) | Identification |
+| `ObjectDefinition` | `ObjectKey`, `ObjectName`, `ContractNumber` | Identification (defined keys), partitioning |
+| `SpeciesGroupDefinition` | `SpeciesGroupKey`, `SpeciesGroupName` | Identification, dimensions |
+| `ProductDefinition` | `ProductKey`; names via `ClassifiedProductDefinition` | Identification, dimensions |
+| `OperatorDefinition` | `OperatorKey`; business name via `ContactInformation` (never personal details) | Identification, dimensions |
 | `SingleTreeProcessedStem` | e.g. `DBH` | sets Stem members *(US7)* |
 | `LogVolume` | `LogVolumeCategory`, `LogMeasurementCategory` (attributes), `Value` (content) | Conditional mapping onto the open Log |
 | `LogMeasurement` | `LogMeasurementCategory` (attribute), its only member | held while its diameters are read; each closed `LogDiameter` updates a Log member |

@@ -89,6 +89,11 @@ assumed.
 
 ## R4. Timestamps per common definition (US3)
 
+- **Superseded 2026-11-13 (US5, developer)**: rows carry one timestamp, `HarvestingCreationTime`
+  (header `CreationDate`, UTC), and partition by it then `ContractNumber`. The contract start date
+  is set once per object (12 real documents) and is not carried; definition dates are not carried.
+  The table below is kept as history; the current table is in [findings-us5.md](findings-us5.md) §3.
+
 - **Decision (proposed)**: Timestamps are defined per common definition: which date it has, and
   whether it is created once or can be modified. Draft from the V4p1 common-definitions schema
   (Verified by element name) and the real document:
@@ -129,6 +134,9 @@ assumed.
   `BoomPositioning` × 2 on the Stem by `boomPositioningCategory`.
 
 ## R6. Schema version constraint
+
+- **Superseded 2026-11-13 (US5, developer)**: the POC supports the latest schema version (V4p1)
+  only; no version window and no version policy for the POC (spec FR-019, findings-us5.md §4).
 
 - **Findings (Verified)**: both real Harvesting documents declare `version="3.5"`
   (`HarvestedProduction_V3p5.xsd`); the newest common-definitions schema in `schemas/` is V4p1. The

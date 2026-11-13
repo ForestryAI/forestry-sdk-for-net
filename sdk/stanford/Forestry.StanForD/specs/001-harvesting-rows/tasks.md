@@ -78,7 +78,7 @@ prerequisites D1-D2 are met (Forestry.Deserialize spec 002, #104, 2026-11-13).
 
 **Purpose**: Wiring every code story needs; adds no behavior a test could assert. Done right before
 the first code story (US2), not before the document stories (developer, 2026-11-13): T005 for any
-code, T006 for the first end-to-end test. The fragment (T007) moved to the end of US5.
+code, T006 for the first end-to-end test. The fragment (T007) moved to the start of US2 (2026-11-13).
 
 - [ ] T005 Add project references to `sdk/deserialize/Forestry.Deserialize/src/Forestry.Deserialize.csproj` and `sdk/deserialize/Forestry.Deserialize.Xml/src/Forestry.Deserialize.Xml.csproj` in `src/Forestry.StanForD.csproj` (A1, R9)
 - [ ] T006 [P] Add the test helper `RealDocuments` that yields files from `STANFORD_HPR_FOLDER` and skips when unset in `test/RealDocuments.cs` (R8)
@@ -87,17 +87,16 @@ code, T006 for the first end-to-end test. The fragment (T007) moved to the end o
 
 ---
 
-## Phase 3: User Story 5 - When Harvesting values are updated (Priority: P2) 📄 Document
+## Phase 3: User Story 5 - When Harvesting values are updated (Priority: P2) 📄 Document ✅ Done
 
 **Goal**: Know which Harvesting values change while the machine works, starting with the contract
 start date (#96). **Independent Test**: findings written with sources and reviewed by the developer.
 
 - [X] T008 [P] [US5] Add the Harvesting schemas from Skogforsk to `schemas/` and list which versions exist in `schemas/README.md` (FR-019, R6) (2026-11-13: the developer added the StanForD 2010 schemas at the latest version, V4p1, `HarvestedProduction` included, and removed the older common definitions; "latest only" applies to the schema files, not the documents read; listed in `schemas/README.md`)
-- [ ] T009 [US5] Compare `ObjectDefinition/StartDate` and `ObjectModificationDate` across the real documents of one contract over several days, and record whether the start date changes when cutting restarts, with sources, in `specs/001-harvesting-rows/findings-us5.md`
-- [ ] T010 [US5] Fill the timestamps-per-definition table (created once or modifiable, element names, seen in real documents) from the schemas and documents in `specs/001-harvesting-rows/findings-us5.md` and update research.md R4
-- [ ] T011 [US5] Confirm which two Harvesting schema versions are the latest and whether the real documents (3.5) fall inside them; update spec.md Assumptions and research.md R6
-- [ ] T007 [US5] Write the minimal Harvesting fragment from the findings (T009-T011), distilled to what ties identification, stems and logs to a contract (developer, 2026-11-13): `Machine` with `MachineKey`; `ObjectDefinition` with `ObjectKey` and `ContractNumber`; one `Stem` with `StemKey`, `ObjectKey`, `SpeciesGroupKey` and `StemCoordinates` (where, and what kind of tree); one `Log` with `LogKey` and its volume, length and diameter (what was produced); plus a `SpeciesGroupDefinition` only if the findings show the key alone is not enough. Root `version` as in the real documents; one element per line (A4), in `test/Fragments/MinimalHarvesting.xml`. Not real rows: the smallest valid input for the code stories' tests
-- [ ] T012 [US5] **Review gate**: the developer reviews `findings-us5.md` and the fragment (T007) on the board (#96)
+- [X] T009 [US5] Compare `ObjectDefinition/StartDate` and `ObjectModificationDate` across the real documents of one contract over several days, and record whether the start date changes when cutting restarts, with sources, in `specs/001-harvesting-rows/findings-us5.md` (2026-11-13: done in `findings-us5.md` §1-2, 12 documents over four days: the start date is set once per object; documents are incremental and repeat the previous last stem)
+- [X] T010 [US5] Fill the timestamps-per-definition table (created once or modifiable, element names, seen in real documents) from the schemas and documents in `specs/001-harvesting-rows/findings-us5.md` and update research.md R4 (2026-11-13: done in `findings-us5.md` §3; the developer chose `HarvestingCreationTime`, the header `CreationDate` in UTC, then `ContractNumber` as the partition values; spec FR-007 to FR-009 and research R4 updated)
+- [X] T011 [US5] Confirm which two Harvesting schema versions are the latest and whether the real documents (3.5) fall inside them; update spec.md Assumptions and research.md R6 (2026-11-13: the developer chose the latest schema version only, V4p1, with no version check for the POC; spec FR-019, research R6, `findings-us5.md` §4)
+- [X] T012 [US5] **Review gate**: the developer reviews `findings-us5.md` on the board (#96) (2026-11-13: passed by the developer on the documentation alone; the fragment moved to US2, so no test review in US5)
 
 ---
 
@@ -117,10 +116,11 @@ group names its actor and lists the filters, groupings and summaries it needs.
 
 **Goal**: Every Stem and Log row is globally identified (#93). **Independent Test**: two fragments
 from two machines with equal stem and log keys give rows whose identifications never repeat.
-**Needs**: D1 (met, #104) and US5's fragment (T007).
+**Needs**: D1 (met, #104); its first task writes the fragment (T007).
 
 ### Test shells for User Story 2 ⚠️
 
+- [ ] T007 [US2] Write the minimal Harvesting fragment from `findings-us5.md`, distilled to what ties identification, stems and logs to a contract (developer, 2026-11-13): `Machine` with `MachineKey`; `ObjectDefinition` with `ObjectKey` and `ContractNumber`; one `Stem` with `StemKey`, `ObjectKey`, `SpeciesGroupKey` and `StemCoordinates` (where, and what kind of tree); one `Log` with `LogKey` and its volume, length and diameter (what was produced); plus the definitions the rows copy from (`SpeciesGroupDefinition`, `OperatorDefinition`, `ProductDefinition`), and a second document repeating the first one's last stem (findings §2). Root `version` as in the real documents; one element per line (A4), in `test/Fragments/MinimalHarvesting.xml`. Not real rows: the smallest valid input for the code stories' tests (moved from US5, 2026-11-13: the first fixture the code stories need)
 - [ ] T017 [P] [US2] Test shell, quickstart 1 / US2-1 / FR-001: a Stem row carries `MachineKey`, `StemKey` and `Id` = `{machine key}-{stem key}` in `test/IdentificationTests.cs`
 - [ ] T018 [P] [US2] Test shell, quickstart 1 / US2-2 / FR-002: a Log row carries `MachineKey`, `StemKey`, `LogKey` and `Id` = `{machine key}-{stem key}-{log key}` in `test/IdentificationTests.cs`
 - [ ] T019 [P] [US2] Test shell, quickstart 2 / US2-4 / SC-001: two fragments, two machines, equal stem and log keys: no `Id` occurs twice in `test/IdentificationTests.cs`
@@ -202,7 +202,9 @@ a fragment with dated definitions gives rows with each date. **Needs**: US2, US5
 
 ---
 
-## Phase 8: Schema version constraint (FR-019, part of US7's readiness)
+## Phase 8: Schema version constraint (FR-019) ⏸ After the POC
+
+*Deferred 2026-11-13 (developer): the POC supports the latest schema version only, with no version check (spec FR-019).*
 
 - [ ] T054 [P] [US7] Test shell, FR-019: a root `version` outside the two latest versions fails by default, is read with the option, and one inside passes, in `test/SchemaVersionTests.cs`
 - [ ] T055 [US7] **Test review gate**: the developer reviews T054 on the board (C6)
@@ -249,11 +251,11 @@ document gives one row per stem and per log, every member traced. **Needs**: US2
 
 - **US1 (Phase 1)**: done.
 - **Setup (Phase 2)**: right before the first code story (US2).
-- **US5, US6 (Phases 3-4)**: no dependencies; next. US5's T007 (the fragment) comes after its findings.
-- **US2 (Phase 5)**: Setup + US5's fragment (T007); D1 met.
+- **US5 (Phase 3)**: done 2026-11-13 (`findings-us5.md`). **US6 (Phase 4)**: no dependencies; next.
+- **US2 (Phase 5)**: Setup; D1 met; starts with the fragment (T007).
 - **US4 (Phase 6)**: Setup; D1 and D2 met. Independent of US2 except the shared `Log` file.
 - **US3 (Phase 7)**: US2 (reference keys) + US5 (T009-T010).
-- **Schema version (Phase 8)**: US5 (T011); D2 met.
+- **Schema version (Phase 8)**: after the POC (spec FR-019, 2026-11-13).
 - **US7 (Phase 9)**: US2, US3, US4, US6.
 - **Polish**: last.
 
@@ -279,7 +281,7 @@ Task: "T026 Stem and Log declarations" and "T027 context row declarations" (afte
 
 ### MVP First (User Story 2)
 
-1. US5 (findings and the fragment, T007), then Setup (T005-T006).
+1. US5 findings (done), then Setup (T005-T006) and the fragment (T007).
 2. US2 shells, gate, implementation: identified Stem and Log rows.
 3. Stop and validate with a real document.
 

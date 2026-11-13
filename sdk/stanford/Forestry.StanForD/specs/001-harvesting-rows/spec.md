@@ -29,7 +29,10 @@ of the user's choice.
 - Q: Without a chosen option, what happens to an occurrence matching no condition? → A: Strict by
   default: it fails (FR-012).
 - Q: Which Harvesting schema versions must be read? → A: First "the latest only"; revised during
-  planning to the two latest versions, checked from the root's version attribute (FR-019).
+  planning to the two latest versions, checked from the root's version attribute; back to the
+  latest only for the POC after US5, with no version check (FR-019, 2026-11-13).
+- Q: Which timestamp partitions rows? → A: The header's `CreationDate` in UTC, then the contract
+  number; the contract start date is not carried (FR-007 to FR-009, 2026-11-13).
 - Q: How is a row identified as one value? → A: A key alone or in combination is globally unique;
   an identification `{machine key}-{stem key}[-{log key}]` is set when the key is read (FR-001,
   FR-002).
@@ -90,18 +93,21 @@ historical, can be placed on a timeline and can be partitioned (#94).
 **Why this priority**: Time is in almost every analysis (contract progress, seasonal effects), but
 how stem and log rows get their time depends on the investigation in User Story 5.
 
-**Independent Test**: Deserialize a short Harvesting document whose common definitions have creation
-and modification timestamps; every row carries the timestamp of what it references, and the source
-of each timestamp is named in this spec.
+**Independent Test**: Deserialize a short Harvesting document with a header creation date; every
+Stem and Log row carries it in UTC, and its source is named in this spec.
 
 **Acceptance Scenarios**:
 
-1. **Given** a common definition loaded as a new entity, **When** a row references it, **Then** the
-   row carries its creation timestamp.
-2. **Given** a common definition loaded over an existing entity, **When** a row references it,
-   **Then** the row carries its modification timestamp, kept apart from a creation timestamp.
-3. **Given** a stem referencing a contract with a start date, **When** it is deserialized, **Then**
-   the Stem row and its Log rows carry that start date.
+1. **Given** a document whose header `CreationDate` is 2026-01-14T17:14:48+01:00, **When** it is
+   deserialized, **Then** every Stem and Log row carries 2026-01-14T16:14:48Z as its harvesting
+   creation time.
+2. **Given** a stem referencing an object with a contract number, **When** it is deserialized,
+   **Then** the Stem row and its Log rows carry that contract number next to the creation time,
+   the two partition values.
+
+*Changed 2026-11-13 after US5 ([findings-us5.md](findings-us5.md)): the contract start date is set
+once per object and says nothing about when a stem was cut, so it is not carried; definition
+creation and modification dates are not carried either.*
 
 ---
 
@@ -228,11 +234,13 @@ the stems and logs in the document, and every member traces to a use in a query 
 
 - **FR-006**: Every Stem and Log row MUST carry at least one timestamp, and this spec MUST name each
   timestamp's source in the document.
-- **FR-007**: Creation and modification timestamps of referenced common definitions MUST be kept
-  apart.
-- **FR-008**: Stem and Log rows MUST carry the start date of the contract their stem references.
-- **FR-009**: Which timestamps are partition candidates MUST be recorded; partitioning itself is out
-  of scope.
+- **FR-007**: Every Stem and Log row MUST carry the harvesting creation time: the header's
+  `CreationDate`, when the machine created the document, in UTC (developer, 2026-11-13). Documents
+  are incremental, so it is as close to the cut time as the document allows.
+- **FR-008**: *Removed 2026-11-13*: rows do not carry the contract start date; US5 showed it is set
+  once per object, not when cutting restarts. It may become a dimension later.
+- **FR-009**: The partition values MUST be recorded: harvesting creation time, then contract number;
+  partitioning itself is out of scope.
 
 **Conditional mapping (User Story 4)**
 
@@ -249,7 +257,8 @@ the stems and logs in the document, and every member traces to a use in a query 
 **Investigation and queries (User Stories 5 and 6)**
 
 - **FR-014**: The contract start date question MUST be answered with sources before User Story 3
-  closes.
+  closes. *Answered 2026-11-13 in [findings-us5.md](findings-us5.md): not updated when cutting
+  restarts.*
 - **FR-015**: Collected queries MUST be grouped, each group naming its actor and the filters,
   groupings and summaries it needs, in a form that can be extended after User Story 6 closes.
 
@@ -261,12 +270,11 @@ the stems and logs in the document, and every member traces to a use in a query 
 
 **Scope**
 
-- **FR-019**: StanForD 2010 Harvesting XML documents of the two latest schema versions are in
-  scope (developer, 2026-11-11). A document outside them fails by default, or is read anyway by
-  option, decided from the version attribute on the root element. The window is counted in
-  versions, not years: Skogforsk sets no upgrade time. Which schema files row types follow is a
-  separate decision: only the latest, V4p1, is kept in `schemas/` for the POC (developer,
-  2026-11-13).
+- **FR-019**: For the POC, row types follow the latest StanForD 2010 schema version only, V4p1
+  (developer, 2026-11-13); the root element's version is not checked, and types are checked
+  against the real documents (version 3.5), not assumed valid (A2). A schema version window (e.g.
+  the two latest versions, counted in versions since Skogforsk sets no upgrade time) and a policy
+  checking it are left for after the POC.
 - **FR-020**: Extension elements (earmarked for the sending program) are not interpreted by this
   package; another package (e.g. for Biometria) can add its own rules for them to the same
   deserialization.
@@ -281,7 +289,8 @@ the stems and logs in the document, and every member traces to a use in a query 
 - **Common definition**: an external entity loaded into the machine (contract, species group,
   product, operator); has a User Id (external reference), a machine-created key, and a creation or
   modification timestamp.
-- **Contract (object)**: the common definition placing stems on a timeline through its start date.
+- **Contract (object)**: the common definition giving stems their contract number and object name;
+  its start date is set once per object.
 - **Query group**: likely queries of one kind, usually by actor, with the filters, groupings and
   summaries they need.
 
@@ -300,7 +309,7 @@ the stems and logs in the document, and every member traces to a use in a query 
   contract progress over time, seasonal measurement quality, operator comparisons, machine
   comparisons).
 - **SC-006**: The contract start date question is answered, with at least one cited source, before
-  timestamps are finished.
+  timestamps are finished. *Met 2026-11-13 (12 real documents, [findings-us5.md](findings-us5.md)).*
 - **SC-007**: An analyst can answer a query from each group using only the Stem and Log rows,
   without returning to the XML.
 
@@ -314,9 +323,9 @@ the stems and logs in the document, and every member traces to a use in a query 
   use short handwritten fragments; real documents back end-to-end tests (constitution A4).
 - `schemas/` holds the StanForD 2010 schemas at the latest version only, V4p1, Harvesting's
   `HarvestedProduction` included (developer, 2026-11-13); older versions are not kept for the POC.
-- Which Harvesting schema versions are the two latest is confirmed in User Story 5; the real
-  documents found are version 3.5.
-- Until User Story 5 answers otherwise, the contract start date is taken as given in the document.
+- The real documents found are version 3.5; the POC reads them against V4p1-based types (FR-019).
+- Documents are incremental and repeat the previous document's last stem; the duplicate rows share
+  an `Id` and are removed downstream, not by this package ([findings-us5.md](findings-us5.md)).
 - User Story 6 closes with a first grouping good enough for User Story 7; collecting continues
   afterwards.
 - Performance (document size affects only time) is a later spec; this spec only keeps what is held
