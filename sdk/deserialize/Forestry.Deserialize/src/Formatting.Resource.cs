@@ -57,6 +57,28 @@ namespace Forestry.Deserialize
 
         internal static string PartialAtFinalBlock => GetResourceString(nameof(PartialAtFinalBlock), @"The media asked for more bytes after the final block.");
 
+        internal static string UnknownMember => GetResourceString(nameof(UnknownMember), @"Type '{0}' has no member '{1}'.");
+
+        internal static string MemberValueOfOtherType => GetResourceString(nameof(MemberValueOfOtherType), @"Type '{0}': member '{1}' is a {2}, not a {3}.");
+
+        internal static string SetAfterEnumerated => GetResourceString(nameof(SetAfterEnumerated), @"Type '{0}': member '{1}' cannot be set, the row came out already and no longer changes.");
+
+        internal static string CompletionActionOutsideCompletion => GetResourceString(nameof(CompletionActionOutsideCompletion), @"Type '{0}': {1} is only allowed on the row being completed, during its own completion.");
+
+        internal static string CompletionActionTwice => GetResourceString(nameof(CompletionActionTwice), @"Type '{0}': {1} was already called for this row; each completion action is taken at most once, by one policy.");
+
+        internal static string ReleaseNotAllowed => GetResourceString(nameof(ReleaseNotAllowed), @"Type '{0}': Release is not allowed, {1}.");
+
+        internal static string ReleaseOpen => GetResourceString(nameof(ReleaseOpen), @"the row is still open");
+
+        internal static string ReleaseTwice => GetResourceString(nameof(ReleaseTwice), @"the row was released already");
+
+        internal static string ReleaseNotKept => GetResourceString(nameof(ReleaseNotKept), @"the row is not kept");
+
+        internal static string ReleaseUntilEnd => GetResourceString(nameof(ReleaseUntilEnd), @"Type '{0}': Release is not allowed, the row is kept until the end of the enumeration.");
+
+        internal static string ContextLimitReached => GetResourceString(nameof(ContextLimitReached), @"The deserialization context keeps more rows than MaxContextRows allows ({0}). Kept: {1}. Raise MaxContextRows on the options if the document needs more.");
+
         internal static string RowNotOfType => GetResourceString(nameof(RowNotOfType), @"A row of type '{0}' is not a '{1}'.");
     }
 }

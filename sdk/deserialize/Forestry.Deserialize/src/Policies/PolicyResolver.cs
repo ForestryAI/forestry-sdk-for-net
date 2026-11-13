@@ -1,6 +1,7 @@
 using System.Collections.Frozen;
 using System.Reflection;
 using Forestry.Deserialize.Definitions;
+using Forestry.Deserialize.Reading;
 
 namespace Forestry.Deserialize.Policies
 {
@@ -20,7 +21,7 @@ namespace Forestry.Deserialize.Policies
 
         private const string Set = nameof(EnumerationPolicy.Set);
 
-        private const string Enumerate = nameof(EnumerationPolicy.Enumerate);
+        private const string Complete = nameof(EnumerationPolicy.Complete);
 
         private readonly Dictionary<MemberInfo, Policy[]> _attributePolicies = [];
 
@@ -72,10 +73,9 @@ namespace Forestry.Deserialize.Policies
         /// Compose a type definition's enumeration policies, and record which act on each member
         /// </summary>
         /// <param name="definition"></param>
-        /// <param name="enumerates">The options enumerate this type's rows (research R12)</param>
         /// <param name="memberApplying">Filled with each member's applying policies</param>
         /// <returns></returns>
-        public TypeChains Resolve(TypeDefinition definition, bool enumerates, Dictionary<PropertyDefinition, IReadOnlyList<EnumerationPolicy>> memberApplying)
+        public TypeChains Resolve(TypeDefinition definition, Dictionary<PropertyDefinition, IReadOnlyList<EnumerationPolicy>> memberApplying)
         {
             Type type = definition.Type;
             EnumerationPolicy[] forType = [.. ForType(type).OfType<EnumerationPolicy>()];
@@ -83,24 +83,24 @@ namespace Forestry.Deserialize.Policies
             EnumerationPolicy[] optionsWide = [.. OptionsWide.OfType<EnumerationPolicy>()];
 
             EnumerationPolicy[] constructChain = PickEnumeration(type, Construct, [], forType, [], onType, optionsWide);
-            EnumerationPolicy[] enumerateChain = PickEnumeration(type, Enumerate, [], forType, [], onType, optionsWide);
+            EnumerationPolicy[] completeChain = PickEnumeration(type, Complete, [], forType, [], onType, optionsWide);
 
-            Func<Row> construct = definition.Construct;
+            Func<DeserializationContext, Row> construct = _ => definition.Construct();
 
             for (int i = constructChain.Length - 1; i >= 0; i--)
             {
                 EnumerationPolicy policy = constructChain[i];
-                Func<Row> next = construct;
-                construct = () => policy.Construct(definition, next);
+                Func<DeserializationContext, Row> next = construct;
+                construct = context => policy.Construct(definition, context, next);
             }
 
-            Func<Row, Row?> enumerate = enumerates ? static row => row : static _ => null;
+            Action<ContextRow> complete = static _ => { };
 
-            for (int i = enumerateChain.Length - 1; i >= 0; i--)
+            for (int i = completeChain.Length - 1; i >= 0; i--)
             {
-                EnumerationPolicy policy = enumerateChain[i];
-                Func<Row, Row?> next = enumerate;
-                enumerate = row => policy.Enumerate(row, definition, next);
+                EnumerationPolicy policy = completeChain[i];
+                Action<ContextRow> next = complete;
+                complete = row => policy.Complete(row, row.Context, next);
             }
 
             Delegate[] setters = new Delegate[definition.Properties.Count];
@@ -112,7 +112,7 @@ namespace Forestry.Deserialize.Policies
 
                 foreach (EnumerationPolicy policy in forMember.Concat(onMember))
                 {
-                    if (EnumerationPolicy.Overrides(policy.GetType(), Construct) || EnumerationPolicy.Overrides(policy.GetType(), Enumerate))
+                    if (EnumerationPolicy.Overrides(policy.GetType(), Construct) || EnumerationPolicy.Overrides(policy.GetType(), Complete))
                     {
                         Throwing.WhenMemberPolicyNotSetOnly(policy.GetType(), type, property.Member);
                     }
@@ -129,9 +129,9 @@ namespace Forestry.Deserialize.Policies
             _enumerationPolicies.UnionWith(onType);
             _enumerationPolicies.UnionWith(optionsWide);
 
-            EnumerationPolicy[] applying = [.. constructChain.Concat(enumerateChain).Distinct(ReferenceEqualityComparer.Instance).Cast<EnumerationPolicy>()];
+            EnumerationPolicy[] applying = [.. constructChain.Concat(completeChain).Distinct(ReferenceEqualityComparer.Instance).Cast<EnumerationPolicy>()];
 
-            return new TypeChains(definition, construct, enumerate, setters, applying);
+            return new TypeChains(definition, construct, complete, setters, applying);
         }
 
         /// <summary>

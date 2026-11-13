@@ -70,6 +70,9 @@ the text members). Nothing in it is kept unless a metadata policy copies it. Med
 
 ## Deserialization state (new, R2)
 
+> **Superseded by spec 002**: replaced by the public `DeserializationContext` and its context rows
+> ([spec 002 data model](../002-reading-context/data-model.md)).
+
 One per deserialization, in the core:
 
 | Holds | Meaning |

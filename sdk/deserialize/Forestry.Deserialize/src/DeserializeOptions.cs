@@ -53,6 +53,33 @@ namespace Forestry.Deserialize
         private PolicyCollection? _policies;
         #endregion
 
+        #region Deserialization context
+        /// <summary>
+        /// Rows policies may keep in the deserialization context after their completion (spec 002 FR-011a,
+        /// S1); open rows do not count. Going past it throws a
+        /// <see cref="DeserializationContextLimitException"/>. Default 100; locked with the options
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">Less than 0</exception>
+        /// <exception cref="InvalidOperationException">The options are read-only</exception>
+        public int MaxContextRows
+        {
+            get => _maxContextRows;
+            set
+            {
+                ThrowingAssertNotReadOnly();
+                ArgumentOutOfRangeException.ThrowIfNegative(value);
+                _maxContextRows = value;
+            }
+        }
+
+        private int _maxContextRows = DefaultMaxContextRows;
+
+        /// <summary>
+        /// Default of <see cref="MaxContextRows"/>: StanForD hpr documents keep about 16 rows (research R28)
+        /// </summary>
+        internal const int DefaultMaxContextRows = 100;
+        #endregion
+
         #region Read-only
         /// <summary>
         /// Locked for changes: the definitions are built

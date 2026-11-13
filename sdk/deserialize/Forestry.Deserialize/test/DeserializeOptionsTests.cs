@@ -174,5 +174,31 @@ namespace Forestry.Deserialize.Tests
             Assert.True(options.IsReadOnly);
         }
         #endregion
+
+        #region MaxContextRows (spec 002)
+        // T016 - FR-011a / research R28: kept rows allowed in the deserialization context, 100 by default
+        [Fact]
+        public void MaxContextRows_Default_ItShould_Be100()
+        {
+            // Arrange + Act
+            TestingDeserializeOptions options = new();
+
+            // Assert
+            Assert.Equal(100, options.MaxContextRows);
+        }
+
+        // T016 - FR-011a: the limit is locked with the options (001 FR-013)
+        [Fact]
+        public void MaxContextRows_Rejects_ChangeAfterTheOptionsAreLocked()
+        {
+            // Arrange
+            TestingDeserializeOptions options = new();
+            options.Rows.Add<Log>();
+            options.MakeReadOnly();
+
+            // Act + Assert
+            Assert.Throws<InvalidOperationException>(() => options.MaxContextRows = 10);
+        }
+        #endregion
     }
 }

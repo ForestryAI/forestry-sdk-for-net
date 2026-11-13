@@ -1,6 +1,7 @@
 using System.Globalization;
 using Forestry.Deserialize.Definitions;
 using Forestry.Deserialize.Policies;
+using Forestry.Deserialize.Reading;
 
 namespace Forestry.Deserialize.Xml.Tests.Fixtures
 {
@@ -10,7 +11,7 @@ namespace Forestry.Deserialize.Xml.Tests.Fixtures
     /// </summary>
     public sealed class RecordingSetPolicy : EnumerationPolicy
     {
-        public override void Set<T>(Row row, PropertyDefinition<T> property, T value, Action<Row, T> next)
+        public override void Set<T>(ContextRow row, PropertyDefinition<T> property, T value, DeserializationContext context, Action<ContextRow, T> next)
         {
             Recording.Record($"set {property.Name}={Convert.ToString(value, CultureInfo.InvariantCulture)}");
             next(row, value);
