@@ -23,8 +23,9 @@ even declarations, so a story's shells may not compile until its implementation.
 - **Tests run through `Forestry.Deserialize.Xml`** with options built by `AddHarvesting()`
   (contracts/public-api.md).
 
-**Organization**: Phases by user story in dependency order: US1 (done), US5 and US6 (documents, can
-start now), the cross-silo prerequisites D1-D2, then US2, US4, US3, US7.
+**Organization**: Phases by user story in dependency order: US1 (done), US5 and US6 (documents,
+next), then Setup right before the first code story, then US2, US4, US3, US7. The cross-silo
+prerequisites D1-D2 are met (Forestry.Deserialize spec 002, #104, 2026-11-13).
 
 ## Format: `[ID] [P?] [Story] Description`
 
@@ -34,15 +35,26 @@ start now), the cross-silo prerequisites D1-D2, then US2, US4, US3, US7.
 
 ## External prerequisites
 
-- **Forestry.Deserialize D1 and D2** (research R1), specified, reviewed and built under
-  Forestry.Deserialize's own constitution and spec, not here:
+- **Forestry.Deserialize D1 and D2** (research R1): **met** by Forestry.Deserialize spec 002, the
+  deserialization context (#99, merged via #104 on 2026-11-13). What the code stories should know:
+  - policies get a `DeserializationContext`; `Complete` (not `Enumerate`) decides whether a row comes
+    out and how long it stays in the context (`Enumerate(false)`, `Keep(Lifetime)`); context rows
+    such as `Machine` or the definitions are rows kept and not enumerated;
+  - members are direct children of their row's element; a value inside a wrapper (e.g.
+    `LogMeasurement > LogDiameter`) is reached by adding the wrapper as a row type that does not come
+    out, whose policy sets the parent;
+  - attributes and element text are declared with `Forestry.Deserialize.Xml`'s
+    `[XmlAttributeValue("name")]` and `[XmlTextValue]`, not by name matching;
+  - at most `MaxContextRows` (default 100) rows are kept.
+
+  As first specified here, under Forestry.Deserialize's own constitution and spec:
   - **D1**: rows of several types open at the same time, nested (`Machine` > `Stem` > `Log` >
     `LogVolume`), each completed at its own end tag, in one deserialization. Blocks US2, US3, US4,
     US7.
   - **D2**: a row's XML attributes and its own element content as members (e.g. `LogVolume` with
     `LogVolumeCategory`, `LogMeasurementCategory` and `Value`). Blocks US4 and the schema version
     policy.
-  Shells for US2-US4 can be written and reviewed before D1-D2 land; they pass only after.
+  Shells for US2-US4 follow the shipped API above.
 
 ## Not in this spec
 
@@ -64,13 +76,14 @@ start now), the cross-silo prerequisites D1-D2, then US2, US4, US3, US7.
 
 ## Phase 2: Setup (Shared Infrastructure)
 
-**Purpose**: Wiring every code story needs; adds no behavior a test could assert.
+**Purpose**: Wiring every code story needs; adds no behavior a test could assert. Done right before
+the first code story (US2), not before the document stories (developer, 2026-11-13): T005 for any
+code, T006 for the first end-to-end test. The fragment (T007) moved to the end of US5.
 
 - [ ] T005 Add project references to `sdk/deserialize/Forestry.Deserialize/src/Forestry.Deserialize.csproj` and `sdk/deserialize/Forestry.Deserialize.Xml/src/Forestry.Deserialize.Xml.csproj` in `src/Forestry.StanForD.csproj` (A1, R9)
 - [ ] T006 [P] Add the test helper `RealDocuments` that yields files from `STANFORD_HPR_FOLDER` and skips when unset in `test/RealDocuments.cs` (R8)
-- [ ] T007 [P] Create `test/Fragments/` with a minimal valid Harvesting fragment (root `version="3.5"`, header `CreationDate`, `Machine` with `MachineKey`, one `ObjectDefinition`, one `Stem` with one `Log`), one element per line, in `test/Fragments/MinimalHarvesting.xml` (A4)
 
-**Checkpoint**: the package references the deserialization packages and tests have fragments to read.
+**Checkpoint**: the package references the deserialization packages and tests can read real documents.
 
 ---
 
@@ -83,7 +96,8 @@ start date (#96). **Independent Test**: findings written with sources and review
 - [ ] T009 [US5] Compare `ObjectDefinition/StartDate` and `ObjectModificationDate` across the real documents of one contract over several days, and record whether the start date changes when cutting restarts, with sources, in `specs/001-harvesting-rows/findings-us5.md`
 - [ ] T010 [US5] Fill the timestamps-per-definition table (created once or modifiable, element names, seen in real documents) from the schemas and documents in `specs/001-harvesting-rows/findings-us5.md` and update research.md R4
 - [ ] T011 [US5] Confirm which two Harvesting schema versions are the latest and whether the real documents (3.5) fall inside them; update spec.md Assumptions and research.md R6
-- [ ] T012 [US5] **Review gate**: the developer reviews `findings-us5.md` on the board (#96)
+- [ ] T007 [US5] Write the minimal Harvesting fragment from the findings (T009-T011), distilled to what ties identification, stems and logs to a contract (developer, 2026-11-13): `Machine` with `MachineKey`; `ObjectDefinition` with `ObjectKey` and `ContractNumber`; one `Stem` with `StemKey`, `ObjectKey`, `SpeciesGroupKey` and `StemCoordinates` (where, and what kind of tree); one `Log` with `LogKey` and its volume, length and diameter (what was produced); plus a `SpeciesGroupDefinition` only if the findings show the key alone is not enough. Root `version` as in the real documents; one element per line (A4), in `test/Fragments/MinimalHarvesting.xml`. Not real rows: the smallest valid input for the code stories' tests
+- [ ] T012 [US5] **Review gate**: the developer reviews `findings-us5.md` and the fragment (T007) on the board (#96)
 
 ---
 
@@ -103,7 +117,7 @@ group names its actor and lists the filters, groupings and summaries it needs.
 
 **Goal**: Every Stem and Log row is globally identified (#93). **Independent Test**: two fragments
 from two machines with equal stem and log keys give rows whose identifications never repeat.
-**Needs**: D1.
+**Needs**: D1 (met, #104) and US5's fragment (T007).
 
 ### Test shells for User Story 2 ⚠️
 
@@ -137,7 +151,7 @@ from two machines with equal stem and log keys give rows whose identifications n
 
 **Goal**: Repeated elements land in the right Log member by their attributes (#95). **Independent
 Test**: a log with three volumes and eight diameters fills eleven members; unmatched fails by
-default. **Needs**: D1, D2.
+default. **Needs**: D1, D2 (met, #104).
 
 ### Test shells for User Story 4 ⚠️
 
@@ -234,12 +248,12 @@ document gives one row per stem and per log, every member traced. **Needs**: US2
 ### Phase Dependencies
 
 - **US1 (Phase 1)**: done.
-- **Setup (Phase 2)**: before any code story.
-- **US5, US6 (Phases 3-4)**: no dependencies; start now, in parallel with D1-D2.
-- **US2 (Phase 5)**: Setup + D1. Shells can be written now.
-- **US4 (Phase 6)**: Setup + D1 + D2. Independent of US2 except the shared `Log` file.
+- **Setup (Phase 2)**: right before the first code story (US2).
+- **US5, US6 (Phases 3-4)**: no dependencies; next. US5's T007 (the fragment) comes after its findings.
+- **US2 (Phase 5)**: Setup + US5's fragment (T007); D1 met.
+- **US4 (Phase 6)**: Setup; D1 and D2 met. Independent of US2 except the shared `Log` file.
 - **US3 (Phase 7)**: US2 (reference keys) + US5 (T009-T010).
-- **Schema version (Phase 8)**: D2 + US5 (T011).
+- **Schema version (Phase 8)**: US5 (T011); D2 met.
 - **US7 (Phase 9)**: US2, US3, US4, US6.
 - **Polish**: last.
 
@@ -249,7 +263,7 @@ Shells → review gate → declarations → policies → options → `dotnet tes
 
 ### Parallel Opportunities
 
-- US5 and US6 together, and alongside the D1-D2 work in Forestry.Deserialize.
+- US5 and US6 together.
 - All shells marked [P] within a story (same file, written together, reviewed together).
 - US2 and US4 shells can be written in parallel; their implementations touch `Log.cs` both, so
   they run one after the other.
@@ -265,17 +279,17 @@ Task: "T026 Stem and Log declarations" and "T027 context row declarations" (afte
 
 ### MVP First (User Story 2)
 
-1. Setup (T005-T007), then D1 lands in Forestry.Deserialize.
+1. US5 (findings and the fragment, T007), then Setup (T005-T006).
 2. US2 shells, gate, implementation: identified Stem and Log rows.
 3. Stop and validate with a real document.
 
 ### Incremental Delivery
 
-US2 → US4 (needs D2) → US3 (needs US5) → schema version → US7 (needs US6). Each story ends with
+US5 → US2 → US4 → US3 → schema version → US7 (needs US6). Each story ends with
 `dotnet test` green on everything before it.
 
 ## Notes
 
 - Board stories: #91 (US1), #93 (US2), #94 (US3), #95 (US4), #96 (US5), #97 (US6), #98 (US7); keep
   each issue's Requirements checklist in sync with this file.
-- D1-D2 get their own Forestry.Deserialize spec and issues.
+- D1-D2 were Forestry.Deserialize spec 002 (#99; stories #100-#102), merged via #104.
