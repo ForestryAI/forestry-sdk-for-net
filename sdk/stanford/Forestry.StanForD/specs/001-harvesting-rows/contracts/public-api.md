@@ -18,6 +18,9 @@ public sealed class ObjectDefinition : Forestry.Deserialize.Row { }
 public sealed class SpeciesGroupDefinition : Forestry.Deserialize.Row { }
 public sealed class OperatorDefinition : Forestry.Deserialize.Row { }
 public sealed class ProductDefinition : Forestry.Deserialize.Row { }
+public sealed class LogVolume : Forestry.Deserialize.Row { }       // categories (attributes) and value (text)
+public sealed class LogMeasurement : Forestry.Deserialize.Row { }  // category (attribute) and LogLength
+public sealed class LogDiameter : Forestry.Deserialize.Row { }     // category (attribute) and value (text)
 
 public static class Identification
 {
@@ -38,12 +41,19 @@ public static class HarvestingOptionsExtensions
 {
     // Adds Stem and Log, the machine and the common definitions, the StanForD enum converters
     // and the policies to the options.
-    public static DeserializeXmlOptions AddHarvesting(this DeserializeXmlOptions options);
+    public static DeserializeXmlOptions AddHarvesting(
+        this DeserializeXmlOptions options,
+        Action<HarvestingOptions>? configure = null);
 }
-```
 
-*Proposed for US4*: an overload taking `Action<HarvestingOptions>` with
-`HarvestingOptions.Unmatched` (`UnmatchedOccurrence.Fail` by default, or `Ignore`; FR-012).
+public sealed class HarvestingOptions
+{
+    // FR-012: fail by default
+    public UnmatchedOccurrence Unmatched { get; set; } = UnmatchedOccurrence.Fail;
+}
+
+public enum UnmatchedOccurrence { Fail, Ignore }
+```
 
 ## Use
 
@@ -67,8 +77,8 @@ await foreach (Row row in Deserialization.DeserializeAsync(stream, options, canc
 | A stem or log with no header `CreationDate` read before it | `InvalidDataException`, naming the row and `CreationDate` |
 | A stem with no `ObjectKey` (no contract) | `InvalidDataException`, naming the row and `ObjectKey` |
 | A StanForD text naming no enum member | `FormatException` (from the converter) |
-| *Proposed (US4)*: an occurrence matching no condition (`Fail`) | `InvalidDataException`, naming element and attributes |
-| *Proposed (US4)*: two occurrences for one conditional member in a row | `InvalidDataException`, naming member and element |
+| A volume, diameter or measured length matching no condition (`Fail`) | `InvalidDataException`, naming the element, its categories and the log |
+| A second volume or diameter for a member already set | `InvalidDataException`, naming the element, its categories, the log and the member |
 
 Forestry.Deserialize's own failures (conversion, cut-off document, context limit) are unchanged.
 
@@ -76,5 +86,6 @@ Forestry.Deserialize's own failures (conversion, cut-off document, context limit
 
 Built: `MachinePolicy`, `CommonDefinitionPolicy<TDefinition>`, `StemIdentificationPolicy` and
 `LogIdentificationPolicy`; `HeaderPolicy`, `StemPartitionPolicy` and `LogPartitionPolicy` (US3), all
-acting when a row completes (`Complete`), in `src/Policies/`. *Proposed*: conditional mapping
-(US4) policies on the same pattern.
+acting when a row completes (`Complete`), in `src/Policies/`; `LogVolumePolicy`,
+`LogMeasurementPolicy` and `LogDiameterPolicy` (US4), each setting the open log's member its
+categories match.

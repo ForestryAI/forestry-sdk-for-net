@@ -4,21 +4,54 @@ using Forestry.StanForD.Policies;
 
 namespace Forestry.StanForD {
     /// <summary>
+    /// What happens to a StanForD element whose categories match no row member (FR-012)
+    /// </summary>
+    public enum UnmatchedOccurrence
+    {
+        /// <summary>
+        /// Deserialization fails, naming the element and its categories (the default)
+        /// </summary>
+        Fail,
+
+        /// <summary>
+        /// The element is ignored
+        /// </summary>
+        Ignore
+    }
+
+    /// <summary>
+    /// Choices for shredding Harvesting documents
+    /// </summary>
+    public sealed class HarvestingOptions
+    {
+        /// <summary>
+        /// What happens to a volume, diameter or measurement whose categories match no <see cref="Log"/>
+        /// member; <see cref="UnmatchedOccurrence.Fail"/> by default
+        /// </summary>
+        public UnmatchedOccurrence Unmatched { get; set; } = UnmatchedOccurrence.Fail;
+    }
+
+    /// <summary>
     /// Sets up XML deserialization options for StanForD Harvesting (hpr) documents
     /// </summary>
     public static class HarvestingOptionsExtensions
     {
         /// <summary>
         /// Adds what shredding a Harvesting document needs: <see cref="Stem"/> and <see cref="Log"/>, the only
-        /// rows that come out; <see cref="Machine"/> and the common definitions, which never come out but are
-        /// read for the stems and logs; converters for the StanForD texts the rows use; and the policies
-        /// setting each row's identification
+        /// rows that come out; the header, the machine, the common definitions and the log measurements,
+        /// which never come out but are read for the stems and logs; converters for the StanForD texts the
+        /// rows use; and the policies setting each row's identification, partition values and measurements
         /// </summary>
         /// <param name="options">Options not used yet</param>
+        /// <param name="configure">Changes the <see cref="HarvestingOptions"/> defaults, e.g. ignoring unmatched
+        /// measurements</param>
         /// <returns>The same options</returns>
-        public static DeserializeXmlOptions AddHarvesting(this DeserializeXmlOptions options)
+        public static DeserializeXmlOptions AddHarvesting(this DeserializeXmlOptions options, Action<HarvestingOptions>? configure = null)
         {
             ArgumentNullException.ThrowIfNull(options);
+
+            HarvestingOptions harvesting = new();
+            configure?.Invoke(harvesting);
 
             options.Rows
                 .Add<Stem>()
@@ -28,7 +61,10 @@ namespace Forestry.StanForD {
                 .Add<ObjectDefinition>()
                 .Add<SpeciesGroupDefinition>()
                 .Add<OperatorDefinition>()
-                .Add<ProductDefinition>();
+                .Add<ProductDefinition>()
+                .Add<LogVolume>()
+                .Add<LogMeasurement>()
+                .Add<LogDiameter>();
 
             options.Converters.Add(new StanForDEnumConverter<ProcessingCategory>());
             options.Converters.Add(new StanForDEnumConverter<CoordinateReferenceSystem>());
@@ -41,6 +77,9 @@ namespace Forestry.StanForD {
                 .Add<SpeciesGroupDefinition>(new CommonDefinitionPolicy<SpeciesGroupDefinition>(nameof(SpeciesGroupDefinition.SpeciesGroupKey), definition => definition.SpeciesGroupKey))
                 .Add<OperatorDefinition>(new CommonDefinitionPolicy<OperatorDefinition>(nameof(OperatorDefinition.OperatorKey), definition => definition.OperatorKey))
                 .Add<ProductDefinition>(new CommonDefinitionPolicy<ProductDefinition>(nameof(ProductDefinition.ProductKey), definition => definition.ProductKey))
+                .Add<LogVolume>(new LogVolumePolicy(harvesting.Unmatched))
+                .Add<LogMeasurement>(new LogMeasurementPolicy(harvesting.Unmatched))
+                .Add<LogDiameter>(new LogDiameterPolicy(harvesting.Unmatched))
                 .Add<Stem>(new StemIdentificationPolicy())
                 .Add<Log>(new LogIdentificationPolicy())
                 .Add<Stem>(new StemPartitionPolicy())

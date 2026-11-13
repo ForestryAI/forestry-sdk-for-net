@@ -158,33 +158,47 @@ until T030 declares it. That is the only build error (2026-11-13).
 
 ---
 
-## Phase 6: User Story 4 - Conditional mapping (Priority: P1)
+## Phase 6: User Story 4 - Conditional mapping (Priority: P1) ✅ Done
 
-**Goal**: Repeated elements land in the right Log member by their attributes (#95). **Independent
+**Goal**: Repeated elements land in the right Log member by their categories (#95). **Independent
 Test**: a log with three volumes and eight diameters fills eleven members; unmatched fails by
 default. **Needs**: D1, D2 (met, #104).
 
+**Design (2026-11-13)**: `LogVolume`, `LogMeasurement` and `LogDiameter` are row types that never
+come out, read with spec 002's XML attribute and text members. When one completes, its policy
+matches its categories (a diameter's measurement category is its enclosing `LogMeasurement`'s) and
+sets the matching member of the open `Log`; `LogMeasurement` sets `MachineLength`. All conditions
+need measurement category "Machine". A member no occurrence sets stays 0, "not measured"
+(developer, 2026-11-13). `AddHarvesting` takes `Action<HarvestingOptions>`, with `Unmatched`
+`Fail` (default) or `Ignore` (FR-012).
+
 ### Test shells for User Story 4 ⚠️
 
-- [ ] T032 [P] [US4] Test shell, quickstart 6 / US4-1: three `LogVolume`s by `logVolumeCategory` (`m3sob`, `m3sub`, `m3 (price)`, `logMeasurementCategory="Machine"`) fill `VolumeM3sobMachine`, `VolumeM3subMachine`, `VolumeM3PriceMachine` in `test/ConditionalMappingTests.cs`
-- [ ] T033 [P] [US4] Test shell, US4-2 / FR-010: a `LogVolume` matching the volume category but not the measurement category sets nothing (with `Unmatched = Ignore`) in `test/ConditionalMappingTests.cs`
-- [ ] T034 [P] [US4] Test shell, quickstart 7 / FR-010: eight `LogDiameter`s under `LogMeasurement logMeasurementCategory="Machine"` fill `DiameterButtOb` … `DiameterTopUb`, and `LogLength` is set, in `test/ConditionalMappingTests.cs`
-- [ ] T035 [P] [US4] Test shell, quickstart 8 / US4-4 / FR-012: an unknown `logVolumeCategory` with default options fails, naming the element and its attributes in `test/ConditionalMappingTests.cs`
-- [ ] T036 [P] [US4] Test shell, quickstart 9 / US4-3: the same with `Unmatched = Ignore` is ignored and the other members are set in `test/ConditionalMappingTests.cs`
-- [ ] T037 [P] [US4] Test shell, quickstart 10 / FR-013: two `LogVolume`s with the same categories in one log fail in `test/ConditionalMappingTests.cs`
-- [ ] T038 [P] [US4] Test shell, R2: `LogVolume`, `LogMeasurement` and `LogDiameter` rows are never enumerated in `test/ConditionalMappingTests.cs`
+- [X] T073 [US4] Extend `test/Fragments/MinimalHarvesting.xml`: stem 619254's first log carries three volumes, a cutting category, top sawing, find-butt-end, eight diameters and the length, as a real log (2026-11-13; the 18 earlier tests still pass)
+- [X] T032 [P] [US4] Test shell, quickstart 6 / US4-1: three `LogVolume`s ("m3sob", "m3sub", "m3 (price)", measurement "Machine") fill `MachineVolumeOverBark`, `MachineVolumeUnderBark`, `MachineVolumePrice` in `test/ConditionalMappingTests.cs` (2026-11-13)
+- [X] T034 [P] [US4] Test shell, quickstart 7 / FR-010, FR-011: eight `LogDiameter`s under a "Machine" `LogMeasurement` fill the eight `MachineDiameter…` members, and `MachineLength` is set, in `test/ConditionalMappingTests.cs` (2026-11-13)
+- [X] T074 [P] [US4] Test shell: a log measuring only some categories keeps 0 for the others in `test/ConditionalMappingTests.cs` (2026-11-13)
+- [X] T033 [P] [US4] Test shell, US4-2 / FR-010: a volume matching the volume category but not the measurement category sets nothing (with `Unmatched = Ignore`) in `test/ConditionalMappingTests.cs` (2026-11-13)
+- [X] T035 [P] [US4] Test shell, quickstart 8 / US4-4 / FR-012: an unknown volume category fails by default, naming `LogVolume`, the category and the stem in `test/ConditionalMappingTests.cs` (2026-11-13)
+- [X] T075 [P] [US4] Test shell, FR-012: an unknown diameter category fails by default, naming `LogDiameter` and the category in `test/ConditionalMappingTests.cs` (2026-11-13)
+- [X] T076 [P] [US4] Test shell, FR-010, FR-012: diameters under a measurement that is not "Machine" fail by default, naming the measurement category in `test/ConditionalMappingTests.cs` (2026-11-13)
+- [X] T036 [P] [US4] Test shell, quickstart 9 / US4-3: with `Unmatched = Ignore`, an unknown category is ignored and the other members are set in `test/ConditionalMappingTests.cs` (2026-11-13)
+- [X] T037 [P] [US4] Test shell, quickstart 10 / FR-013: two volumes with the same categories in one log fail, naming `LogVolume`, the category and the stem in `test/ConditionalMappingTests.cs` (2026-11-13)
+- [X] T038 [P] [US4] Test shell, R2: volumes, measurements and diameters never come out; only the 5 stems and logs do, in `test/ConditionalMappingTests.cs` (2026-11-13)
+
+The shells assume `HarvestingOptions` and `UnmatchedOccurrence` (contracts/public-api.md); the test
+project does not compile until T043 declares them (2026-11-13).
 
 ### Review gate
 
-- [ ] T039 [US4] **Test review gate**: the developer reviews T032-T038 on the board before any code (C6)
+- [X] T039 [US4] **Test review gate**: the developer reviews T073, T032-T038 and T074-T076 on the board before any code (C6) (2026-11-13: passed, "Shells look good")
 
 ### Implementation for User Story 4 (after the gate)
 
-- [ ] T040 [P] [US4] Declare the context rows `LogVolume` (`LogVolumeCategory`, `LogMeasurementCategory` attributes, `Value` content), `LogMeasurement` (`LogMeasurementCategory`, its only member) and `LogDiameter` (`LogDiameterCategory`, `Value`) in `src/Harvesting/Context/`
-- [ ] T041 [P] [US4] Add the conditional members to `Log` (`decimal?` volumes, `int?` diameters, `int?` `LogLength`) in `src/Harvesting/Log.cs`
-- [ ] T042 [US4] Implement the conditional mapping policy: at `Enumerate` of `LogVolume` / `LogDiameter`, match its members (and the open `LogMeasurement`'s category) against the conditions, set the matched member on the open `Log`, drop the context row; `Unmatched` `Fail` (default) or `Ignore`; a second occurrence for the same member fails, in `src/Harvesting/Policies/ConditionalMappingPolicy.cs` (R5)
-- [ ] T043 [US4] Add `HarvestingOptions.Unmatched` and `UnmatchedOccurrence` per contracts/public-api.md in `src/Harvesting/HarvestingOptions.cs`
-- [ ] T044 [US4] Run `dotnet test`: T032-T038 pass, US2 still green
+- [X] T040 [P] [US4] Declare the row types `LogVolume` (`[XmlAttributeValue]` `logVolumeCategory` and `logMeasurementCategory`, `[XmlTextValue]` `decimal` value), `LogMeasurement` (`logMeasurementCategory`, `LogLength`) and `LogDiameter` (`logDiameterCategory`, `int` value) in `src/` (2026-11-13: `src/LogMeasurements.cs`)
+- [X] T042 [US4] Implement the conditional mapping policies at `Complete`: keep the row out of the enumeration, match its categories against the conditions, set the open `Log`'s member; a member already set fails (FR-013); no match fails or is ignored by `Unmatched` (FR-012), in `src/Policies/` (2026-11-13: `LogVolumePolicy`, `LogMeasurementPolicy`, `LogDiameterPolicy` and the shared `ConditionalMapping` in `src/Policies/ConditionalMappingPolicies.cs`)
+- [X] T043 [US4] Add `HarvestingOptions` (`Unmatched`), `UnmatchedOccurrence` and `AddHarvesting(Action<HarvestingOptions>?)`, adding the three row types and their policies, in `src/HarvestingOptions.cs` (2026-11-13: `src/HarvestingOptions.cs`)
+- [X] T044 [US4] Run `dotnet test`: T032-T038 and T074-T076 pass, US2 and US3 still green (2026-11-13: 28 passed on net10.0)
 
 ---
 

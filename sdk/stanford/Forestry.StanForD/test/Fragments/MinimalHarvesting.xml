@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  The smallest Harvesting document the code stories test against (tasks.md T007, findings-us5.md).
+  The smallest Harvesting document the code stories test against (tasks.md T007, findings-us5.md);
+  stem 619254's first log carries every measurement a real log has (tasks.md T073).
   Shaped like the real documents (StanForD 2010, version 3.5): header, machine, the common
   definitions the rows copy from, then two stems. Values are made up; no real machine, contract
   or person.
@@ -51,8 +52,22 @@
           <LogKey>1</LogKey>
           <ProductKey>3350</ProductKey>
           <LogVolume logVolumeCategory="m3sob" logMeasurementCategory="Machine">0.5925430</LogVolume>
+          <LogVolume logVolumeCategory="m3sub" logMeasurementCategory="Machine">0.5332270</LogVolume>
+          <LogVolume logVolumeCategory="m3 (price)" logMeasurementCategory="Machine">0.5332271</LogVolume>
+          <CuttingCategory>
+            <CuttingReason>Automatic</CuttingReason>
+          </CuttingCategory>
+          <TopSawing>false</TopSawing>
+          <FindButtEndFunction>false</FindButtEndFunction>
           <LogMeasurement logMeasurementCategory="Machine">
+            <LogDiameter logDiameterCategory="Butt ob">495</LogDiameter>
+            <LogDiameter logDiameterCategory="Butt ub">471</LogDiameter>
+            <LogDiameter logDiameterCategory="Mid ob">383</LogDiameter>
+            <LogDiameter logDiameterCategory="Mid ub">363</LogDiameter>
+            <LogDiameter logDiameterCategory="Mid HKS ob">380</LogDiameter>
+            <LogDiameter logDiameterCategory="Mid HKS ub">360</LogDiameter>
             <LogDiameter logDiameterCategory="Top ob">362</LogDiameter>
+            <LogDiameter logDiameterCategory="Top ub">343</LogDiameter>
             <LogLength>491</LogLength>
           </LogMeasurement>
         </Log>
