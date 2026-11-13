@@ -25,6 +25,7 @@ namespace Forestry.Deserialize.Definitions
             _constructor = constructor;
             Properties = properties;
             _propertiesByMember = properties.ToFrozenDictionary(property => MemberKey.Of(property.Member));
+            _indexesByName = properties.ToFrozenDictionary(property => property.Name, property => property.Index, StringComparer.Ordinal);
         }
 
         /// <summary>
@@ -46,6 +47,8 @@ namespace Forestry.Deserialize.Definitions
 
         private readonly FrozenDictionary<MemberKey, PropertyDefinition> _propertiesByMember;
 
+        private readonly FrozenDictionary<string, int> _indexesByName;
+
         /// <summary>
         /// Construct a row with the chosen constructor (no parameters in this slice)
         /// </summary>
@@ -60,6 +63,16 @@ namespace Forestry.Deserialize.Definitions
         /// <returns></returns>
         internal bool TryGetProperty(MemberInfo member, [NotNullWhen(true)] out PropertyDefinition? property) =>
             _propertiesByMember.TryGetValue(MemberKey.Of(member), out property);
+
+        /// <summary>
+        /// Index in <see cref="Properties"/> of the member with this C# name: the bit its set-member
+        /// bitmap uses (spec 002, research R22)
+        /// </summary>
+        /// <param name="memberName"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        internal bool TryGetPropertyIndex(string memberName, out int index) =>
+            _indexesByName.TryGetValue(memberName, out index);
 
         /// <summary>
         /// Build the definition of a row type, rejecting it before any byte is read (FR-008)

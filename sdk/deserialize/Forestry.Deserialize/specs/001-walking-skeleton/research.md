@@ -49,6 +49,11 @@ Items confirmed in the design discussions of 2026-10-26 to 2026-10-29 say so. St
 
 ## R2. Reading layers: media row enumerators and two core pipelines
 
+> **Superseded in part by spec 002 (2026-11-12)**: `DeserializationState` is replaced by the public
+> `DeserializationContext` (spec 002 research R20): the open-row stack plus the rows policies keep,
+> shared by every enumeration policy. The rest of R2 (media enumerators driving, the core passive,
+> the byte-span handover) stands.
+
 - **Decision (developer, 2026-10-28)**: Each media supplies a row enumerator (sync and async). Its
   move drives the media's own reader over buffered bytes and hands C# types and members to the
   core's two pipelines; it returns when the core has completed a row, which becomes `Current`. The
@@ -898,6 +903,17 @@ role and name, never its design as a precedent (R0).
 - **Status**: Confirmed for the POC (developer, 2026-11-07): "good enough right now; the logic can be
   polished later". Reached over several reworks the same day (history at the end); expect it to move
   again with spec 002/003, when a second row class and real HPR data show what policies need.
+- **Superseded in part by spec 002 (2026-11-12)**, see spec 002 research R23, R24, R26:
+  - `Enumerate(Row, TypeDefinition, Func<Row, Row?> next)` is replaced by
+    `Complete(ContextRow, DeserializationContext, Action<ContextRow> next)`: at completion, policies take
+    actions on the row, each at most once (`Enumerate(bool)`, `Keep(Lifetime)`, later `Release`), and
+    undecided ones get the defaults.
+  - Every method takes the deserialization context; `Clear()` became `Clear(DeserializationContext)`;
+    each `next` passes what the step needs (`Func<DeserializationContext, Row>`,
+    `Action<ContextRow, T>`, `Action<ContextRow>`), so chains allocate nothing per row.
+  - Per-enumeration state belongs in the context, not in policy fields. The one-enumeration-at-a-time
+    rule below stays (spec 002 FR-011), as do precedence, chains, attaching and member targets.
+  - The API polish before a release is tracked in #103.
 
 ### Terms (recalibrated during the US4 review)
 

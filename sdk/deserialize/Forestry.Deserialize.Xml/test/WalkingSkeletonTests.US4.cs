@@ -14,10 +14,9 @@ namespace Forestry.Deserialize.Xml.Tests
     /// surface they assume (research R19). For the review gate (T055), the assumed surface:
     /// <list type="bullet">
     /// <item><c>EnumerationPolicy</c> (namespace <c>Forestry.Deserialize.Policies</c>) with virtual
-    /// <c>Construct(TypeDefinition, Func&lt;Row&gt; next)</c>,
-    /// <c>Set&lt;T&gt;(Row, PropertyDefinition&lt;T&gt;, T, Action&lt;Row, T&gt; next)</c>,
-    /// <c>Enumerate(Row, TypeDefinition, Func&lt;Row, Row?&gt; next)</c> and <c>Clear()</c>; a policy
-    /// takes part only in the methods it overrides.</item>
+    /// <c>Construct</c>, <c>Set&lt;T&gt;</c>, <c>Enumerate</c> and <c>Clear</c>; a policy takes part only in
+    /// the methods it overrides. Since spec 002 (tasks.md T029) every method takes the deserialization
+    /// context and <c>Enumerate</c> is <c>Complete</c>; the fixtures follow, the records keep their words.</item>
     /// <item><c>[Policy&lt;TPolicy&gt;]</c> on a row class attaches an enumeration policy to the type; the
     /// options create it once, when they lock.</item>
     /// <item><c>options.Policies.Add&lt;TRow&gt;(policy)</c> attaches an instance through the options;

@@ -15,6 +15,32 @@ namespace Forestry.Deserialize.Xml
 
         private XmlAssociation? _association;
 
+        private Dictionary<Type, string>? _textValues;
+
+        /// <summary>
+        /// Set <typeparamref name="TRow"/>'s member <paramref name="memberName"/> from the text directly
+        /// inside the row's element, as <see cref="XmlTextValueAttribute"/> does; it wins over the
+        /// attribute (spec 002 US3, research R30). A type not added or a member it does not have fails
+        /// when the options lock
+        /// </summary>
+        /// <typeparam name="TRow">An added row type</typeparam>
+        /// <param name="memberName">The member's C# name, e.g. <c>nameof(Price.Amount)</c></param>
+        /// <returns>These options, to chain</returns>
+        /// <exception cref="InvalidOperationException">The options are read-only</exception>
+        public DeserializeXmlOptions TextValue<TRow>(string memberName) where TRow : Row
+        {
+            ArgumentException.ThrowIfNullOrEmpty(memberName);
+            ThrowingAssertNotReadOnly();
+
+            (_textValues ??= [])[typeof(TRow)] = memberName;
+            return this;
+        }
+
+        /// <summary>
+        /// The member names set through <see cref="TextValue{TRow}(string)"/>, by row type
+        /// </summary>
+        internal IReadOnlyDictionary<Type, string> TextValues => _textValues ?? [];
+
         /// <summary>
         /// XML defaults, e.g. XML Schema booleans
         /// </summary>

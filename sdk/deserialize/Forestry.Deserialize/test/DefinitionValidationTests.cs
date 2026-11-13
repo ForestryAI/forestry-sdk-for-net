@@ -134,5 +134,26 @@ namespace Forestry.Deserialize.Tests
             // Assert
             Assert.Contains(nameof(NotARow), exception.Message);
         }
+
+        // T016 - FR-007 / research R22: a type definition finds a member's index by its C# name, the bit
+        // its set-member bitmap uses; an unknown name is not found
+        [Fact]
+        public void TypeDefinition_ForMemberNames_ItShould_FindTheIndexOfEachMemberOnly()
+        {
+            // Arrange
+            TestingDeserializeOptions options = OptionsWith<Log>();
+            options.MakeReadOnly();
+            Definitions.TypeDefinition definition = options.ThrowingGetTypeDefinition(typeof(Log));
+            int logVolumeIndex = definition.Properties.Select(property => property.Name).ToList().IndexOf(nameof(Log.LogVolume));
+
+            // Act
+            bool foundLogVolume = definition.TryGetPropertyIndex(nameof(Log.LogVolume), out int index);
+            bool foundUnknown = definition.TryGetPropertyIndex("NoSuchMember", out _);
+
+            // Assert
+            Assert.True(foundLogVolume);
+            Assert.Equal(logVolumeIndex, index);
+            Assert.False(foundUnknown);
+        }
     }
 }

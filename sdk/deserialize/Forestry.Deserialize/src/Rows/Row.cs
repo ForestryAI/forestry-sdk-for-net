@@ -27,6 +27,13 @@ namespace Forestry.Deserialize
         public bool Is<T>() where T : Row => this is T;
 
         /// <summary>
+        /// A copy of this row for the consumer when the context keeps the original (spec 002 isolation,
+        /// research R25); shallow is enough since members are single values
+        /// </summary>
+        /// <returns></returns>
+        internal Row ShallowCopy() => (Row)MemberwiseClone();
+
+        /// <summary>
         /// This row as a <typeparamref name="T"/>: the same instance, with its values already typed
         /// </summary>
         /// <typeparam name="T">A row class</typeparam>

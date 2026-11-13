@@ -162,9 +162,11 @@ namespace Forestry.Deserialize
         }
 
         /// <summary>
-        /// An enumeration ended: clear every enumeration policy once, then let the next one start
+        /// An enumeration ended: clear every enumeration policy once, with the context still holding its
+        /// rows, then let the next one start
         /// </summary>
-        internal void EndEnumeration()
+        /// <param name="context">The ending enumeration's deserialization context</param>
+        internal void EndEnumeration(Reading.DeserializationContext context)
         {
             if (_enumerationPolicies.Length == 0)
             {
@@ -175,7 +177,7 @@ namespace Forestry.Deserialize
             {
                 foreach (EnumerationPolicy policy in _enumerationPolicies)
                 {
-                    policy.Clear();
+                    policy.Clear(context);
                 }
             }
             finally
@@ -264,7 +266,7 @@ namespace Forestry.Deserialize
 
             foreach ((Type type, TypeDefinition definition) in typeDefinitions)
             {
-                typeChains[type] = resolver.Resolve(definition, Enumerates(type), memberApplying);
+                typeChains[type] = resolver.Resolve(definition, memberApplying);
             }
 
             _typeChains = typeChains.ToFrozenDictionary();

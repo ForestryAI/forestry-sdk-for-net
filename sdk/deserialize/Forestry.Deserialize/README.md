@@ -2,15 +2,16 @@
 
 Forestry Deserialize reads large documents in one forward pass and shreds them into flat rows: one
 instance of your own class per occurrence in the document, handed out as soon as it is complete.
-Nothing keeps a row once it is handed out, so a document of a million rows costs about the same
-memory as one of a thousand. The need comes from StanForD XML from harvesting and forwarding
+Nothing keeps a row once it is handed out unless a policy asks to, so a document of a million rows
+costs about the same memory as one of a thousand. The need comes from StanForD XML from harvesting and forwarding
 machines, which is the real data this is developed and tested against, but neither this package nor
 `Forestry.Deserialize.Xml` is limited to StanForD.
 
 The design is specified with spec-kit: the rules are in the
-[constitution](.specify/memory/constitution.md) and the current slice is
-[spec 001, walking skeleton](specs/001-walking-skeleton/spec.md), with its decisions in
-[research.md](specs/001-walking-skeleton/research.md). Some of the design is adapted from
+[constitution](.specify/memory/constitution.md), the slices are
+[spec 001, walking skeleton](specs/001-walking-skeleton/spec.md) and
+[spec 002, deserialization context](specs/002-reading-context/spec.md), each with its decisions in
+its research.md. Some of the design is adapted from
 Microsoft's open-source .NET runtime; see [THIRD-PARTY-NOTICES.md](../../../THIRD-PARTY-NOTICES.md).
 
 ## Try the preview
@@ -64,8 +65,8 @@ gives the typed row.
 
 ### Checking and casting rows
 
-`Row.Is<T>()` checks a row's class and `Row.AsType<T>()` gives the typed row. They matter most once
-several row types come from one pass (a later slice), but work the same today:
+`Row.Is<T>()` checks a row's class and `Row.AsType<T>()` gives the typed row. They matter most when
+several row types come from one pass:
 
 ```csharp
 foreach (Row row in Deserialization.Deserialize(xml, options))
@@ -125,16 +126,18 @@ Policies change what happens while rows are built, without touching the media. T
 `Forestry.Deserialize.Policies`:
 
 - **Enumeration policies** (`EnumerationPolicy`) act per row: when it is constructed (`Construct`),
-  when each member is set (`Set`), when a completed row may be enumerated (`Enumerate`), and when the
-  enumeration ends (`Clear`). Override only what you need; a policy takes part in exactly the methods
-  it overrides. Each method gets the next step as `next`: call it to keep the default.
+  when each member is set (`Set`), when it completes (`Complete`), and when the enumeration ends
+  (`Clear`). Each method gets the enumeration's deserialization context (see below) and the next step
+  as `next`: call it to keep the default. Override only what you need; a policy takes part in exactly
+  the methods it overrides.
 - **Definition policies** (`DefinitionPolicy`) act once, when the options lock, and decide which
   public properties and fields of a row type are members (`IncludeMember`).
 
 ```csharp
 public sealed class AuditingPolicy : EnumerationPolicy
 {
-    public override void Set<T>(Row row, PropertyDefinition<T> property, T value, Action<Row, T> next)
+    public override void Set<T>(ContextRow row, PropertyDefinition<T> property, T value,
+        DeserializationContext context, Action<ContextRow, T> next)
     {
         // inspect or change the value, then let the setter run
         next(row, value);
@@ -151,10 +154,95 @@ options.Policies.Add<Log>(nameof(Log.LogKey), new AuditingPolicy()); // only Log
   every row type (`Add(policy)`), one type (`Add<TRow>(policy)`) or one member
   (`Add<TRow>(memberName, policy)`, `Set` only). The options win over attributes; the most specific
   target wins, and policies added through the options for the same target run in the order added.
-- **Lifetime**: a policy lives as long as its options and may keep state for one enumeration; it is
-  cleared when each enumeration ends. So options with enumeration policies serve one enumeration at
-  a time: use one options instance per concurrent deserialization.
+- **Lifetime**: a policy lives as long as its options; keep what one enumeration needs in its
+  deserialization context, not in the policy's fields. `Clear(context)` runs once when each
+  enumeration ends. Options with enumeration policies serve one enumeration at a time: use one
+  options instance per concurrent deserialization.
 - Policies are configuration: once the options are used, adding one throws.
+
+### Rows that need each other: the deserialization context
+
+Some rows carry what other rows need: a site whose key every order should carry, a contact whose
+name belongs on its site. Each enumeration has a **deserialization context**
+(`DeserializationContext`, in `Forestry.Deserialize.Reading`) that its enumeration policies share.
+Every row is in it from its start to its end (open), so a policy sees the rows around the one it is
+building. When a row completes, its policies decide two things, each at most once:
+
+- **whether it comes out**: `row.Enumerate(false)` keeps it out of the enumeration;
+- **how long it stays**: `row.Keep(Lifetime.UntilEnd)` or `row.Keep(Lifetime.UntilReleased)`, until
+  a later policy calls `context.Release(row)`.
+
+What no policy decides gets the default: a row comes out when its type was added to the options, and
+leaves the context at its end. Here every order carries its site's key, and no site comes out:
+
+```csharp
+public sealed class SiteKeptOut : EnumerationPolicy
+{
+    public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+    {
+        row.Enumerate(false);         // no Site rows in the enumeration
+        row.Keep(Lifetime.UntilEnd);  // rows after the site can still find it
+        next(row);
+    }
+}
+
+public sealed class OrderWithSiteKey : EnumerationPolicy
+{
+    public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+    {
+        Site site = context.Rows<Site>().Single().Row.AsType<Site>();
+        row.Set(nameof(Order.SiteKey), site.SiteKey);
+        next(row);
+    }
+}
+
+DeserializeXmlOptions options = new();
+options.Rows.Add<Site>().Add<Order>();
+options.Policies.Add<Site>(new SiteKeptOut()).Add<Order>(new OrderWithSiteKey());
+```
+
+- **Finding rows**: `context.Rows<TRow>()` gives the open and kept rows of a type, oldest first, as
+  a snapshot (releasing rows while you loop over it takes effect for the next query). Rows nest by
+  the document's structure, so `context.Parent(row)`, `Ancestors(row)`, `Children(row)` and
+  `Siblings(row)` find related rows still in the context; a parent that already left is not found.
+- **Only what has been read so far**: an open row's members that come later in the document are not
+  set yet. `row.IsSet(nameof(Site.SiteKey))` tells, whether the document set it (an empty element
+  included) or a policy did through `row.Set(...)`; a plain C# assignment to `row.Row` is not
+  tracked.
+- **Changing rows**: `row.Set(name, value)` works on open rows and on kept rows that did not come
+  out. A row that came out no longer changes: setting one of its members throws. When a row both
+  comes out and stays, you get a copy, so nothing you do to it reaches the context, and nothing a
+  policy does later reaches yours.
+- **Limits and lifetime**: the context keeps at most `options.MaxContextRows` rows (default 100;
+  open rows do not count). Going past it throws a `DeserializationContextLimitException` listing the
+  kept rows per type. When the enumeration ends, each policy's `Clear(context)` runs once, then
+  every row leaves the context.
+
+#### Values inside wrappers, attributes and text (XML)
+
+- **Wrappers**: a member is read only from a direct child of its row's element. For a value one
+  level down (`<Stem><SingleTreeProcessedStem><DBH>399</DBH>...`), add the wrapper as a row type
+  that does not come out, and let its policy copy the value onto `context.Parent(row)`. A wrapper
+  that tells values apart (e.g. `<BoomPositioning boomPositioningCategory="Felling">`) works the
+  same way, its policy choosing which member of the parent to set.
+- **Attributes and text** come from `Forestry.Deserialize.Xml`'s own attributes, since where a value
+  comes from is the media's:
+
+  ```csharp
+  public sealed class Price : Row
+  {
+      [XmlAttributeValue("currency")]
+      public string? Currency { get; set; }   // <Price currency="EUR">
+
+      [XmlTextValue]
+      public decimal Amount { get; set; }     // <Price ...>0.59</Price>
+  }
+  ```
+
+  A member marked `[XmlAttributeValue]` is set only from that attribute of the row's own element,
+  never from a child element of the same name. The text member (or the one named with
+  `options.TextValue<TRow>(memberName)`, which wins) takes the last text directly inside the element;
+  with no text it is set empty. Attributes no member asks for are ignored.
 
 ### Failing fast
 
@@ -162,6 +250,11 @@ options.Policies.Add<Log>(nameof(Log.LogKey), new AuditingPolicy()); // only Log
   converter handles, no constructor that can be chosen, a chosen constructor with parameters,
   two row types or two members read from the same element, and a policy that cannot apply (one on
   a member overriding more than `Set`, or registered for a type or member the options do not have).
+- Also before any byte is read (XML): two members reading the same attribute, or two text members
+  in one row type; `MaxContextRows` changed after the options are used.
+- While reading, from a policy: a completion action taken twice or on another row than the one
+  completing, a member set on a row that already came out, or more kept rows than
+  `MaxContextRows` allows.
 - While reading: a value that cannot be converted throws a `FormatException` naming the member, its
   path in the document (e.g. `Root/Log/LogKey`) and the class. A document cut off inside a row
   throws, and that row is never handed out.
@@ -171,10 +264,13 @@ options.Policies.Add<Log>(nameof(Log.LogKey), new AuditingPolicy()); // only Log
 Spec 001's four user stories are done ([tasks.md](specs/001-walking-skeleton/tasks.md)): the
 synchronous and asynchronous entry points, `Row.Is<T>()` / `Row.AsType<T>()` (a type check and a
 checked cast naming both classes when it fails), and policies attached by attribute or by options.
-The policy model is good enough for the POC and expected to move with the next slices (research R19).
+Spec 002's three are done too ([tasks.md](specs/002-reading-context/tasks.md)): the deserialization
+context, rows of several types nested in one pass with their containment relationships, and XML
+attributes and element text as members. The policy model is good enough for the POC; its polish
+before a release is tracked separately.
 
-Later slices add several row types in one pass and rows that take their ancestors (e.g. a `Log`
-built with its `Stem`).
+Later slices add relationships by keys and references, and rows that take their ancestors as
+constructor parameters (e.g. a `Log` built with its `Stem`).
 
 ## Tests
 

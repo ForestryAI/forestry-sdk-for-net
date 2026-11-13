@@ -30,8 +30,8 @@ namespace Forestry.Deserialize.Definitions
         /// <param name="row"></param>
         /// <param name="utf8"></param>
         /// <param name="context"></param>
-        /// <param name="set">The composed set step, an <c>Action&lt;Row, T&gt;</c></param>
-        internal override void ReadAndSet(Row row, ReadOnlySpan<byte> utf8, in FieldContext context, Delegate set)
+        /// <param name="set">The composed set step, an <c>Action&lt;ContextRow, T&gt;</c></param>
+        internal override void ReadAndSet(ContextRow row, ReadOnlySpan<byte> utf8, in FieldContext context, Delegate set)
         {
             T value;
 
@@ -47,27 +47,39 @@ namespace Forestry.Deserialize.Definitions
                 }
                 catch (Exception exception) when (exception is FormatException or OverflowException)
                 {
-                    Throwing.WhenUnconvertible(this, row.GetType(), context.Path.ToUtf8String(), exception);
+                    Throwing.WhenUnconvertible(this, row.Row.GetType(), context.Path.ToUtf8String(), exception);
                     return;
                 }
             }
 
-            ((Action<Row, T>)set)(row, value);
+            ((Action<ContextRow, T>)set)(row, value);
         }
 
         internal override Delegate ComposeSet(IReadOnlyList<Policies.EnumerationPolicy> chain)
         {
-            Action<Row, T> step = _setter;
+            Action<ContextRow, T> step = (row, value) =>
+            {
+                _setter(row.Row, value);
+                row.MarkSet(Index);
+            };
 
             for (int i = chain.Count - 1; i >= 0; i--)
             {
                 Policies.EnumerationPolicy policy = chain[i];
-                Action<Row, T> next = step;
-                step = (row, value) => policy.Set(row, this, value, next);
+                Action<ContextRow, T> next = step;
+                step = (row, value) => policy.Set(row, this, value, row.Context, next);
             }
 
             return step;
         }
+
+        /// <summary>
+        /// Set the member with the built-in setter, no policy (a policy setting it through
+        /// <see cref="ContextRow.Set{TValue}(string, TValue)"/>)
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="value"></param>
+        internal void SetValue(Row row, T value) => _setter(row, value);
 
         /// <summary>
         /// Compiled once: assign the member of the row's concrete type, property or field alike
