@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The smallest Harvesting document the code stories test against (tasks.md T007, findings-us5.md).
+  Shaped like the real documents (StanForD 2010, version 3.5): header, machine, the common
+  definitions the rows copy from, then two stems. Values are made up; no real machine, contract
+  or person.
+-->
+<HarvestedProduction xmlns="urn:skogforsk:stanford2010" messageType="hpr" diameterUnit="mm" lengthUnit="cm" volumeUnit="m3" version="3.5">
+  <HarvestedProductionHeader>
+    <CreationDate>2026-01-14T15:25:33+01:00</CreationDate>
+  </HarvestedProductionHeader>
+  <Machine>
+    <MachineKey>6f1d2c3b-4a5e-4f60-8a71-92b3c4d5e6f7</MachineKey>
+    <OperatorDefinition>
+      <OperatorKey>2</OperatorKey>
+      <ContactInformation>
+        <BusinessName>Example Logging AB</BusinessName>
+      </ContactInformation>
+    </OperatorDefinition>
+    <SpeciesGroupDefinition>
+      <SpeciesGroupName>GRAN</SpeciesGroupName>
+      <SpeciesGroupKey>221</SpeciesGroupKey>
+    </SpeciesGroupDefinition>
+    <ProductDefinition>
+      <ProductKey>3350</ProductKey>
+      <ClassifiedProductDefinition>
+        <ProductName>Spruce sawlog</ProductName>
+        <ProductInfo>012-EX</ProductInfo>
+        <ProductVersion>EX121</ProductVersion>
+      </ClassifiedProductDefinition>
+    </ProductDefinition>
+    <ObjectDefinition>
+      <ObjectName>Example object</ObjectName>
+      <ContractNumber>10000001</ContractNumber>
+      <ObjectKey>283</ObjectKey>
+      <StartDate>2026-01-12T12:06:41+01:00</StartDate>
+    </ObjectDefinition>
+    <Stem>
+      <StemKey>619254</StemKey>
+      <ObjectKey>283</ObjectKey>
+      <SpeciesGroupKey>221</SpeciesGroupKey>
+      <OperatorKey>2</OperatorKey>
+      <ProcessingCategory>SingleTreeProcessing</ProcessingCategory>
+      <StemCoordinates receiverPosition="Base machine position" coordinateReferenceSystem="WGS84">
+        <Latitude latitudeCategory="North">56.6349311</Latitude>
+        <Longitude longitudeCategory="East">15.1924476</Longitude>
+        <Altitude>139</Altitude>
+      </StemCoordinates>
+      <SingleTreeProcessedStem>
+        <Log>
+          <LogKey>1</LogKey>
+          <ProductKey>3350</ProductKey>
+          <LogVolume logVolumeCategory="m3sob" logMeasurementCategory="Machine">0.5925430</LogVolume>
+          <LogMeasurement logMeasurementCategory="Machine">
+            <LogDiameter logDiameterCategory="Top ob">362</LogDiameter>
+            <LogLength>491</LogLength>
+          </LogMeasurement>
+        </Log>
+        <Log>
+          <LogKey>2</LogKey>
+          <ProductKey>3350</ProductKey>
+          <LogVolume logVolumeCategory="m3sob" logMeasurementCategory="Machine">0.4012000</LogVolume>
+          <LogMeasurement logMeasurementCategory="Machine">
+            <LogDiameter logDiameterCategory="Top ob">301</LogDiameter>
+            <LogLength>430</LogLength>
+          </LogMeasurement>
+        </Log>
+      </SingleTreeProcessedStem>
+    </Stem>
+    <Stem>
+      <StemKey>619255</StemKey>
+      <ObjectKey>283</ObjectKey>
+      <SpeciesGroupKey>221</SpeciesGroupKey>
+      <OperatorKey>2</OperatorKey>
+      <ProcessingCategory>SingleTreeProcessing</ProcessingCategory>
+      <StemCoordinates receiverPosition="Base machine position" coordinateReferenceSystem="WGS84">
+        <Latitude latitudeCategory="North">56.6349453</Latitude>
+        <Longitude longitudeCategory="East">15.1924711</Longitude>
+        <Altitude>140</Altitude>
+      </StemCoordinates>
+      <SingleTreeProcessedStem>
+        <Log>
+          <LogKey>1</LogKey>
+          <ProductKey>3350</ProductKey>
+          <LogVolume logVolumeCategory="m3sob" logMeasurementCategory="Machine">0.5101000</LogVolume>
+          <LogMeasurement logMeasurementCategory="Machine">
+            <LogDiameter logDiameterCategory="Top ob">340</LogDiameter>
+            <LogLength>490</LogLength>
+          </LogMeasurement>
+        </Log>
+      </SingleTreeProcessedStem>
+    </Stem>
+  </Machine>
+</HarvestedProduction>

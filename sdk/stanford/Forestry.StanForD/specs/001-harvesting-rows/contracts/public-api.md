@@ -1,40 +1,48 @@
-# Contract: Forestry.StanForD public API (proposed)
+# Contract: Forestry.StanForD public API
 
-Names are proposals (C7); shapes follow [data-model.md](../data-model.md) and
-[research.md](../research.md).
+Shapes follow [data-model.md](../data-model.md). Built in US2 (2026-11-13) unless marked
+*proposed*.
 
 ## Rows
 
 ```csharp
-namespace Forestry.StanForD.Harvesting;
+namespace Forestry.StanForD;
 
 public sealed class Stem : Forestry.Deserialize.Row { /* members per data-model.md */ }
 public sealed class Log  : Forestry.Deserialize.Row { /* members per data-model.md */ }
+
+// Read for the stems and logs, never come out
+public sealed class Machine : Forestry.Deserialize.Row { }
+public sealed class ObjectDefinition : Forestry.Deserialize.Row { }
+public sealed class SpeciesGroupDefinition : Forestry.Deserialize.Row { }
+public sealed class OperatorDefinition : Forestry.Deserialize.Row { }
+public sealed class ProductDefinition : Forestry.Deserialize.Row { }
+
+public static class Identification
+{
+    public static string Format(Guid machineKey, int key);              // "{machine key N}-{key}"
+    public static string Format(Guid machineKey, int key, int subkey);  // "{machine key N}-{key}-{subkey}"
+}
 ```
 
-Context rows (`Machine`, `HarvestedProductionHeader`, the definitions) are `internal`.
+The common definitions are public because policies and Forestry.Deserialize's options need them;
+only Stem and Log come out of a Harvesting document.
 
 ## One call to configure the options
 
 ```csharp
-namespace Forestry.StanForD.Harvesting;
+namespace Forestry.StanForD;
 
 public static class HarvestingOptionsExtensions
 {
-    // Adds Stem, Log, the context rows and the three policies to the options.
-    public static DeserializeXmlOptions AddHarvesting(
-        this DeserializeXmlOptions options,
-        Action<HarvestingOptions>? configure = null);
+    // Adds Stem and Log, the machine and the common definitions, the StanForD enum converters
+    // and the policies to the options.
+    public static DeserializeXmlOptions AddHarvesting(this DeserializeXmlOptions options);
 }
-
-public sealed class HarvestingOptions
-{
-    // FR-012: Fail by default.
-    public UnmatchedOccurrence Unmatched { get; set; } = UnmatchedOccurrence.Fail;
-}
-
-public enum UnmatchedOccurrence { Fail, Ignore }
 ```
+
+*Proposed for US4*: an overload taking `Action<HarvestingOptions>` with
+`HarvestingOptions.Unmatched` (`UnmatchedOccurrence.Fail` by default, or `Ignore`; FR-012).
 
 ## Use
 
@@ -51,17 +59,18 @@ await foreach (Row row in Deserialization.DeserializeAsync(stream, options, canc
 
 | When | Exception |
 |---|---|
-| A Stem starts with no machine key read | `InvalidDataException`, naming the stem element |
-| A reference key not defined earlier in the document | `InvalidDataException`, naming the stem and key |
-| An occurrence matching no condition (`Fail`) | `InvalidDataException`, naming element and attributes |
-| Two occurrences for one conditional member in a row | `InvalidDataException`, naming member and element |
+| A stem, log or definition with no machine key read before it | `InvalidDataException`, naming the row and `MachineKey` |
+| A log not inside a stem with a stem key | `InvalidDataException`, naming the log |
+| A reference key with no definition earlier in the document | `InvalidDataException`, naming the row, the key and its value |
+| A common definition with no key | `InvalidDataException`, naming the definition and its key |
+| A StanForD text naming no enum member | `FormatException` (from the converter) |
+| *Proposed (US4)*: an occurrence matching no condition (`Fail`) | `InvalidDataException`, naming element and attributes |
+| *Proposed (US4)*: two occurrences for one conditional member in a row | `InvalidDataException`, naming member and element |
 
-The exception type is a proposal; Forestry.Deserialize's own failures (conversion, cut-off
-document) are unchanged.
+Forestry.Deserialize's own failures (conversion, cut-off document, context limit) are unchanged.
 
 ## Policies (internal)
 
-Identification and timestamp policies (member-level `Set` on key members), conditional mapping
-policies (on context rows such as `LogVolume` and `LogDiameter`) and a schema version constraint
-policy (on the root context row): enumeration policies on Forestry.Deserialize, internal to the
-package; `AddHarvesting` adds the context rows and attaches the policies.
+Built: `MachinePolicy`, `CommonDefinitionPolicy<TDefinition>`, `StemIdentificationPolicy` and
+`LogIdentificationPolicy`, all acting when a row completes (`Complete`), in `src/Policies/`.
+*Proposed*: partitioning (US3) and conditional mapping (US4) policies on the same pattern.

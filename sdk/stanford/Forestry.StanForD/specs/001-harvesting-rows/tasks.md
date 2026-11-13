@@ -112,36 +112,47 @@ group names its actor and lists the filters, groupings and summaries it needs.
 
 ---
 
-## Phase 5: User Story 2 - Identification (Priority: P1) 🎯 MVP
+## Phase 5: User Story 2 - Identification (Priority: P1) 🎯 MVP ✅ Done
 
 **Goal**: Every Stem and Log row is globally identified (#93). **Independent Test**: two fragments
 from two machines with equal stem and log keys give rows whose identifications never repeat.
 **Needs**: D1 (met, #104); its first task writes the fragment (T007).
 
+**Design (2026-11-13, developer)**: only Stem and Log rows come out; whatever is standard in the
+common definitions becomes Stem and Log dimensions. Identification is set when a row completes
+(spec 002's `Complete`): the `Machine` is found as an ancestor (it stays open around every stem),
+a log's stem as an ancestor, and the common definitions are kept in the deserialization context
+until the document ends (`Keep(Lifetime.UntilEnd)`). This replaces the earlier design of `Set`
+policies on key members and a policy holding its own memory.
+
 ### Test shells for User Story 2 ⚠️
 
-- [ ] T007 [US2] Write the minimal Harvesting fragment from `findings-us5.md`, distilled to what ties identification, stems and logs to a contract (developer, 2026-11-13): `Machine` with `MachineKey`; `ObjectDefinition` with `ObjectKey` and `ContractNumber`; one `Stem` with `StemKey`, `ObjectKey`, `SpeciesGroupKey` and `StemCoordinates` (where, and what kind of tree); one `Log` with `LogKey` and its volume, length and diameter (what was produced); plus the definitions the rows copy from (`SpeciesGroupDefinition`, `OperatorDefinition`, `ProductDefinition`), and a second document repeating the first one's last stem (findings §2). Root `version` as in the real documents; one element per line (A4), in `test/Fragments/MinimalHarvesting.xml`. Not real rows: the smallest valid input for the code stories' tests (moved from US5, 2026-11-13: the first fixture the code stories need)
-- [ ] T017 [P] [US2] Test shell, quickstart 1 / US2-1 / FR-001: a Stem row carries `MachineKey`, `StemKey` and `Id` = `{machine key}-{stem key}` in `test/IdentificationTests.cs`
-- [ ] T018 [P] [US2] Test shell, quickstart 1 / US2-2 / FR-002: a Log row carries `MachineKey`, `StemKey`, `LogKey` and `Id` = `{machine key}-{stem key}-{log key}` in `test/IdentificationTests.cs`
-- [ ] T019 [P] [US2] Test shell, quickstart 2 / US2-4 / SC-001: two fragments, two machines, equal stem and log keys: no `Id` occurs twice in `test/IdentificationTests.cs`
-- [ ] T020 [P] [US2] Test shell, edge case "log keys restart per stem": two stems each with log key 1 give two different log `Id`s in `test/IdentificationTests.cs`
-- [ ] T021 [P] [US2] Test shell, quickstart 3 / FR-005: a `Stem` before any `MachineKey` fails, naming the stem in `test/IdentificationTests.cs`
-- [ ] T022 [P] [US2] Test shell, quickstart 4 / US2-3 / FR-003: a stem referencing an `ObjectKey` not defined earlier fails, naming the stem and the key; a defined one passes in `test/IdentificationTests.cs`
-- [ ] T023 [P] [US2] Test shell, FR-004: the same fragment deserialized twice gives the same `Id`s in `test/IdentificationTests.cs`
-- [ ] T024 [P] [US2] Test shell, context rows (R2): `Machine` and definition rows are never enumerated in `test/IdentificationTests.cs`
+- [X] T007 [US2] Write the minimal Harvesting fragments from `findings-us5.md`, one element per line (A4): `test/Fragments/MinimalHarvesting.xml` (header, machine, operator, species group, product and object definitions, stem 619254 with logs 1-2, stem 619255 with log 1) and `test/Fragments/MinimalHarvestingNext.xml` (the same machine's next document: the definitions again, stem 619255 repeated, stem 619256); made-up values, root `version="3.5"`; read through `test/Fragments/Fragments.cs`, copied to the output by the test project (2026-11-13)
+- [X] T017 [P] [US2] Test shell, quickstart 1 / US2-1 / FR-001: a Stem row carries `MachineKey`, `StemKey` and `Id` = `{machine key "N"}-{stem key}` in `test/IdentificationTests.cs` (2026-11-13)
+- [X] T018 [P] [US2] Test shell, quickstart 1 / US2-2 / FR-002: a Log row carries `MachineKey`, `StemKey`, `LogKey` and `Id` = `{machine key "N"}-{stem key}-{log key}` in `test/IdentificationTests.cs` (2026-11-13)
+- [X] T019 [P] [US2] Test shell, quickstart 2 / US2-4 / SC-001: the fragment and a copy with another machine key, equal stem and log keys: no `Id` occurs twice in `test/IdentificationTests.cs` (2026-11-13)
+- [X] T020 [P] [US2] Test shell, edge case "log keys restart per stem": log key 1 under two stems gives two different log `Id`s in `test/IdentificationTests.cs` (2026-11-13)
+- [X] T021 [P] [US2] Test shell, quickstart 3 / FR-005: a `Stem` in a `Machine` with no `MachineKey` throws `InvalidDataException` naming the stem key and `MachineKey` in `test/IdentificationTests.cs` (2026-11-13)
+- [X] T022 [P] [US2] Test shell, quickstart 4 / US2-3 / FR-003: a theory over `ObjectKey`, `SpeciesGroupKey`, `OperatorKey` (stem) and `ProductKey` (log) referring to a definition not in the document throws `InvalidDataException` naming the stem, the key and its value; defined references pass in T017-T018 in `test/IdentificationTests.cs` (2026-11-13)
+- [X] T023 [P] [US2] Test shell, FR-004: the same fragment deserialized twice gives the same `Id`s in `test/IdentificationTests.cs` (2026-11-13)
+- [X] T069 [P] [US2] Test shell, FR-004 / findings §2: the stem repeated in the next document (619255 and its log) has the same `Id`s in both documents, so duplicates can be removed downstream, in `test/IdentificationTests.cs` (2026-11-13)
+- [X] T024 [P] [US2] Test shell, R2: only Stem and Log rows come out (2 and 3); `Machine` and the definitions never do, in `test/IdentificationTests.cs` (2026-11-13)
+
+The shells assume `AddHarvesting()` (contracts/public-api.md); the test project does not compile
+until T030 declares it. That is the only build error (2026-11-13).
 
 ### Review gate
 
-- [ ] T025 [US2] **Test review gate**: the developer reviews T017-T024 on the board before any code (C6)
+- [X] T025 [US2] **Test review gate**: the developer reviews T007, T017-T024 and T069 on the board before any code (C6) (2026-11-13: passed, "Shells look good")
 
 ### Implementation for User Story 2 (after the gate)
 
-- [ ] T026 [P] [US2] Declare the `Stem` and `Log` row types with the identification and key members of data-model.md (`Id` `string`, `MachineKey` `Guid`, `StemKey` `long`, `LogKey` `int`, `ObjectKey`, `SubObjectKey`, `SpeciesGroupKey`, `OperatorKey`, `ProductKey` `long`) in `src/Harvesting/Stem.cs` and `src/Harvesting/Log.cs`
-- [ ] T027 [P] [US2] Declare the internal context rows `Machine`, `ObjectDefinition`, `SpeciesGroupDefinition`, `ProductDefinition`, `OperatorDefinition` (`OperatorKey` only, never contact details) in `src/Harvesting/Context/`
-- [ ] T028 [US2] Implement the context-row policy: holds `Machine` and definitions by key in transient memory, drops them at `Enumerate` (returns `null`), forgets everything at `Clear` in `src/Harvesting/Policies/ContextPolicy.cs` (R2, C5)
-- [ ] T029 [US2] Implement the identification policies: member-level `Set` on `Stem.StemKey` (sets `MachineKey`, `Id`; fails with no machine key) and `Log.LogKey` (sets `MachineKey`, `StemKey`, `Id` from the open stem captured at `Construct`); reference keys fail when not defined earlier, in `src/Harvesting/Policies/IdentificationPolicy.cs` (R3)
-- [ ] T030 [US2] Implement `AddHarvesting()` adding `Stem`, `Log`, the context rows and the policies, per contracts/public-api.md, in `src/Harvesting/HarvestingOptions.cs`
-- [ ] T031 [US2] Run `dotnet test`: T017-T024 pass
+- [X] T026 [P] [US2] Add the shared identification format, `{machine key "N"}-{key}[-{key}]`, in `src/Identification.cs` (2026-11-13: `Identification.Format` in `src/Identification.cs`)
+- [X] T027 [P] [US2] Implement the common-definition policy for `Machine` (never comes out; found as an ancestor) and the four definitions (never come out, `Keep(Lifetime.UntilEnd)`, `MachineKey` and `Id` set from the `Machine` ancestor at `Complete`) in `src/Policies/` (2026-11-13: `MachinePolicy` in `src/Policies/IdentificationPolicies.cs`; `CommonDefinitionPolicy<TDefinition>` in `src/Policies/CommonDefinitionPolicy.cs`, failing when a definition has no key)
+- [X] T028 [US2] Implement the Stem and Log identification policies at `Complete`: `MachineKey` from the `Machine` ancestor, a log's `StemKey` from its `Stem` ancestor, `Id` via T026; no machine key throws `InvalidDataException` (FR-005); a reference key with no kept definition of that key throws `InvalidDataException` naming the stem, key and value (FR-003), in `src/Policies/` (2026-11-13: `StemIdentificationPolicy` and `LogIdentificationPolicy` in `src/Policies/IdentificationPolicies.cs`, lookups in `src/Policies/Harvesting.cs`; a reference key the document does not set is not checked)
+- [X] T029 [US2] Add converters for the StanForD enums the rows use (`ProcessingCategory`, `CoordinateReferenceSystem`, `CuttingReason`, StanForD texts with spaces), since Forestry.Deserialize has none for enums and the options would fail when they lock, in `src/Converters/` (2026-11-13: `StanForDEnumConverter<TEnum>` in `src/Converters/`, matching the text without spaces, ignoring case; unknown text throws `FormatException`)
+- [X] T030 [US2] Implement `AddHarvesting()` adding `Stem` and `Log`, `Machine` and the definitions, the converters and the policies, per contracts/public-api.md, in `src/HarvestingOptions.cs` (2026-11-13: `HarvestingOptionsExtensions.AddHarvesting()` in `src/HarvestingOptions.cs`; no `configure` argument until US4 needs `HarvestingOptions`)
+- [X] T031 [US2] Run `dotnet test`: T017-T024 and T069 pass (2026-11-13: 12 passed on net10.0, the four T022 cases included)
 
 **Checkpoint**: Stem and Log rows are identified globally (MVP).
 
