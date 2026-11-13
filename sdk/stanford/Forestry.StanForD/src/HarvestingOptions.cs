@@ -23,6 +23,7 @@ namespace Forestry.StanForD {
             options.Rows
                 .Add<Stem>()
                 .Add<Log>()
+                .Add<HarvestedProductionHeader>()
                 .Add<Machine>()
                 .Add<ObjectDefinition>()
                 .Add<SpeciesGroupDefinition>()
@@ -34,13 +35,16 @@ namespace Forestry.StanForD {
             options.Converters.Add(new StanForDEnumConverter<CuttingReason>());
 
             options.Policies
+                .Add<HarvestedProductionHeader>(new HeaderPolicy())
                 .Add<Machine>(new MachinePolicy())
                 .Add<ObjectDefinition>(new CommonDefinitionPolicy<ObjectDefinition>(nameof(ObjectDefinition.ObjectKey), definition => definition.ObjectKey))
                 .Add<SpeciesGroupDefinition>(new CommonDefinitionPolicy<SpeciesGroupDefinition>(nameof(SpeciesGroupDefinition.SpeciesGroupKey), definition => definition.SpeciesGroupKey))
                 .Add<OperatorDefinition>(new CommonDefinitionPolicy<OperatorDefinition>(nameof(OperatorDefinition.OperatorKey), definition => definition.OperatorKey))
                 .Add<ProductDefinition>(new CommonDefinitionPolicy<ProductDefinition>(nameof(ProductDefinition.ProductKey), definition => definition.ProductKey))
                 .Add<Stem>(new StemIdentificationPolicy())
-                .Add<Log>(new LogIdentificationPolicy());
+                .Add<Log>(new LogIdentificationPolicy())
+                .Add<Stem>(new StemPartitionPolicy())
+                .Add<Log>(new LogPartitionPolicy());
 
             return options;
         }

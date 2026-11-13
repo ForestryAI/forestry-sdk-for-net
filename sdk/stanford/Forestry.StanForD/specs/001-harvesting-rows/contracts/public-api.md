@@ -12,6 +12,7 @@ public sealed class Stem : Forestry.Deserialize.Row { /* members per data-model.
 public sealed class Log  : Forestry.Deserialize.Row { /* members per data-model.md */ }
 
 // Read for the stems and logs, never come out
+public sealed class HarvestedProductionHeader : Forestry.Deserialize.Row { }
 public sealed class Machine : Forestry.Deserialize.Row { }
 public sealed class ObjectDefinition : Forestry.Deserialize.Row { }
 public sealed class SpeciesGroupDefinition : Forestry.Deserialize.Row { }
@@ -63,6 +64,8 @@ await foreach (Row row in Deserialization.DeserializeAsync(stream, options, canc
 | A log not inside a stem with a stem key | `InvalidDataException`, naming the log |
 | A reference key with no definition earlier in the document | `InvalidDataException`, naming the row, the key and its value |
 | A common definition with no key | `InvalidDataException`, naming the definition and its key |
+| A stem or log with no header `CreationDate` read before it | `InvalidDataException`, naming the row and `CreationDate` |
+| A stem with no `ObjectKey` (no contract) | `InvalidDataException`, naming the row and `ObjectKey` |
 | A StanForD text naming no enum member | `FormatException` (from the converter) |
 | *Proposed (US4)*: an occurrence matching no condition (`Fail`) | `InvalidDataException`, naming element and attributes |
 | *Proposed (US4)*: two occurrences for one conditional member in a row | `InvalidDataException`, naming member and element |
@@ -72,5 +75,6 @@ Forestry.Deserialize's own failures (conversion, cut-off document, context limit
 ## Policies (internal)
 
 Built: `MachinePolicy`, `CommonDefinitionPolicy<TDefinition>`, `StemIdentificationPolicy` and
-`LogIdentificationPolicy`, all acting when a row completes (`Complete`), in `src/Policies/`.
-*Proposed*: partitioning (US3) and conditional mapping (US4) policies on the same pattern.
+`LogIdentificationPolicy`; `HeaderPolicy`, `StemPartitionPolicy` and `LogPartitionPolicy` (US3), all
+acting when a row completes (`Complete`), in `src/Policies/`. *Proposed*: conditional mapping
+(US4) policies on the same pattern.

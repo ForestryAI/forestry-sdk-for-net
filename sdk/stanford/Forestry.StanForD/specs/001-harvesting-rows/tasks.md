@@ -188,28 +188,43 @@ default. **Needs**: D1, D2 (met, #104).
 
 ---
 
-## Phase 7: User Story 3 - Timestamps (Priority: P2)
+## Phase 7: User Story 3 - Partitioning (Priority: P2) ✅ Done
 
-**Goal**: Every Stem and Log row carries timestamps with named sources (#94). **Independent Test**:
-a fragment with dated definitions gives rows with each date. **Needs**: US2, US5 (T009-T010).
+**Goal**: Every Stem and Log row carries its partition values, with named sources (#94):
+`HarvestingCreationTime` (the header's `CreationDate`, in UTC), then `ContractNumber` (US5
+decision, 2026-11-13). **Independent Test**: the fragment gives every row the creation time in UTC
+and the contract number of its object. **Needs**: US2 (done), US5 (done).
+
+**Design (2026-11-13)**: `HarvestedProductionHeader` is a row type that never comes out and is kept
+until the document ends, like the common definitions. When a stem or log completes, a partition
+policy, added after the identification policy, sets the creation time in UTC, and `ContractNumber`
+and `ObjectName` from the `ObjectDefinition` the stem refers to (a log through its stem). A stem
+with no `ObjectKey` fails (developer, 2026-11-13).
 
 ### Test shells for User Story 3 ⚠️
 
-- [ ] T045 [P] [US3] Test shell, quickstart 5 / US3-3 / FR-008: a stem referencing an object with `StartDate` carries `ObjectStartDate`, and so do its logs, in `test/TimestampTests.cs`
-- [ ] T046 [P] [US3] Test shell, US3-1/US3-2 / FR-007: creation and modification dates of referenced definitions (per the US5 table) are carried and kept apart in `test/TimestampTests.cs`
-- [ ] T047 [P] [US3] Test shell, FR-006 / SC-002: every Stem and Log row has `DocumentCreationDate` from the header in `test/TimestampTests.cs`
+- [X] T045 [P] [US3] Test shell, US3-1 / FR-007: every stem and log carries `HarvestingCreationTime` = the header's creation date in UTC (offset zero) in `test/PartitioningTests.cs` (2026-11-13)
+- [X] T046 [P] [US3] Test shell, US3-2 / FR-009: every stem and log carries `ContractNumber` and `ObjectName` from its stem's object in `test/PartitioningTests.cs` (2026-11-13)
+- [X] T070 [P] [US3] Test shell, findings §2: the stem repeated in the next document keeps its `Id` and carries the later creation time in `test/PartitioningTests.cs` (2026-11-13)
+- [X] T071 [P] [US3] Test shell: a creation date with seven fraction digits, as in the real documents, keeps them in `test/PartitioningTests.cs` (2026-11-13)
+- [X] T047 [P] [US3] Test shell, FR-006: a header with no `CreationDate` throws `InvalidDataException` naming the stem and `CreationDate` in `test/PartitioningTests.cs` (2026-11-13)
+- [X] T072 [P] [US3] Test shell, FR-009: a stem with no `ObjectKey` throws `InvalidDataException` naming the stem and `ObjectKey` in `test/PartitioningTests.cs` (2026-11-13)
+
+The shells compile against the rows' existing members and fail until the implementation (6 failing,
+the 12 US2 tests still passing, 2026-11-13). The fragment edit helpers moved to
+`test/Fragments/Fragments.cs`, shared with the US2 tests.
 
 ### Review gate
 
-- [ ] T048 [US3] **Test review gate**: the developer reviews T045-T047 on the board before any code (C6)
+- [X] T048 [US3] **Test review gate**: the developer reviews T045-T047 and T070-T072 on the board before any code (C6) (2026-11-13: passed, "Shells look good")
 
 ### Implementation for User Story 3 (after the gate)
 
-- [ ] T049 [P] [US3] Declare the internal context row `HarvestedProductionHeader` (`CreationDate`) and add the date members of the definitions per the US5 table in `src/Harvesting/Context/`
-- [ ] T050 [US3] Add the timestamp members (`DateTimeOffset` / `DateTimeOffset?`) to `Stem` and `Log` per data-model.md in `src/Harvesting/Stem.cs` and `src/Harvesting/Log.cs`
-- [ ] T051 [US3] Implement the timestamp policy: when a reference key is set, copy the referenced definition's dates; set `DocumentCreationDate` from the header, in `src/Harvesting/Policies/TimestampPolicy.cs` (R4)
-- [ ] T052 [US3] Record each timestamp's source and the partition candidates (FR-006, FR-009) in `specs/001-harvesting-rows/data-model.md`
-- [ ] T053 [US3] Run `dotnet test`: T045-T047 pass, US2 and US4 still green
+- [X] T049 [P] [US3] Declare the row type `HarvestedProductionHeader` (`CreationDate`, `DateTimeOffset`) in `src/HarvestedProductionHeader.cs`, and a policy keeping it out of the enumeration and in the context until the end, in `src/Policies/` (2026-11-13: `src/HarvestedProductionHeader.cs`; `HeaderPolicy` in `src/Policies/PartitionPolicies.cs`)
+- [X] T051 [US3] Implement the partition policy for Stem and Log at `Complete`: `HarvestingCreationTime` from the kept header, converted to UTC; `ContractNumber` and `ObjectName` from the kept `ObjectDefinition` with the stem's `ObjectKey`; no `CreationDate` or no `ObjectKey` throws `InvalidDataException`, in `src/Policies/` (2026-11-13: `StemPartitionPolicy` and `LogPartitionPolicy` in `src/Policies/PartitionPolicies.cs`, lookups in `src/Policies/Harvesting.cs`)
+- [X] T050 [US3] Add the header row and the partition policy to `AddHarvesting()` in `src/HarvestingOptions.cs`, the partition policy after the identification policies (2026-11-13)
+- [X] T052 [US3] Record the partition values' sources in `specs/001-harvesting-rows/data-model.md` (FR-006, FR-009) (2026-11-13: data-model.md, Partitioning sources)
+- [X] T053 [US3] Run `dotnet test`: T045-T047 and T070-T072 pass, US2 still green (2026-11-13: 18 passed on net10.0, seven fraction digits included)
 
 ---
 

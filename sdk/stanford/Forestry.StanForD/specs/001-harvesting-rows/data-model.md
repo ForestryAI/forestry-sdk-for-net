@@ -31,6 +31,16 @@ definition sit next to the key that refers to it. Set by: *name* = read directly
 | metrics | `MachineVolumeOverBark`, `MachineVolumeUnderBark`, `MachineVolumePrice` (`decimal`); `MachineLength` and eight `MachineDiameter…` members (`int`, 0 when not measured) | conditional mapping |
 | dimensions | `DiameterUnit`, `LengthUnit`, `VolumeUnit` (root attributes, not converted); `ObjectName`; `ProductKey`, `ProductName`, `ProductNamespace`, `ProductVersion`; `CuttingReason`; `TopSawing`; `FindButtEndFunction` | `ProductKey`, `TopSawing`, `FindButtEndFunction` by name; others policy |
 
+### Partitioning sources (US3, FR-006, FR-007, FR-009)
+
+| Member (Stem and Log) | Source | Set when |
+|---|---|---|
+| `HarvestingCreationTime` | `HarvestedProductionHeader/CreationDate`, converted to UTC (the document keeps the machine's offset) | the row completes; no creation date fails |
+| `ContractNumber` | `ObjectDefinition/ContractNumber` of the object the stem's `ObjectKey` refers to (a log through its stem) | the row completes; a stem with no `ObjectKey` fails |
+| `ObjectName` (a dimension) | `ObjectDefinition/ObjectName`, same object | the row completes |
+
+`HarvestedProductionHeader` is a row type that never comes out, kept until the document ends.
+
 ### Common definitions (`src/*Definition.cs`, `src/Machine.cs`)
 
 | Row | Identification | Members the rows copy |

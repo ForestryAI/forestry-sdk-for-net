@@ -34,18 +34,6 @@ namespace Forestry.StanForD.Tests
             Deserialization.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting()).ToList();
 
         /// <summary>
-        /// The fragment with the first stem's <paramref name="element"/> value replaced
-        /// </summary>
-        private static string WithFirstStemValue(string xml, string element, string value)
-        {
-            int stem = xml.IndexOf("<Stem>", StringComparison.Ordinal);
-            int start = xml.IndexOf($"<{element}>", stem, StringComparison.Ordinal) + element.Length + 2;
-            int end = xml.IndexOf($"</{element}>", start, StringComparison.Ordinal);
-
-            return string.Concat(xml.AsSpan(0, start), value, xml.AsSpan(end));
-        }
-
-        /// <summary>
         /// T017, quickstart 1, US2-1, FR-001: a stem carries the machine key, its stem key and both as its Id
         /// </summary>
         [Fact]
@@ -185,7 +173,7 @@ namespace Forestry.StanForD.Tests
         public void ReferenceToUndefinedDefinition_ItShould_Throw(string key)
         {
             // Arrange
-            string xml = WithFirstStemValue(Fragment.Read(Fragment.MinimalHarvesting), key, "999");
+            string xml = Fragment.WithFirstStemValue(Fragment.Read(Fragment.MinimalHarvesting), key, "999");
 
             // Act
             InvalidDataException exception = Assert.Throws<InvalidDataException>(() => Read(xml));

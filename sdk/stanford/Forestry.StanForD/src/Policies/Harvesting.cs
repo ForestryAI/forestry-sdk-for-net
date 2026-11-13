@@ -30,7 +30,14 @@ namespace Forestry.StanForD.Policies {
         /// The <see cref="Stem"/> open around a log
         /// </summary>
         /// <exception cref="InvalidDataException">The log is not inside a stem with a stem key</exception>
-        public static Stem Stem(ContextRow log, DeserializationContext context)
+        public static Stem Stem(ContextRow log, DeserializationContext context) =>
+            StemRow(log, context).Row.AsType<Stem>();
+
+        /// <summary>
+        /// The <see cref="Stem"/> open around a log, as a context row (to ask what the document set)
+        /// </summary>
+        /// <exception cref="InvalidDataException">The log is not inside a stem with a stem key</exception>
+        public static ContextRow StemRow(ContextRow log, DeserializationContext context)
         {
             ContextRow? stem = context.Ancestors(log).FirstOrDefault(ancestor => ancestor.Row is Stem);
 
@@ -39,7 +46,51 @@ namespace Forestry.StanForD.Policies {
                 throw new InvalidDataException($"Log {log.Row.AsType<Log>().LogKey} is not inside a Stem with a {nameof(StanForD.Stem.StemKey)}.");
             }
 
-            return stem.Row.AsType<Stem>();
+            return stem;
+        }
+
+        /// <summary>
+        /// When the machine created the document, in UTC, from the kept header (FR-007)
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="what">The row, as named in an error, e.g. "Stem 619254"</param>
+        /// <exception cref="InvalidDataException">No header creation date is read before the row (FR-006)</exception>
+        public static DateTimeOffset HarvestingCreationTime(DeserializationContext context, string what)
+        {
+            ContextRow? header = context.Rows<HarvestedProductionHeader>().FirstOrDefault();
+
+            if (header is null || !header.IsSet(nameof(HarvestedProductionHeader.CreationDate)))
+            {
+                throw new InvalidDataException($"{what} has no partition time: no {nameof(HarvestedProductionHeader)}/{nameof(HarvestedProductionHeader.CreationDate)} is read before it.");
+            }
+
+            return header.Row.AsType<HarvestedProductionHeader>().CreationDate.ToUniversalTime();
+        }
+
+        /// <summary>
+        /// The kept <see cref="ObjectDefinition"/> a stem refers to (FR-009)
+        /// </summary>
+        /// <param name="stem">The stem, as a context row</param>
+        /// <param name="context"></param>
+        /// <param name="what">The row, as named in an error, e.g. "Log 1 of Stem 619254"</param>
+        /// <exception cref="InvalidDataException">The stem has no object key, or no such object is kept</exception>
+        public static ObjectDefinition Object(ContextRow stem, DeserializationContext context, string what)
+        {
+            if (!stem.IsSet(nameof(StanForD.Stem.ObjectKey)))
+            {
+                throw new InvalidDataException($"{what} has no contract: its stem has no {nameof(StanForD.Stem.ObjectKey)}.");
+            }
+
+            int objectKey = stem.Row.AsType<Stem>().ObjectKey;
+            ContextRow? definition = context.Rows<ObjectDefinition>()
+                .FirstOrDefault(row => !row.IsOpen && row.Row.AsType<ObjectDefinition>().ObjectKey == objectKey);
+
+            if (definition is null)
+            {
+                throw new InvalidDataException($"{what} refers to {nameof(StanForD.Stem.ObjectKey)} {objectKey}, but no {nameof(ObjectDefinition)} before it has that key.");
+            }
+
+            return definition.Row.AsType<ObjectDefinition>();
         }
 
         /// <summary>
