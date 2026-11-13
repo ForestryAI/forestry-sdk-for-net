@@ -1,0 +1,888 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Forwarded Production message XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				ForwardedProduction_V4p1.xsd
+   Generated On: 				4 September 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010" targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-08-22">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1.xsd"/>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="ForwardedProduction" type="ForwardedProductionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Description>The root element of the Forwarded Production message</doc:Description>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:unique name="UniqueMachineKey">
+			<xsd:selector xpath="sfd:Machine"/>
+			<xsd:field xpath="sfd:MachineKey"/>
+		</xsd:unique>
+		<xsd:unique name="UniqueMachineUserID">
+			<xsd:selector xpath="sfd:Machine"/>
+			<xsd:field xpath="sfd:MachineUserID"/>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="ClassifiedProductDefinitionMachineForwardedProductionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.0</doc:VersionCreated>
+				<doc:Graph>ClassifiedProductDefinitionMachineForwardedProductionTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="CommonProductDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="ProductUserID" type="UserIDType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:VarNumber>V121_t2</doc:VarNumber>
+								<doc:Unit>free text</doc:Unit>
+								<doc:Description>Identity per product defined by user of data, normally logging organisation. Do not use a single space or null value. Do not begin or end with a space. Do not include any of the following characters: Double space, Linefeed, carriage return,%, ?, lt, gt, :, " (double quote), /, \, |, *,+.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="SpeciesGroupKey" type="KeyType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Unit>sequential no</doc:Unit>
+								<doc:Description>Machine specific identity per species group set by machine. Must be updated if any modifications to species group definition is done. Running number reset only when MachineKey is changed.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ForwardedProductionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>ForwardedProductionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ForwardedProductionHeader" type="MessageHeaderType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>General information for message</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Machine" type="MachineForwardedProductionType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>All the product specific data is included under Machine elements</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:unique name="UniqueOperatorUserID">
+					<xsd:selector xpath="sfd:OperatorDefinition"/>
+					<xsd:field xpath="sfd:OperatorUserID"/>
+				</xsd:unique>
+				<xsd:key name="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:OperatorDefinition"/>
+					<xsd:field xpath="sfd:OperatorKey"/>
+				</xsd:key>
+				<xsd:keyref name="OperatorKeyRefStem" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:Load"/>
+					<xsd:field xpath="sfd:OperatorKey"/>
+				</xsd:keyref>
+				<xsd:key name="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:SpeciesGroupDefinition"/>
+					<xsd:field xpath="sfd:SpeciesGroupKey"/>
+				</xsd:key>
+				<xsd:keyref name="SpeciesGroupKeyRefProductDefinition" refer="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:ProductDefinition/sfd:ClassifiedProductDefinition"/>
+					<xsd:field xpath="sfd:SpeciesGroupKey"/>
+				</xsd:keyref>
+				<xsd:key name="ProductKeyProductDefinition">
+					<xsd:selector xpath="sfd:ProductDefinition"/>
+					<xsd:field xpath="sfd:ProductKey"/>
+				</xsd:key>
+				<xsd:keyref name="ProductKeyRefSingleTreeProcessedStemLog" refer="ProductKeyProductDefinition">
+					<xsd:selector xpath="sfd:DeliveryDefinition/ProductKey"/>
+					<xsd:field xpath="."/>
+				</xsd:keyref>
+				<xsd:unique name="UniqueObjectUserID">
+					<xsd:selector xpath="sfd:ObjectDefinition"/>
+					<xsd:field xpath="sfd:ObjectUserID"/>
+				</xsd:unique>
+				<xsd:key name="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:ObjectDefinition"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:key>
+				<xsd:keyref name="ObjectKeyRefStem" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:LocationDefinition"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:keyref>
+				<xsd:key name="LocationKeyLocationDefinition">
+					<xsd:selector xpath="sfd:LocationDefinition"/>
+					<xsd:field xpath="sfd:LocationKey"/>
+				</xsd:key>
+				<xsd:keyref name="LocationKeyRefForwardingStatus" refer="LocationKeyLocationDefinition">
+					<xsd:selector xpath="sfd:ForwardingStatus"/>
+					<xsd:field xpath="sfd:LocationKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="LocationKeyRefPartialLoad" refer="LocationKeyLocationDefinition">
+					<xsd:selector xpath="sfd:Load/sfd:PartialLoad"/>
+					<xsd:field xpath="sfd:LocationKey"/>
+				</xsd:keyref>
+				<xsd:key name="DeliveryKeyDeliveryDefinition">
+					<xsd:selector xpath="sfd:DeliveryDefinition"/>
+					<xsd:field xpath="sfd:DeliveryKey"/>
+				</xsd:key>
+				<xsd:keyref name="DeliveryKeyRefPartialLoad" refer="DeliveryKeyDeliveryDefinition">
+					<xsd:selector xpath="sfd:Load/sfd:PartialLoad"/>
+					<xsd:field xpath="sfd:DeliveryKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="DeliveryKeyRefForwardingStatus" refer="DeliveryKeyDeliveryDefinition">
+					<xsd:selector xpath="sfd:ForwardingStatus"/>
+					<xsd:field xpath="sfd:DeliveryKey"/>
+				</xsd:keyref>
+				<xsd:key name="LoadKeyLoad">
+					<xsd:selector xpath="sfd:Load"/>
+					<xsd:field xpath="sfd:LoadKey"/>
+				</xsd:key>
+				<xsd:key name="ScaleKeyScaleDefinition">
+					<xsd:selector xpath="sfd:ScaleDefinition"/>
+					<xsd:field xpath="sfd:ScaleKey"/>
+				</xsd:key>
+				<xsd:keyref name="ScaleKeyRefPartialLoad" refer="ScaleKeyScaleDefinition">
+					<xsd:selector xpath="sfd:Load/PartialLoad"/>
+					<xsd:field xpath="sfd:ScaleKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="ObjectKeyRefUserDefinedData" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:UserDefinedData/sfd:DataTableGroup"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="LocationKeyRefUserDefinedData" refer="LocationKeyLocationDefinition">
+					<xsd:selector xpath="sfd:UserDefinedData/sfd:DataTableGroup"/>
+					<xsd:field xpath="sfd:LocationKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="OperatorKeyRefRow" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:UserDefinedData/sfd:DataTableGroup/sfd:DataTable/sfd:Row"/>
+					<xsd:field xpath="sfd:OperatorKey"/>
+				</xsd:keyref>
+				<xsd:key name="TrackingKeyTrackCoordinates">
+					<xsd:selector xpath="sfd:TrackCoordinates"/>
+					<xsd:field xpath="sfd:TrackingKey"/>
+				</xsd:key>
+				<xsd:keyref name="ObjectKeyRefTrackCoordinates" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:TrackCoordinates"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="LoadKeyRefTrackCoordinates" refer="LoadKeyLoad">
+					<xsd:selector xpath="sfd:TrackCoordinates"/>
+					<xsd:field xpath="sfd:LoadKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="LoadKeyRefLogTransport" refer="LoadKeyLoad">
+					<xsd:selector xpath="LogTransport"/>
+					<xsd:field xpath="LoadKey"/>
+				</xsd:keyref>
+				<xsd:unique name="UniqueLogTransportKey">
+					<xsd:selector xpath="LogTransport"/>
+					<xsd:field xpath="LogTransportKey"/>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="fpr">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Enumeration list of file extensions of StanForD 2010 messages: Allowed value in forwarded production message is: "fpr"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup"/>
+	</xsd:complexType>
+	<xsd:complexType name="ForwardingStatusType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>ForwardingStatusTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="LocationKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per location.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DeliveryKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>v441_t12</doc:VarNumber>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per delivery definition. Set when new delivery definition is modified or created. Running number recommended, reset only when MachineKey is changed.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ForwardStartDate" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>v441_t6</doc:VarNumber>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Start date (when combination of delivery and location definition is used the first time). Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ForwardEndDate" type="StanForD2010DateTimeType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>v441_t7</doc:VarNumber>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Date when delivery and location is completed, no additional unloading at the combination of delivery and location definitions are done after this date. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="LoadChangeType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>LoadChangeTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="LoadChangeCoordinates" type="CoordinatesType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>Load change coordinates, describes the location of where the load has changed to loading or unloading.
+</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="GreenMass" type="MassType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>kg</doc:Unit>
+						<doc:Description>Green/raw mass (kg) 
+</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MaxBoomAngle" type="xsd:nonNegativeInteger" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>Degrees</doc:Unit>
+						<doc:Description>Maximum angle of boom (0-360 degrees) when felleing or loading/unloading. 
+BoomAngle is equal to the difference between MachineBearing and the angle of the boom. BoomAngle is registered in degrees where 0º is equal to MachineBearing, 0° is thus straight backwards, 90° is straight to the right and 270° is straight to the left. In case of a forwarder a boom angle of 180 degrees means that the boom is in the centre of the load space. 
+</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MaxBoomExtension" type="xsd:positiveInteger" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>cm</doc:Unit>
+						<doc:Description>Extension of boom when angle is registered. This is the distance from the forwarder to the grapple. This value can be a “default” value indicating the “normal” extension.
+</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MachineBearing" type="xsd:nonNegativeInteger" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>Degrees</doc:Unit>
+						<doc:Description>The bearing (0-360 degrees) of the machine when boom angle is registered. MeachineBearing is perpendicular to the front wheel axis (90º).
+MachineBearing is registered in degrees where 0º is north, 90° is east, 180° is south and 270° is west.
+</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="loadChangeCategory" type="LoadChangeCategoryType">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>4.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Allowed values defining what coordinates represents: "Loading", "Unloading"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="LoadGreenMassType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>LoadGreenMassTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:decimal">
+				<xsd:attribute name="loadGreenMassMethod" type="LoadGreenMassMethodType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Unit>list</doc:Unit>
+							<doc:Description>Allowed values: "Loading", "Unloading"</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="LoadVolumeType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>LoadVolumeTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:decimal">
+				<xsd:attribute name="loadVolumeCategory" type="LoadVolumeCategoryType" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Unit>list</doc:Unit>
+							<doc:Description>Enumeration values defining the actual content of the element.  Allowed values are: "Volume, m3sob", Volume, m3sub", "Loose volume, m3", "Solid volume including bark, branches and needles, m3", "Solid volume of bundles (length*cross sectional area), m3"</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="LoadType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>LoadTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="LoadKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>v446_t1</doc:VarNumber>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per load. Must be totally unique for a certain MachineKey. Reset only when MachineKey is changed</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="OperatorKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine unique operator identity, set by machine</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LoadNumber" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>v446_t1</doc:VarNumber>
+						<doc:Unit>no</doc:Unit>
+						<doc:Description>Load number. Several PartialLoads registered per Load when co-loading is carried out. (Old load code 2 ). LoadNumber should be reset when starting at new harvesting object.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DistanceFromLastUnloading" type="xsd:nonNegativeInteger" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>m</doc:Unit>
+						<doc:Description>Driven distance from last time of unloading (when load space of forwarder was emptied). Registered when unloading present load. Distance from start of harvesting object is registered for first load. Measured by odometer or gps.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="UnloadingTime" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Date and Time when load was unloaded by forwarder. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="PartialLoad" type="PartialLoadType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Structure for partial load data. Multiple occurences when coloading.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LoadChange" type="LoadChangeType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>Structure for storing positions where logs have been loaded or unloaded. </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="LogReferenceType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.1</doc:VersionCreated>
+				<doc:Graph>LogReferenceTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="HarvesterMachineKey" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.1</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Globally uniqe harvester identity (GUID). Extracted from hpr message. </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="StemKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>no</doc:Unit>
+						<doc:Description>Harvester specific identity per stem. Extracted from hpr message.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LogKey" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Stem specific id for log. Running number reset for each stem. First log (butt end) always LogKey=1. Extracted from hpr message.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="LogTransportType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.1</doc:VersionCreated>
+				<doc:Graph>LogTransportTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="LogTransportKey" type="xsd:unsignedLong">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.1</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per log transport. Must be totally unique for a certain MachineKey. Reset only when MachineKey is changed.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LogReference" type="LogReferenceType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.1</doc:VersionCreated>
+						<doc:Description>Structure for unique log references extracted from hpr-file.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="UnloadingLogCoordinates" type="CoordinatesType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.1</doc:VersionCreated>
+						<doc:Description>Coordinates describing the position of logs unloaded in a specific Location or outside any Location. 
+Child elements and attributes defined according to the basic CoordinateType
+</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LoadKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>v446_t1</doc:VarNumber>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per load. Must be totally unique for a certain MachineKey. Reset only when MachineKey is changed. In this case used as a reference to a Load.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="PartialLoadKey" type="KeyType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per partial load. Unque inside Load. In this case used as a reference to a PartialLoad.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MachineForwardedProductionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>MachineForwardedProductionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="MachineType">
+				<xsd:sequence>
+					<xsd:element name="SpeciesGroupDefinition" type="SpeciesGroupDefinitionForwardedProductionType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Definition of species used in this forwarded production message</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="ProductDefinition" type="ProductDefinitionMachineForwardedProductionType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Structure for defining product.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="ObjectDefinition" type="ObjectDefinitionMachineForwardedProductionType" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Structure for object specific data</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+						<xsd:unique name="UniqueSubObectUserID">
+							<xsd:selector xpath="sfd:SubObject"/>
+							<xsd:field xpath="sfd:SubObjectUserID"/>
+						</xsd:unique>
+						<xsd:unique name="UniqueSubObjectKey">
+							<xsd:selector xpath="sfd:SubObject"/>
+							<xsd:field xpath="sfd:SubObjectKey"/>
+						</xsd:unique>
+					</xsd:element>
+					<xsd:element name="LocationDefinition" type="LocationDefinitionMachineType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:VersionModified>2.1</doc:VersionModified>
+								<doc:Description>Structure for location of forwarded production at harvesting object.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="DeliveryDefinition" type="DeliveryDefinitionWithDetailsType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:VersionModified>2.1</doc:VersionModified>
+								<doc:Description>Describes the content of what has been forwarded.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="Load" type="LoadType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:VersionModified>2.1</doc:VersionModified>
+								<doc:Description>Structure for forwarded load data.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+						<xsd:unique name="UniquePartialLoadKey">
+							<xsd:selector xpath="sfd:PartialLoad"/>
+							<xsd:field xpath="sfd:PartialLoadKey"/>
+						</xsd:unique>
+					</xsd:element>
+					<xsd:element name="LogTransport" type="LogTransportType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>4.1</doc:VersionCreated>
+								<doc:Description>Structure for reporting the position where harvested logs have been moved by a forwarder.
+No PartialLoadKey to be registered if logs are unloaded outside a Location (normally in the forest).
+</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="ForwardingStatus" type="ForwardingStatusType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:VersionModified>2.1</doc:VersionModified>
+								<doc:Description>Status of forwarding per combination of delivery and location definition.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="ScaleDefinition" type="ScaleDefinitionType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Structure for scale information.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="UserDefinedData" type="UserDefinedDataProductionType" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>2.1</doc:VersionCreated>
+								<doc:Description>Structure for user defined data</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+						<xsd:unique name="UniqueTableGroupIDInFpr">
+							<xsd:selector xpath="DataTableGroup"/>
+							<xsd:field xpath="@tableGroupID"/>
+						</xsd:unique>
+					</xsd:element>
+					<xsd:element name="TrackCoordinates" type="TrackCoordinatesForwardedProductionType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>3.3</doc:VersionCreated>
+								<doc:VersionModified>4.0</doc:VersionModified>
+								<doc:Description>Structure for tracking coordinates registered with a constant distance (e.g. every 10 m) or time  interval  (e.g. every 30 seconds) </doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ObjectDefinitionMachineForwardedProductionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>ObjectDefinitionMachineForwardedProductionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="ObjectDefinitionMachineType">
+				<xsd:sequence>
+					<xsd:element name="DensityAdjustment" type="xsd:decimal" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>4.0</doc:VersionCreated>
+								<doc:Unit>kg/m3</doc:Unit>
+								<doc:Description>Adjustment of basic density (kg/m3 for conversion between volume and mass per delivery definition. Observe that this means that the value in element Density is adjusted with the value in DensityAdjustment which makes it possible to use modify the density value for individual objects without distributing new fdi-files.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="PartialLoadType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>PartialLoadTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="PartialLoadKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per partial load. Unque inside  Load </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DeliveryKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>v441_t12</doc:VarNumber>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per delivery definition. Set when new delivery definition is modified or created. Running number recommended, reset only when MachineKey is changed.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LocationKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per location.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LoadNumberOfItems" type="LoadNumberOfItemsType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>v446_t1</doc:VarNumber>
+						<doc:Unit>no</doc:Unit>
+						<doc:Description>Number of logs or bundles</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LoadVolume" type="LoadVolumeType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>v446_t1</doc:VarNumber>
+						<doc:Unit>m3</doc:Unit>
+						<doc:Description>Volume of Load. Volume unit defined by element ForwardingVolumeCategory</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LoadGreenMass" type="LoadGreenMassType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>v446_t1</doc:VarNumber>
+						<doc:Unit>kg</doc:Unit>
+						<doc:Description>Green/raw mass (kg) (old load code 450)</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ScaleKey" type="KeyType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Machine unique scale identity, set by machine</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SubObjectKey" type="KeyType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per harvesting sub object, set by machine. Set when new harvesting sub object is started. Running no recommended, reset when ObjectKey is updated.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ProductDefinitionMachineForwardedProductionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>ProductDefinitionMachineForwardedProductionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ProductKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>v121_t6,v256_t1</doc:VarNumber>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per product set by machine. Must be updated if any modifications to product is done. Running no reset only when MachineKey is changed. </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:choice>
+				<xsd:element name="ClassifiedProductDefinition" type="ClassifiedProductDefinitionMachineForwardedProductionType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Description>Structure for classified product. Definied in pin message.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+				<xsd:element name="UnclassifiedProductDefinition" type="UnclassifiedProductDefinitionMachineType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Description>Structure for unclassified product. Defined in the machine, not included in pin message.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SpeciesGroupDefinitionForwardedProductionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.0</doc:VersionCreated>
+				<doc:Graph>SpeciesGroupDefinitionForwardedProductionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="CommonSpeciesGroupDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="SpeciesGroupKey" type="KeyType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Unit>sequential no</doc:Unit>
+								<doc:Description>Machine specific identity per species group set by machine. Must be updated if any modifications to species group definition is done. Running number reset only when MachineKey is changed.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="TrackCoordinatesForwardedProductionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>TrackCoordinatesForwardedProductionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="TrackCoordinatesType">
+				<xsd:sequence>
+					<xsd:element name="LoadKey" type="KeyType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:VarNumber>v446_t1</doc:VarNumber>
+								<doc:Unit>sequential no</doc:Unit>
+								<doc:Description>Machine specific identity per load. Must be totally unique for a certain MachineKey. Reset only when MachineKey is changed</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="LoadChangeCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Loading"/>
+			<xsd:enumeration value="Unloading"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

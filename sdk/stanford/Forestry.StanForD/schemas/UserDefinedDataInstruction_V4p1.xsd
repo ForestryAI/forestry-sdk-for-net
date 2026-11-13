@@ -1,0 +1,465 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  User Defined Data Instruction XML Schema file   						   			 												 *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				UserDefinedDataInstruction_V4p1.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010" targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1.xsd"/>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="UserDefinedDataInstruction" type="UserDefinedDataInstructionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>2.1</doc:VersionCreated>
+				<doc:Description>The root element of the User Defined Data Instruction message</doc:Description>
+			</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="DataCellDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>2.1</doc:VersionCreated>
+				<doc:Graph>DataCellDefinitionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="cellID" type="xsd:string" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>2.1</doc:VersionCreated>
+							<doc:Description>Identity of cell</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:attribute name="cellText" type="xsd:string">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>2.1</doc:VersionCreated>
+							<doc:Description>Text in cell. E.g. a question to be answered by operator.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:attribute name="dataCategory" type="DataCategoryType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>2.1</doc:VersionCreated>
+							<doc:Description>Defines data type of cell, overrides DataColumnDefinition. Allowed values are: enum, integer, string, decimal, date, boolean, sequential no per row.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:attribute name="optional" type="xsd:boolean">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>2.1</doc:VersionCreated>
+							<doc:Description>Indicates if cell must be filled in by operator.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:attribute name="columnOrder" type="xsd:nonNegativeInteger" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>2.1</doc:VersionCreated>
+							<doc:Description>Column order for current cell in GUI.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:attribute name="enumListID" type="xsd:string">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>2.1</doc:VersionCreated>
+							<doc:Description>Identity of enumeration list. </doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:attribute name="unit" type="xsd:string">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>2.1</doc:VersionCreated>
+							<doc:Description>Defines unit of column, eg mm, kg, m3, cm etc. Can be used in GUI to inform operator about unit.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:attribute name="readOnly" type="xsd:boolean">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>2.1</doc:VersionCreated>
+							<doc:Description>Indicates if cell can be edited by operator.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="DataColumnDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>2.1</doc:VersionCreated>
+				<doc:Graph>DataColumnDefinitionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:attribute name="columnID" type="xsd:string" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.1</doc:VersionCreated>
+					<doc:Description>Identity of column</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="columnName" type="xsd:string" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.1</doc:VersionCreated>
+					<doc:Description>Name of column</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="dataCategory" type="DataCategoryType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.1</doc:VersionCreated>
+					<doc:Description>Defines data type of column. Allowed values are: =”enum”, “string”, “integer”, “decimal”, “date”, “boolean” or “sequentialInteger”</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="optional" type="xsd:boolean" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.1</doc:VersionCreated>
+					<doc:Description>Indicates if column must be filled in by operator.</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="columnOrder" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.1</doc:VersionCreated>
+					<doc:Description>Presentation order of column</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="enumListID" type="xsd:string">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.1</doc:VersionCreated>
+					<doc:Description>Identity of enumeration list. </doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="unit" type="xsd:string">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.1</doc:VersionCreated>
+					<doc:Description>Defines unit of column, eg mm, kg, m3, cm etc. Can be used in GUI to inform operator about unit.</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="DataEnumDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>2.1</doc:VersionCreated>
+				<doc:Graph>DataEnumDefinitionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="EnumValue" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.1</doc:VersionCreated>
+						<doc:Description>Enum value</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string"/>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="enumListID" type="xsd:string" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.1</doc:VersionCreated>
+					<doc:Description>Identity of enumeration list. </doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="DataRowDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>2.1</doc:VersionCreated>
+				<doc:Graph>DataRowDefinitionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="DataCellDefinition" type="DataCellDefinitionType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.1</doc:VersionCreated>
+						<doc:Description>Existing cell attributes overrides column attributes.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="rowID" type="xsd:string" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.1</doc:VersionCreated>
+					<doc:Description>Identity of row</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="rowOrder" type="xsd:nonNegativeInteger" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.1</doc:VersionCreated>
+					<doc:Description>Presentation order of row in GUI</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="DataTableDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>2.1</doc:VersionCreated>
+				<doc:Graph>DataTableDefinitionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="DataColumnDefinition" type="DataColumnDefinitionType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.1</doc:VersionCreated>
+						<doc:Description>Definition of columns in user defined data table</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DataRowDefinition" type="DataRowDefinitionType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.1</doc:VersionCreated>
+						<doc:Description>Definition of fixed rows in user defined data table</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:unique name="UniqueCellID">
+					<xsd:selector xpath="sfd:DataCellDefinition"/>
+					<xsd:field xpath="@cellID"/>
+				</xsd:unique>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="tableID" type="xsd:string" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.1</doc:VersionCreated>
+					<doc:Description>Identity of user defined table</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="tableName" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.1</doc:VersionCreated>
+					<doc:Description>Name of user defined data table</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="minRowCount" type="xsd:nonNegativeInteger" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.1</doc:VersionCreated>
+					<doc:Description>Minimum number of rows in user defined data table.</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="maxRowCount" type="xsd:positiveInteger" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.1</doc:VersionCreated>
+					<doc:Description>Maximum number of rows in user defined data table.</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="tableTriggerPoint" type="TableTriggerPointType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>3.0</doc:VersionCreated>
+					<doc:Description>Attribute indicating when a user defined table must be presented to the operator (in the GUI of the machine) in order to make it simple to fill in the table at the right time. Allowed values are: "StartObject","EndObject", "EndShift", "UnloadingComplete" "ChangeSubObject", "StartShift", "ChangeObject".</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="DataTableGroupDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>2.1</doc:VersionCreated>
+				<doc:Graph>DataTableGroupDefinitionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="DataTableDefinition" type="DataTableDefinitionType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.1</doc:VersionCreated>
+						<doc:Description>Definition user defined data table</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:unique name="UniqueColumnIDUserDefinedDataInstruction">
+					<xsd:selector xpath="sfd:DataColumnDefinition"/>
+					<xsd:field xpath="@columnID"/>
+				</xsd:unique>
+				<xsd:unique name="UniqueRowIDUserDefinedDataInstruction">
+					<xsd:selector xpath="sfd:DataRowDefinition"/>
+					<xsd:field xpath="@rowID"/>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="DataEnumDefinition" type="DataEnumDefinitionType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.1</doc:VersionCreated>
+						<doc:Description>List of user defined enumerations</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="tableGroupID" type="xsd:string" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.1</doc:VersionCreated>
+					<doc:Description>Identity of table group</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="tableGroupName" type="xsd:string" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.1</doc:VersionCreated>
+					<doc:Description>Name of user defined data table, to be used in the UI</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="outputDataLocation" type="OutputDataLocationType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.1</doc:VersionCreated>
+					<doc:Description>Points to where the user defined data should be registered and then reported. Allowed values are: "ProductionObject" (in hpr, thp and fpr), "MonitoringObject" ( in mom), "MonitoringShift" (in mom) and "ProductionLocation" (in fpr>)</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="UserDefinedDataDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>2.1</doc:VersionCreated>
+				<doc:Graph>UserDefinedDataDefinitionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="DataTableGroupDefinition" type="DataTableGroupDefinitionType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.1</doc:VersionCreated>
+						<doc:Description>Definition of user defined data tables registered in the some output file.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:unique name="UniqueTableIDUserDefinedDataInstruction">
+					<xsd:selector xpath="sfd:DataTableDefinition"/>
+					<xsd:field xpath="@tableID"/>
+				</xsd:unique>
+				<xsd:unique name="UniqueEnumListID">
+					<xsd:selector xpath="sfd:DataEnumDefinition"/>
+					<xsd:field xpath="@enumListID"/>
+				</xsd:unique>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="UserDefinedDataInstructionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>2.1</doc:VersionCreated>
+				<doc:Graph>UserDefinedDataInstructionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="UserDefinedDataInstructionHeader" type="MessageHeaderType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.1</doc:VersionCreated>
+						<doc:Description>General information for message</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="UserDefinedDataDefinition" type="UserDefinedDataDefinitionType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.1</doc:VersionCreated>
+						<doc:Description>Definition for user defined data</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:unique name="UniqueTablegroupID">
+					<xsd:selector xpath="sfd:DataTableGroupDefinition"/>
+					<xsd:field xpath="@tableGroupID"/>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="udi">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Enumeration list of file extensions of StanForD 2010 messages: Allowed value in user defined data message is: "udi"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup"/>
+	</xsd:complexType>
+	<xsd:simpleType name="DataCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="enum"/>
+			<xsd:enumeration value="string"/>
+			<xsd:enumeration value="integer"/>
+			<xsd:enumeration value="decimal"/>
+			<xsd:enumeration value="date"/>
+			<xsd:enumeration value="boolean"/>
+			<xsd:enumeration value="sequentialInteger"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="OutputDataLocationType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="ProductionObject"/>
+			<xsd:enumeration value="MonitoringObject"/>
+			<xsd:enumeration value="MonitoringShift"/>
+			<xsd:enumeration value="ProductionLocation"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="TableTriggerPointType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="StartObject"/>
+			<xsd:enumeration value="EndObject"/>
+			<xsd:enumeration value="EndShift"/>
+			<xsd:enumeration value="UnloadingComplete"/>
+			<xsd:enumeration value="ChangeSubObject"/>
+			<xsd:enumeration value="StartShift"/>
+			<xsd:enumeration value="ChangeObject"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

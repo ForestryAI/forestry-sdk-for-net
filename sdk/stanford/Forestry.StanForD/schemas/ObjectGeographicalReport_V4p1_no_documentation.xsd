@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Object Geographical Report XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				ObjectGeographicalReport_V4p1_no_documentation.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1_no_documentation.xsd">
+</xsd:include>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="ObjectGeographicalReport" type="ObjectGeographicalReportType">
+		
+		<xsd:unique name="UniqueMachineKey">
+			<xsd:selector xpath="sfd:Machine">
+</xsd:selector>
+			<xsd:field xpath="sfd:MachineKey">
+</xsd:field>
+		</xsd:unique>
+		<xsd:unique name="UniqueMachineUserID">
+			<xsd:selector xpath="sfd:Machine">
+</xsd:selector>
+			<xsd:field xpath="MachineUserID">
+</xsd:field>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="MachineObjectGeographicalReportType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="MachineWithAttachmentType">
+				<xsd:sequence>
+					<xsd:element name="ObjectDefinition" type="ObjectDefinitionObjectGeographicalReportType" maxOccurs="unbounded">
+						
+						<xsd:unique name="UniqueSubObjectUserIDMachineObjectGeographicalReport">
+							<xsd:selector xpath="sfd:SubObject">
+</xsd:selector>
+							<xsd:field xpath="sfd:SubObjectUserID">
+</xsd:field>
+						</xsd:unique>
+						<xsd:unique name="UniqueFeatureCollectionUserID">
+							<xsd:selector xpath="sfd:FeatureCollection">
+</xsd:selector>
+							<xsd:field xpath="sfd:FeatureCollectionUserID">
+</xsd:field>
+						</xsd:unique>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ObjectDefinitionObjectGeographicalReportType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="ObjectDefinitionMachineType">
+				<xsd:sequence>
+					<xsd:element name="FeatureCollection" type="FeatureCollectionType" minOccurs="0" maxOccurs="unbounded">
+						
+						<xsd:key name="FeaturePropertyUserIDPropertyDefinition">
+							<xsd:selector xpath="FeaturePropertyDefinition">
+</xsd:selector>
+							<xsd:field xpath="FeaturePropertyUserID">
+</xsd:field>
+						</xsd:key>
+						<xsd:keyref name="FeaturePropertyUserIDRefProperty" refer="FeaturePropertyUserIDPropertyDefinition">
+							<xsd:selector xpath="Feature/FeatureProperty">
+</xsd:selector>
+							<xsd:field xpath="FeaturePropertyUserID">
+</xsd:field>
+						</xsd:keyref>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ObjectGeographicalReportType">
+		
+		<xsd:sequence>
+			<xsd:element name="ObjectGeographicalReportHeader" type="MessageHeaderType">
+				
+			</xsd:element>
+			<xsd:element name="Machine" type="MachineObjectGeographicalReportType" maxOccurs="unbounded">
+				
+				<xsd:unique name="UniqueObjectKey">
+					<xsd:selector xpath="sfd:ObjectDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:unique>
+				<xsd:unique name="UniqueObjectUserID">
+					<xsd:selector xpath="sfd:ObjectDefinition">
+</xsd:selector>
+					<xsd:field xpath="ObjectUserID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:unique name="UniqueOperatorUserID">
+					<xsd:selector xpath="sfd:OperatorDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorUserID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:unique name="UniqueOperatorKey">
+					<xsd:selector xpath="sfd:OperatorDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="ogr">
+			
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup">
+</xsd:attributeGroup>
+	</xsd:complexType>
+	<xsd:simpleType name="GISFileModifiedType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Not modified">
+</xsd:enumeration>
+			<xsd:enumeration value="Modified">
+</xsd:enumeration>
+			<xsd:enumeration value="New">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

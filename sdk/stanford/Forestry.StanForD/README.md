@@ -37,4 +37,6 @@ Every row is:
 
 Very early. Spec 001 ([#90](https://github.com/ForestryAI/forestry-sdk-for-net/issues/90)) is
 starting: identification, timestamps and conditional mapping as policies, then the Log and Stem row
-types. `schemas/` holds Skogforsk's common-definitions schema in 11 versions (`V1p0` to `V4p1`).
+types. `schemas/` holds Skogforsk's StanForD 2010 schemas at the latest version, V4p1: every message
+(Harvesting's `HarvestedProduction` included), the common definitions and the envelope, each also
+without documentation.

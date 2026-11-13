@@ -107,8 +107,10 @@ with the row types (#98).
 
 ## 6. Schema Findings
 
-`schemas/` holds 11 versions of the Skogforsk common-definitions schema (`V1p0` to `V4p1`); the
-Harvesting schema itself is not there yet. Verified by comparing type names, not assumed:
+`schemas/` holds Skogforsk's StanForD 2010 schemas at the latest version, V4p1, for the POC: every
+message (Harvesting's `HarvestedProduction` included), the common definitions and the envelope, each
+also in a `_no_documentation` variant (2026-11-13; the older common-definitions versions `V1p0` to
+`V4p0` were removed). Found while they were here, verified by comparing type names, not assumed:
 `V4p0`→`V4p1` is purely additive (7 new types), but `V3p6`→`V4p0` removed 13 types and three earlier
 version bumps each removed at least one. A type built against an older version is not assumed valid
 against `V4p1` without checking.
@@ -116,7 +118,8 @@ against `V4p1` without checking.
 ## 7. Status / POC Debt
 
 - No row types or policies yet; spec 001 (#90) is starting.
-- The Harvesting schema is to be added to `schemas/`.
+- `schemas/` has only V4p1, while the real documents found are version 3.5; which versions to
+  read is spec 001's FR-019.
 - Open: whether the contract start date is updated each time cutting starts (#96).
 - Open (shared with Forestry.Deserialize): how definitions handle references across the document's
   hierarchy (key lookups rather than ancestors).

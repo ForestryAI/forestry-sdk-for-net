@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  StanForD2010 Envelope Acknowledgement XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				StanForD2010EnvelopeAcknowledgement_V4p1_no_documentation.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1_no_documentation.xsd">
+</xsd:include>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="StanForD2010EnvelopeAcknowledgement" type="StanForD2010EnvelopeAcknowledgementType">
+		
+		<xsd:unique name="UniqueTransmissionID">
+			<xsd:selector xpath="EnvelopeTransmissionInfo">
+</xsd:selector>
+			<xsd:field xpath="TransmissionID">
+</xsd:field>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="EnvelopeTransmissionInfoType">
+		
+		<xsd:sequence>
+			<xsd:element name="TransmissionID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="TransmissionTime" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+			<xsd:element name="TransmissionSender" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="TransmissionReceiver" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="TransmissionStatus" type="StanForD2010AcknowledgementStatusType">
+				
+			</xsd:element>
+			<xsd:element name="TransmissionError" type="xsd:string" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="DocumentName" type="xsd:string" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="AttachmentName" type="xsd:string" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="StanForD2010EnvelopeAcknowledgementHeaderType">
+		
+		<xsd:sequence>
+			<xsd:element name="AcknowledgementID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="AcknowledgementDate" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+			<xsd:element name="AcknowledgementSender" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="AcknowledgementReciever" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="StanForD2010EnvelopeAcknowledgementType">
+		
+		<xsd:sequence>
+			<xsd:element name="StanForD2010EnvelopeAcknowledgementHeader" type="StanForD2010EnvelopeAcknowledgementHeaderType">
+				
+			</xsd:element>
+			<xsd:element name="EnvelopeTransmissionInfo" type="EnvelopeTransmissionInfoType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="ena">
+			
+		</xsd:attribute>
+		<xsd:attribute name="version" type="StanForD2010VersionType" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="versionDate" type="xsd:date" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:simpleType name="StanForD2010AcknowledgementStatusType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Success">
+</xsd:enumeration>
+			<xsd:enumeration value="Failure">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

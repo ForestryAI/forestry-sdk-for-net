@@ -1,0 +1,734 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Harvesting Quality Control XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				HarvestingQualityControl_V4p1.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010" targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1.xsd"/>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="HarvestingQualityControl" type="HarvestingQualityControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Description>The root element of the harvesting quality control message</doc:Description>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:unique name="UniqueMachineKey">
+			<xsd:selector xpath="sfd:Machine"/>
+			<xsd:field xpath="sfd:MachineKey"/>
+		</xsd:unique>
+		<xsd:unique name="UniqueMachineUserID">
+			<xsd:selector xpath="sfd:Machine"/>
+			<xsd:field xpath="sfd:MachineUserID"/>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="ClassifiedProductDefinitionMachineHarvestingQualityControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>ClassifiedProductDefinitionMachineHarvestingQualityControlTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="ProductDefinitionWithCommonDetailsType">
+				<xsd:sequence>
+					<xsd:element name="ProductUserID" type="UserIDType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:VarNumber>V121_t2</doc:VarNumber>
+								<doc:Unit>free text</doc:Unit>
+								<doc:Description>Identity per product defined by user of data, normally logging organisation. Do not use a single space or null value. Do not begin or end with a space. Do not include any of the following characters: Double space, Linefeed, carriage return,%, ?, lt, gt, :, " (double quote), /, \, |, *,+.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="SpeciesGroupKey" type="KeyType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Unit>sequential no</doc:Unit>
+								<doc:Description>Machine specific identity per species group set by machine. Must be updated if any modifications to species group definition is done. Running number reset only when MachineKey is changed.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ControlLogDiameterType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>controllogdiametertypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:nonNegativeInteger">
+				<xsd:attributeGroup ref="ControlLogDiameterAttributeGroup"/>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="ControlValuesMultiTreeProcessingType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.1</doc:VersionCreated>
+				<doc:Graph>ControlValuesMultiTreeProcessingTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ProductDefinition" type="ProductDefinitionMachineHarvestingQualityControlType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Structure for defining product.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ObjectDefinition" type="ObjectDefinitionMachineType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Structure for object specific data</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:unique name="UniqueSubObjectKey">
+					<xsd:selector xpath="sfd:SubObject"/>
+					<xsd:field xpath="sfd:SubObjectKey"/>
+				</xsd:unique>
+				<xsd:unique name="UniqueSubObjectUserControlValues">
+					<xsd:selector xpath="sfd:SubObject"/>
+					<xsd:field xpath="sfd:SubObjectUserID"/>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="SawCutWidth" type="xsd:positiveInteger" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.6</doc:VersionCreated>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>Width of saw cut. This data can be used for determining more exact position of control diameter positions in cases with large number of logs per stem.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Stem" type="StemControlValuesMultiTreeProcessingType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>A list of harvested single tree processed stems</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MultiTreeControlStem" type="MultiTreeFelledStemType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.1</doc:VersionCreated>
+						<doc:Description>Structure for storing control data as MultiTreeFelled stems</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="RandomFrequency" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.1</doc:VersionCreated>
+						<doc:Description>Sampling interval for random selection of control bunches. The frequency should mean the average number of stems, between random sampled control bunches. The unit should be no of stem bunches </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MultiTreeControlValuesUsed" type="xsd:boolean">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.1</doc:VersionCreated>
+						<doc:Unit>true/false</doc:Unit>
+						<doc:Description>Indicating if control bunch is used in calculation of average CorrectionFactor.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="AverageCorrectionFactorInUse" type="AverageCorrectionFactorInUseType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.1</doc:VersionCreated>
+						<doc:Description>Average correction factor for last control bunches of stems. Number of stems used for calculating the floating average is registered in attribute numberOfControlBunches. Suggested default value is 30.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ControlValuesType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>ControlValuesTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ProductDefinition" type="ProductDefinitionMachineHarvestingQualityControlType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Structure for defining product.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ObjectDefinition" type="ObjectDefinitionMachineType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Structure for object specific data</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:unique name="UniqueSubObjectKeyControlValuesType">
+					<xsd:selector xpath="sfd:SubObject"/>
+					<xsd:field xpath="sfd:SubObjectKey"/>
+				</xsd:unique>
+				<xsd:unique name="UniqueSubObjectUserIControlValues">
+					<xsd:selector xpath="sfd:SubObject"/>
+					<xsd:field xpath="sfd:SubObjectUserID"/>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="ControlStemSettings" type="ControlStemSettingsType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Settings for random selection of control stems. Recommended that the last five settings per species group are included in an hqc-file.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SawCutWidth" type="xsd:positiveInteger" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.6</doc:VersionCreated>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>Width of saw cut. This data can be used for determining more exact position of control diameter positions in cases with large number of logs per stem.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Stem" type="StemHarvestingQualityControlType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>A list of harvested quality and control stems</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="HarvestingQualityControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>harvestingqualitycontroltypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="HarvestingQualityControlHeader" type="MessageHeaderType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>General information for message</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Machine" type="MachineHarvestingQualityControlType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>All the product specific data is included under Machine elements</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:unique name="UniqueStemKey">
+					<xsd:selector xpath="sfd:ControlValues/sfd:Stem"/>
+					<xsd:field xpath="sfd:StemKey"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:unique>
+				<xsd:unique name="UniqueObjectUserID">
+					<xsd:selector xpath="sfd:ControlValues/sfd:ObjectDefinition"/>
+					<xsd:field xpath="ObjectUserID"/>
+				</xsd:unique>
+				<xsd:unique name="UniqueOperatorUserID">
+					<xsd:selector xpath="sfd:OperatorDefinition"/>
+					<xsd:field xpath="sfd:OperatorUserID"/>
+				</xsd:unique>
+				<xsd:key name="ProductKeyProductDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:ProductDefinition"/>
+					<xsd:field xpath="sfd:ProductKey"/>
+				</xsd:key>
+				<xsd:keyref name="ProductKeyRefProductLog" refer="ProductKeyProductDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:Stem/sfd:SingleTreeProcessedStem/sfd:Log"/>
+					<xsd:field xpath="sfd:ProductKey"/>
+				</xsd:keyref>
+				<xsd:key name="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:SpeciesGroupDefinition"/>
+					<xsd:field xpath="sfd:SpeciesGroupKey"/>
+				</xsd:key>
+				<xsd:keyref name="SpeciesGroupKeyRefProductDefinition" refer="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:ProductDefinition/sfd:ClassifiedProductDefinition"/>
+					<xsd:field xpath="sfd:SpeciesGroupKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="SpeciesGroupKeyRefStem" refer="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:Stem"/>
+					<xsd:field xpath="sfd:SpeciesGroupKey"/>
+				</xsd:keyref>
+				<xsd:key name="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:OperatorDefinition"/>
+					<xsd:field xpath="sfd:OperatorKey"/>
+				</xsd:key>
+				<xsd:keyref name="OperatorKeyRefStem" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:Stem"/>
+					<xsd:field xpath="sfd:OperatorKey"/>
+				</xsd:keyref>
+				<xsd:key name="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:ObjectDefinition"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:key>
+				<xsd:keyref name="ObjectKeyRefStem" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:Stem"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:keyref>
+				<xsd:key name="BarkFunctionKeyBarkFunction">
+					<xsd:selector xpath="sfd:SpeciesGroupDefinition/sfd:BarkFunction"/>
+					<xsd:field xpath="sfd:BarkFunctionKey"/>
+				</xsd:key>
+				<xsd:keyref name="BarkFunctionKeyRefStem" refer="BarkFunctionKeyBarkFunction">
+					<xsd:selector xpath="sfd:ControlValues/sfd:Stem"/>
+					<xsd:field xpath="sfd:BarkFunctionKey"/>
+				</xsd:keyref>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="hqc">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Enumeration list of file extensions of StanForD 2010 messages: Allowed value in Harvesting Quality Control message is: "hqc"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup"/>
+	</xsd:complexType>
+	<xsd:complexType name="LogDiameterHarvestingQualityControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>LogDiameterHarvestingQualityControlTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:nonNegativeInteger">
+				<xsd:attribute name="logDiameterCategory" type="LogDiameterCategoryType" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Unit>list</doc:Unit>
+							<doc:Description>Enumeration list describing how log is measured: top ob,top ub,mid ob,mid ub,butt ob,butt ub,mid HKS,mid HKS ub</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:attribute name="diameterMeasurementCategory" type="DiameterMeasurementCategoryType" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Unit>list</doc:Unit>
+							<doc:Description>Enumeration list, allowed values: "Average", "First" and  "Second"</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="LogHarvestingQualityControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>LogHarvestingQualityControlTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="LogType">
+				<xsd:sequence>
+					<xsd:element name="LogMeasurement" type="LogMeasurementHarvestingQualityControlType" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:VersionModified>2.0</doc:VersionModified>
+								<doc:Description>Diameter and length data per log.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="CalibrationUseLog" type="xsd:boolean" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:VarNumber>V38_t3</doc:VarNumber>
+								<doc:Unit>true/false</doc:Unit>
+								<doc:Description>Manually measured control log accepted for calibration use, only registered in caliper. By default set to “false” if log is not manually measured at all and “true” if manually measured. Operator should be able to set it manually to “false” for all logs independently of whether the stem is randomly or manually selected.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="LogLengthClass" type="xsd:positiveInteger" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Unit>cm</doc:Unit>
+								<doc:Description>Registered length class of the log</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="LogDiameterClass" type="xsd:positiveInteger" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Unit>mm</doc:Unit>
+								<doc:Description>Registered diameter class of the log</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="LogMeasurementHarvestingQualityControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>logmeasurementharvestingqualitycontroltypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="LogDiameter" type="LogDiameterHarvestingQualityControlType" minOccurs="0" maxOccurs="24">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>2.0</doc:VersionModified>
+						<doc:VarNumber>V256_t1 (201-208)</doc:VarNumber>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>Measured diameter of log</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LogLength" type="LogLengthType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>2.0</doc:VersionModified>
+						<doc:VarNumber>V256_t1 (301)</doc:VarNumber>
+						<doc:Unit>cm</doc:Unit>
+						<doc:Description>Measured length of log</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MeasurementDate" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Date and time of measurement. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ControlLogDiameter" type="ControlLogDiameterType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>2.0</doc:VersionModified>
+						<doc:VarNumber>V373</doc:VarNumber>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>Measured control diameters,filtered</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="logMeasurementCategory" type="LogMeasurementCategoryType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Type of log measurement. Allowed values: "Machine", "Operator" and "Auditor"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="MachineHarvestingQualityControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>machineharvestingqualitycontroltypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="MachineWithAttachmentType">
+				<xsd:sequence>
+					<xsd:sequence>
+						<xsd:element name="SpeciesGroupDefinition" type="SpeciesGroupDefinitionWithDetailsAndBarkFunctionAndKeyType" maxOccurs="unbounded">
+							<xsd:annotation>
+								<xsd:documentation>
+									<doc:VersionCreated>1.0</doc:VersionCreated>
+									<doc:Description>Definition of species used in this production message</doc:Description>
+								</xsd:documentation>
+							</xsd:annotation>
+						</xsd:element>
+					</xsd:sequence>
+					<xsd:choice>
+						<xsd:sequence>
+							<xsd:element name="ControlValues" type="ControlValuesType">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>1.0</doc:VersionCreated>
+										<doc:Description>Control measurement data</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:element>
+							<xsd:element name="CalibrationValues" type="CalibrationValuesType" minOccurs="0">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>1.0</doc:VersionCreated>
+										<doc:Description>Calibration history of harvester, at least the last 5 calibrations are to be registered</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:element>
+						</xsd:sequence>
+						<xsd:sequence>
+							<xsd:element name="CalibrationValues" type="CalibrationValuesType">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>1.0</doc:VersionCreated>
+										<doc:Description>Calibration history of harvester, at least the last 5 calibrations are to be registered</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:element>
+						</xsd:sequence>
+						<xsd:element name="ControlValuesMultiTreeProcessing" type="ControlValuesMultiTreeProcessingType" maxOccurs="unbounded"/>
+					</xsd:choice>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ProductDefinitionMachineHarvestingQualityControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>ProductDefinitionMachineHarvestingQualityControlTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ProductKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>v121_t6,v256_t1</doc:VarNumber>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per product set by machine. Must be updated if any modifications to product is done. Running no reset only when MachineKey is changed. </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:choice>
+				<xsd:element name="ClassifiedProductDefinition" type="ClassifiedProductDefinitionMachineHarvestingQualityControlType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Description>Structure for classified product. Definied in pin message.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+				<xsd:element name="UnclassifiedProductDefinition" type="UnclassifiedProductDefinitionMachineType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Description>Structure for unclassified product. Definied in the machine, not included in pin message.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SingleTreeProcessedStemHarvestingQualityControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>SingleTreeProcessedStemHarvestingQualityControlTypeegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="DBH" type="DiameterType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V266_t1(740)</doc:VarNumber>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>DBH (on bark) measured at height according to DBHHeight (in SpeciesGroupDefinition). Same  diameter used in optimisation and volume calculation. DBH is based on butt-end extrapolation function (old SPP)  if such function is  used at DBH position.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ReferenceDiameter" type="ReferenceDiameterType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>2.0</doc:VersionModified>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>Diameter at position used for predicting DBH in multi tree harvesting. Normally the first measured diameter. Not to be an extrapolated diameter (e.g. extrapolated using butt-end extrapolation function, old SPP). Can be used when calculating estimated volumes based on volume of single tree processed stems. </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="StemGrade" type="StemGradeType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Grades of stem</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="StemDiameters" type="StemDiametersType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Measured diameters of stem</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Log" type="LogHarvestingQualityControlType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Structure for log data</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="StemControlValuesMultiTreeProcessingType">
+		<xsd:complexContent>
+			<xsd:extension base="StemType">
+				<xsd:sequence>
+					<xsd:element name="SingleTreeProcessedStem" type="SingleTreeProcessedStemHarvestingQualityControlType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Structure for single tree processed stem</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+						<xsd:unique name="UniqueSingleTreeProcessedStemLogKey">
+							<xsd:selector xpath="sfd:Log"/>
+							<xsd:field xpath="sfd:LogKey"/>
+						</xsd:unique>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="StemHarvestingQualityControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>stemharvestingqualitycontroltypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="StemType">
+				<xsd:sequence>
+					<xsd:element name="ControlMeasurementDefinition" type="ControlMeasurementDefinitionType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:VersionModified>2.0</doc:VersionModified>
+								<doc:Description>Structure for other down times.</doc:Description>
+								<doc:Description>Information about when and who carried out a control measurement</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="ControlStemInfo" type="ControlStemInfoType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Information about rejection and selection of control stem</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:choice>
+						<xsd:element name="SingleTreeProcessedStem" type="SingleTreeProcessedStemHarvestingQualityControlType">
+							<xsd:annotation>
+								<xsd:documentation>
+									<doc:VersionCreated>1.0</doc:VersionCreated>
+									<doc:Description>Structure for multi tree processed stem</doc:Description>
+								</xsd:documentation>
+							</xsd:annotation>
+							<xsd:unique name="UniqueSingleTreeProcessedStemLogKeyStemHarvestingQualityControlType">
+								<xsd:selector xpath="sfd:Log"/>
+								<xsd:field xpath="sfd:LogKey"/>
+							</xsd:unique>
+						</xsd:element>
+					</xsd:choice>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="ControlLogDiameterCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="ub"/>
+			<xsd:enumeration value="ob"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="HarvestingQualityControlMessageCategory">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Measurement control"/>
+			<xsd:enumeration value="Log data to caliper"/>
+			<xsd:enumeration value="Calibration log"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:attributeGroup name="ControlLogDiameterAttributeGroup">
+		<xsd:attribute name="diameterPosition" type="xsd:nonNegativeInteger" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:VarNumber>V374</doc:VarNumber>
+					<doc:Unit>cm</doc:Unit>
+					<doc:Description>Control position for diameter measuring from butt end of log. Used for log diameter vector (element ControlLogDiameter). Element is used to connect diameter values measured by Machine, Auditor and Operator. </doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="controlLogDiameterCategory" type="ControlLogDiameterCategoryType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Enumeration list, allowed values: "ub" and "ob"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="diameterMeasurementCategory" type="DiameterMeasurementCategoryType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:VersionModified>2.0</doc:VersionModified>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Enumeration list, allowed values: "Average", "First" and "Second"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="diameterPositionCaliper" type="xsd:nonNegativeInteger" use="optional">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.0</doc:VersionCreated>
+					<doc:Unit>cm</doc:Unit>
+					<doc:Description>Real position where diameter was actually measured. This position might deviate from diameterPosition if operator or auditor measured the diameter at a different position than given by diameterPosition. To be registered in caliper for Auditor and Operator.</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:attributeGroup>
+</xsd:schema>

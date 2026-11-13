@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  User Defined Data Instruction XML Schema file   						   			 												 *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				UserDefinedDataInstruction_V4p1_no_documentation.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1_no_documentation.xsd">
+</xsd:include>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="UserDefinedDataInstruction" type="UserDefinedDataInstructionType">
+		
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="DataCellDefinitionType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="cellID" type="xsd:string" use="required">
+					
+				</xsd:attribute>
+				<xsd:attribute name="cellText" type="xsd:string">
+					
+				</xsd:attribute>
+				<xsd:attribute name="dataCategory" type="DataCategoryType">
+					
+				</xsd:attribute>
+				<xsd:attribute name="optional" type="xsd:boolean">
+					
+				</xsd:attribute>
+				<xsd:attribute name="columnOrder" type="xsd:nonNegativeInteger" use="required">
+					
+				</xsd:attribute>
+				<xsd:attribute name="enumListID" type="xsd:string">
+					
+				</xsd:attribute>
+				<xsd:attribute name="unit" type="xsd:string">
+					
+				</xsd:attribute>
+				<xsd:attribute name="readOnly" type="xsd:boolean">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="DataColumnDefinitionType">
+		
+		<xsd:attribute name="columnID" type="xsd:string" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="columnName" type="xsd:string" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="dataCategory" type="DataCategoryType" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="optional" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="columnOrder" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="enumListID" type="xsd:string">
+			
+		</xsd:attribute>
+		<xsd:attribute name="unit" type="xsd:string">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="DataEnumDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="EnumValue" maxOccurs="unbounded">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="enumListID" type="xsd:string" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="DataRowDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="DataCellDefinition" type="DataCellDefinitionType" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="rowID" type="xsd:string" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="rowOrder" type="xsd:nonNegativeInteger" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="DataTableDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="DataColumnDefinition" type="DataColumnDefinitionType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="DataRowDefinition" type="DataRowDefinitionType" minOccurs="0" maxOccurs="unbounded">
+				
+				<xsd:unique name="UniqueCellID">
+					<xsd:selector xpath="sfd:DataCellDefinition">
+</xsd:selector>
+					<xsd:field xpath="@cellID">
+</xsd:field>
+				</xsd:unique>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="tableID" type="xsd:string" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="tableName" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="minRowCount" type="xsd:nonNegativeInteger" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="maxRowCount" type="xsd:positiveInteger" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="tableTriggerPoint" type="TableTriggerPointType" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="DataTableGroupDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="DataTableDefinition" type="DataTableDefinitionType" maxOccurs="unbounded">
+				
+				<xsd:unique name="UniqueColumnIDUserDefinedDataInstruction">
+					<xsd:selector xpath="sfd:DataColumnDefinition">
+</xsd:selector>
+					<xsd:field xpath="@columnID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:unique name="UniqueRowIDUserDefinedDataInstruction">
+					<xsd:selector xpath="sfd:DataRowDefinition">
+</xsd:selector>
+					<xsd:field xpath="@rowID">
+</xsd:field>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="DataEnumDefinition" type="DataEnumDefinitionType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="tableGroupID" type="xsd:string" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="tableGroupName" type="xsd:string" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="outputDataLocation" type="OutputDataLocationType" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="UserDefinedDataDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="DataTableGroupDefinition" type="DataTableGroupDefinitionType" maxOccurs="unbounded">
+				
+				<xsd:unique name="UniqueTableIDUserDefinedDataInstruction">
+					<xsd:selector xpath="sfd:DataTableDefinition">
+</xsd:selector>
+					<xsd:field xpath="@tableID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:unique name="UniqueEnumListID">
+					<xsd:selector xpath="sfd:DataEnumDefinition">
+</xsd:selector>
+					<xsd:field xpath="@enumListID">
+</xsd:field>
+				</xsd:unique>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="UserDefinedDataInstructionType">
+		
+		<xsd:sequence>
+			<xsd:element name="UserDefinedDataInstructionHeader" type="MessageHeaderType">
+				
+			</xsd:element>
+			<xsd:element name="UserDefinedDataDefinition" type="UserDefinedDataDefinitionType">
+				
+				<xsd:unique name="UniqueTablegroupID">
+					<xsd:selector xpath="sfd:DataTableGroupDefinition">
+</xsd:selector>
+					<xsd:field xpath="@tableGroupID">
+</xsd:field>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="udi">
+			
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup">
+</xsd:attributeGroup>
+	</xsd:complexType>
+	<xsd:simpleType name="DataCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="enum">
+</xsd:enumeration>
+			<xsd:enumeration value="string">
+</xsd:enumeration>
+			<xsd:enumeration value="integer">
+</xsd:enumeration>
+			<xsd:enumeration value="decimal">
+</xsd:enumeration>
+			<xsd:enumeration value="date">
+</xsd:enumeration>
+			<xsd:enumeration value="boolean">
+</xsd:enumeration>
+			<xsd:enumeration value="sequentialInteger">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="OutputDataLocationType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="ProductionObject">
+</xsd:enumeration>
+			<xsd:enumeration value="MonitoringObject">
+</xsd:enumeration>
+			<xsd:enumeration value="MonitoringShift">
+</xsd:enumeration>
+			<xsd:enumeration value="ProductionLocation">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="TableTriggerPointType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="StartObject">
+</xsd:enumeration>
+			<xsd:enumeration value="EndObject">
+</xsd:enumeration>
+			<xsd:enumeration value="EndShift">
+</xsd:enumeration>
+			<xsd:enumeration value="UnloadingComplete">
+</xsd:enumeration>
+			<xsd:enumeration value="ChangeSubObject">
+</xsd:enumeration>
+			<xsd:enumeration value="StartShift">
+</xsd:enumeration>
+			<xsd:enumeration value="ChangeObject">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

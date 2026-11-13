@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Object Geographical Instruction XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				ObjectGeographicalInstruction_V4p1_no_documentation.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1_no_documentation.xsd">
+</xsd:include>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="ObjectGeographicalInstruction" type="ObjectGeographicalInstructionType">
+		
+		<xsd:unique name="UniqueObjectUserID">
+			<xsd:selector xpath="sfd:ObjectDefinition">
+</xsd:selector>
+			<xsd:field xpath="sfd:ObjectUserID">
+</xsd:field>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="BackgroundMapType">
+		
+		<xsd:sequence>
+			<xsd:element name="MapName" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="Order" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="MINScale" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="MAXScale" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="EmbeddedMap" type="EmbeddedType">
+				
+			</xsd:element>
+			<xsd:element name="EmbeddedGeoRefMap" type="EmbeddedType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="GISCoordinateReferenceSystem" type="GISCoordinateReferenceSystemType" use="optional">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="EmbeddedFileType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="encodingMethod" type="EncodingMethodType" use="required">
+					
+				</xsd:attribute>
+				<xsd:attribute name="attachmentName" type="xsd:string">
+					
+				</xsd:attribute>
+				<xsd:attribute name="StartFile" type="xsd:boolean" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="EmbeddedType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="encodingMethod" type="EncodingMethodType" use="required">
+					
+				</xsd:attribute>
+				<xsd:attribute name="attachmentName" type="xsd:string">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="InformationToOperatorType">
+		
+		<xsd:choice>
+			<xsd:element name="WebBrowserFiles" type="WebBrowserFilesType">
+				
+			</xsd:element>
+			<xsd:element name="WebBrowserURL" type="xsd:string">
+				
+			</xsd:element>
+		</xsd:choice>
+	</xsd:complexType>
+	<xsd:complexType name="ObjectDefinitionObjectGeographicalInstructionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="ObjectDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="FeatureCollection" type="FeatureCollectionType" minOccurs="0" maxOccurs="unbounded">
+						
+						<xsd:key name="PropertyUserIDPropertyDefinition">
+							<xsd:selector xpath="FeaturePropertyDefinition">
+</xsd:selector>
+							<xsd:field xpath="FeaturePropertyUserID">
+</xsd:field>
+						</xsd:key>
+						<xsd:keyref name="PropertyUserIDRefProperty" refer="PropertyUserIDPropertyDefinition">
+							<xsd:selector xpath="Feature/FeatureProperty">
+</xsd:selector>
+							<xsd:field xpath="FeaturePropertyUserID">
+</xsd:field>
+						</xsd:keyref>
+					</xsd:element>
+					<xsd:element name="BackgroundMap" type="BackgroundMapType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="InformationToOperator" type="InformationToOperatorType" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="AlarmCoordinates" type="MultiPointExtendedType" minOccurs="0">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ObjectGeographicalInstructionType">
+		
+		<xsd:sequence>
+			<xsd:element name="ObjectGeographicalInstructionHeader" type="MessageHeaderType">
+				
+			</xsd:element>
+			<xsd:element name="ObjectDefinition" type="ObjectDefinitionObjectGeographicalInstructionType">
+				
+				<xsd:unique name="UniqueFeatureUserID">
+					<xsd:selector xpath="sfd:FeatureCollection/sfd:Feature">
+</xsd:selector>
+					<xsd:field xpath="sfd:FeatureUserID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:unique name="UniqueMapName">
+					<xsd:selector xpath="sfd:BackgroundMap">
+</xsd:selector>
+					<xsd:field xpath="sfd:MapName">
+</xsd:field>
+				</xsd:unique>
+				<xsd:unique name="UniqueFeatureCollectionUserID">
+					<xsd:selector xpath="sfd:FeatureCollection">
+</xsd:selector>
+					<xsd:field xpath="sfd:FeatureCollectionUserID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:unique name="UniqueSubObectUserID">
+					<xsd:selector xpath="sfd:SubObject">
+</xsd:selector>
+					<xsd:field xpath="sfd:SubObjectUserID">
+</xsd:field>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="ogi">
+			
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup">
+</xsd:attributeGroup>
+	</xsd:complexType>
+	<xsd:complexType name="SubObjectDefinitionObjectGeographicalInstructionType">
+		
+		<xsd:sequence>
+			<xsd:element name="SubObjectUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="SubObjectName" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="SubObjectArea" type="PositiveDecimal" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="LoggingForm" type="LoggingFormType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="RealEstateIDSubObject" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="BorderPolygon" type="MultiPolygonType" minOccurs="0">
+</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="WebBrowserFilesType">
+		
+		<xsd:sequence>
+			<xsd:element name="EmbeddedFile" type="EmbeddedFileType" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+</xsd:schema>

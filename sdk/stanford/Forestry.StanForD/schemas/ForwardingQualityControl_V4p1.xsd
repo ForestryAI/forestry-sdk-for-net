@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Forwarding Quality Control message XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				ForwardingQualityControl_V4p1.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010" targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1.xsd"/>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="ForwardingQualityControl" type="ForwardingQualityControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Description>The root element of the Forwarding Quality Control message</doc:Description>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:unique name="UniqueMachineKey">
+			<xsd:selector xpath="sfd:Machine"/>
+			<xsd:field xpath="sfd:MachineKey"/>
+		</xsd:unique>
+		<xsd:unique name="UniqueMachineUserID">
+			<xsd:selector xpath="sfd:Machine"/>
+			<xsd:field xpath="sfd:MachineUserID"/>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="ForwardingQualityControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>ForwardingQualityControlTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ForwardingQualityControlHeader" type="MessageHeaderType"/>
+			<xsd:element name="Machine" type="MachineForwardingQualityControlType" maxOccurs="unbounded">
+				<xsd:unique name="UniqueOperatorUserID">
+					<xsd:selector xpath="sfd:OperatorDefinition"/>
+					<xsd:field xpath="sfd:OperatorUserID"/>
+				</xsd:unique>
+				<xsd:key name="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:OperatorDefinition"/>
+					<xsd:field xpath="sfd:OperatorKey"/>
+				</xsd:key>
+				<xsd:keyref name="OperatorKeyRefScaleControl" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:ScaleControl"/>
+					<xsd:field xpath="sfd:OperatorKey"/>
+				</xsd:keyref>
+				<xsd:key name="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:ObjectDefinition"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:key>
+				<xsd:keyref name="ObjectKeyRefStem" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:ScaleControl"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:keyref>
+				<xsd:key name="ScaleKeyScaleDefinition">
+					<xsd:selector xpath="sfd:ScaleDefinition"/>
+					<xsd:field xpath="sfd:ScaleKey"/>
+				</xsd:key>
+				<xsd:keyref name="ScaleKeyRefScaleControl" refer="ScaleKeyScaleDefinition">
+					<xsd:selector xpath="sfd:ScaleControl"/>
+					<xsd:field xpath="sfd:ScaleKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="ScaleKeyRefScaleCalibration" refer="ScaleKeyScaleDefinition">
+					<xsd:selector xpath="sfd:ScaleCalibration"/>
+					<xsd:field xpath="sfd:ScaleKey"/>
+				</xsd:keyref>
+				<xsd:key name="ScaleControlKeyScaleControl">
+					<xsd:selector xpath="sfd:ScaleControl"/>
+					<xsd:field xpath="sfd:ScaleControlKey"/>
+				</xsd:key>
+				<xsd:keyref name="ScaleControlKeyRefScaleCalibrationl" refer="ScaleControlKeyScaleControl">
+					<xsd:selector xpath="sfd:ScaleCalibration"/>
+					<xsd:field xpath="sfd:ScaleControlKey"/>
+				</xsd:keyref>
+				<xsd:unique name="UniqueObjectUserID">
+					<xsd:selector xpath="sfd:ObjectDefinition"/>
+					<xsd:field xpath="sfd:ObjectUserID"/>
+				</xsd:unique>
+				<xsd:key name="DeliveryKeyDeliveryDefinition">
+					<xsd:selector xpath="sfd:DeliveryDefinition"/>
+					<xsd:field xpath="sfd:DeliveryKey"/>
+				</xsd:key>
+				<xsd:keyref name="DeliveryKeyRefScaleControl" refer="DeliveryKeyDeliveryDefinition">
+					<xsd:selector xpath="sfd:ScaleControl"/>
+					<xsd:field xpath="sfd:DeliveryKey"/>
+				</xsd:keyref>
+				<xsd:unique name="UniqueProductKey">
+					<xsd:selector xpath="sfd:DeliveryDefinition/sfd:ProductKey"/>
+					<xsd:field xpath="."/>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="fqc">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Enumeration list of file extensions of StanForD 2010 messages: Allowed value in forwarding quality control message is: "fqc"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup"/>
+	</xsd:complexType>
+	<xsd:complexType name="MachineForwardingQualityControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>MachineForwardingQualityControlTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="MachineType">
+				<xsd:sequence>
+					<xsd:element name="ObjectDefinition" type="ObjectDefinitionMachineType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:unique name="UniqueSubObectUserID">
+							<xsd:selector xpath="SubObject"/>
+							<xsd:field xpath="SubObjectUserID"/>
+						</xsd:unique>
+						<xsd:unique name="UniqueSubObjectKey">
+							<xsd:selector xpath="SubObject"/>
+							<xsd:field xpath="SubObjectKey"/>
+						</xsd:unique>
+					</xsd:element>
+					<xsd:element name="ScaleDefinition" type="ScaleDefinitionType" maxOccurs="unbounded"/>
+					<xsd:element name="DeliveryDefinition" type="DeliveryDefinitionWithDetailsType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Describes the content of what has been forwarded.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="ScaleControl" type="ScaleControlType" minOccurs="0" maxOccurs="unbounded"/>
+					<xsd:element name="ScaleCalibration" type="ScaleCalibrationType" minOccurs="0" maxOccurs="unbounded"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ScaleCalibrationType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>ScaleCalibrationTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ScaleKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine unique scale identity, set by machine</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ScaleControlKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine unique scale control identity, set by machine. Used in order to describe what scale control data was used for a scale calibration.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ScaleCalibrationDate" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V61_t12</doc:VarNumber>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Date and time of weight scale control measurement. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ScaleCalibrationAdjustment" type="xsd:integer">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V60_t5</doc:VarNumber>
+						<doc:Unit>%</doc:Unit>
+						<doc:Description>Scale adjustment in %. 100% is equal to no adjustment and 105 % means that the scale is adjusted with 5% upwards. 102% is to be registered if scale is adjusted -3% at subsequent calibration.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="scaleWorkCategory" type="ScaleWorkCategoryType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Allowed list values are: "Loading", Unloading" and "Static"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ScaleControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>ScaleControlTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ScaleControlKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine unique scale control identity, set by machine</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ScaleKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine unique scale identity, set by machine</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="OperatorKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine unique operator identity, set by machine</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DeliveryKey" type="KeyType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>v441_t12</doc:VarNumber>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per delivery definition. Set when new delivery definition is modified or created. Running number recommended, reset only when MachineKey is changed.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ObjectKey" type="KeyType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per harvesting object. Set when new harvesting object is started. Running no recommended, reset only when MachineKey is changed</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SubObjectKey" type="KeyType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per harvesting sub object, set by machine. Set when new harvesting sub object is started. Running no recommended, reset when ObjectKey is updated.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ScaleControlDate" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V61_t2</doc:VarNumber>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Date and time of weight scale control measurement. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ControlReferenceMass" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V61_t3</doc:VarNumber>
+						<doc:Unit>kg</doc:Unit>
+						<doc:Description>Reference weight, weight of the control object e.g. test object or weight bridge.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ScaleData" type="ScaleDataType" maxOccurs="unbounded"/>
+			<xsd:element name="Orientation" type="OrientationType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.0</doc:VersionCreated>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Allowed list values are: "Right side of load space", "Left side of load space"</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="scaleWorkCategory" type="ScaleWorkCategoryType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Allowed list values are: "Loading", Unloading" and "Static"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="scaleControlCategory" type="ScaleControlCategoryType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Allowed list values are: "Random dynamic mass","Manual fixed mass"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ScaleDataType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>ScaleDataTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ScaledMass" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V61_t5</doc:VarNumber>
+						<doc:Unit>kg</doc:Unit>
+						<doc:Description>Registered mass of control scaling in forwarder per scaling occasion. Weight values of the forwarder's scale. (kg)</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:simpleType name="OrientationType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Right side of load space"/>
+			<xsd:enumeration value="Left side of load space"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ScaleControlCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Random dynamic mass"/>
+			<xsd:enumeration value="Manual fixed mass"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ScaleWorkCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Loading"/>
+			<xsd:enumeration value="Unloading"/>
+			<xsd:enumeration value="Static"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

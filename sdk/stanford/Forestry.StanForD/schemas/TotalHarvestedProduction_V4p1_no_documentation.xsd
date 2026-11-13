@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- *** Total Harvested Production XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				TotalHarvestedProduction_V4p1_no_documentation.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1_no_documentation.xsd">
+</xsd:include>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="TotalHarvestedProduction" type="TotalHarvestedProductionType">
+		
+		<xsd:unique name="UniqueMachineKey">
+			<xsd:selector xpath="sfd:Machine">
+</xsd:selector>
+			<xsd:field xpath="sfd:MachineKey">
+</xsd:field>
+		</xsd:unique>
+		<xsd:unique name="UniqueMachineUserID">
+			<xsd:selector xpath="sfd:Machine">
+</xsd:selector>
+			<xsd:field xpath="sfd:MachineUserID">
+</xsd:field>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="ClassifiedProductDefinitionMachineTotalHarvestedProductionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="ProductDefinitionWithCommonDetailsType">
+				<xsd:sequence>
+					<xsd:element name="ProductUserID" type="UserIDType">
+						
+					</xsd:element>
+					<xsd:element name="SpeciesGroupKey" type="KeyType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="DataTableGroupTotalHarvestedProductionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="DataTableGroupType">
+				<xsd:sequence>
+					<xsd:element name="ObjectKey" type="KeyType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="MachineTotalHarvestedProductionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="MachineWithAttachmentType">
+				<xsd:sequence>
+					<xsd:element name="SpeciesGroupDefinition" type="SpeciesGroupDefinitionWithDetailsAndBarkFunctionAndKeyType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="ProductDefinition" type="ProductDefinitionMachineTotalHarvestedProductionType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="ObjectDefinition" type="ObjectDefinitionMachineType" maxOccurs="unbounded">
+						
+						<xsd:unique name="UniqueSubObjectKey">
+							<xsd:selector xpath="sfd:SubObject">
+</xsd:selector>
+							<xsd:field xpath="sfd:SubObjectKey">
+</xsd:field>
+						</xsd:unique>
+						<xsd:unique name="UniqueSubObjectUserID">
+							<xsd:selector xpath="sfd:SubObject">
+</xsd:selector>
+							<xsd:field xpath="sfd:SubObjectUserID">
+</xsd:field>
+						</xsd:unique>
+					</xsd:element>
+					<xsd:element name="Total" type="TotalType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="UserDefinedData" type="UserDefinedDataTotalHarvestedProductionType" minOccurs="0">
+						
+						<xsd:unique name="UniqueTableGroupIDTotalHarvestedProduction">
+							<xsd:selector xpath="sfd:DataTableGroup">
+</xsd:selector>
+							<xsd:field xpath="@tableGroupID">
+</xsd:field>
+						</xsd:unique>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ProductDefinitionMachineTotalHarvestedProductionType">
+		
+		<xsd:sequence>
+			<xsd:element name="ProductKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:choice>
+				<xsd:element name="ClassifiedProductDefinition" type="ClassifiedProductDefinitionMachineTotalHarvestedProductionType">
+					
+				</xsd:element>
+				<xsd:element name="UnclassifiedProductDefinition" type="UnclassifiedProductDefinitionMachineType">
+					
+				</xsd:element>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="TotalHarvestedProductionType">
+		
+		<xsd:sequence>
+			<xsd:element name="TotalHarvestedProductionHeader" type="MessageHeaderType">
+				
+			</xsd:element>
+			<xsd:element name="Machine" type="MachineTotalHarvestedProductionType" maxOccurs="unbounded">
+				
+				<xsd:unique name="UniqueOperatorUserID">
+					<xsd:selector xpath="sfd:OperatorDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorUserID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:key name="ProductKeyProductDefinition">
+					<xsd:selector xpath="sfd:ProductDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ProductKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="ProdcutKeyRefTotalProduct" refer="ProductKeyProductDefinition">
+					<xsd:selector xpath="sfd:Total/sfd:TotalLogs">
+</xsd:selector>
+					<xsd:field xpath="sfd:ProductKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:OperatorDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="OperatorKeyRefTotal" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:Total">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:unique name="UniqueObjectUserID">
+					<xsd:selector xpath="sfd:ObjectDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectUserID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:key name="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:ObjectDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="ObjectKeyRefTotal" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:Total">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:SpeciesGroupDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:SpeciesGroupKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="SpeciesGroupKeyRefProductDefinition" refer="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:ProductDefinition/sfd:ClassifiedProductDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:SpeciesGroupKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="SpeciesGroupKeyRefTotal" refer="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:Total">
+</xsd:selector>
+					<xsd:field xpath="sfd:SpeciesGroupKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="BarkFunctionKeyBarkFunction">
+					<xsd:selector xpath="sfd:SpeciesGroupDefinition/sfd:BarkFunction">
+</xsd:selector>
+					<xsd:field xpath="sfd:BarkFunctionKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="ObjectKeyRefUserDefinedData" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:UserDefinedData/sfd:DataTableGroup">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="OperatorKeyRefRow" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:UserDefinedData/sfd:DataTableGroup/sfd:DataTable/sfd:Row">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:keyref>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="thp">
+			
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup">
+</xsd:attributeGroup>
+	</xsd:complexType>
+	<xsd:complexType name="TotalLogsType">
+		
+		<xsd:sequence>
+			<xsd:element name="ProductKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="TotalProductNumberOfLogs" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="TotalProductNumberOfLogBunches" type="xsd:nonNegativeInteger" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="TotalProductVolume" type="TotalProductVolumeType" maxOccurs="6">
+				
+			</xsd:element>
+			<xsd:element name="TotalLogLength" type="xsd:nonNegativeInteger" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="TotalProductVolumeType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="VolumeType">
+				<xsd:attribute name="totalProductVolumeCategory" type="LogVolumeCategoryType" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="TotalStemVolumeType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="VolumeType">
+				<xsd:attribute name="totalStemVolumeCategory" type="StemVolumeCategoryType" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="TotalType">
+		
+		<xsd:sequence>
+			<xsd:element name="ObjectKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="SubObjectKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="OperatorKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="SpeciesGroupKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="TotalNumberOfStems" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="TotalNumberOfStemBunches" type="xsd:nonNegativeInteger" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="TotalStemVolume" type="TotalStemVolumeType" maxOccurs="4">
+				
+			</xsd:element>
+			<xsd:element name="ProcessingCategory" type="ProcessingCategoryType">
+				
+			</xsd:element>
+			<xsd:element name="TotalLogs" type="TotalLogsType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="UserDefinedDataTotalHarvestedProductionType">
+		
+		<xsd:sequence>
+			<xsd:element name="DataTableGroup" type="DataTableGroupTotalHarvestedProductionType" maxOccurs="unbounded">
+				
+				<xsd:unique name="UniqueTableIDTotalHarvestedProduction">
+					<xsd:selector xpath="sfd:DataTable">
+</xsd:selector>
+					<xsd:field xpath="@tableID">
+</xsd:field>
+				</xsd:unique>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+</xsd:schema>

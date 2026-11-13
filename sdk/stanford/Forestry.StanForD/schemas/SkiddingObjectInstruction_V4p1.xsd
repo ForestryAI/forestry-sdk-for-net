@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Skidding Object Instruction XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				SkiddingObjectInstruction_V4p1.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010" targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1.xsd"/>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="SkiddingObjectInstruction" type="SkiddingObjectInstructionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.6</doc:VersionCreated>
+				<doc:Description>The root element of the Skidding Object Instruction message</doc:Description>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:unique name="UniqueObjectUserID">
+			<xsd:selector xpath="sfd:ObjectDefinition"/>
+			<xsd:field xpath="sfd:ObjectUserID"/>
+		</xsd:unique>
+		<xsd:unique name="UniqueSpeciesGroupUserID">
+			<xsd:selector xpath="sfd:ObjectDefinition/sfd:SpeciesGroupUserID"/>
+			<xsd:field xpath="."/>
+		</xsd:unique>
+		<xsd:keyref name="LocationUserIDKeyRefObjectDefinition" refer="LocationUserIDLocationDefinition">
+			<xsd:selector xpath="sfd:ObjectDefinition"/>
+			<xsd:field xpath="sfd:LocationUserID"/>
+		</xsd:keyref>
+		<xsd:key name="LocationUserIDLocationDefinition">
+			<xsd:selector xpath="sfd:LocationDefinition"/>
+			<xsd:field xpath="sfd:LocationUserID"/>
+		</xsd:key>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="ObjectDefinitionSkiddingObjectInstructionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.6</doc:VersionCreated>
+				<doc:Graph>ObjectDefinitionSkiddingObjectInstructionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="ObjectDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="SpeciesGroupUserID" type="UserIDType" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Unit>free text</doc:Unit>
+								<doc:Description>Identity per species group defined by user of data, normally by  logging organisation. Do not use a single space or null value. Do not begin or end with a space. Do not include any of the following characters: Double space, Linefeed, carriage return,%, ?, lt, gt, :, " (double quote), /, \, |, *,+.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="LocationUserID" type="UserIDType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Unit>sequential no</doc:Unit>
+								<doc:Description>Identity per location defined by user of data, normally logging organisation. Do not use a single space or null value. Do not begin or end with a space. Do not include any of the following characters: Double space, Linefeed, carriage return,%, ?, lt, gt, :, " (double quote), /, \, |, *,+.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="SkiddingObjectInstructionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.6</doc:VersionCreated>
+				<doc:Graph>SkiddingObjectInstructionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="SkiddingObjectInstructionHeader" type="MessageHeaderType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>General information for message</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ObjectDefinition" type="ObjectDefinitionSkiddingObjectInstructionType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Structure for object specific data</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:unique name="UniqueSubObjectUserID">
+					<xsd:selector xpath="sfd:SubObject"/>
+					<xsd:field xpath="sfd:SubObjectUserID"/>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="LocationDefinition" type="LocationDefinitionWithModificationDateType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionCreated>3.6</doc:VersionCreated>
+						<doc:Description>Structure for location of skidded production at harvesting object.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="xsd:string" use="required" fixed="soi">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Enumeration list of file extensions of StanForD 2010 messages: Allowed value in Skidding Object Instruction message is: "soi"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup"/>
+	</xsd:complexType>
+</xsd:schema>

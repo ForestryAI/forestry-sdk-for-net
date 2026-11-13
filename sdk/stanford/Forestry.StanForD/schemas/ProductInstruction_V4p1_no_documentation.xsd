@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2011 rel. 3 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Product instruction XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				ProductInstruction_V4p1_no_documentation.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1_no_documentation.xsd">
+</xsd:include>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="ProductInstruction" type="ProductInstructionType">
+		
+		<xsd:unique name="UniqueProductUserID">
+			<xsd:selector xpath="sfd:ProductDefinition">
+</xsd:selector>
+			<xsd:field xpath="sfd:ProductUserID">
+</xsd:field>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="ClassifiedProductDefinitionProductInstructionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="ProductDefinitionWithDetailsType">
+				<xsd:sequence>
+					<xsd:element name="SpeciesGroupUserID" type="UserIDType" nillable="false">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ProductDefinitionProductInstructionType">
+		
+		<xsd:sequence>
+			<xsd:element name="ProductUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:choice>
+				<xsd:element name="ClassifiedProductDefinition" type="ClassifiedProductDefinitionProductInstructionType">
+					
+					<xsd:unique name="UniqueDiameterAndLenghtClassesProductDefinitionProductInstruction">
+						<xsd:selector xpath="sfd:ProductMatrixes/sfd:ProductMatrixItem">
+</xsd:selector>
+						<xsd:field xpath="@diameterClassLowerLimit">
+</xsd:field>
+						<xsd:field xpath="@lengthClassLowerLimit">
+</xsd:field>
+					</xsd:unique>
+				</xsd:element>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ProductInstructionType">
+		
+		<xsd:sequence>
+			<xsd:element name="ProductInstructionHeader" type="MessageHeaderType">
+				
+			</xsd:element>
+			<xsd:element name="ProductDefinition" type="ProductDefinitionProductInstructionType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="pin">
+			
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup">
+</xsd:attributeGroup>
+	</xsd:complexType>
+</xsd:schema>

@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Style Definition XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				StyleDefinition_V4p1.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010" targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1.xsd"/>
+	<xsd:element name="DesignInstruction" type="DesignInstructionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Description>The root element of the Design Instruction message</doc:Description>
+			</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<xsd:complexType name="DesignDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>DesignDefinitionTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="StyleDefinition" type="StyleDefinitionType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>Structure for styles used in GIS applications (ogi)</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SymbolDefinition" type="SymbolDefinitionType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>Structure for embedding symbol files (PNG or SVG)</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="DesignInstructionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>DesignInstructionTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="DesignInstructionHeader" type="MessageHeaderType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>General information for message</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DesignDefinition" type="DesignDefinitionType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>Structure for styles and symbols used in GIS applications (ogi)</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:unique name="UniqueStyleUserID">
+					<xsd:selector xpath="sfd:StyleDefinition"/>
+					<xsd:field xpath="sfd:StyleUserID"/>
+				</xsd:unique>
+				<xsd:unique name="UniqueSymbolUserID">
+					<xsd:selector xpath="sfd:SymbolDefinition"/>
+					<xsd:field xpath="sfd:SymbolUserID"/>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="din">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Enumeration list of file extensions of StanForD 2010 messages: Allowed value in Design Instruction message is: "din"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup"/>
+	</xsd:complexType>
+	<xsd:complexType name="EmbeddedType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>EmbeddedSymbolTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="pictureFormat" type="PictureFormatType" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>4.0</doc:VersionCreated>
+							<doc:Unit>enumeration list</doc:Unit>
+							<doc:Description>Enumeration values for file formats. Allowed values are: “PNG”, “SVG”</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:attribute name="encodingMethod" type="EncodingMethodType" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>4.0</doc:VersionCreated>
+							<doc:Unit>Enumeration list</doc:Unit>
+							<doc:Description>The encoding method used to transform compressed binary document to text format. Allowed values: "Base64" and "None"</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:attribute name="attachmentName" type="xsd:string">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>4.0</doc:VersionCreated>
+							<doc:Unit>free text</doc:Unit>
+							<doc:Description>The name of the attachment file.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="StyleDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>StyleDefinitionTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="StyleUserID" type="UserIDType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>Free text</doc:Unit>
+						<doc:Description>Identity per Style as defined in DIN-file. Set by user of data, normally logging organisation. Do not use a single space or null value. Do not begin or end with a space. Do not include any of the following characters: Double space, Linefeed, carriage return,%, ?, lt, gt, :, " (double quote), /, \, |, *,+.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="StyleName">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>Free text</doc:Unit>
+						<doc:Description>Name per Style</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="StyleInfo" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>Free text</doc:Unit>
+						<doc:Description>Free text identity information per style. Identity element normally to be used by logging organization. No constraints in standard concerning how to use this element.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="StyleVersion" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>Free text</doc:Unit>
+						<doc:Description>Additional identity information of style. Identity element normally to be used by logging organization. No constraints in standard concerning how to use this element.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="StyleGroup" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>Free text</doc:Unit>
+						<doc:Description>Descriptive text for a group of styles.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ModificationDate" type="ModificationDateType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Date and time when style definition was last modified. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Color" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>code</doc:Unit>
+						<doc:Description>Color (RGB) of feature. (Examples: 16711680 = blue, 65280 = green, 255 = red, 0 = black, 16777215 = white</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LineStyle" type="LineStyleType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>enumeration list</doc:Unit>
+						<doc:Description>Line style of feature. Allowed values are: "Solid", "Dash", "Dot", "Dash-Dot","Double solid" and "HashLine"</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LineThickness" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>point</doc:Unit>
+						<doc:Description>Line thickness, no of points, (independently of line style) for feature.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="FillStyle" type="FillStyleType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>enumeration list</doc:Unit>
+						<doc:Description>Fill style per StyleDefinition. Allowed values are: SolidFill,TransparentFill,HorizontalFill,VerticalFill,UpwardDiagonalFill,DownwardDiagonalFill,CrossFill and DiagonalCrossFill. The following values not to be used as they are in conflict with elements FillOpacity and Color: LightGrayFill,GrayFill,DarkGrayFill and HalfTransparentFill</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="FillOpacity" type="FillOpacityType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>percent</doc:Unit>
+						<doc:Description>Fill opacity of feature (0-100%).</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="TopRendering" type="TopRenderingType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>Structure for adding colors etc on top of the basic rendering of a geaographical feature.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SymbolDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>SymbolDefinitionTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="SymbolUserID" type="UserIDType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Identity per Symbol as defined in DIN-file. Set by user of data, normally logging organisation. Do not use a single space or null value. Do not begin or end with a space. Do not include any of the following characters: Double space, Linefeed, carriage return,%, ?, lt, gt, :, " (double quote), /, \, |, *,+.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SymbolName">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>Free text</doc:Unit>
+						<doc:Description>Name per Symbol</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SymbolInfo" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>Free text</doc:Unit>
+						<doc:Description>Free text identity information per symbol. Identity element normally to be used by logging organization. No constraints in standard concerning how to use this element.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SymbolVersion" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>Free text</doc:Unit>
+						<doc:Description>Additional identity information of symbol. Identity element normally to be used by logging organization. No constraints in standard concerning how to use this element.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SymbolGroup" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>Free text</doc:Unit>
+						<doc:Description>Descriptive text for a group of symbols.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ModificationDate" type="ModificationDateType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Date and time when symbol definition was last modified. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SymbolSize" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>Size of symbol</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="EmbeddedSymbol" type="EmbeddedType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>Symbol attachments stored as embedded files</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="TopRenderingType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>TopRenderingTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="TopRenderingColor" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>code</doc:Unit>
+						<doc:Description>Color (RGB) of feature. (Examples: 16711680 = blue, 65280 = green, 255 = red, 0 = black, 16777215 = white</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="TopRenderingLineStyle" type="LineStyleType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>enumeration list</doc:Unit>
+						<doc:Description>Line style of feature. Allowed values are: "Solid", "Dash", "Dot", "Dash-Dot","Double solid" and "HashLine"</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="TopRenderingLineThickness" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>point</doc:Unit>
+						<doc:Description>Line thickness, no of points, (independently of line style) for feature.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="TopRenderingFillStyle" type="FillStyleType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>enumeration list</doc:Unit>
+						<doc:Description>Fill style format class and layer. Allowed values are: SolidFill,TransparentFill,HorizontalFill,VerticalFill,UpwardDiagonalFill,DownwardDiagonalFill,CrossFill,DiagonalCrossFill,LightGrayFill,GrayFill,DarkGrayFill and HalfTransparentFill</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="TopRenderingFillOpacity" type="FillOpacityType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>percent</doc:Unit>
+						<doc:Description>Fill opacity of feature (0-100%).</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="TopRenderingOrder" type="xsd:positiveInteger" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.1</doc:VersionCreated>
+						<doc:Unit>no</doc:Unit>
+						<doc:Description>Order of presentation for rendering additional styles (e.g. colors) on top of the basic style definition. For example, 1 is the topmost layer</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:simpleType name="FillOpacityType">
+		<xsd:restriction base="xsd:nonNegativeInteger">
+			<xsd:maxInclusive value="100"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="FillStyleType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="SolidFill"/>
+			<xsd:enumeration value="TransparentFill"/>
+			<xsd:enumeration value="HorizontalFill"/>
+			<xsd:enumeration value="VerticalFill"/>
+			<xsd:enumeration value="UpwardDiagonalFill"/>
+			<xsd:enumeration value="DownwardDiagonalFill"/>
+			<xsd:enumeration value="CrossFill"/>
+			<xsd:enumeration value="DiagonalCrossFill"/>
+			<xsd:enumeration value="LightGrayFill"/>
+			<xsd:enumeration value="GrayFill"/>
+			<xsd:enumeration value="DarkGrayFill"/>
+			<xsd:enumeration value="HalfTransparentFill"/>
+			<xsd:enumeration value="DottedFill"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LineStyleType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Solid"/>
+			<xsd:enumeration value="Dash"/>
+			<xsd:enumeration value="Dot"/>
+			<xsd:enumeration value="Dash-Dot"/>
+			<xsd:enumeration value="Double solid"/>
+			<xsd:enumeration value="HashLine"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="PictureFormatType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="PNG"/>
+			<xsd:enumeration value="SVG"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

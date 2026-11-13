@@ -1,0 +1,513 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Forwarded Production message XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				ForwardedProduction_V4p1_no_documentation.xsd
+   Generated On: 				4 September 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-08-22" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1_no_documentation.xsd">
+</xsd:include>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="ForwardedProduction" type="ForwardedProductionType">
+		
+		<xsd:unique name="UniqueMachineKey">
+			<xsd:selector xpath="sfd:Machine">
+</xsd:selector>
+			<xsd:field xpath="sfd:MachineKey">
+</xsd:field>
+		</xsd:unique>
+		<xsd:unique name="UniqueMachineUserID">
+			<xsd:selector xpath="sfd:Machine">
+</xsd:selector>
+			<xsd:field xpath="sfd:MachineUserID">
+</xsd:field>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="ClassifiedProductDefinitionMachineForwardedProductionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CommonProductDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="ProductUserID" type="UserIDType">
+						
+					</xsd:element>
+					<xsd:element name="SpeciesGroupKey" type="KeyType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ForwardedProductionType">
+		
+		<xsd:sequence>
+			<xsd:element name="ForwardedProductionHeader" type="MessageHeaderType">
+				
+			</xsd:element>
+			<xsd:element name="Machine" type="MachineForwardedProductionType" maxOccurs="unbounded">
+				
+				<xsd:unique name="UniqueOperatorUserID">
+					<xsd:selector xpath="sfd:OperatorDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorUserID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:key name="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:OperatorDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="OperatorKeyRefStem" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:Load">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:SpeciesGroupDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:SpeciesGroupKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="SpeciesGroupKeyRefProductDefinition" refer="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:ProductDefinition/sfd:ClassifiedProductDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:SpeciesGroupKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="ProductKeyProductDefinition">
+					<xsd:selector xpath="sfd:ProductDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ProductKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="ProductKeyRefSingleTreeProcessedStemLog" refer="ProductKeyProductDefinition">
+					<xsd:selector xpath="sfd:DeliveryDefinition/ProductKey">
+</xsd:selector>
+					<xsd:field xpath=".">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:unique name="UniqueObjectUserID">
+					<xsd:selector xpath="sfd:ObjectDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectUserID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:key name="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:ObjectDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="ObjectKeyRefStem" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:LocationDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="LocationKeyLocationDefinition">
+					<xsd:selector xpath="sfd:LocationDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:LocationKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="LocationKeyRefForwardingStatus" refer="LocationKeyLocationDefinition">
+					<xsd:selector xpath="sfd:ForwardingStatus">
+</xsd:selector>
+					<xsd:field xpath="sfd:LocationKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="LocationKeyRefPartialLoad" refer="LocationKeyLocationDefinition">
+					<xsd:selector xpath="sfd:Load/sfd:PartialLoad">
+</xsd:selector>
+					<xsd:field xpath="sfd:LocationKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="DeliveryKeyDeliveryDefinition">
+					<xsd:selector xpath="sfd:DeliveryDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:DeliveryKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="DeliveryKeyRefPartialLoad" refer="DeliveryKeyDeliveryDefinition">
+					<xsd:selector xpath="sfd:Load/sfd:PartialLoad">
+</xsd:selector>
+					<xsd:field xpath="sfd:DeliveryKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="DeliveryKeyRefForwardingStatus" refer="DeliveryKeyDeliveryDefinition">
+					<xsd:selector xpath="sfd:ForwardingStatus">
+</xsd:selector>
+					<xsd:field xpath="sfd:DeliveryKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="LoadKeyLoad">
+					<xsd:selector xpath="sfd:Load">
+</xsd:selector>
+					<xsd:field xpath="sfd:LoadKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:key name="ScaleKeyScaleDefinition">
+					<xsd:selector xpath="sfd:ScaleDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ScaleKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="ScaleKeyRefPartialLoad" refer="ScaleKeyScaleDefinition">
+					<xsd:selector xpath="sfd:Load/PartialLoad">
+</xsd:selector>
+					<xsd:field xpath="sfd:ScaleKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="ObjectKeyRefUserDefinedData" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:UserDefinedData/sfd:DataTableGroup">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="LocationKeyRefUserDefinedData" refer="LocationKeyLocationDefinition">
+					<xsd:selector xpath="sfd:UserDefinedData/sfd:DataTableGroup">
+</xsd:selector>
+					<xsd:field xpath="sfd:LocationKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="OperatorKeyRefRow" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:UserDefinedData/sfd:DataTableGroup/sfd:DataTable/sfd:Row">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="TrackingKeyTrackCoordinates">
+					<xsd:selector xpath="sfd:TrackCoordinates">
+</xsd:selector>
+					<xsd:field xpath="sfd:TrackingKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="ObjectKeyRefTrackCoordinates" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:TrackCoordinates">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="LoadKeyRefTrackCoordinates" refer="LoadKeyLoad">
+					<xsd:selector xpath="sfd:TrackCoordinates">
+</xsd:selector>
+					<xsd:field xpath="sfd:LoadKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="LoadKeyRefLogTransport" refer="LoadKeyLoad">
+					<xsd:selector xpath="LogTransport">
+</xsd:selector>
+					<xsd:field xpath="LoadKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:unique name="UniqueLogTransportKey">
+					<xsd:selector xpath="LogTransport">
+</xsd:selector>
+					<xsd:field xpath="LogTransportKey">
+</xsd:field>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="fpr">
+			
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup">
+</xsd:attributeGroup>
+	</xsd:complexType>
+	<xsd:complexType name="ForwardingStatusType">
+		
+		<xsd:sequence>
+			<xsd:element name="LocationKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="DeliveryKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="ForwardStartDate" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+			<xsd:element name="ForwardEndDate" type="StanForD2010DateTimeType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="LoadChangeType">
+		
+		<xsd:sequence>
+			<xsd:element name="LoadChangeCoordinates" type="CoordinatesType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="GreenMass" type="MassType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="MaxBoomAngle" type="xsd:nonNegativeInteger" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="MaxBoomExtension" type="xsd:positiveInteger" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="MachineBearing" type="xsd:nonNegativeInteger" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="loadChangeCategory" type="LoadChangeCategoryType">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="LoadGreenMassType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:decimal">
+				<xsd:attribute name="loadGreenMassMethod" type="LoadGreenMassMethodType">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="LoadVolumeType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:decimal">
+				<xsd:attribute name="loadVolumeCategory" type="LoadVolumeCategoryType" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="LoadType">
+		
+		<xsd:sequence>
+			<xsd:element name="LoadKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="OperatorKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="LoadNumber" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="DistanceFromLastUnloading" type="xsd:nonNegativeInteger" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="UnloadingTime" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+			<xsd:element name="PartialLoad" type="PartialLoadType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="LoadChange" type="LoadChangeType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="LogReferenceType">
+		
+		<xsd:sequence>
+			<xsd:element name="HarvesterMachineKey" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="StemKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="LogKey" type="xsd:positiveInteger">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="LogTransportType">
+		
+		<xsd:sequence>
+			<xsd:element name="LogTransportKey" type="xsd:unsignedLong">
+				
+			</xsd:element>
+			<xsd:element name="LogReference" type="LogReferenceType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="UnloadingLogCoordinates" type="CoordinatesType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="LoadKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="PartialLoadKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MachineForwardedProductionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="MachineType">
+				<xsd:sequence>
+					<xsd:element name="SpeciesGroupDefinition" type="SpeciesGroupDefinitionForwardedProductionType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="ProductDefinition" type="ProductDefinitionMachineForwardedProductionType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="ObjectDefinition" type="ObjectDefinitionMachineForwardedProductionType" maxOccurs="unbounded">
+						
+						<xsd:unique name="UniqueSubObectUserID">
+							<xsd:selector xpath="sfd:SubObject">
+</xsd:selector>
+							<xsd:field xpath="sfd:SubObjectUserID">
+</xsd:field>
+						</xsd:unique>
+						<xsd:unique name="UniqueSubObjectKey">
+							<xsd:selector xpath="sfd:SubObject">
+</xsd:selector>
+							<xsd:field xpath="sfd:SubObjectKey">
+</xsd:field>
+						</xsd:unique>
+					</xsd:element>
+					<xsd:element name="LocationDefinition" type="LocationDefinitionMachineType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="DeliveryDefinition" type="DeliveryDefinitionWithDetailsType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="Load" type="LoadType" minOccurs="0" maxOccurs="unbounded">
+						
+						<xsd:unique name="UniquePartialLoadKey">
+							<xsd:selector xpath="sfd:PartialLoad">
+</xsd:selector>
+							<xsd:field xpath="sfd:PartialLoadKey">
+</xsd:field>
+						</xsd:unique>
+					</xsd:element>
+					<xsd:element name="LogTransport" type="LogTransportType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="ForwardingStatus" type="ForwardingStatusType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="ScaleDefinition" type="ScaleDefinitionType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="UserDefinedData" type="UserDefinedDataProductionType" minOccurs="0">
+						
+						<xsd:unique name="UniqueTableGroupIDInFpr">
+							<xsd:selector xpath="DataTableGroup">
+</xsd:selector>
+							<xsd:field xpath="@tableGroupID">
+</xsd:field>
+						</xsd:unique>
+					</xsd:element>
+					<xsd:element name="TrackCoordinates" type="TrackCoordinatesForwardedProductionType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ObjectDefinitionMachineForwardedProductionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="ObjectDefinitionMachineType">
+				<xsd:sequence>
+					<xsd:element name="DensityAdjustment" type="xsd:decimal" minOccurs="0">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="PartialLoadType">
+		
+		<xsd:sequence>
+			<xsd:element name="PartialLoadKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="DeliveryKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="LocationKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="LoadNumberOfItems" type="LoadNumberOfItemsType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="LoadVolume" type="LoadVolumeType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="LoadGreenMass" type="LoadGreenMassType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ScaleKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="SubObjectKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ProductDefinitionMachineForwardedProductionType">
+		
+		<xsd:sequence>
+			<xsd:element name="ProductKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:choice>
+				<xsd:element name="ClassifiedProductDefinition" type="ClassifiedProductDefinitionMachineForwardedProductionType">
+					
+				</xsd:element>
+				<xsd:element name="UnclassifiedProductDefinition" type="UnclassifiedProductDefinitionMachineType">
+					
+				</xsd:element>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SpeciesGroupDefinitionForwardedProductionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CommonSpeciesGroupDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="SpeciesGroupKey" type="KeyType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="TrackCoordinatesForwardedProductionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="TrackCoordinatesType">
+				<xsd:sequence>
+					<xsd:element name="LoadKey" type="KeyType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="LoadChangeCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Loading">
+</xsd:enumeration>
+			<xsd:enumeration value="Unloading">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

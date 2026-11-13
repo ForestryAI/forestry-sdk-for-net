@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2021 (x64) (http://www.altova.com) by Skogforsk (Skogforsk) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Operational Monitoring Code List XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				OperationalMonitoringCodeList_V4p1_no_documentation.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010" xmlns:col="urn:skogforsk:stanford2010:codelist">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1_no_documentation.xsd">
+</xsd:include>
+	<!-- ===== Imports ===== -->
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="OperationalMonitoringCodeList" type="OperationalMonitoringCodeListType">
+		
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="CarrierRepairReasonType">
+		
+		<xsd:sequence>
+			<xsd:element name="ElectricalCode" maxOccurs="unbounded">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="electricalName" type="xsd:string" use="required">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="HydraulicsCode" maxOccurs="unbounded">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="hydraulicsName" type="xsd:string" use="required">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="MechanicalCode" maxOccurs="unbounded">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="mechanicalName" type="xsd:string" use="required">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="AirCode" maxOccurs="unbounded">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="airName" type="xsd:string" use="required">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="DownTimeType">
+		
+		<xsd:sequence>
+			<xsd:element name="Repair" type="RepairType">
+				
+			</xsd:element>
+			<xsd:element name="MaintenanceStandardCode" maxOccurs="unbounded">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="maintenanceStandardName" type="xsd:string" use="required">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="DisturbanceStandardCode" maxOccurs="unbounded">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="disturbanceStandardName" type="xsd:string" use="required">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="OtherMachineDownTimeStandardCode" maxOccurs="unbounded">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="otherMachineDownTimeStandardName" type="xsd:string" use="required">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="AttachmentRepairReasonType">
+		
+		<xsd:sequence>
+			<xsd:element name="ElectricalCode" maxOccurs="unbounded">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="electricalName" type="xsd:string" use="required">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="HydraulicsCode" maxOccurs="unbounded">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="hydraulicsName" type="xsd:string" use="required">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="MechanicalCode" maxOccurs="unbounded">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="mechanicalName" type="xsd:string" use="required">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="LoaderLinkageRepairReasonType">
+		
+		<xsd:sequence>
+			<xsd:element name="ElectricalCode" maxOccurs="unbounded">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="electricalName" type="xsd:string" use="required">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="HydraulicsCode" maxOccurs="unbounded">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="hydraulicsName" type="xsd:string" use="required">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="MechanicalCode" maxOccurs="unbounded">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="mechanicalName" type="xsd:string" use="required">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="RepairType">
+		
+		<xsd:sequence>
+			<xsd:element name="CarrierRepairReason" type="CarrierRepairReasonType">
+				
+			</xsd:element>
+			<xsd:element name="LoaderLinkageRepairReason" type="LoaderLinkageRepairReasonType">
+				
+			</xsd:element>
+			<xsd:element name="AttachmentRepairReason" type="AttachmentRepairReasonType">
+				
+			</xsd:element>
+			<xsd:element name="OtherRepairReasonCode" maxOccurs="unbounded">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="otherRepairReasonName" type="xsd:string" use="required">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="OperationalMonitoringCodeListType">
+		
+		<xsd:sequence>
+			<xsd:element name="OperationalMonitoringCodeListHeader" type="MessageHeaderType">
+				
+			</xsd:element>
+			<xsd:element name="OperationalMonitoringCodeListDefinition" type="OperationalMonitoringCodeListDefinitionType">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="mcl">
+			
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup">
+</xsd:attributeGroup>
+	</xsd:complexType>
+	<xsd:complexType name="OperationalMonitoringCodeListDefinitionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CommonCodeListDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="OtherWorkCategoryCode" maxOccurs="unbounded">
+						
+						<xsd:complexType>
+							<xsd:simpleContent>
+								<xsd:extension base="xsd:string">
+									<xsd:attribute name="otherWorkCategoryName" type="xsd:string" use="required">
+										
+									</xsd:attribute>
+								</xsd:extension>
+							</xsd:simpleContent>
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="DownTime" type="DownTimeType">
+						
+					</xsd:element>
+					<xsd:element name="IndividualUnutilizedTimeCategoryCode" maxOccurs="unbounded">
+						
+						<xsd:complexType>
+							<xsd:simpleContent>
+								<xsd:extension base="xsd:string">
+									<xsd:attribute name="individualUnutilizedTimeCategoryName" type="xsd:string" use="required">
+										
+									</xsd:attribute>
+								</xsd:extension>
+							</xsd:simpleContent>
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="OperatorWorkTimeCategoryCode" maxOccurs="unbounded">
+						
+						<xsd:complexType>
+							<xsd:simpleContent>
+								<xsd:extension base="xsd:string">
+									<xsd:attribute name="operatorWorkTimeCategoryName" type="xsd:string" use="required">
+										
+									</xsd:attribute>
+								</xsd:extension>
+							</xsd:simpleContent>
+						</xsd:complexType>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="MonitoringCodeType">
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="Name" type="xsd:string" use="required">
+</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+</xsd:schema>
