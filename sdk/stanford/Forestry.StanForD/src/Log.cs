@@ -51,8 +51,7 @@ namespace Forestry.StanForD {
         public DateTimeOffset HarvestingCreationTime { get; set; }
 
         /// <summary>
-        /// Contract number, from StanForD <c>ObjectDefinition/ContractNumber</c>.  Grouping logs by
-        /// contract is common in the forest industry.
+        /// Havesting contract number associated with the havesting object i.e. business to operative
         /// </summary>
         public string ContractNumber { get; set; } = string.Empty;
         #endregion
@@ -160,10 +159,99 @@ namespace Forestry.StanForD {
         public string VolumeUnit { get; set; } = string.Empty;
 
         /// <summary>
-        /// Descriptive name of the harvesting object, from the stem's referenced
+        /// The machine's sequence number of the stem within its object, from StanForD
+        /// <c>Stem/StemNumber</c>; its highest value against the stems counted shows a missing document
+        /// </summary>
+        public int StemNumber { get; set; }
+
+        /// <summary>
+        /// Object the log's stem was harvested in, from StanForD <c>Stem/ObjectKey</c>; refers to an
+        /// <see cref="ObjectDefinition"/> of the same machine
+        /// </summary>
+        public int ObjectKey { get; set; }
+
+        /// <summary>
+        /// Descriptive name of the harvesting object, from the referenced
         /// <see cref="ObjectDefinition.ObjectName"/>; separates objects within a contract
         /// </summary>
         public string ObjectName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The object's external reference, from the referenced <see cref="ObjectDefinition.ObjectUserID"/>
+        /// </summary>
+        public string ObjectUserID { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Sub-object (a part of the object's area) the log's stem was harvested in, from StanForD
+        /// <c>Stem/SubObjectKey</c>; refers to a <see cref="SubObject"/> of the stem's object
+        /// </summary>
+        public int SubObjectKey { get; set; }
+
+        /// <summary>
+        /// Descriptive name of the sub-object, from the referenced <see cref="SubObject.SubObjectName"/>
+        /// </summary>
+        public string SubObjectName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The sub-object's external reference, from the referenced <see cref="SubObject.SubObjectUserID"/>
+        /// </summary>
+        public string SubObjectUserID { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Species group (tree kind) of the stem, from StanForD <c>Stem/SpeciesGroupKey</c>; refers
+        /// to a <see cref="SpeciesGroupDefinition"/> of the same machine
+        /// </summary>
+        public int SpeciesGroupKey { get; set; }
+
+        /// <summary>
+        /// Species group name e.g. "GRAN" (spruce in Swedish), from the referenced
+        /// <see cref="SpeciesGroupDefinition.SpeciesGroupName"/>
+        /// </summary>
+        public string SpeciesGroupName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Species group identity information, from the referenced
+        /// <see cref="SpeciesGroupDefinition.SpeciesGroupInfo"/>
+        /// </summary>
+        public string SpeciesGroupInfo { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The species group's external reference, from the referenced
+        /// <see cref="SpeciesGroupDefinition.SpeciesGroupUserID"/>
+        /// </summary>
+        public string SpeciesGroupUserID { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Species group version, from the referenced <see cref="SpeciesGroupDefinition.SpeciesGroupVersion"/>
+        /// </summary>
+        public string SpeciesGroupVersion { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Operator who harvested the stem, from StanForD <c>Stem/OperatorKey</c>; refers to an
+        /// <see cref="OperatorDefinition"/> of the same machine
+        /// </summary>
+        public int OperatorKey { get; set; }
+
+        /// <summary>
+        /// Business the operator works for, from the referenced
+        /// <see cref="OperatorDefinition.OperatorBusinessName"/>
+        /// </summary>
+        public string OperatorBusinessName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The operator's external reference, from the referenced <see cref="OperatorDefinition.OperatorUserID"/>
+        /// </summary>
+        public string OperatorUserID { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The machine's external reference, from <see cref="Machine.MachineUserID"/>
+        /// </summary>
+        public string MachineUserID { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The logging contractor's business identity, from <see cref="Machine.LoggingContractorBusinessID"/>
+        /// </summary>
+        public string LoggingContractorBusinessID { get; set; } = string.Empty;
 
         /// <summary>
         /// Product the log was cut as, from StanForD <c>Log/ProductKey</c>; refers to a
@@ -188,6 +276,23 @@ namespace Forestry.StanForD {
         /// referenced <see cref="ProductDefinition.ProductVersion"/>
         /// </summary>
         public string ProductVersion { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The product's external reference, from the referenced <see cref="ProductDefinition.ProductUserID"/>
+        /// </summary>
+        public string ProductUserID { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Where the product is delivered, e.g. a sawmill, from the referenced
+        /// <see cref="ProductDefinition.ProductDestinationBusinessName"/>
+        /// </summary>
+        public string ProductDestinationBusinessName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The destination's business identity, from the referenced
+        /// <see cref="ProductDefinition.ProductDestinationBusinessID"/>
+        /// </summary>
+        public string ProductDestinationBusinessID { get; set; } = string.Empty;
 
         /// <summary>
         /// Cutting reason, from StanForD <c>CuttingCategory/CuttingReason</c>

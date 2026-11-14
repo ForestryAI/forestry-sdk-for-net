@@ -41,6 +41,11 @@ namespace Forestry.StanForD {
         /// <c>ContactInformation</c> contextual row
         /// </remarks>
         public string OperatorBusinessName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The operator's external reference, from StanForD <c>OperatorDefinition/OperatorUserID</c>
+        /// </summary>
+        public string OperatorUserID { get; set; } = string.Empty;
         #endregion
     }
 }

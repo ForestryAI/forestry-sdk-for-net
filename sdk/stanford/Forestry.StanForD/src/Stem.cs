@@ -120,6 +120,12 @@ namespace Forestry.StanForD {
 
         #region dimensions
         /// <summary>
+        /// The machine's sequence number of the stem within its object, from StanForD
+        /// <c>Stem/StemNumber</c>; its highest value against the stems counted shows a missing document
+        /// </summary>
+        public int StemNumber { get; set; }
+
+        /// <summary>
         /// Object the stem was harvested in, from StanForD <c>Stem/ObjectKey</c>; refers to an
         /// <see cref="ObjectDefinition"/> of the same machine
         /// </summary>
@@ -130,6 +136,27 @@ namespace Forestry.StanForD {
         /// <see cref="ObjectDefinition.ObjectName"/>; separates objects within a contract
         /// </summary>
         public string ObjectName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The object's external reference, from the referenced <see cref="ObjectDefinition.ObjectUserID"/>
+        /// </summary>
+        public string ObjectUserID { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Sub-object (a part of the object's area) the stem was harvested in, from StanForD
+        /// <c>Stem/SubObjectKey</c>; refers to a <see cref="SubObject"/> of the stem's object
+        /// </summary>
+        public int SubObjectKey { get; set; }
+
+        /// <summary>
+        /// Descriptive name of the sub-object, from the referenced <see cref="SubObject.SubObjectName"/>
+        /// </summary>
+        public string SubObjectName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The sub-object's external reference, from the referenced <see cref="SubObject.SubObjectUserID"/>
+        /// </summary>
+        public string SubObjectUserID { get; set; } = string.Empty;
 
         /// <summary>
         /// Species group (tree kind) of the stem, from StanForD <c>Stem/SpeciesGroupKey</c>; refers
@@ -144,6 +171,23 @@ namespace Forestry.StanForD {
         public string SpeciesGroupName { get; set; } = string.Empty;
 
         /// <summary>
+        /// Species group identity information, from the referenced
+        /// <see cref="SpeciesGroupDefinition.SpeciesGroupInfo"/>
+        /// </summary>
+        public string SpeciesGroupInfo { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The species group's external reference, from the referenced
+        /// <see cref="SpeciesGroupDefinition.SpeciesGroupUserID"/>
+        /// </summary>
+        public string SpeciesGroupUserID { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Species group version, from the referenced <see cref="SpeciesGroupDefinition.SpeciesGroupVersion"/>
+        /// </summary>
+        public string SpeciesGroupVersion { get; set; } = string.Empty;
+
+        /// <summary>
         /// Operator who harvested the stem, from StanForD <c>Stem/OperatorKey</c>; refers to an
         /// <see cref="OperatorDefinition"/> of the same machine
         /// </summary>
@@ -154,6 +198,21 @@ namespace Forestry.StanForD {
         /// <see cref="OperatorDefinition.OperatorBusinessName"/>
         /// </summary>
         public string OperatorBusinessName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The operator's external reference, from the referenced <see cref="OperatorDefinition.OperatorUserID"/>
+        /// </summary>
+        public string OperatorUserID { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The machine's external reference, from <see cref="Machine.MachineUserID"/>
+        /// </summary>
+        public string MachineUserID { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The logging contractor's business identity, from <see cref="Machine.LoggingContractorBusinessID"/>
+        /// </summary>
+        public string LoggingContractorBusinessID { get; set; } = string.Empty;
         #endregion
     }
 }

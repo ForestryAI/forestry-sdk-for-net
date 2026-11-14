@@ -37,6 +37,22 @@ namespace Forestry.StanForD {
         /// <c>SpeciesGroupDefinition/SpeciesGroupName</c>
         /// </summary>
         public string SpeciesGroupName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Species group identity information, from StanForD <c>SpeciesGroupDefinition/SpeciesGroupInfo</c>
+        /// </summary>
+        public string SpeciesGroupInfo { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The species group's external reference, from StanForD
+        /// <c>SpeciesGroupDefinition/SpeciesGroupUserID</c>
+        /// </summary>
+        public string SpeciesGroupUserID { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Species group version, from StanForD <c>SpeciesGroupDefinition/SpeciesGroupVersion</c>
+        /// </summary>
+        public string SpeciesGroupVersion { get; set; } = string.Empty;
         #endregion
     }
 }

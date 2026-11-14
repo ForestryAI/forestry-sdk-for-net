@@ -48,6 +48,10 @@ of the user's choice.
   out for now.
 - Q: Are stem metrics part of the dimensions? → A: No; they are User Story 8, after the dimensions
   (FR-024, 2026-11-14).
+- Q: What about the operator's volume found in real documents? → A: Measurement levels are M1
+  (machine), M2 (operator) and M3 (quality check); M2 is ignored for now, and why hpr documents
+  carry it (thought to come only with quality files) is a backlog investigation (FR-011,
+  2026-11-14).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -294,6 +298,9 @@ coordinate reference system, both boom positions and DBH.
   measurement), meet the member's condition; a condition MAY combine several attributes.
 - **FR-011**: Every log volume and log diameter category found in the real documents MUST map to
   its own member or be deliberately ignored.
+  *Deliberately ignored (developer, 2026-11-14): measurements with measurement category "Operator"
+  (M2, the operator's own measurement, beside the machine's M1); 10 logs in the real documents carry
+  one. To be looked into later (#109).*
 - **FR-012**: An occurrence matching no condition MUST be ignored or fail, by an option chosen by
   the developer. Without a chosen option, conditional mapping is strict: the occurrence fails
   deserialization (developer, 2026-11-11).

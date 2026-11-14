@@ -31,6 +31,11 @@ namespace Forestry.StanForD {
         /// <c>ObjectDefinition/ObjectName</c>
         /// </summary>
         public string ObjectName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The object's external reference, from StanForD <c>ObjectDefinition/ObjectUserID</c>
+        /// </summary>
+        public string ObjectUserID { get; set; } = string.Empty;
         #endregion
 
         #region partitioning

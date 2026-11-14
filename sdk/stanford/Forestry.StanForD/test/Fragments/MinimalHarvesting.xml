@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   The smallest Harvesting document the code stories test against (tasks.md T007, findings-us5.md);
-  stem 619254's first log carries every measurement a real log has (tasks.md T073).
+  stem 619254's first log carries every measurement a real log has (tasks.md T073); every
+  dimension US7 reads is present (tasks.md T077).
   Shaped like the real documents (StanForD 2010, version 3.5): header, machine, the common
   definitions the rows copy from, then two stems. Values are made up; no real machine, contract
   or person.
@@ -12,14 +13,22 @@
   </HarvestedProductionHeader>
   <Machine>
     <MachineKey>6f1d2c3b-4a5e-4f60-8a71-92b3c4d5e6f7</MachineKey>
+    <MachineUserID agency="Other">EX-H01</MachineUserID>
+    <LoggingContractor>
+      <BusinessID>99001</BusinessID>
+    </LoggingContractor>
     <OperatorDefinition>
       <OperatorKey>2</OperatorKey>
+      <OperatorUserID>op-0002</OperatorUserID>
       <ContactInformation>
         <BusinessName>Example Logging AB</BusinessName>
       </ContactInformation>
     </OperatorDefinition>
     <SpeciesGroupDefinition>
+      <SpeciesGroupUserID agency="Seller">EX_Gran</SpeciesGroupUserID>
       <SpeciesGroupName>GRAN</SpeciesGroupName>
+      <SpeciesGroupInfo modificationRestricted="true">2</SpeciesGroupInfo>
+      <SpeciesGroupVersion modificationRestricted="false">V1</SpeciesGroupVersion>
       <SpeciesGroupKey>221</SpeciesGroupKey>
     </SpeciesGroupDefinition>
     <ProductDefinition>
@@ -28,19 +37,33 @@
         <ProductName>Spruce sawlog</ProductName>
         <ProductInfo>012-EX</ProductInfo>
         <ProductVersion>EX121</ProductVersion>
+        <ProductDestination>
+          <Address />
+          <BusinessName>Example Sawmill</BusinessName>
+          <BusinessID>89001</BusinessID>
+        </ProductDestination>
+        <ProductUserID agency="LoggingOrganisation">Gran_timmer_EX</ProductUserID>
       </ClassifiedProductDefinition>
     </ProductDefinition>
     <ObjectDefinition>
+      <ObjectUserID>4200001</ObjectUserID>
       <ObjectName>Example object</ObjectName>
       <ContractNumber>10000001</ContractNumber>
       <ObjectKey>283</ObjectKey>
       <StartDate>2026-01-12T12:06:41+01:00</StartDate>
+      <SubObject>
+        <SubObjectUserID>sub-0001</SubObjectUserID>
+        <SubObjectName>Standard</SubObjectName>
+        <SubObjectKey>1</SubObjectKey>
+      </SubObject>
     </ObjectDefinition>
     <Stem>
       <StemKey>619254</StemKey>
       <ObjectKey>283</ObjectKey>
+      <SubObjectKey>1</SubObjectKey>
       <SpeciesGroupKey>221</SpeciesGroupKey>
       <OperatorKey>2</OperatorKey>
+      <StemNumber>527</StemNumber>
       <ProcessingCategory>SingleTreeProcessing</ProcessingCategory>
       <StemCoordinates receiverPosition="Base machine position" coordinateReferenceSystem="WGS84">
         <Latitude latitudeCategory="North">56.6349311</Latitude>
@@ -85,8 +108,10 @@
     <Stem>
       <StemKey>619255</StemKey>
       <ObjectKey>283</ObjectKey>
+      <SubObjectKey>1</SubObjectKey>
       <SpeciesGroupKey>221</SpeciesGroupKey>
       <OperatorKey>2</OperatorKey>
+      <StemNumber>528</StemNumber>
       <ProcessingCategory>SingleTreeProcessing</ProcessingCategory>
       <StemCoordinates receiverPosition="Base machine position" coordinateReferenceSystem="WGS84">
         <Latitude latitudeCategory="North">56.6349453</Latitude>

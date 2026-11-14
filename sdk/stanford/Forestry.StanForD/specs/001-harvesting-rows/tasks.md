@@ -81,7 +81,7 @@ the first code story (US2), not before the document stories (developer, 2026-11-
 code, T006 for the first end-to-end test. The fragment (T007) moved to the start of US2 (2026-11-13).
 
 - [ ] T005 Add project references to `sdk/deserialize/Forestry.Deserialize/src/Forestry.Deserialize.csproj` and `sdk/deserialize/Forestry.Deserialize.Xml/src/Forestry.Deserialize.Xml.csproj` in `src/Forestry.StanForD.csproj` (A1, R9)
-- [ ] T006 [P] Add the test helper `RealDocuments` that yields files from `STANFORD_HPR_FOLDER` and skips when unset in `test/RealDocuments.cs` (R8)
+- [X] T006 [P] Add the test helper `RealDocuments` that yields files from `STANFORD_HPR_FOLDER` and skips when unset in `test/RealDocuments.cs` (R8) (2026-11-14: `test/RealDocuments.cs`, reading `*.hpr`, `*.hpr.xml` and `*.hpr.gz`; `[RealDocumentFact]` skips a test when the folder is not set, since xUnit 2 has no runtime skip)
 
 **Checkpoint**: the package references the deserialization packages and tests can read real documents.
 
@@ -268,25 +268,29 @@ metrics are US8 (Phase 9b).
 
 ### Test shells for User Story 7 ⚠️
 
-- [ ] T077 [US7] Extend both fragments with the dimension elements, as in the real documents: `StemNumber` and `SubObjectKey` on each stem; `ObjectUserID` and a `SubObject` (`SubObjectUserID`, `SubObjectName`, `SubObjectKey`) in the object definition; `SpeciesGroupUserID`, `SpeciesGroupInfo` and `SpeciesGroupVersion`; `OperatorUserID`; `MachineUserID` and `LoggingContractor/BusinessID`; `ProductUserID` and a `ProductDestination` (`BusinessName`, `BusinessID`) in the classified product definition; made-up values, in `test/Fragments/`
-- [ ] T078 [P] [US7] Test shell, US7-1 / FR-021, FR-022: every stem carries `StemNumber`, its object's key, name and user id, sub-object key, name and user id, species group key, name, info, user id and version, and operator key, business name and user id, in `test/DimensionTests.cs`
-- [ ] T079 [P] [US7] Test shell, US7-1 / FR-021: every log carries the same stem dimensions as its stem (no join needed), in `test/DimensionTests.cs`
-- [ ] T080 [P] [US7] Test shell, US7-2 / FR-022: every log carries its product's key, name, info, user id and version, and its destination's business name and id, in `test/DimensionTests.cs`
-- [ ] T081 [P] [US7] Test shell, US7-3 / FR-023: every stem and log carries `MachineUserID` and `LoggingContractorBusinessID`, in `test/DimensionTests.cs`
-- [ ] T057 [P] [US7] Test shell, quickstart 11 / US7-4 / FR-018: a real document (`STANFORD_HPR_FOLDER`, read through T006's helper) gives one Stem row per `Stem` and one Log row per `Log`, with no failure, in `test/EndToEndTests.cs`
-- [ ] T058 [P] [US7] Test shell, quickstart 12 / US7-5 / C0 / FR-016: every public member of `Stem` and `Log` is a single value (primitive, single-value struct or `string`) in `test/RowShapeTests.cs`
-- [ ] T059 [P] [US7] Test shell, C3 / FR-017: every member of `Stem` and `Log` is named in `data-model.md` in `test/RowShapeTests.cs`
+- [X] T077 [US7] Extend both fragments with the dimension elements, as in the real documents: `StemNumber` and `SubObjectKey` on each stem; `ObjectUserID` and a `SubObject` (`SubObjectUserID`, `SubObjectName`, `SubObjectKey`) in the object definition; `SpeciesGroupUserID`, `SpeciesGroupInfo` and `SpeciesGroupVersion`; `OperatorUserID`; `MachineUserID` and `LoggingContractor/BusinessID`; `ProductUserID` and a `ProductDestination` (`BusinessName`, `BusinessID`) in the classified product definition; made-up values, in `test/Fragments/` (2026-11-14: both fragments; every existing test still passes)
+- [X] T078 [P] [US7] Test shell, US7-1 / FR-021, FR-022: every stem carries `StemNumber`, its object's key, name and user id, sub-object key, name and user id, species group key, name, info, user id and version, and operator key, business name and user id, in `test/DimensionTests.cs` (2026-11-14)
+- [X] T079 [P] [US7] Test shell, US7-1 / FR-021: every log carries the same stem dimensions as its stem (no join needed), in `test/DimensionTests.cs` (2026-11-14)
+- [X] T080 [P] [US7] Test shell, US7-2 / FR-022: every log carries its product's key, name, info, user id and version, and its destination's business name and id, in `test/DimensionTests.cs` (2026-11-14)
+- [X] T081 [P] [US7] Test shell, US7-3 / FR-023: every stem and log carries `MachineUserID` and `LoggingContractorBusinessID`, in `test/DimensionTests.cs` (2026-11-14)
+- [X] T057 [P] [US7] Test shell, quickstart 11 / US7-4 / FR-018: a real document (`STANFORD_HPR_FOLDER`, read through T006's helper) gives one Stem row per `Stem` and one Log row per `Log`, with no failure, in `test/EndToEndTests.cs` (2026-11-14: counts `<Stem>` and `<Log>` in each document against the rows, default options, so an unknown category fails here)
+- [X] T058 [P] [US7] Test shell, quickstart 12 / US7-5 / C0 / FR-016: every public member of `Stem` and `Log` is a single value (primitive, single-value struct or `string`) in `test/RowShapeTests.cs` (2026-11-14: primitives, enums, `string`, `decimal`, `Guid`, `DateTime`, `DateTimeOffset`, or nullable ones)
+- [X] T059 [P] [US7] Test shell, C3 / FR-017: every member of `Stem` and `Log` is named in `data-model.md` in `test/RowShapeTests.cs` (2026-11-14: each member name in backticks in `data-model.md`; fails today for members the data model names only as a group, e.g. the eight diameters)
 
 ### Review gate
 
-- [ ] T060 [US7] **Test review gate**: the developer reviews T077-T081 and T057-T059 on the board before any code (C6)
+The dimension shells do not compile until T062 declares the new members (only missing-member
+errors, 2026-11-14), so the whole test project waits on T062.
+
+- [X] T060 [US7] **Test review gate**: the developer reviews T077-T081 and T057-T059 on the board before any code (C6) (2026-11-14: passed, "Shells look good")
 
 ### Implementation for User Story 7 (after the gate)
 
 - [X] T061 [US7] Choose the remaining Stem and Log members from `queries.md` and record them in `specs/001-harvesting-rows/data-model.md` (2026-11-14: data-model.md "Dimensions (US7)", queries.md "Missing, for US7"; `ProductNamespace` renamed `ProductInfo`)
-- [ ] T062 [US7] Add the dimension members to `Stem`, `Log` and the definitions; context rows for what sits below them (`SubObject`, `ContactInformation`, `ClassifiedProductDefinition`, `ProductDestination`, `LoggingContractor`); and policies copying the definitions' dimensions onto stems and logs, and a stem's onto its logs, in `src/` and `src/Policies/`
+- [X] T062 [US7] Add the dimension members to `Stem`, `Log` and the definitions; context rows for what sits below them (`SubObject`, `ContactInformation`, `ClassifiedProductDefinition`, `ProductDestination`, `LoggingContractor`); and policies copying the definitions' dimensions onto stems and logs, and a stem's onto its logs, in `src/` and `src/Policies/`; name every Stem and Log member in data-model.md (T059) (2026-11-14: members on `Stem`, `Log` and the definitions; rows `SubObject`, `ContactInformation`, `ClassifiedProductDefinition`, `ProductDestination`, `LoggingContractor` in `src/DefinitionParts.cs`; their policies in `src/Policies/DefinitionPartPolicies.cs`; `StemDimensionPolicy` and `LogDimensionPolicy` in `src/Policies/DimensionPolicies.cs`; every member named in data-model.md. A product with two destinations fails (S0). The test project copies data-model.md next to the tests, since the build output is outside the package folder)
 - [X] T063 [US7] Decide with the developer whether `MachineType`, `DiameterUnitType` and `ValidationExtensions` stay; remove them if not, in `src/` (R9) (2026-11-13: removed with the row classes, commit 3400c45)
-- [ ] T064 [US7] Run `dotnet test` with `STANFORD_HPR_FOLDER` set: T077-T081 and T057-T059 pass, all earlier stories green
+- [X] T086 [US7] Ignore measurements with measurement category "Operator" (M2) deliberately, in `src/Policies/ConditionalMappingPolicies.cs`, with a test that an operator's volume beside the machine's neither fails nor changes the machine's members in `test/ConditionalMappingTests.cs`; T033 and T076 now use "Other" for a measurement category that still counts as unmatched (2026-11-14, found by T057; the M2 investigation is #109)
+- [X] T064 [US7] Run `dotnet test` with `STANFORD_HPR_FOLDER` set: T077-T081 and T057-T059 pass, all earlier stories green (2026-11-14: 36 passed with the fragments. With the 12 real documents, the end-to-end test fails on 10 logs carrying a fourth volume, `m3sob` measured by "Operator", which matches no Log member; with `Unmatched = Ignore` every document passes, one row per stem and log. Developer, 2026-11-14: operator (M2) measurements are ignored for now (T086); then all 38 tests pass with the 12 real documents)
 
 ---
 

@@ -55,6 +55,32 @@ namespace Forestry.StanForD {
         /// Set by a policy, as for <see cref="ProductName"/>
         /// </remarks>
         public string ProductVersion { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The product's external reference, from StanForD <c>ClassifiedProductDefinition/ProductUserID</c>
+        /// </summary>
+        /// <remarks>
+        /// Set by a policy, as for <see cref="ProductName"/>
+        /// </remarks>
+        public string ProductUserID { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Where the product is delivered, e.g. a sawmill, from StanForD
+        /// <c>ClassifiedProductDefinition/ProductDestination/BusinessName</c>
+        /// </summary>
+        /// <remarks>
+        /// Set by a policy from a <see cref="ProductDestination"/> row
+        /// </remarks>
+        public string ProductDestinationBusinessName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The destination's business identity, from StanForD
+        /// <c>ClassifiedProductDefinition/ProductDestination/BusinessID</c>
+        /// </summary>
+        /// <remarks>
+        /// Set by a policy from a <see cref="ProductDestination"/> row
+        /// </remarks>
+        public string ProductDestinationBusinessID { get; set; } = string.Empty;
         #endregion
     }
 }

@@ -28,8 +28,8 @@ definition sit next to the key that refers to it. Set by: *name* = read directly
 |---|---|---|
 | identification | `Id` (`string`, `{machine key "N"}-{stem key}-{log key}`), `LogKey`, `StemKey` (`int`), `MachineKey` (`Guid`) | `LogKey` name; others policy |
 | partitioning | `HarvestingCreationTime`, `ContractNumber` | policy |
-| metrics | `MachineVolumeOverBark`, `MachineVolumeUnderBark`, `MachineVolumePrice` (`decimal`); `MachineLength` and eight `MachineDiameter…` members (`int`, 0 when not measured) | conditional mapping |
-| dimensions | `DiameterUnit`, `LengthUnit`, `VolumeUnit` (root attributes, not converted); `ObjectName`; `ProductKey`, `ProductName`, `ProductInfo`, `ProductVersion`; `CuttingReason`; `TopSawing`; `FindButtEndFunction` | `ProductKey`, `TopSawing`, `FindButtEndFunction` by name; others policy |
+| metrics | `MachineVolumeOverBark`, `MachineVolumeUnderBark`, `MachineVolumePrice` (`decimal`); `MachineLength` and the eight diameters `MachineDiameterButtOverBark`, `MachineDiameterButtUnderBark`, `MachineDiameterMidOverBark`, `MachineDiameterMidUnderBark`, `MachineDiameterMidHKSOverBark`, `MachineDiameterMidHKSUnderBark`, `MachineDiameterTopOverBark`, `MachineDiameterTopUnderBark` (`int`, 0 when not measured) | conditional mapping |
+| dimensions | `DiameterUnit`, `LengthUnit`, `VolumeUnit` (root attributes, not converted); the stem's dimensions (see "Dimensions (US7)"); `ProductKey`, `ProductName`, `ProductInfo`, `ProductUserID`, `ProductVersion`, `ProductDestinationBusinessName`, `ProductDestinationBusinessID`; `CuttingReason`; `TopSawing`; `FindButtEndFunction` | `ProductKey`, `TopSawing`, `FindButtEndFunction` by name; others policy |
 
 ### Partitioning sources (US3, FR-006, FR-007, FR-009)
 
@@ -41,7 +41,7 @@ definition sit next to the key that refers to it. Set by: *name* = read directly
 
 `HarvestedProductionHeader` is a row type that never comes out, kept until the document ends.
 
-### Dimensions (US7, planned 2026-11-14; FR-021 to FR-023)
+### Dimensions (US7, built 2026-11-14; FR-021 to FR-023)
 
 Copied onto every row they apply to, a stem's onto its logs too, so queries need no joins. ✓ = a
 member that exists today (some still empty until US7 sets them).

@@ -113,7 +113,7 @@ namespace Forestry.StanForD.Tests
             // Arrange
             string xml = Fragment.Read(Fragment.MinimalHarvesting).Replace(
                 """<LogVolume logVolumeCategory="m3sob" logMeasurementCategory="Machine">0.4012000</LogVolume>""",
-                """<LogVolume logVolumeCategory="m3sob" logMeasurementCategory="Operator">0.4012000</LogVolume>""",
+                """<LogVolume logVolumeCategory="m3sob" logMeasurementCategory="Other">0.4012000</LogVolume>""",
                 StringComparison.Ordinal);
 
             // Act
@@ -172,7 +172,7 @@ namespace Forestry.StanForD.Tests
             // Arrange
             string xml = Fragment.Read(Fragment.MinimalHarvesting).Replace(
                 """<LogMeasurement logMeasurementCategory="Machine">""",
-                """<LogMeasurement logMeasurementCategory="Operator">""",
+                """<LogMeasurement logMeasurementCategory="Other">""",
                 StringComparison.Ordinal);
 
             // Act
@@ -180,7 +180,30 @@ namespace Forestry.StanForD.Tests
 
             // Assert
             Assert.Contains("LogDiameter", exception.Message, StringComparison.Ordinal);
-            Assert.Contains("Operator", exception.Message, StringComparison.Ordinal);
+            Assert.Contains("Other", exception.Message, StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// T086, FR-011 (developer, 2026-11-14): an operator's (M2) volume, beside the machine's (M1) ones, is
+        /// deliberately ignored by default, so it neither fails nor changes the machine's members
+        /// </summary>
+        [Fact]
+        public void OperatorVolume_ItShould_BeIgnoredByDefault()
+        {
+            // Arrange
+            string xml = Fragment.Read(Fragment.MinimalHarvesting).Replace(
+                """<LogVolume logVolumeCategory="m3 (price)" logMeasurementCategory="Machine">0.5332271</LogVolume>""",
+                """<LogVolume logVolumeCategory="m3 (price)" logMeasurementCategory="Machine">0.5332271</LogVolume>""" +
+                """<LogVolume logVolumeCategory="m3sob" logMeasurementCategory="Operator">0.6000000</LogVolume>""",
+                StringComparison.Ordinal);
+
+            // Act
+            Log log = FirstLog(Read(xml));
+
+            // Assert
+            Assert.Equal(0.5925430m, log.MachineVolumeOverBark);
+            Assert.Equal(0.5332270m, log.MachineVolumeUnderBark);
+            Assert.Equal(0.5332271m, log.MachineVolumePrice);
         }
 
         /// <summary>

@@ -10,9 +10,22 @@ namespace Forestry.StanForD.Policies {
     internal static class ConditionalMapping
     {
         /// <summary>
-        /// The measurement category every condition needs
+        /// The measurement category every condition needs: the machine's measurement (M1)
         /// </summary>
         public const string Machine = "Machine";
+
+        /// <summary>
+        /// Measurement categories deliberately ignored (FR-011): the operator's own measurement (M2), seen
+        /// beside the machine's in real Harvesting documents; to be looked into later (developer,
+        /// 2026-11-14, #109). Quality-check measurements (M3) are not expected in Harvesting documents
+        /// </summary>
+        private static readonly HashSet<string> s_ignored = new(StringComparer.Ordinal) { "Operator" };
+
+        /// <summary>
+        /// Whether a measurement of <paramref name="measurementCategory"/> is deliberately ignored, neither
+        /// setting a member nor counting as unmatched
+        /// </summary>
+        public static bool IsIgnored(string measurementCategory) => s_ignored.Contains(measurementCategory);
 
         /// <summary>
         /// The <see cref="Log"/> open around a measurement row
@@ -86,6 +99,13 @@ namespace Forestry.StanForD.Policies {
             row.Enumerate(false);
 
             LogVolume volume = row.Row.AsType<LogVolume>();
+
+            if (ConditionalMapping.IsIgnored(volume.LogMeasurementCategory))
+            {
+                next(row);
+                return;
+            }
+
             ContextRow log = ConditionalMapping.Log(row, context, nameof(LogVolume));
             string? member = volume.LogMeasurementCategory == ConditionalMapping.Machine
                 && s_members.TryGetValue(volume.LogVolumeCategory, out string? found) ? found : null;
@@ -108,7 +128,8 @@ namespace Forestry.StanForD.Policies {
         {
             row.Enumerate(false);
 
-            if (row.IsSet(nameof(LogMeasurement.LogLength)))
+            if (row.IsSet(nameof(LogMeasurement.LogLength))
+                && !ConditionalMapping.IsIgnored(row.Row.AsType<LogMeasurement>().LogMeasurementCategory))
             {
                 LogMeasurement measurement = row.Row.AsType<LogMeasurement>();
                 ContextRow log = ConditionalMapping.Log(row, context, nameof(LogMeasurement));
@@ -150,6 +171,13 @@ namespace Forestry.StanForD.Policies {
             ContextRow log = ConditionalMapping.Log(row, context, nameof(LogDiameter));
             string measurementCategory = context.Ancestors(row)
                 .FirstOrDefault(ancestor => ancestor.Row is LogMeasurement)?.Row.AsType<LogMeasurement>().LogMeasurementCategory ?? string.Empty;
+
+            if (ConditionalMapping.IsIgnored(measurementCategory))
+            {
+                next(row);
+                return;
+            }
+
             string? member = measurementCategory == ConditionalMapping.Machine
                 && s_members.TryGetValue(diameter.LogDiameterCategory, out string? found) ? found : null;
             string occurrence = $"{nameof(LogDiameter)} (logDiameterCategory \"{diameter.LogDiameterCategory}\", logMeasurementCategory \"{measurementCategory}\")";

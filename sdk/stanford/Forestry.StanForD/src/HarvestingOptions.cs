@@ -62,6 +62,11 @@ namespace Forestry.StanForD {
                 .Add<SpeciesGroupDefinition>()
                 .Add<OperatorDefinition>()
                 .Add<ProductDefinition>()
+                .Add<SubObject>()
+                .Add<ContactInformation>()
+                .Add<ClassifiedProductDefinition>()
+                .Add<ProductDestination>()
+                .Add<LoggingContractor>()
                 .Add<LogVolume>()
                 .Add<LogMeasurement>()
                 .Add<LogDiameter>();
@@ -77,13 +82,20 @@ namespace Forestry.StanForD {
                 .Add<SpeciesGroupDefinition>(new CommonDefinitionPolicy<SpeciesGroupDefinition>(nameof(SpeciesGroupDefinition.SpeciesGroupKey), definition => definition.SpeciesGroupKey))
                 .Add<OperatorDefinition>(new CommonDefinitionPolicy<OperatorDefinition>(nameof(OperatorDefinition.OperatorKey), definition => definition.OperatorKey))
                 .Add<ProductDefinition>(new CommonDefinitionPolicy<ProductDefinition>(nameof(ProductDefinition.ProductKey), definition => definition.ProductKey))
+                .Add<SubObject>(new SubObjectPolicy())
+                .Add<ContactInformation>(new ContactInformationPolicy())
+                .Add<ClassifiedProductDefinition>(new ClassifiedProductDefinitionPolicy())
+                .Add<ProductDestination>(new ProductDestinationPolicy())
+                .Add<LoggingContractor>(new LoggingContractorPolicy())
                 .Add<LogVolume>(new LogVolumePolicy(harvesting.Unmatched))
                 .Add<LogMeasurement>(new LogMeasurementPolicy(harvesting.Unmatched))
                 .Add<LogDiameter>(new LogDiameterPolicy(harvesting.Unmatched))
                 .Add<Stem>(new StemIdentificationPolicy())
                 .Add<Log>(new LogIdentificationPolicy())
                 .Add<Stem>(new StemPartitionPolicy())
-                .Add<Log>(new LogPartitionPolicy());
+                .Add<Log>(new LogPartitionPolicy())
+                .Add<Stem>(new StemDimensionPolicy())
+                .Add<Log>(new LogDimensionPolicy());
 
             return options;
         }
