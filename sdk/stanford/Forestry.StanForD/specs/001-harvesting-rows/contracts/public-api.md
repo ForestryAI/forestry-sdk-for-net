@@ -21,6 +21,10 @@ public sealed class ProductDefinition : Forestry.Deserialize.Row { }
 public sealed class LogVolume : Forestry.Deserialize.Row { }       // categories (attributes) and value (text)
 public sealed class LogMeasurement : Forestry.Deserialize.Row { }  // category (attribute) and LogLength
 public sealed class LogDiameter : Forestry.Deserialize.Row { }     // category (attribute) and value (text)
+public sealed class SubObject, ContactInformation, ClassifiedProductDefinition,
+    ProductDestination, LoggingContractor : Forestry.Deserialize.Row { }  // US7, copied onto definitions
+public sealed class StemCoordinates, Latitude, Longitude, BoomPositioning,
+    SingleTreeProcessedStem : Forestry.Deserialize.Row { }                // US8, copied onto the stem
 
 public static class Identification
 {
@@ -88,4 +92,6 @@ Built: `MachinePolicy`, `CommonDefinitionPolicy<TDefinition>`, `StemIdentificati
 `LogIdentificationPolicy`; `HeaderPolicy`, `StemPartitionPolicy` and `LogPartitionPolicy` (US3), all
 acting when a row completes (`Complete`), in `src/Policies/`; `LogVolumePolicy`,
 `LogMeasurementPolicy` and `LogDiameterPolicy` (US4), each setting the open log's member its
-categories match.
+categories match. The definition part policies (US7), `StemDimensionPolicy` and
+`LogDimensionPolicy` (US7), and the stem metric policies (US8) follow the same pattern; an
+unknown boom positioning or coordinate category follows `HarvestingOptions.Unmatched`.

@@ -19,7 +19,7 @@ definition sit next to the key that refers to it. Set by: *name* = read directly
 |---|---|---|
 | identification | `Id` (`string`, `{machine key "N"}-{stem key}`), `StemKey` (`int`), `MachineKey` (`Guid`) | `StemKey` name; others policy |
 | partitioning | `HarvestingCreationTime` (`DateTimeOffset`, UTC, header `CreationDate`), `ContractNumber` (`string`) | policy |
-| metrics | `ProcessingCategory`, `Latitude`, `Longitude` (signed `decimal` degrees), `Altitude`, `CoordinateReferenceSystem`, `BoomAngleFelling`, `BoomAngleLastLogCut`, `BoomExtensionFelling`, `BoomExtensionLastLogCut` (`int`; 65535 is the schema's default value) | name or policy (coordinates and boom positions sit below the stem) |
+| metrics | `ProcessingCategory`, `Latitude`, `Longitude` (signed `decimal` degrees), `Altitude`, `CoordinateReferenceSystem`, `BoomAngleFelling`, `BoomAngleLastLogCut`, `BoomExtensionFelling`, `BoomExtensionLastLogCut` (`int`; 65535 is the schema's default value), `DBH` (`int`) | policy (US8): from the `StemCoordinates`, `Latitude`, `Longitude`, `BoomPositioning` and `SingleTreeProcessedStem` rows; `ProcessingCategory` by name |
 | dimensions | `ObjectKey`, `ObjectName`, `SpeciesGroupKey`, `SpeciesGroupName`, `OperatorKey`, `OperatorBusinessName` | keys by name; names by policy from the definitions |
 
 ### Log (`src/Log.cs`)
@@ -59,7 +59,7 @@ member that exists today (some still empty until US7 sets them).
 
 User Ids are StanForD's external references, the keys a Biometria add-on would join on; their
 `agency` attribute is left out for now. Stem metrics in wrapper elements (coordinates, altitude,
-coordinate reference system, boom positions, DBH) are User Story 8.
+coordinate reference system, boom positions, DBH) are User Story 8 (built 2026-11-14).
 
 ### Common definitions (`src/*Definition.cs`, `src/Machine.cs`)
 

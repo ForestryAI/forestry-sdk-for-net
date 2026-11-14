@@ -116,6 +116,12 @@ namespace Forestry.StanForD {
         /// <see cref="BoomExtensionFelling"/>.
         /// </remarks>
         public int BoomExtensionLastLogCut { get; set; }
+
+        /// <summary>
+        /// Diameter at breast height, in the document's diameter unit, from StanForD
+        /// <c>SingleTreeProcessedStem/DBH</c>; 0 when not measured
+        /// </summary>
+        public int DBH { get; set; }
         #endregion
 
         #region dimensions

@@ -67,7 +67,16 @@
         <Longitude longitudeCategory="East">15.1924711</Longitude>
         <Altitude>140</Altitude>
       </StemCoordinates>
+      <BoomPositioning boomPositioningCategory="Felling">
+        <BoomAngle>41</BoomAngle>
+        <BoomExtension>700</BoomExtension>
+      </BoomPositioning>
+      <BoomPositioning boomPositioningCategory="Last log cut">
+        <BoomAngle>60</BoomAngle>
+        <BoomExtension>650</BoomExtension>
+      </BoomPositioning>
       <SingleTreeProcessedStem>
+        <DBH>352</DBH>
         <Log>
           <LogKey>1</LogKey>
           <ProductKey>3350</ProductKey>
@@ -92,7 +101,16 @@
         <Longitude longitudeCategory="East">15.1924935</Longitude>
         <Altitude>140</Altitude>
       </StemCoordinates>
+      <BoomPositioning boomPositioningCategory="Felling">
+        <BoomAngle>44</BoomAngle>
+        <BoomExtension>710</BoomExtension>
+      </BoomPositioning>
+      <BoomPositioning boomPositioningCategory="Last log cut">
+        <BoomAngle>62</BoomAngle>
+        <BoomExtension>640</BoomExtension>
+      </BoomPositioning>
       <SingleTreeProcessedStem>
+        <DBH>301</DBH>
         <Log>
           <LogKey>1</LogKey>
           <ProductKey>3350</ProductKey>

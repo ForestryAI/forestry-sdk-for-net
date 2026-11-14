@@ -252,7 +252,7 @@ the 12 US2 tests still passing, 2026-11-13). The fragment edit helpers moved to
 
 ---
 
-## Phase 9: User Story 7 - Log and Stem dimensions (Priority: P3)
+## Phase 9: User Story 7 - Log and Stem dimensions (Priority: P3) ✅ Done
 
 **Goal**: Stem and Log rows carry every dimension the hpr query groups filter or group on, copied
 onto each row (#98; spec FR-021 to FR-023). **Independent Test**: the fragment gives every stem and
@@ -294,16 +294,18 @@ errors, 2026-11-14), so the whole test project waits on T062.
 
 ---
 
-## Phase 9b: User Story 8 - Stem metrics (Priority: P4)
+## Phase 9b: User Story 8 - Stem metrics (Priority: P4) ✅ Done
 
 **Goal**: The stem's values in wrapper elements: signed coordinates, altitude, coordinate reference
 system, boom positions by category and DBH (spec FR-024). **Independent Test**: the fragment's stem
 carries them. **Needs**: US7. Only the detail query (G4) uses them (developer, 2026-11-14).
 
-- [ ] T082 [P] [US8] Test shells: latitude and longitude signed by `latitudeCategory` / `longitudeCategory`; altitude and `coordinateReferenceSystem`; `BoomAngle` and `BoomExtension` per `boomPositioningCategory` ("Felling", "Last log cut"); `DBH`; in `test/StemMetricTests.cs`
-- [ ] T083 [US8] **Test review gate**: the developer reviews T082 on the board before any code (C6)
-- [ ] T084 [US8] Context rows `StemCoordinates`, `Latitude`, `Longitude`, `BoomPositioning` and `SingleTreeProcessedStem`, and policies setting the stem's metric members, in `src/` and `src/Policies/`; `DBH` added to `Stem`
-- [ ] T085 [US8] Run `dotnet test`: T082 passes, all earlier stories green
+- [X] T087 [US8] Extend both fragments with two `BoomPositioning`s per stem ("Felling", "Last log cut", made-up angles and extensions) and `SingleTreeProcessedStem/DBH`, in real-document order, in `test/Fragments/` (2026-11-14; the 37 earlier tests still pass)
+- [X] T082 [P] [US8] Test shells: latitude and longitude signed by `latitudeCategory` / `longitudeCategory`; altitude and `coordinateReferenceSystem`; `BoomAngle` and `BoomExtension` per `boomPositioningCategory` ("Felling", "Last log cut"); `DBH`; in `test/StemMetricTests.cs` (2026-11-14: 8 tests; also an unknown boom positioning or latitude category failing by default, ignored with `Unmatched = Ignore`, and no metric rows coming out. Only build error: `Stem.DBH` does not exist yet)
+- [X] T083 [US8] **Test review gate**: the developer reviews T082 on the board before any code (C6) (2026-11-14: passed, "Shells look good")
+- [X] T084 [US8] Context rows `StemCoordinates`, `Latitude`, `Longitude`, `BoomPositioning` and `SingleTreeProcessedStem`, and policies setting the stem's metric members, in `src/` and `src/Policies/`; `DBH` added to `Stem`; a category matching no member fails or is ignored by `Unmatched` (FR-012) (2026-11-14: `src/StemMetricParts.cs` and `src/Policies/StemMetricPolicies.cs`; `Stem.DBH`)
+- [X] T088 [US8] Ignore a `Latitude` or `Longitude` outside `StemCoordinates`: real documents carry a latitude in species groups' bark functions (`Skogforsk2004ScotsPine`), which name association matched as a row; test in `test/StemMetricTests.cs` (2026-11-14, found by T057)
+- [X] T085 [US8] Run `dotnet test`: T082 passes, all earlier stories green (2026-11-14: 46 passed with the fragments, 47 with the 12 real documents)
 
 ---
 
