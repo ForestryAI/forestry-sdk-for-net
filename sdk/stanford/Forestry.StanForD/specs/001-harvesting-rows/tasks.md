@@ -100,15 +100,15 @@ start date (#96). **Independent Test**: findings written with sources and review
 
 ---
 
-## Phase 4: User Story 6 - Collect and group queries (Priority: P2, ongoing) 📄 Document
+## Phase 4: User Story 6 - Collect and group queries (Priority: P2, ongoing) 📄 Document ✅ First grouping done
 
 **Goal**: A first grouping of likely queries on log and stem data (#97). **Independent Test**: every
 group names its actor and lists the filters, groupings and summaries it needs.
 
-- [ ] T013 [P] [US6] Create the extendable query collection (query in plain language, who asks it, group, members it filters/groups/summarizes by) in `specs/001-harvesting-rows/queries.md`
-- [ ] T014 [US6] Collect and group queries covering at least product value, contract progress over time, seasonal measurement quality, operator comparisons and machine comparisons (SC-005) in `specs/001-harvesting-rows/queries.md`
-- [ ] T015 [US6] For each group, list the Stem and Log members it needs and mark which are already in `data-model.md` in `specs/001-harvesting-rows/queries.md`
-- [ ] T016 [US6] **Review gate**: the developer reviews `queries.md` on the board (#97); collecting continues after the story closes
+- [X] T013 [P] [US6] Create the extendable query collection (query in plain language, who asks it, group, members it filters/groups/summarizes by) in `specs/001-harvesting-rows/queries.md` (2026-11-14: `queries.md`, groups with query, who asks, filters, groupings, summaries and source)
+- [X] T014 [US6] Collect and group queries covering at least product value, contract progress over time, seasonal measurement quality, operator comparisons and machine comparisons (SC-005) in `specs/001-harvesting-rows/queries.md` (2026-11-14: seven groups from what the industry is offered today (#97); each marked hpr, Biometria or MOM, only hpr in the POC; seasonal quality in G6, operator and machine comparisons in G3)
+- [X] T015 [US6] For each group, list the Stem and Log members it needs and mark which are already in `data-model.md` in `specs/001-harvesting-rows/queries.md` (2026-11-14: `queries.md`, "Members the hpr groups need": on the rows today, missing for US7, and the User Ids for joining Biometria later)
+- [X] T016 [US6] **Review gate**: the developer reviews `queries.md` on the board (#97); collecting continues after the story closes (2026-11-14: passed, "Looks good"; collecting continues in `queries.md`)
 
 ---
 
