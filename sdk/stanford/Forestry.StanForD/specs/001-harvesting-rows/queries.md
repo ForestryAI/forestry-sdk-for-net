@@ -104,24 +104,29 @@ Each query: plain language, who asks, filters (F), groupings (G), summaries (S).
 
 **On the rows today** (data-model.md): `Id`, `MachineKey`, `StemKey`, `LogKey`,
 `HarvestingCreationTime`, `ContractNumber`, `ObjectName`, the three volumes, the eight diameters,
-`MachineLength`, unit members, `ProductKey`, `ProductName`, `ProductNamespace`, `ProductVersion`,
+`MachineLength`, unit members, `ProductKey`, `ProductName`, `ProductInfo`, `ProductVersion`,
 `CuttingReason`, `TopSawing`, `FindButtEndFunction`; on Stem: coordinates, altitude, boom
 positions, `ProcessingCategory`, `SpeciesGroupKey`, `SpeciesGroupName`, `OperatorKey`,
 `OperatorBusinessName`.
 
-**Missing, for US7** (all read from the hpr document):
+**Missing, for US7** (all read from the hpr document; decided 2026-11-14): copied onto every
+row they apply to (FR-021); products and species groups keep all four identifiers, Name, Info,
+UserID and Version (FR-022); members named after their element, prefixed by their owner where
+needed (FR-023). The full list is in data-model.md, "Dimensions (US7)".
 
-| Member | Row | From StanForD | Groups |
+| Member | Rows | From StanForD | Groups |
 |---|---|---|---|
-| `StemNumber` | Stem | `Stem/StemNumber`, a sequence per object | G4 |
-| `SubObjectKey`, `SubObjectName` | Stem, Log | `Stem/SubObjectKey`, `ObjectDefinition/SubObject` | G1 |
-| species group on Log | Log | its stem's `SpeciesGroupName` (or a join to Stem by `Id`) | G1, G5, G6 |
-| operator on Log | Log | its stem's `OperatorKey`, `OperatorBusinessName` (or a join) | G3 |
-| product destination | Log | `ProductDefinition/.../ProductDestination/BusinessName` | G2 |
-| `MachineUserID` | Stem, Log | `Machine/MachineUserID` | G3 |
-| logging contractor | Stem, Log | `Machine/LoggingContractor` | G3 |
-| `DBH` | Stem | `SingleTreeProcessedStem/DBH` | G5 |
-| User Ids | Stem, Log | `ObjectUserID`, `ProductUserID`, `SpeciesGroupUserID`, `MachineUserID` | joining Biometria later |
+| `StemNumber` | Stem, Log | `Stem/StemNumber`, a sequence per object | G4, completeness |
+| `ObjectKey`, `ObjectUserID` | Stem, Log | `ObjectDefinition` | G1, joining Biometria later |
+| `SubObjectKey`, `SubObjectName`, `SubObjectUserID` | Stem, Log | `Stem/SubObjectKey`, `ObjectDefinition/SubObject` | G1 |
+| species group: `SpeciesGroupKey`, `Name`, `Info`, `UserID`, `Version` | Stem, Log | `SpeciesGroupDefinition` | G1, G5, G6 |
+| operator: `OperatorKey`, `OperatorBusinessName`, `OperatorUserID` | Stem, Log | `OperatorDefinition` | G3 |
+| product: `ProductUserID` (with the existing name, info and version) | Log | `ClassifiedProductDefinition` | G1, G2, G7 |
+| `ProductDestinationBusinessName`, `ProductDestinationBusinessID` | Log | `ClassifiedProductDefinition/ProductDestination` | G2 |
+| `MachineUserID`, `LoggingContractorBusinessID` | Stem, Log | `Machine` | G3 |
+
+**Stem metrics, User Story 8**: `DBH`, signed coordinates, altitude, coordinate reference system and
+boom positions (G4 only).
 
 **Consciously left out for now** (developer, 2026-11-14): single and multi-tree processing details,
 stem grades and defects.

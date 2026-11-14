@@ -252,27 +252,54 @@ the 12 US2 tests still passing, 2026-11-13). The fragment edit helpers moved to
 
 ---
 
-## Phase 9: User Story 7 - Log and Stem row types (Priority: P3)
+## Phase 9: User Story 7 - Log and Stem dimensions (Priority: P3)
 
-**Goal**: Stem and Log rows with members from the query groups (#98). **Independent Test**: a real
-document gives one row per stem and per log, every member traced. **Needs**: US2-US4, US6.
+**Goal**: Stem and Log rows carry every dimension the hpr query groups filter or group on, copied
+onto each row (#98; spec FR-021 to FR-023). **Independent Test**: the fragment gives every stem and
+log its object, sub-object, species group, operator, machine and (on logs) product and destination
+dimensions; a real document gives one row per stem and per log, every member traced. **Needs**:
+US2-US4 (done), US6 (first grouping done).
+
+**Design (2026-11-14, developer)**: dimensions are duplicated onto every row instead of joined, a
+stem's onto its logs too; products and species groups keep Name, Info, UserID and Version; members
+are named after their StanForD element, prefixed by their owner where needed
+(`LoggingContractorBusinessID`). The members are listed in data-model.md, "Dimensions (US7)". Stem
+metrics are US8 (Phase 9b).
 
 ### Test shells for User Story 7 ⚠️
 
-- [ ] T057 [P] [US7] Test shell, quickstart 11 / US7-1 / FR-018: a real document (`STANFORD_HPR_FOLDER`) gives one Stem row per `Stem` and one Log row per `Log` in `test/EndToEndTests.cs`
-- [ ] T058 [P] [US7] Test shell, quickstart 12 / C0 / FR-016: every public member of `Stem` and `Log` is a single value (primitive or single-value struct, or `string`) in `test/RowShapeTests.cs`
-- [ ] T059 [P] [US7] Test shell, C3 / FR-017: every member of `Stem` and `Log` appears in the trace column of `data-model.md` in `test/RowShapeTests.cs`
+- [ ] T077 [US7] Extend both fragments with the dimension elements, as in the real documents: `StemNumber` and `SubObjectKey` on each stem; `ObjectUserID` and a `SubObject` (`SubObjectUserID`, `SubObjectName`, `SubObjectKey`) in the object definition; `SpeciesGroupUserID`, `SpeciesGroupInfo` and `SpeciesGroupVersion`; `OperatorUserID`; `MachineUserID` and `LoggingContractor/BusinessID`; `ProductUserID` and a `ProductDestination` (`BusinessName`, `BusinessID`) in the classified product definition; made-up values, in `test/Fragments/`
+- [ ] T078 [P] [US7] Test shell, US7-1 / FR-021, FR-022: every stem carries `StemNumber`, its object's key, name and user id, sub-object key, name and user id, species group key, name, info, user id and version, and operator key, business name and user id, in `test/DimensionTests.cs`
+- [ ] T079 [P] [US7] Test shell, US7-1 / FR-021: every log carries the same stem dimensions as its stem (no join needed), in `test/DimensionTests.cs`
+- [ ] T080 [P] [US7] Test shell, US7-2 / FR-022: every log carries its product's key, name, info, user id and version, and its destination's business name and id, in `test/DimensionTests.cs`
+- [ ] T081 [P] [US7] Test shell, US7-3 / FR-023: every stem and log carries `MachineUserID` and `LoggingContractorBusinessID`, in `test/DimensionTests.cs`
+- [ ] T057 [P] [US7] Test shell, quickstart 11 / US7-4 / FR-018: a real document (`STANFORD_HPR_FOLDER`, read through T006's helper) gives one Stem row per `Stem` and one Log row per `Log`, with no failure, in `test/EndToEndTests.cs`
+- [ ] T058 [P] [US7] Test shell, quickstart 12 / US7-5 / C0 / FR-016: every public member of `Stem` and `Log` is a single value (primitive, single-value struct or `string`) in `test/RowShapeTests.cs`
+- [ ] T059 [P] [US7] Test shell, C3 / FR-017: every member of `Stem` and `Log` is named in `data-model.md` in `test/RowShapeTests.cs`
 
 ### Review gate
 
-- [ ] T060 [US7] **Test review gate**: the developer reviews T057-T059 on the board before any code (C6)
+- [ ] T060 [US7] **Test review gate**: the developer reviews T077-T081 and T057-T059 on the board before any code (C6)
 
 ### Implementation for User Story 7 (after the gate)
 
-- [ ] T061 [US7] Choose the remaining Stem and Log members from `queries.md` and record each with its trace in `specs/001-harvesting-rows/data-model.md`
-- [ ] T062 [US7] Add those members, with context rows (e.g. `SingleTreeProcessedStem`) where they come from below the row, in `src/Harvesting/`
-- [ ] T063 [US7] Decide with the developer whether `MachineType`, `DiameterUnitType` and `ValidationExtensions` stay; remove them if not, in `src/` (R9)
-- [ ] T064 [US7] Run `dotnet test` with `STANFORD_HPR_FOLDER` set: T057-T059 pass, all earlier stories green
+- [X] T061 [US7] Choose the remaining Stem and Log members from `queries.md` and record them in `specs/001-harvesting-rows/data-model.md` (2026-11-14: data-model.md "Dimensions (US7)", queries.md "Missing, for US7"; `ProductNamespace` renamed `ProductInfo`)
+- [ ] T062 [US7] Add the dimension members to `Stem`, `Log` and the definitions; context rows for what sits below them (`SubObject`, `ContactInformation`, `ClassifiedProductDefinition`, `ProductDestination`, `LoggingContractor`); and policies copying the definitions' dimensions onto stems and logs, and a stem's onto its logs, in `src/` and `src/Policies/`
+- [X] T063 [US7] Decide with the developer whether `MachineType`, `DiameterUnitType` and `ValidationExtensions` stay; remove them if not, in `src/` (R9) (2026-11-13: removed with the row classes, commit 3400c45)
+- [ ] T064 [US7] Run `dotnet test` with `STANFORD_HPR_FOLDER` set: T077-T081 and T057-T059 pass, all earlier stories green
+
+---
+
+## Phase 9b: User Story 8 - Stem metrics (Priority: P4)
+
+**Goal**: The stem's values in wrapper elements: signed coordinates, altitude, coordinate reference
+system, boom positions by category and DBH (spec FR-024). **Independent Test**: the fragment's stem
+carries them. **Needs**: US7. Only the detail query (G4) uses them (developer, 2026-11-14).
+
+- [ ] T082 [P] [US8] Test shells: latitude and longitude signed by `latitudeCategory` / `longitudeCategory`; altitude and `coordinateReferenceSystem`; `BoomAngle` and `BoomExtension` per `boomPositioningCategory` ("Felling", "Last log cut"); `DBH`; in `test/StemMetricTests.cs`
+- [ ] T083 [US8] **Test review gate**: the developer reviews T082 on the board before any code (C6)
+- [ ] T084 [US8] Context rows `StemCoordinates`, `Latitude`, `Longitude`, `BoomPositioning` and `SingleTreeProcessedStem`, and policies setting the stem's metric members, in `src/` and `src/Policies/`; `DBH` added to `Stem`
+- [ ] T085 [US8] Run `dotnet test`: T082 passes, all earlier stories green
 
 ---
 
@@ -296,7 +323,8 @@ document gives one row per stem and per log, every member traced. **Needs**: US2
 - **US4 (Phase 6)**: Setup; D1 and D2 met. Independent of US2 except the shared `Log` file.
 - **US3 (Phase 7)**: US2 (reference keys) + US5 (T009-T010).
 - **Schema version (Phase 8)**: after the POC (spec FR-019, 2026-11-13).
-- **US7 (Phase 9)**: US2, US3, US4, US6.
+- **US7 (Phase 9)**: US2, US3, US4, US6 (all done); dimensions only.
+- **US8 (Phase 9b)**: US7; the stem metrics in wrapper elements.
 - **Polish**: last.
 
 ### Within Each Story
@@ -327,11 +355,11 @@ Task: "T026 Stem and Log declarations" and "T027 context row declarations" (afte
 
 ### Incremental Delivery
 
-US5 → US2 → US4 → US3 → schema version → US7 (needs US6). Each story ends with
+US5 → US2 → US4 → US3 → US6 → US7 (dimensions) → US8 (stem metrics); schema version after the POC. Each story ends with
 `dotnet test` green on everything before it.
 
 ## Notes
 
-- Board stories: #91 (US1), #93 (US2), #94 (US3), #95 (US4), #96 (US5), #97 (US6), #98 (US7); keep
+- Board stories: #91 (US1), #93 (US2), #94 (US3), #95 (US4), #96 (US5), #97 (US6), #98 (US7), #108 (US8); keep
   each issue's Requirements checklist in sync with this file.
 - D1-D2 were Forestry.Deserialize spec 002 (#99; stories #100-#102), merged via #104.

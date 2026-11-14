@@ -40,6 +40,14 @@ of the user's choice.
   log measurement's category for its diameters (FR-010).
 - Q: Are extensions interpreted? → A: No; they belong to the sending program and are an add-on
   from packages like Biometria (FR-020).
+- Q: Copy dimensions onto every row or join? → A: Copy, onto Stem and Log alike, even at an extra
+  cost when deserializing: Kusto avoids joins and Parquet stores repeated values as ranges (FR-021,
+  2026-11-14).
+- Q: Which product and species group identifiers? → A: All of Name, Info, UserID and Version; they
+  may only be interpretable together (FR-022, 2026-11-14). The User Id's `agency` attribute is left
+  out for now.
+- Q: Are stem metrics part of the dimensions? → A: No; they are User Story 8, after the dimensions
+  (FR-024, 2026-11-14).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -180,23 +188,60 @@ the filters, groupings and summaries it needs; it can be extended after this sto
 
 ---
 
-### User Story 7 - Log and Stem row types (Priority: P3)
+### User Story 7 - Log and Stem dimensions (Priority: P3)
 
-The developer deserializes a real Harvesting document into Stem and Log rows whose members come
-from the query groups, identified (User Story 2), timestamped (User Story 3) and filled by
-conditional mapping (User Story 4) (#98).
+The developer deserializes a real Harvesting document into Stem and Log rows that carry every
+dimension the hpr query groups filter or group on ([queries.md](queries.md)), copied onto each row,
+identified (User Story 2), partitioned (User Story 3) and measured (User Story 4) (#98).
 
 **Why this priority**: It is the deliverable the POC shows, but it depends on the stories before it.
 
-**Independent Test**: Deserialize a real Harvesting document; the number of Stem and Log rows equals
-the stems and logs in the document, and every member traces to a use in a query group.
+**Independent Test**: Deserialize the fragment and a real Harvesting document; every stem and log
+carries its object, sub-object, species group, operator, machine and (on logs) product and
+destination dimensions, there is one row per stem and per log, and every member traces to a use in
+a query group.
 
 **Acceptance Scenarios**:
 
-1. **Given** a real Harvesting document, **When** it is deserialized, **Then** there is one Stem row
+1. **Given** a stem referring to an object, sub-object, species group and operator, **When** it is
+   deserialized, **Then** the Stem row and each of its Log rows carry those definitions' keys,
+   names, infos, user ids and versions as defined for each (no joins needed).
+2. **Given** a log referring to a product, **When** it is deserialized, **Then** the Log row carries
+   the product's key, name, info, user id and version, and its destination's business name and id.
+3. **Given** a machine with a user id and a logging contractor's business id, **When** it is
+   deserialized, **Then** every Stem and Log row carries both.
+4. **Given** a real Harvesting document, **When** it is deserialized, **Then** there is one Stem row
    per stem and one Log row per log.
-2. **Given** the Stem and Log row types, **When** their members are listed, **Then** each is a
+5. **Given** the Stem and Log row types, **When** their members are listed, **Then** each is a
    single value and traces to a use in at least one query group.
+
+*Changed 2026-11-14 (developer): US7 is dimensions only; Stem metrics in wrapper elements moved to
+User Story 8. Dimensions are duplicated onto every row rather than joined: Kusto avoids joins, and
+column formats store a repeated value as a range. Every identifier of products and species groups
+is kept (Name, Info, UserID, Version), since they may only make sense together.*
+
+---
+
+### User Story 8 - Stem metrics (Priority: P4, #108)
+
+The developer gets the stem's measured values that StanForD keeps in wrapper elements: coordinates
+(signed by their category), altitude and coordinate reference system from `StemCoordinates`, boom
+angle and extension by category from `BoomPositioning`, and `DBH` from `SingleTreeProcessedStem`.
+
+**Why this priority**: Only the detail query (G4 in [queries.md](queries.md)) uses them; the POC's
+other groups do not (developer, 2026-11-14).
+
+**Independent Test**: Deserialize the fragment; the stem carries signed coordinates, altitude,
+coordinate reference system, both boom positions and DBH.
+
+**Acceptance Scenarios**:
+
+1. **Given** a stem with `latitudeCategory="North"` and `longitudeCategory="East"`, **When** it is
+   deserialized, **Then** latitude and longitude are positive; south and west give negative values.
+2. **Given** boom positions for "Felling" and "Last log cut", **When** deserialized, **Then** each
+   sets its own angle and extension members.
+3. **Given** a single-tree processed stem with a DBH, **When** deserialized, **Then** the stem
+   carries it.
 
 ---
 
@@ -262,10 +307,22 @@ the stems and logs in the document, and every member traces to a use in a query 
 - **FR-015**: Collected queries MUST be grouped, each group naming its actor and the filters,
   groupings and summaries it needs, in a form that can be extended after User Story 6 closes.
 
-**Row types (User Story 7)**
+**Row types and dimensions (User Story 7)**
 
 - **FR-016**: There MUST be a Stem row type and a Log row type; every member MUST be a single value.
 - **FR-017**: Every member MUST trace to a use in at least one query group.
+- **FR-021**: Every dimension an hpr query group filters or groups on MUST be copied onto each Stem
+  and Log row it applies to (a stem's dimensions onto its logs too), not left to a join.
+- **FR-022**: Products and species groups MUST carry all of StanForD's identifiers: Name, Info,
+  UserID and Version. Other definitions carry their key, name and user id where StanForD has them.
+- **FR-023**: Members MUST be named after their StanForD element, prefixed by their owner where the
+  element name alone is ambiguous (e.g. `LoggingContractorBusinessID`, not `BusinessID`).
+
+**Stem metrics (User Story 8)**
+
+- **FR-024**: A stem MUST carry its coordinates signed by their category (north and east positive,
+  south and west negative), altitude, coordinate reference system, boom angle and extension per
+  boom positioning category, and DBH.
 - **FR-018**: Deserializing a document MUST give one Stem row per stem and one Log row per log.
 
 **Scope**

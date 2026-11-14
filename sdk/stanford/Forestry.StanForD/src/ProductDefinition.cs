@@ -45,7 +45,7 @@ namespace Forestry.StanForD {
         /// <remarks>
         /// Set by a policy, as for <see cref="ProductName"/>
         /// </remarks>
-        public string ProductNamespace { get; set; } = string.Empty;
+        public string ProductInfo { get; set; } = string.Empty;
 
         /// <summary>
         /// Additional identity information normally to be used by logging organization e.g.

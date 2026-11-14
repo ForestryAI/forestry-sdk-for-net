@@ -179,9 +179,9 @@ namespace Forestry.StanForD {
 
         /// <summary>
         /// Free text identity information (code) normally to be used by logging organization
-        /// e.g. "012-JGA", from the referenced <see cref="ProductDefinition.ProductNamespace"/>
+        /// e.g. "012-JGA", from the referenced <see cref="ProductDefinition.ProductInfo"/>
         /// </summary>
-        public string ProductNamespace { get; set; } = string.Empty;
+        public string ProductInfo { get; set; } = string.Empty;
 
         /// <summary>
         /// Additional identity information normally to be used by logging organization, from the

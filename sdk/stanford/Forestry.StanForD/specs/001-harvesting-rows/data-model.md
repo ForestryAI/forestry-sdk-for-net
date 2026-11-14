@@ -29,7 +29,7 @@ definition sit next to the key that refers to it. Set by: *name* = read directly
 | identification | `Id` (`string`, `{machine key "N"}-{stem key}-{log key}`), `LogKey`, `StemKey` (`int`), `MachineKey` (`Guid`) | `LogKey` name; others policy |
 | partitioning | `HarvestingCreationTime`, `ContractNumber` | policy |
 | metrics | `MachineVolumeOverBark`, `MachineVolumeUnderBark`, `MachineVolumePrice` (`decimal`); `MachineLength` and eight `MachineDiameter…` members (`int`, 0 when not measured) | conditional mapping |
-| dimensions | `DiameterUnit`, `LengthUnit`, `VolumeUnit` (root attributes, not converted); `ObjectName`; `ProductKey`, `ProductName`, `ProductNamespace`, `ProductVersion`; `CuttingReason`; `TopSawing`; `FindButtEndFunction` | `ProductKey`, `TopSawing`, `FindButtEndFunction` by name; others policy |
+| dimensions | `DiameterUnit`, `LengthUnit`, `VolumeUnit` (root attributes, not converted); `ObjectName`; `ProductKey`, `ProductName`, `ProductInfo`, `ProductVersion`; `CuttingReason`; `TopSawing`; `FindButtEndFunction` | `ProductKey`, `TopSawing`, `FindButtEndFunction` by name; others policy |
 
 ### Partitioning sources (US3, FR-006, FR-007, FR-009)
 
@@ -41,6 +41,26 @@ definition sit next to the key that refers to it. Set by: *name* = read directly
 
 `HarvestedProductionHeader` is a row type that never comes out, kept until the document ends.
 
+### Dimensions (US7, planned 2026-11-14; FR-021 to FR-023)
+
+Copied onto every row they apply to, a stem's onto its logs too, so queries need no joins. ✓ = a
+member that exists today (some still empty until US7 sets them).
+
+| Group | Members | Rows | From StanForD |
+|---|---|---|---|
+| Stem | `StemNumber` (a sequence per object; its highest value against the stems counted shows a missing document) | Stem, Log | `Stem/StemNumber` |
+| Object | `ObjectKey` ✓ (Stem), `ObjectName` ✓, `ObjectUserID` | Stem, Log | `ObjectDefinition` |
+| Sub-object | `SubObjectKey`, `SubObjectName`, `SubObjectUserID` | Stem, Log | `Stem/SubObjectKey`, `ObjectDefinition/SubObject` |
+| Species group | `SpeciesGroupKey` ✓ (Stem), `SpeciesGroupName` ✓, `SpeciesGroupInfo`, `SpeciesGroupUserID`, `SpeciesGroupVersion` | Stem, Log | `SpeciesGroupDefinition` |
+| Operator | `OperatorKey` ✓ (Stem), `OperatorBusinessName` ✓, `OperatorUserID` | Stem, Log | `OperatorDefinition` (business name from `ContactInformation`) |
+| Machine | `MachineUserID`, `LoggingContractorBusinessID` | Stem, Log | `Machine/MachineUserID`, `Machine/LoggingContractor/BusinessID` |
+| Product | `ProductKey` ✓, `ProductName` ✓, `ProductInfo` ✓, `ProductUserID`, `ProductVersion` ✓ | Log | `ClassifiedProductDefinition` |
+| Destination | `ProductDestinationBusinessName`, `ProductDestinationBusinessID` | Log | `ClassifiedProductDefinition/ProductDestination` |
+
+User Ids are StanForD's external references, the keys a Biometria add-on would join on; their
+`agency` attribute is left out for now. Stem metrics in wrapper elements (coordinates, altitude,
+coordinate reference system, boom positions, DBH) are User Story 8.
+
 ### Common definitions (`src/*Definition.cs`, `src/Machine.cs`)
 
 | Row | Identification | Members the rows copy |
@@ -49,7 +69,7 @@ definition sit next to the key that refers to it. Set by: *name* = read directly
 | `ObjectDefinition` | `Id`, `ObjectKey`, `MachineKey` | `ObjectName`, `ContractNumber` |
 | `SpeciesGroupDefinition` | `Id`, `SpeciesGroupKey`, `MachineKey` | `SpeciesGroupName` |
 | `OperatorDefinition` | `Id`, `OperatorKey`, `MachineKey` | `OperatorBusinessName` (from `ContactInformation`, by policy; never personal details) |
-| `ProductDefinition` | `Id`, `ProductKey`, `MachineKey` | `ProductName`, `ProductNamespace` (`ProductInfo`), `ProductVersion` (from `ClassifiedProductDefinition`, by policy) |
+| `ProductDefinition` | `Id`, `ProductKey`, `MachineKey` | `ProductName`, `ProductInfo`, `ProductVersion` (from `ClassifiedProductDefinition`, by policy) |
 
 Traces to query groups (C3) are added at US7, after US6.
 
