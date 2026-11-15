@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Yarding Object Instruction XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				YardingObjectInstruction_V4p1_no_documentation.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1_no_documentation.xsd">
+</xsd:include>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="YardingObjectInstruction" type="YardingObjectInstructionType">
+		
+		<xsd:keyref name="LocationUserIDKeyRefObjectDefinition" refer="LocationUserIDLocationDefinition">
+			<xsd:selector xpath="sfd:ObjectDefinition">
+</xsd:selector>
+			<xsd:field xpath="sfd:LocationUserID">
+</xsd:field>
+		</xsd:keyref>
+		<xsd:key name="LocationUserIDLocationDefinition">
+			<xsd:selector xpath="sfd:LocationDefinition">
+</xsd:selector>
+			<xsd:field xpath="sfd:LocationUserID">
+</xsd:field>
+		</xsd:key>
+		<xsd:unique name="UniqueObjectUserID">
+			<xsd:selector xpath="sfd:ObjectDefinition">
+</xsd:selector>
+			<xsd:field xpath="sfd:ObjectUserID">
+</xsd:field>
+		</xsd:unique>
+		<xsd:unique name="UniqueSpeciesGroupUserID">
+			<xsd:selector xpath="sfd:ObjectDefinition/sfd:SpeciesGroupUserID">
+</xsd:selector>
+			<xsd:field xpath=".">
+</xsd:field>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="ObjectDefinitionYardingObjectInstructionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="ObjectDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="SpeciesGroupUserID" type="UserIDType" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="LocationUserID" type="UserIDType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="YardingObjectInstructionType">
+		
+		<xsd:sequence>
+			<xsd:element name="YardingObjectInstructionHeader" type="MessageHeaderType">
+				
+			</xsd:element>
+			<xsd:element name="ObjectDefinition" type="ObjectDefinitionYardingObjectInstructionType">
+				
+				<xsd:unique name="UniqueSubObjectUserID">
+					<xsd:selector xpath="sfd:SubObject">
+</xsd:selector>
+					<xsd:field xpath="sfd:SubObjectUserID">
+</xsd:field>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="LocationDefinition" type="LocationDefinitionWithModificationDateType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="xsd:string" use="required" fixed="yoi">
+			
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup">
+</xsd:attributeGroup>
+	</xsd:complexType>
+</xsd:schema>

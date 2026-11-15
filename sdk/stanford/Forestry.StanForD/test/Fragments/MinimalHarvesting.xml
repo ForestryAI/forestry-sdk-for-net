@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The smallest Harvesting document the code stories test against (tasks.md T007, findings-us5.md);
+  stem 619254's first log carries every measurement a real log has (tasks.md T073); every
+  dimension US7 reads is present (tasks.md T077), and every stem metric US8 reads (tasks.md T087).
+  Shaped like the real documents (StanForD 2010, version 3.5): header, machine, the common
+  definitions the rows copy from, then two stems. Values are made up; no real machine, contract
+  or person.
+-->
+<HarvestedProduction xmlns="urn:skogforsk:stanford2010" messageType="hpr" diameterUnit="mm" lengthUnit="cm" volumeUnit="m3" version="3.5">
+  <HarvestedProductionHeader>
+    <CreationDate>2026-01-14T15:25:33+01:00</CreationDate>
+  </HarvestedProductionHeader>
+  <Machine>
+    <MachineKey>6f1d2c3b-4a5e-4f60-8a71-92b3c4d5e6f7</MachineKey>
+    <MachineUserID agency="Other">EX-H01</MachineUserID>
+    <LoggingContractor>
+      <BusinessID>99001</BusinessID>
+    </LoggingContractor>
+    <OperatorDefinition>
+      <OperatorKey>2</OperatorKey>
+      <OperatorUserID>op-0002</OperatorUserID>
+      <ContactInformation>
+        <BusinessName>Example Logging AB</BusinessName>
+      </ContactInformation>
+    </OperatorDefinition>
+    <SpeciesGroupDefinition>
+      <SpeciesGroupUserID agency="Seller">EX_Gran</SpeciesGroupUserID>
+      <SpeciesGroupName>GRAN</SpeciesGroupName>
+      <SpeciesGroupInfo modificationRestricted="true">2</SpeciesGroupInfo>
+      <SpeciesGroupVersion modificationRestricted="false">V1</SpeciesGroupVersion>
+      <SpeciesGroupKey>221</SpeciesGroupKey>
+    </SpeciesGroupDefinition>
+    <ProductDefinition>
+      <ProductKey>3350</ProductKey>
+      <ClassifiedProductDefinition>
+        <ProductName>Spruce sawlog</ProductName>
+        <ProductInfo>012-EX</ProductInfo>
+        <ProductVersion>EX121</ProductVersion>
+        <ProductDestination>
+          <Address />
+          <BusinessName>Example Sawmill</BusinessName>
+          <BusinessID>89001</BusinessID>
+        </ProductDestination>
+        <ProductUserID agency="LoggingOrganisation">Gran_timmer_EX</ProductUserID>
+      </ClassifiedProductDefinition>
+    </ProductDefinition>
+    <ObjectDefinition>
+      <ObjectUserID>4200001</ObjectUserID>
+      <ObjectName>Example object</ObjectName>
+      <ContractNumber>10000001</ContractNumber>
+      <ObjectKey>283</ObjectKey>
+      <StartDate>2026-01-12T12:06:41+01:00</StartDate>
+      <SubObject>
+        <SubObjectUserID>sub-0001</SubObjectUserID>
+        <SubObjectName>Standard</SubObjectName>
+        <SubObjectKey>1</SubObjectKey>
+      </SubObject>
+    </ObjectDefinition>
+    <Stem>
+      <StemKey>619254</StemKey>
+      <ObjectKey>283</ObjectKey>
+      <SubObjectKey>1</SubObjectKey>
+      <SpeciesGroupKey>221</SpeciesGroupKey>
+      <OperatorKey>2</OperatorKey>
+      <StemNumber>527</StemNumber>
+      <ProcessingCategory>SingleTreeProcessing</ProcessingCategory>
+      <StemCoordinates receiverPosition="Base machine position" coordinateReferenceSystem="WGS84">
+        <Latitude latitudeCategory="North">56.6349311</Latitude>
+        <Longitude longitudeCategory="East">15.1924476</Longitude>
+        <Altitude>139</Altitude>
+      </StemCoordinates>
+      <BoomPositioning boomPositioningCategory="Felling">
+        <BoomAngle>36</BoomAngle>
+        <BoomExtension>820</BoomExtension>
+      </BoomPositioning>
+      <BoomPositioning boomPositioningCategory="Last log cut">
+        <BoomAngle>55</BoomAngle>
+        <BoomExtension>610</BoomExtension>
+      </BoomPositioning>
+      <SingleTreeProcessedStem>
+        <DBH>399</DBH>
+        <Log>
+          <LogKey>1</LogKey>
+          <ProductKey>3350</ProductKey>
+          <LogVolume logVolumeCategory="m3sob" logMeasurementCategory="Machine">0.5925430</LogVolume>
+          <LogVolume logVolumeCategory="m3sub" logMeasurementCategory="Machine">0.5332270</LogVolume>
+          <LogVolume logVolumeCategory="m3 (price)" logMeasurementCategory="Machine">0.5332271</LogVolume>
+          <CuttingCategory>
+            <CuttingReason>Automatic</CuttingReason>
+          </CuttingCategory>
+          <TopSawing>false</TopSawing>
+          <FindButtEndFunction>false</FindButtEndFunction>
+          <LogMeasurement logMeasurementCategory="Machine">
+            <LogDiameter logDiameterCategory="Butt ob">495</LogDiameter>
+            <LogDiameter logDiameterCategory="Butt ub">471</LogDiameter>
+            <LogDiameter logDiameterCategory="Mid ob">383</LogDiameter>
+            <LogDiameter logDiameterCategory="Mid ub">363</LogDiameter>
+            <LogDiameter logDiameterCategory="Mid HKS ob">380</LogDiameter>
+            <LogDiameter logDiameterCategory="Mid HKS ub">360</LogDiameter>
+            <LogDiameter logDiameterCategory="Top ob">362</LogDiameter>
+            <LogDiameter logDiameterCategory="Top ub">343</LogDiameter>
+            <LogLength>491</LogLength>
+          </LogMeasurement>
+        </Log>
+        <Log>
+          <LogKey>2</LogKey>
+          <ProductKey>3350</ProductKey>
+          <LogVolume logVolumeCategory="m3sob" logMeasurementCategory="Machine">0.4012000</LogVolume>
+          <LogMeasurement logMeasurementCategory="Machine">
+            <LogDiameter logDiameterCategory="Top ob">301</LogDiameter>
+            <LogLength>430</LogLength>
+          </LogMeasurement>
+        </Log>
+      </SingleTreeProcessedStem>
+    </Stem>
+    <Stem>
+      <StemKey>619255</StemKey>
+      <ObjectKey>283</ObjectKey>
+      <SubObjectKey>1</SubObjectKey>
+      <SpeciesGroupKey>221</SpeciesGroupKey>
+      <OperatorKey>2</OperatorKey>
+      <StemNumber>528</StemNumber>
+      <ProcessingCategory>SingleTreeProcessing</ProcessingCategory>
+      <StemCoordinates receiverPosition="Base machine position" coordinateReferenceSystem="WGS84">
+        <Latitude latitudeCategory="North">56.6349453</Latitude>
+        <Longitude longitudeCategory="East">15.1924711</Longitude>
+        <Altitude>140</Altitude>
+      </StemCoordinates>
+      <BoomPositioning boomPositioningCategory="Felling">
+        <BoomAngle>41</BoomAngle>
+        <BoomExtension>700</BoomExtension>
+      </BoomPositioning>
+      <BoomPositioning boomPositioningCategory="Last log cut">
+        <BoomAngle>60</BoomAngle>
+        <BoomExtension>650</BoomExtension>
+      </BoomPositioning>
+      <SingleTreeProcessedStem>
+        <DBH>352</DBH>
+        <Log>
+          <LogKey>1</LogKey>
+          <ProductKey>3350</ProductKey>
+          <LogVolume logVolumeCategory="m3sob" logMeasurementCategory="Machine">0.5101000</LogVolume>
+          <LogMeasurement logMeasurementCategory="Machine">
+            <LogDiameter logDiameterCategory="Top ob">340</LogDiameter>
+            <LogLength>490</LogLength>
+          </LogMeasurement>
+        </Log>
+      </SingleTreeProcessedStem>
+    </Stem>
+  </Machine>
+</HarvestedProduction>

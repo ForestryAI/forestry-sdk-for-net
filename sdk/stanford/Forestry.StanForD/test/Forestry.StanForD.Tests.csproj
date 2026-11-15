@@ -32,4 +32,14 @@
   <ItemGroup>
     <ProjectReference Include="..\src\Forestry.StanForD.csproj" />
   </ItemGroup>
+
+  <!-- Handwritten Harvesting fragments the tests read (A4) -->
+  <ItemGroup>
+    <None Include="Fragments\*.xml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- The spec's data model, which every Stem and Log member must be named in (C3, RowShapeTests) -->
+  <ItemGroup>
+    <None Include="..\specs\001-harvesting-rows\data-model.md" Link="data-model.md" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

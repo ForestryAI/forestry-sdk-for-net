@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Forwarding Delivery instruction XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				ForwardingDeliveryInstruction_V4p1.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010" targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1.xsd"/>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="ForwardingDeliveryInstruction" type="ForwardingDeliveryInstructionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Description>The root element of the Forwarding Delivery Instruction message</doc:Description>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:unique name="UniqueProductUserID">
+			<xsd:selector xpath="sfd:ProductDefinition"/>
+			<xsd:field xpath="sfd:ProductUserID"/>
+		</xsd:unique>
+		<xsd:unique name="UniqueDeliveryDefinitionUserID">
+			<xsd:selector xpath="sfd:DeliveryDefinition"/>
+			<xsd:field xpath="sfd:DeliveryUserID"/>
+		</xsd:unique>
+		<xsd:key name="SpeciesGroupKeySpeciesGroupDefinition">
+			<xsd:selector xpath="sfd:SpeciesGroupDefinition"/>
+			<xsd:field xpath="sfd:SpeciesGroupUserID"/>
+		</xsd:key>
+		<xsd:keyref name="SpeciesGroupKeyRefProductDefinition" refer="SpeciesGroupKeySpeciesGroupDefinition">
+			<xsd:selector xpath="sfd:ProductDefinition/sfd:ClassifiedProductDefinition"/>
+			<xsd:field xpath="sfd:SpeciesGroupUserID"/>
+		</xsd:keyref>
+		<xsd:key name="ProductKeyProductDefinition">
+			<xsd:selector xpath="sfd:ProductDefinition"/>
+			<xsd:field xpath="sfd:ProductUserID"/>
+		</xsd:key>
+		<xsd:keyref name="ProductUserIDRefProductDefinition" refer="ProductKeyProductDefinition">
+			<xsd:selector xpath="sfd:DeliveryDefinition/sfd:ProductUserID"/>
+			<xsd:field xpath="."/>
+		</xsd:keyref>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="ClassifiedProductDefinitionForwardingDeliveryInstructionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>ClassifiedProductDefinitionForwardingDeliveryInstructionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ProductName" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V121_t1</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Name of the product</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ModificationDate" type="ModificationDateType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V16_t4</doc:VarNumber>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Date and time when product definition was last modified. ProductKey updated if modified in machine. Not to be updated if ProductKey is updated only because  SpecieGroupDefinition was modified and new SpeciesGroupKey was updated. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProductInfo" type="InfoType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V121_t2</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Free text identity information about product. Identity element normally to be used by logging organization. No constraints in standard concerning how to use this element.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProductVersion" type="VersionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V121_t3</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Additional identity information of product. Identity element normally to be used by logging organization. No constraints in standard concerning how to use this element.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProductBuyer" type="ContactInformationType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Contact information of buyer. V32_t1 is to be registered in element ProductBuyer.BusinessID</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProductClass" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.1</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Additional identity information of product. Identity element normally to be used by logging organization. No constraints in standard concerning how to use this element.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LoggingOrganisation" type="LoggingOrganisationType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>v31</doc:VarNumber>
+						<doc:Description>Contact information for organisation responsible for logging an object (normaly forest company or forest owners association), owner of the right to harvest a certain object. Old types Organisation, Region, District, Working team, Wood pile</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProductDestination" type="ContactInformationType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Destination address of product. Var32_t2 is to be registered in element ProductDestination.BusinessID</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProductGroupName" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V127</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Descriptive text for a group of products.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="StemTypeCode" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V124_t2</doc:VarNumber>
+						<doc:Unit>free text (usually finish PMP-codes)</doc:Unit>
+						<doc:Description>Code for stem type. This is a reference to StemTypeCode element in StemTypeDefinition in SpeciesGropuInstruction message.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProductPresentationOrder" type="xsd:positiveInteger" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Indicates the order of products per SpeciesGroup. May be used in presentation tools in order to show the products in a certain order, for example if sawlog product are always to be presented before pulp wood and fuel wood in a printed report. The element should be considered as an optional hint given by forest company.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProductDescription" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Free text sent to sent to machine per product definitions</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SpeciesGroupUserID" type="UserIDType" nillable="false">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Identity per species group defined by user of data, normally by  logging organisation. Do not use a single space or null value. Do not begin or end with a space. Do not include any of the following characters: Double space, Linefeed, carriage return,%, ?, lt, gt, :, " (double quote), /, \, |, *,+.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProductCreationDate" type="StanForD2010DateTimeType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V13</doc:VarNumber>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Date and time when product definition was created in an administrative tool. Never set in a forest machine. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="DeliveryDefinitionForwardingDeliveryInstructionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>DeliveryDefinitionForwardingDeliveryInstructionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="CommonDeliveryDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="ProductUserID" type="UserIDType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:VarNumber>V121_t2</doc:VarNumber>
+								<doc:Unit>free text</doc:Unit>
+								<doc:Description>Identity per product defined by user of data, normally logging organisation Do not use a single space or null value. Do not begin or end with a space. Do not include any of the following characters: Double space, Linefeed, carriage return,%, ?, lt, gt, :, " (double quote), /, \, |, *,+.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ForwardingDeliveryInstructionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>ForwardingDeliveryInstructionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ForwardingDeliveryInstructionHeader" type="MessageHeaderType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>General information for message</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SpeciesGroupDefinition" type="CommonSpeciesGroupDefinitionType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Definition of species used in this forwarding delivery instruction message</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProductDefinition" type="ProductDefinitionForwardingDeliveryInstructionType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Structure for defining product.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DeliveryDefinition" type="DeliveryDefinitionForwardingDeliveryInstructionType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Describes the content of what has been forwarded.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="fdi">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>
+						<doc:Description>Enumeration list of file extensions of StanForD 2010 messages: Allowed value in ForwardingDelivery Instruction message is: "fdi"</doc:Description>
+					</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup"/>
+	</xsd:complexType>
+	<xsd:complexType name="ProductDefinitionForwardingDeliveryInstructionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>ProductDefinitionForwardingDeliveryInstructionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ProductUserID" type="UserIDType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V121_t2</doc:VarNumber>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Identity per product defined by user of data, normally logging organisation Do not use a single space or null value. Do not begin or end with a space. Do not include any of the following characters: Double space, Linefeed, carriage return,%, ?, lt, gt, :, " (double quote), /, \, |, *,+.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:choice>
+				<xsd:element name="ClassifiedProductDefinition" type="ClassifiedProductDefinitionForwardingDeliveryInstructionType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Description>Structure for classified product. Definied in pin message.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+</xsd:schema>

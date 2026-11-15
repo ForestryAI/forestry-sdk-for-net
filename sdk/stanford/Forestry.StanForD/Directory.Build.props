@@ -2,5 +2,9 @@
   <!--
     Add anything library specific before the generic Directory.Build.props
   -->
+  <PropertyGroup>
+    <IsShippingLibrary>true</IsShippingLibrary>
+  </PropertyGroup>
+
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory).., Directory.Build.props))\Directory.Build.props" />
 </Project>

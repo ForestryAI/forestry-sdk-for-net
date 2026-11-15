@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Forwarding Quality Control message XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				ForwardingQualityControl_V4p1_no_documentation.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1_no_documentation.xsd">
+</xsd:include>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="ForwardingQualityControl" type="ForwardingQualityControlType">
+		
+		<xsd:unique name="UniqueMachineKey">
+			<xsd:selector xpath="sfd:Machine">
+</xsd:selector>
+			<xsd:field xpath="sfd:MachineKey">
+</xsd:field>
+		</xsd:unique>
+		<xsd:unique name="UniqueMachineUserID">
+			<xsd:selector xpath="sfd:Machine">
+</xsd:selector>
+			<xsd:field xpath="sfd:MachineUserID">
+</xsd:field>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="ForwardingQualityControlType">
+		
+		<xsd:sequence>
+			<xsd:element name="ForwardingQualityControlHeader" type="MessageHeaderType">
+</xsd:element>
+			<xsd:element name="Machine" type="MachineForwardingQualityControlType" maxOccurs="unbounded">
+				<xsd:unique name="UniqueOperatorUserID">
+					<xsd:selector xpath="sfd:OperatorDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorUserID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:key name="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:OperatorDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="OperatorKeyRefScaleControl" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:ScaleControl">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:ObjectDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="ObjectKeyRefStem" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:ScaleControl">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="ScaleKeyScaleDefinition">
+					<xsd:selector xpath="sfd:ScaleDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ScaleKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="ScaleKeyRefScaleControl" refer="ScaleKeyScaleDefinition">
+					<xsd:selector xpath="sfd:ScaleControl">
+</xsd:selector>
+					<xsd:field xpath="sfd:ScaleKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="ScaleKeyRefScaleCalibration" refer="ScaleKeyScaleDefinition">
+					<xsd:selector xpath="sfd:ScaleCalibration">
+</xsd:selector>
+					<xsd:field xpath="sfd:ScaleKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="ScaleControlKeyScaleControl">
+					<xsd:selector xpath="sfd:ScaleControl">
+</xsd:selector>
+					<xsd:field xpath="sfd:ScaleControlKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="ScaleControlKeyRefScaleCalibrationl" refer="ScaleControlKeyScaleControl">
+					<xsd:selector xpath="sfd:ScaleCalibration">
+</xsd:selector>
+					<xsd:field xpath="sfd:ScaleControlKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:unique name="UniqueObjectUserID">
+					<xsd:selector xpath="sfd:ObjectDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectUserID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:key name="DeliveryKeyDeliveryDefinition">
+					<xsd:selector xpath="sfd:DeliveryDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:DeliveryKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="DeliveryKeyRefScaleControl" refer="DeliveryKeyDeliveryDefinition">
+					<xsd:selector xpath="sfd:ScaleControl">
+</xsd:selector>
+					<xsd:field xpath="sfd:DeliveryKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:unique name="UniqueProductKey">
+					<xsd:selector xpath="sfd:DeliveryDefinition/sfd:ProductKey">
+</xsd:selector>
+					<xsd:field xpath=".">
+</xsd:field>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="fqc">
+			
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup">
+</xsd:attributeGroup>
+	</xsd:complexType>
+	<xsd:complexType name="MachineForwardingQualityControlType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="MachineType">
+				<xsd:sequence>
+					<xsd:element name="ObjectDefinition" type="ObjectDefinitionMachineType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:unique name="UniqueSubObectUserID">
+							<xsd:selector xpath="SubObject">
+</xsd:selector>
+							<xsd:field xpath="SubObjectUserID">
+</xsd:field>
+						</xsd:unique>
+						<xsd:unique name="UniqueSubObjectKey">
+							<xsd:selector xpath="SubObject">
+</xsd:selector>
+							<xsd:field xpath="SubObjectKey">
+</xsd:field>
+						</xsd:unique>
+					</xsd:element>
+					<xsd:element name="ScaleDefinition" type="ScaleDefinitionType" maxOccurs="unbounded">
+</xsd:element>
+					<xsd:element name="DeliveryDefinition" type="DeliveryDefinitionWithDetailsType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="ScaleControl" type="ScaleControlType" minOccurs="0" maxOccurs="unbounded">
+</xsd:element>
+					<xsd:element name="ScaleCalibration" type="ScaleCalibrationType" minOccurs="0" maxOccurs="unbounded">
+</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ScaleCalibrationType">
+		
+		<xsd:sequence>
+			<xsd:element name="ScaleKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="ScaleControlKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="ScaleCalibrationDate" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+			<xsd:element name="ScaleCalibrationAdjustment" type="xsd:integer">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="scaleWorkCategory" type="ScaleWorkCategoryType" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ScaleControlType">
+		
+		<xsd:sequence>
+			<xsd:element name="ScaleControlKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="ScaleKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="OperatorKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="DeliveryKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ObjectKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="SubObjectKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ScaleControlDate" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+			<xsd:element name="ControlReferenceMass" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="ScaleData" type="ScaleDataType" maxOccurs="unbounded">
+</xsd:element>
+			<xsd:element name="Orientation" type="OrientationType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="scaleWorkCategory" type="ScaleWorkCategoryType" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="scaleControlCategory" type="ScaleControlCategoryType" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ScaleDataType">
+		
+		<xsd:sequence>
+			<xsd:element name="ScaledMass" type="xsd:positiveInteger">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:simpleType name="OrientationType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Right side of load space">
+</xsd:enumeration>
+			<xsd:enumeration value="Left side of load space">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ScaleControlCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Random dynamic mass">
+</xsd:enumeration>
+			<xsd:enumeration value="Manual fixed mass">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ScaleWorkCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Loading">
+</xsd:enumeration>
+			<xsd:enumeration value="Unloading">
+</xsd:enumeration>
+			<xsd:enumeration value="Static">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

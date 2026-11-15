@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  StanForD2010 Envelope XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				StanForD2010Envelope_V4p1.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010" targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1.xsd"/>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="StanForD2010Envelope" type="StanForD2010EnvelopeType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Description>The root element of the StanForD2010 envelope message</doc:Description>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:unique name="UniqueTransmissionID">
+			<xsd:selector xpath="sfd:StanForD2010EnvelopeHeader/sfd:TransmissionInfo"/>
+			<xsd:field xpath="sfd:TransmissionID"/>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="AttachmentType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>AttachmentTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:choice>
+				<xsd:element name="EmbeddedAttachment" type="EmbeddedType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Description>Attachments can be stored embedded in the same way as StanForD messages</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+				<xsd:element name="ExternalAttachment" type="ExternalDocumentType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Description>Attachments can be stored externally in the same way as StanForD messages</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+			</xsd:choice>
+			<xsd:element name="AttachmentName" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>The name of the attachment file.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SchemaName" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>If the attachment is a XML document then it is possible to store the corresponding schema file name here</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Signature" type="SignatureType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>It is possible to encrypt the attachments same way as actual messages using signatures</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="CompressionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>CompressionTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="CompressionCategory" type="CompressionCategoryType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>List of compression methods. Allowed values are: "ZIP/DEFLATE" and "Not defined". ZIP/DEFLATE is the recommended compression method in StanForD 2010.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="CompressionSoftware" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Optional information of the compression software in use. For example WinZip, 7-Zip,…</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MessageType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>MessageTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:choice>
+				<xsd:element name="EmbeddedDocument" type="EmbeddedType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Description>A StanForD 2010 message can be included inside the envelope as an embedded document inside this element.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+				<xsd:element name="ExternalDocument" type="ExternalDocumentType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Description>The other way to include the StanForD  2010 message into envelope message is to store only the information where the externally stored actual message is.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+			</xsd:choice>
+			<xsd:element name="DocumentName" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>The name of StanForD2010 message. Usually the file name of the message</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SchemaName" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>It is possible to store the schema file name of the StanFord message in this element. Schema file name is also stored inside StanForD 2010 message</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Signature" type="SignatureType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Signatures provides us a mechanism to encrypt our message and also be sure that the message is the original one. There is a XML standard (XML Signature) that defines way to implement the signature</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="EmbeddedType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>EmbeddedTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="encodingMethod" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Unit>list</doc:Unit>
+							<doc:Description>The encoding method used to transform compressed binary document to text format. Allowed values: "Base64" and "None"</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+					<xsd:simpleType>
+						<xsd:restriction base="xsd:string">
+							<xsd:enumeration value="Base64"/>
+							<xsd:enumeration value="None"/>
+						</xsd:restriction>
+					</xsd:simpleType>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="ExternalDocumentType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>ExternalDocumentTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="DocumentLocation" type="xsd:string" nillable="true">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>This is place to store information where the externally stored StanForD 2010 message or attachment file is. It might be for example web-address or file path.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Compression" type="CompressionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>It is possible to store the compression method and software in this structure when  the attachment is compressed</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SignatureType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>SignatureTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:any processContents="lax"/>
+		</xsd:sequence>
+		<xsd:attribute name="signatureCategory" type="SignatureCategoryType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Used signature method. The allowed values are: XML Signature, Other</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="StanForD2010EnvelopeHeaderType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>StanForD2010EnvelopeHeaderTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="TransmissionInfo" type="TransmissionInfoType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>TransmissionInfo contain more technical information of the delivery of the message. The structure could have multiple instances so that it is possiible to follow message delivering route</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="BusinessSender" type="ContactInformationType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Identification information of the business company that is originally sending the envelope message.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="BusinessReceiver" type="ContactInformationType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Identification information of the business company that is finally receiving the envelope message.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="StanForD2010EnvelopeType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>StanForD2010EnvelopeTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="StanForD2010EnvelopeHeader" type="StanForD2010EnvelopeHeaderType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>General information for message</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="StanForD2010Message" type="StanForD2010MessageType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Structure to include StanForD2010 messages</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="env">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Enumeration list of file extensions of StanForD 2010 messages: Allowed value in StanForD2010 Envelope  message is: "env"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="version" type="StanForD2010VersionType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.0</doc:VersionCreated>
+					<doc:Unit>version number</doc:Unit>
+					<doc:Description>The version number of the message in format:  "major"."minor", where "major" is a sequential number of the major version (start from 1) and "minor" is a sequential number of the minor version.></doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="versionDate" type="xsd:date" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.1</doc:VersionCreated>
+					<doc:Unit>yyyy-mm-dd</doc:Unit>
+					<doc:Description>Date of version</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="StanForD2010MessageType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>StanForD2010MessageTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="MessageDocument" type="MessageType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>StanForD message included with envelope.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MessageAttachment" type="AttachmentType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>File (not StanForD) included with envelope.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageCategory" type="MessageCategoryType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Attribute tells us the category of the StanForD 2010 message. Enumeration list of file extensions of StanForD 2010 messages: Allowed values are: "fdi", "foi", "fpr", "fqc", "hpr", "hqc", "ogi", "ogr", "oin", "mom", "pin", "spi" and "thp".</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="TransmissionInfoType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>TransmissionInfoTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="TransmissionID" type="UserIDType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Unique identifier that can be used in registering and following envelope transmissions. Do not use a single space or null value. Do not begin or end with a space. Do not include any of the following characters: Double space, Linefeed, carriage return,%, ?, lt, gt, :, " (double quote), /, \, |, *,+.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="TransmissionTime" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Transmission time registered in sender</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="TransmissionSender" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>TransmissionSender could be business sender but the value of this element could be also: transmission appliication or machine that is sending the message, the representative company of the business sender,...  </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="TransmissionReceiver" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>TransmissionReceiver could be business receiver but the value of this element could be also: transmssion appliication or machine that is receiving the message, the representative company of the business sender,... </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:simpleType name="CompressionCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="ZIP/DEFLATE"/>
+			<xsd:enumeration value="Not defined"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="SignatureCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="XML Signature"/>
+			<xsd:enumeration value="Other"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

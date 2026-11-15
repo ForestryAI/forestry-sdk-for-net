@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Object Geographical Instruction XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				ObjectGeographicalInstruction_V4p1.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010" targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1.xsd"/>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="ObjectGeographicalInstruction" type="ObjectGeographicalInstructionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Description>The root element of the Object Geographical Instruction message</doc:Description>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:unique name="UniqueObjectUserID">
+			<xsd:selector xpath="sfd:ObjectDefinition"/>
+			<xsd:field xpath="sfd:ObjectUserID"/>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="BackgroundMapType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>BackgroundMapTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="MapName" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Name of background map presented in user interface.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Order" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>Order of background maps as presented in GIS application: For example, 1 is the topmost layer. Background maps by default presented behind feature collections.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MINScale" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>Min scale per background map. Example, if value is 1500 then min scale for showing present layer is 1:1500.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MAXScale" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>Max scale per background map. Example, if value is 10000 then max scale for showing present layer is 1:10 000.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="EmbeddedMap" type="EmbeddedType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>Background map attachments stored as embedded files.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="EmbeddedGeoRefMap" type="EmbeddedType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>Background map attachments stored as embedded files.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="GISCoordinateReferenceSystem" type="GISCoordinateReferenceSystemType" use="optional">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>4.0</doc:VersionCreated>
+					<doc:Unit>code</doc:Unit>
+					<doc:Description>Coordinate reference system used for multipolygon/line/point, codes according to the EPSG database (http://www.epsg.org/).
+Not used for individual coordinates registered by machine, e.g. per harvested stem or forwarder location. EPSG-value must have pre-fix "EPSG:" and after that at least four digit integer. Example of valid EPSG-value is "EPSG:3006"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="EmbeddedFileType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>EmbeddedFileTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="encodingMethod" type="EncodingMethodType" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>4.0</doc:VersionCreated>
+							<doc:Unit>Enumeration list</doc:Unit>
+							<doc:Description>The encoding method used to transform compressed binary document to text format. Allowed values: "Base64" and "None"</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:attribute name="attachmentName" type="xsd:string">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>4.0</doc:VersionCreated>
+							<doc:Unit>free text</doc:Unit>
+							<doc:Description>The name of the attachment file.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:attribute name="StartFile" type="xsd:boolean" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>4.0</doc:VersionCreated>
+							<doc:Unit>true/false</doc:Unit>
+							<doc:Description>Start file to show to operator.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="EmbeddedType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>EmbeddedMapTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="encodingMethod" type="EncodingMethodType" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>4.0</doc:VersionCreated>
+							<doc:Unit>Enumeration list</doc:Unit>
+							<doc:Description>The encoding method used to transform compressed binary document to text format. Allowed values: "Base64" and "None"</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:attribute name="attachmentName" type="xsd:string">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>4.0</doc:VersionCreated>
+							<doc:Unit>free text</doc:Unit>
+							<doc:Description>The name of the attachment file.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="InformationToOperatorType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>InformationToOperatorTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:choice>
+			<xsd:element name="WebBrowserFiles" type="WebBrowserFilesType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>Structure for storing files that can be presented in a web browser, e.g. pdf or html. Typically used in cases where intormation must be avaible even if machine is off-line.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="WebBrowserURL" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>url</doc:Unit>
+						<doc:Description>URL to be presented in web browser component. Only useable when machine is on-line.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:choice>
+	</xsd:complexType>
+	<xsd:complexType name="ObjectDefinitionObjectGeographicalInstructionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:VersionModified>4.0</doc:VersionModified>
+				<doc:Graph>ObjectDefinitionObjectGeographicalInstructionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="ObjectDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="FeatureCollection" type="FeatureCollectionType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>4.0</doc:VersionCreated>
+								<doc:Description>Structure for GIS data</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+						<xsd:key name="PropertyUserIDPropertyDefinition">
+							<xsd:selector xpath="FeaturePropertyDefinition"/>
+							<xsd:field xpath="FeaturePropertyUserID"/>
+						</xsd:key>
+						<xsd:keyref name="PropertyUserIDRefProperty" refer="PropertyUserIDPropertyDefinition">
+							<xsd:selector xpath="Feature/FeatureProperty"/>
+							<xsd:field xpath="FeaturePropertyUserID"/>
+						</xsd:keyref>
+					</xsd:element>
+					<xsd:element name="BackgroundMap" type="BackgroundMapType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>4.0</doc:VersionCreated>
+								<doc:Description>Structure for background maps, normally e.g. jpg or tif formats</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="InformationToOperator" type="InformationToOperatorType" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>4.0</doc:VersionCreated>
+								<doc:Description>Structure for storing directives, including text that describes how the operation is to be carried out. </doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="AlarmCoordinates" type="MultiPointExtendedType" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>4.0</doc:VersionCreated>
+								<doc:Description>Alarm coordinates for harvesting object. These coordinates may be used in case of an emergency in order to quickly give a rescue team the approximate coordinates of the machine.Only one set per object is allowed.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ObjectGeographicalInstructionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>ObjectGeographicalInstructionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ObjectGeographicalInstructionHeader" type="MessageHeaderType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>General information for message</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ObjectDefinition" type="ObjectDefinitionObjectGeographicalInstructionType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Structure for object specific data</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:unique name="UniqueFeatureUserID">
+					<xsd:selector xpath="sfd:FeatureCollection/sfd:Feature"/>
+					<xsd:field xpath="sfd:FeatureUserID"/>
+				</xsd:unique>
+				<xsd:unique name="UniqueMapName">
+					<xsd:selector xpath="sfd:BackgroundMap"/>
+					<xsd:field xpath="sfd:MapName"/>
+				</xsd:unique>
+				<xsd:unique name="UniqueFeatureCollectionUserID">
+					<xsd:selector xpath="sfd:FeatureCollection"/>
+					<xsd:field xpath="sfd:FeatureCollectionUserID"/>
+				</xsd:unique>
+				<xsd:unique name="UniqueSubObectUserID">
+					<xsd:selector xpath="sfd:SubObject"/>
+					<xsd:field xpath="sfd:SubObjectUserID"/>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="ogi">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Enumeration list of file extensions of StanForD 2010 messages: Allowed value in Object Geographical Instruction message is: "ogi"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup"/>
+	</xsd:complexType>
+	<xsd:complexType name="SubObjectDefinitionObjectGeographicalInstructionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>subobjectdefinitiontypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="SubObjectUserID" type="UserIDType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Identity per sub harvesting object defined by user of data, normally by logging organisation. Do not use a single space or null value. Do not begin or end with a space. Do not include any of the following characters: Double space, Linefeed, carriage return,%, ?, ls, gt, :, " (double quote), /, \, |, *,+.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SubObjectName" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Descriptive name of sub harvesting object</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SubObjectArea" type="PositiveDecimal" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>ha</doc:Unit>
+						<doc:Description>Area of harvesting subobject</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LoggingForm" type="LoggingFormType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Defines possible loggin form of subobject</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="RealEstateIDSubObject" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Real estate identity for sub-object.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="BorderPolygon" type="MultiPolygonType" minOccurs="0"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="WebBrowserFilesType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>WebBrowserFilesTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="EmbeddedFile" type="EmbeddedFileType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>Background map attachments stored as embedded files</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+</xsd:schema>

@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Harvested Production  XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				HarvestedProduction_V4p1_no_documentation.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1_no_documentation.xsd">
+</xsd:include>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="HarvestedProduction" type="HarvestedProductionType">
+		
+		<xsd:unique name="UniqueMachineKey">
+			<xsd:selector xpath="sfd:Machine">
+</xsd:selector>
+			<xsd:field xpath="sfd:MachineKey">
+</xsd:field>
+		</xsd:unique>
+		<xsd:unique name="UniqueMachineUserID">
+			<xsd:selector xpath="sfd:Machine">
+</xsd:selector>
+			<xsd:field xpath="sfd:MachineUserID">
+</xsd:field>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="HarvestedProductionType">
+		
+		<xsd:sequence>
+			<xsd:element name="HarvestedProductionHeader" type="MessageHeaderType">
+				
+			</xsd:element>
+			<xsd:element name="Machine" type="MachineHarvestedProductionType" maxOccurs="unbounded">
+				
+				<xsd:unique name="UniqueProductKey">
+					<xsd:selector xpath="sfd:ProductDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ProductKey">
+</xsd:field>
+				</xsd:unique>
+				<xsd:unique name="UniqueSpeciesGroupKeyDefinition">
+					<xsd:selector xpath="sfd:SpeciesGroupDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:SpeciesGroupKey">
+</xsd:field>
+				</xsd:unique>
+				<xsd:unique name="UniqueDiameterSectionKey">
+					<xsd:selector xpath="sfd:ObjectDefinition/sfd:DiameterSectionDefinitions/sfd:DiameterSectionDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:DiameterSectionKey">
+</xsd:field>
+				</xsd:unique>
+				<xsd:unique name="UniqueStemNumber">
+					<xsd:selector xpath="sfd:Stem">
+</xsd:selector>
+					<xsd:field xpath="sfd:StemNumber">
+</xsd:field>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:unique>
+				<xsd:key name="StemKeyStem">
+					<xsd:selector xpath="sfd:Stem">
+</xsd:selector>
+					<xsd:field xpath="sfd:StemKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:unique name="UniqueOperatorUserID">
+					<xsd:selector xpath="sfd:OperatorDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorUserID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:unique name="UniqueObjectUserID">
+					<xsd:selector xpath="sfd:ObjectDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectUserID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:key name="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:OperatorDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="OperatorKeyRefStem" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:Stem">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:ObjectDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="ObjectKeyRefStem" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:Stem">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:unique name="UniqueBarkFunctionKey">
+					<xsd:selector xpath="sfd:SpeciesGroupDefinition/sfd:BarkFunction">
+</xsd:selector>
+					<xsd:field xpath="sfd:BarkFunctionKey">
+</xsd:field>
+				</xsd:unique>
+				<xsd:keyref name="ObjectKeyRefUserDefinedData" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:UserDefinedData/sfd:DataTableGroup">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="OperatorKeyRefRow" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:UserDefinedData/sfd:DataTableGroup/sfd:DataTable/sfd:Row">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="TrackingKeyTrackCoordinates">
+					<xsd:selector xpath="sfd:TrackCoordinates">
+</xsd:selector>
+					<xsd:field xpath="sfd:TrackingKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="ObjectKeyRefTrackCoordinates" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:TrackCoordinates">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="StemKeyRefTrackCoordinates" refer="StemKeyStem">
+					<xsd:selector xpath="sfd:TrackCoordinates">
+</xsd:selector>
+					<xsd:field xpath="sfd:StemKey">
+</xsd:field>
+				</xsd:keyref>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="hpd">
+			
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup">
+</xsd:attributeGroup>
+	</xsd:complexType>
+</xsd:schema>

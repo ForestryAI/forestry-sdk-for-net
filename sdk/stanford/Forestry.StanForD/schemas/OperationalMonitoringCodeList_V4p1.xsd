@@ -1,0 +1,616 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2021 (x64) (http://www.altova.com) by Skogforsk (Skogforsk) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Operational Monitoring Code List XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				OperationalMonitoringCodeList_V4p1.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010" xmlns:col="urn:skogforsk:stanford2010:codelist" targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1.xsd"/>
+	<!-- ===== Imports ===== -->
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="OperationalMonitoringCodeList" type="OperationalMonitoringCodeListType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Description>The root element of the UserDefined Code list message</doc:Description>
+			</xsd:documentation>
+		</xsd:annotation>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="CarrierRepairReasonType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>CarrierRepairReasonTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ElectricalCode" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>User defined repair reason codes.
+</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="electricalName" type="xsd:string" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes.</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="HydraulicsCode" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>User defined repair reason codes.
+</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="hydraulicsName" type="xsd:string" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. 
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="MechanicalCode" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>User defined repair reason codes.
+</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="mechanicalName" type="xsd:string" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. 
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="AirCode" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>User defined repair reason codes.
+</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="airName" type="xsd:string" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. 
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="DownTimeType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>MachineDownTimeTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="Repair" type="RepairType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Structure with user defined repair reasons</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MaintenanceStandardCode" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>User defined maintenance reason codes</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="maintenanceStandardName" type="xsd:string" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. 
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="DisturbanceStandardCode" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>User defined disturbance reason codes</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="disturbanceStandardName" type="xsd:string" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. 
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="OtherMachineDownTimeStandardCode" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>User defined other machine downtime reason codes</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="otherMachineDownTimeStandardName" type="xsd:string" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. 
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="AttachmentRepairReasonType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>AttachmentRepairReasonTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ElectricalCode" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>User defined repair reason codes.
+</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="electricalName" type="xsd:string" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. 
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="HydraulicsCode" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>User defined repair reason codes.
+</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="hydraulicsName" type="xsd:string" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. 
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="MechanicalCode" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>User defined repair reason codes.
+</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="mechanicalName" type="xsd:string" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. 
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="LoaderLinkageRepairReasonType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>LoaderLinkageRepairReasonTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ElectricalCode" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>User defined repair reason codes.
+</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="electricalName" type="xsd:string" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. 
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="HydraulicsCode" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>User defined repair reason codes.
+</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="hydraulicsName" type="xsd:string" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. 
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="MechanicalCode" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>User defined repair reason codes.
+</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="mechanicalName" type="xsd:string" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. 
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="RepairType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>RepairTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="CarrierRepairReason" type="CarrierRepairReasonType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>Structure with user defined repair reason codes for carrier / base machine</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LoaderLinkageRepairReason" type="LoaderLinkageRepairReasonType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>Structure with user defined repair reason codes for loader</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="AttachmentRepairReason" type="AttachmentRepairReasonType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>Structure with user defined repair reason codes foharvesting head</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="OtherRepairReasonCode" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>User defined other repair reason codes.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="otherRepairReasonName" type="xsd:string" use="required">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. 
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="OperationalMonitoringCodeListType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>operationalmonitoringtypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="OperationalMonitoringCodeListHeader" type="MessageHeaderType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>General information for message</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="OperationalMonitoringCodeListDefinition" type="OperationalMonitoringCodeListDefinitionType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>User Defined Code List Definition </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="mcl">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Enumeration list of file extensions of StanForD 2010 messages: Allowed value in Operational Monitoring message is: "mcl"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup"/>
+	</xsd:complexType>
+	<xsd:complexType name="OperationalMonitoringCodeListDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>MachineOperationalMonitoringTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="CommonCodeListDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="OtherWorkCategoryCode" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>4.0</doc:VersionCreated>
+								<doc:Unit>free text</doc:Unit>
+								<doc:Description>User defined other work category codes.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+						<xsd:complexType>
+							<xsd:simpleContent>
+								<xsd:extension base="xsd:string">
+									<xsd:attribute name="otherWorkCategoryName" type="xsd:string" use="required">
+										<xsd:annotation>
+											<xsd:documentation>
+												<doc:VersionCreated>4.0</doc:VersionCreated>
+												<doc:Unit>free text</doc:Unit>
+												<doc:Description>Descriptive name per other work category. 
+</doc:Description>
+											</xsd:documentation>
+										</xsd:annotation>
+									</xsd:attribute>
+								</xsd:extension>
+							</xsd:simpleContent>
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="DownTime" type="DownTimeType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>4.0</doc:VersionCreated>
+								<doc:Description>Structure for user defined down times.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="IndividualUnutilizedTimeCategoryCode" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>4.0</doc:VersionCreated>
+								<doc:Unit>free text</doc:Unit>
+								<doc:Description>User defined individual  unutilized time category codes.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+						<xsd:complexType>
+							<xsd:simpleContent>
+								<xsd:extension base="xsd:string">
+									<xsd:attribute name="individualUnutilizedTimeCategoryName" type="xsd:string" use="required">
+										<xsd:annotation>
+											<xsd:documentation>
+												<doc:VersionCreated>4.0</doc:VersionCreated>
+												<doc:Unit>free text</doc:Unit>
+												<doc:Description>Descriptive name per down time codes. 
+</doc:Description>
+											</xsd:documentation>
+										</xsd:annotation>
+									</xsd:attribute>
+								</xsd:extension>
+							</xsd:simpleContent>
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="OperatorWorkTimeCategoryCode" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>4.0</doc:VersionCreated>
+								<doc:Unit>free text</doc:Unit>
+								<doc:Description>User defined individual  operator work time category codes.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+						<xsd:complexType>
+							<xsd:simpleContent>
+								<xsd:extension base="xsd:string">
+									<xsd:attribute name="operatorWorkTimeCategoryName" type="xsd:string" use="required">
+										<xsd:annotation>
+											<xsd:documentation>
+												<doc:VersionCreated>4.0</doc:VersionCreated>
+												<doc:Unit>free text</doc:Unit>
+												<doc:Description>Descriptive name per down time codes. 
+</doc:Description>
+											</xsd:documentation>
+										</xsd:annotation>
+									</xsd:attribute>
+								</xsd:extension>
+							</xsd:simpleContent>
+						</xsd:complexType>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="MonitoringCodeType">
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="Name" type="xsd:string" use="required"/>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+</xsd:schema>

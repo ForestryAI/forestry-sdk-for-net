@@ -1,0 +1,1087 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Operational Monitoring XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				OperationalMonitoring_V4p1_no_documentation.xsd
+   Generated On: 				4 September 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-08-22" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1_no_documentation.xsd">
+</xsd:include>
+	<!-- ===== Imports ===== -->
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="OperationalMonitoring" type="OperationalMonitoringType">
+		
+		<xsd:unique name="UniqueMachineKey">
+			<xsd:selector xpath="sfd:Machine">
+</xsd:selector>
+			<xsd:field xpath="sfd:MachineKey">
+</xsd:field>
+		</xsd:unique>
+		<xsd:unique name="UniqueMachineUserID">
+			<xsd:selector xpath="sfd:Machine">
+</xsd:selector>
+			<xsd:field xpath="sfd:MachineUserID">
+</xsd:field>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="AttachmentRepairReasonType">
+		
+		<xsd:choice>
+			<xsd:element name="ElectricalCode">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="electricalName" type="xsd:string">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="HydraulicsCode">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="hydraulicsName" type="xsd:string">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="MechanicalCode">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="mechanicalName" type="xsd:string">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:choice>
+	</xsd:complexType>
+	<xsd:complexType name="CarrierRepairReasonType">
+		
+		<xsd:choice>
+			<xsd:element name="ElectricalCode">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="electricalName" type="xsd:string">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="HydraulicsCode">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="hydraulicsName" type="xsd:string">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="MechanicalCode">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="mechanicalName" type="xsd:string">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="AirCode">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="airName" type="xsd:string">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:choice>
+	</xsd:complexType>
+	<xsd:complexType name="CodeListDefinitionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CommonCodeListDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="CodeListKey" type="KeyType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="DataTableGroupOperationalMonitoringType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="DataTableGroupType">
+				<xsd:choice>
+					<xsd:element name="ObjectKey" type="KeyType">
+						
+					</xsd:element>
+					<xsd:element name="ShiftKey" type="KeyType">
+						
+					</xsd:element>
+				</xsd:choice>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="DisturbanceType">
+		
+		<xsd:sequence>
+			<xsd:element name="DisturbanceStandardCode">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="disturbanceStandardName" type="xsd:string">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="DisturbanceManufacturerCode" type="ManufacturerCodeType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ForwarderDataType">
+		
+		<xsd:sequence>
+			<xsd:element name="ForwardedGreenMass" type="MassType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="TotalForwardedVolume" type="TotalForwardedVolumeType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="NumberOfLoads" type="xsd:nonNegativeInteger" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="LoadNumberOfItems" type="LoadNumberOfItemsType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="DeliveryDefinitionEstimation" type="DeliveryEstimationType">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="HarvesterDataType">
+		
+		<xsd:sequence>
+			<xsd:element name="TotalVolumeOfHarvestedLogs" type="TotalVolumeOfHarvestedLogsType" minOccurs="0" maxOccurs="4">
+				
+			</xsd:element>
+			<xsd:element name="NumberOfHarvestedStems" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="ProcessingCategory" type="ProcessingCategoryType">
+				
+			</xsd:element>
+			<xsd:element name="SpeciesGroupKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="IndividualMachineWorkTimeType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="MonitoringTimeType">
+				<xsd:sequence>
+					<xsd:element name="IndividualMachineWorkTimeKey" type="KeyType">
+						
+					</xsd:element>
+					<xsd:element name="MonitoringSettingsKey" type="KeyType">
+						
+					</xsd:element>
+					<xsd:element name="OtherMachineData" type="OtherMachineDataType" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:choice>
+						<xsd:element name="IndividualMachineRunTimeCategory" type="MachineRunTimeCategoryType">
+							
+						</xsd:element>
+						<xsd:element name="IndividualMachineDownTime" type="MachineDownTimeType">
+							
+						</xsd:element>
+						<xsd:element name="IndividualUnutilizedTimeCategoryCode" type="IndividualUnutilizedTimeCategoryType">
+							
+						</xsd:element>
+					</xsd:choice>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="IndividualShortDownTimeType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="ShortDownTimeType">
+				<xsd:sequence>
+					<xsd:element name="MonitoringStartTime" type="StanForD2010DateTimeType">
+						
+					</xsd:element>
+					<xsd:element name="MonitoringTimeLength" type="xsd:positiveInteger">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="IndividualUnutilizedTimeCategoryType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="individualUnutilizedTimeCategoryName" type="xsd:string">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="LoaderLinkageRepairReasonType">
+		
+		<xsd:choice>
+			<xsd:element name="ElectricalCode">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="electricalName" type="xsd:string">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="HydraulicsCode">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="hydraulicsName" type="xsd:string">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="MechanicalCode">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="mechanicalName" type="xsd:string">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:choice>
+	</xsd:complexType>
+	<xsd:complexType name="MachineDownTimeType">
+		
+		<xsd:sequence>
+			<xsd:choice>
+				<xsd:element name="Repair" type="RepairType">
+					
+				</xsd:element>
+				<xsd:element name="Maintenance" type="MaintenanceType">
+					
+				</xsd:element>
+				<xsd:element name="Disturbance" type="DisturbanceType">
+					
+				</xsd:element>
+				<xsd:element name="OtherMachineDownTimeCategory" type="OtherMachineDownTimeType">
+					
+				</xsd:element>
+			</xsd:choice>
+			<xsd:element name="SpareParts" type="SparePartsType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="Coordinates" type="CoordinatesType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MachineOperationalMonitoringType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="MachineWithAttachmentType">
+				<xsd:sequence>
+					<xsd:element name="SpeciesGroupDefinition" type="SpeciesGroupDefinitionOperationalMonitoringType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="ObjectDefinition" type="ObjectDefinitionMachineType" minOccurs="0" maxOccurs="unbounded">
+						
+						<xsd:unique name="UniqueSubObjectKey">
+							<xsd:selector xpath="sfd:SubObject">
+</xsd:selector>
+							<xsd:field xpath="sfd:SubObjectKey">
+</xsd:field>
+						</xsd:unique>
+						<xsd:unique name="UniqueSubObjectUserIDMachineOperationalMonitoring">
+							<xsd:selector xpath="sfd:SubObject">
+</xsd:selector>
+							<xsd:field xpath="sfd:SubObjectUserID">
+</xsd:field>
+						</xsd:unique>
+					</xsd:element>
+					<xsd:element name="CodeListDefinition" type="CodeListDefinitionType" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="IndividualMachineWorkTime" type="IndividualMachineWorkTimeType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="OperatorLoginEvent" type="OperatorLoginEventType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="OperatorShiftDefinition" type="OperatorShiftDefinitionType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="OperatorWorkTime" type="OperatorWorkTimeType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="ReportInterval" type="ReportIntervalType">
+						
+					</xsd:element>
+					<xsd:element name="MonitoringSettings" type="MonitoringSettingsType" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="MachineEngineTime" type="xsd:nonNegativeInteger">
+						
+					</xsd:element>
+					<xsd:element name="MachineDrivenDistance" type="xsd:nonNegativeInteger">
+						
+					</xsd:element>
+					<xsd:element name="MachineFuelConsumption" type="xsd:nonNegativeInteger">
+						
+					</xsd:element>
+					<xsd:element name="IndividualShortDownTime" type="IndividualShortDownTimeType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="UserDefinedData" type="UserDefinedDataOperationalMonitoringType" minOccurs="0">
+						
+						<xsd:unique name="UniqueTableGroupIDUserDefinedDataOperationalMonitoring">
+							<xsd:selector xpath="sfd:DataTableGroup">
+</xsd:selector>
+							<xsd:field xpath="@tableGroupID">
+</xsd:field>
+						</xsd:unique>
+					</xsd:element>
+					<xsd:element name="IndividualEngineTime" minOccurs="0" maxOccurs="unbounded">
+						
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="EngineStartTime" type="StanForD2010DateTimeType">
+									
+								</xsd:element>
+								<xsd:element name="EngineTimeLength" type="xsd:positiveInteger">
+									
+								</xsd:element>
+								<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+									
+								</xsd:element>
+							</xsd:sequence>
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="TrackCoordinates" type="TrackCoordinatesOperationalMonitoringType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="MachineRunTimeCategoryType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="MachineRunTimeCategoryListType">
+				<xsd:attribute name="otherWorkCategoryCode" type="xsd:string">
+					
+				</xsd:attribute>
+				<xsd:attribute name="otherWorkCategoryName" type="xsd:string">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="MaintenanceType">
+		
+		<xsd:sequence>
+			<xsd:element name="MaintenanceStandardCode">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="maintenanceStandardName" type="xsd:string">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="MaintenanceManufacturerCode" type="ManufacturerCodeType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ManufacturerCodeType">
+		
+		<xsd:sequence>
+			<xsd:element name="Code" type="xsd:integer">
+				
+			</xsd:element>
+			<xsd:element name="CodeDescription" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MonitoringSettingsType">
+		
+		<xsd:sequence>
+			<xsd:element name="MonitoringFilterTimeDown" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="MonitoringFilterTimeRun" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="MonitoringFilterTimeMinimum" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="MonitoringSettingsKey" type="KeyType">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MonitoringTimeType">
+		
+		<xsd:sequence>
+			<xsd:element name="OperatorKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="ObjectKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="SubObjectKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="MonitoringStartTime" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+			<xsd:element name="MonitoringTimeLength" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="MonitoringTimeDescription" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="CodeListKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="OperationalMonitoringType">
+		
+		<xsd:sequence>
+			<xsd:element name="OperationalMonitoringHeader" type="MessageHeaderType">
+				
+			</xsd:element>
+			<xsd:element name="Machine" type="MachineOperationalMonitoringType" maxOccurs="unbounded">
+				
+				<xsd:key name="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:SpeciesGroupDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:SpeciesGroupKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="SpeciesGroupKeyRefIndividualMachineWorkTime" refer="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:IndividualMachineWorkTime/sfd:OtherMachineData/sfd:HarvesterData">
+</xsd:selector>
+					<xsd:field xpath="sfd:SpeciesGroupKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:OperatorDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:unique name="UniqueOperatorUserID">
+					<xsd:selector xpath="sfd:OperatorDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorUserID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:keyref name="OperatorKeyRefIndividualMachineWorkTime" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:IndividualMachineWorkTime">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="OperatorKeyRefOperatorWorkTime" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:OperatorWorkTime">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="OperatorKeyRefIndividualShortDownTime" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:IndividualShortDownTime">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:ObjectDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:unique name="UniqueObjectUserID">
+					<xsd:selector xpath="sfd:ObjectDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectUserID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:keyref name="ObjectKeyRefIndividualMachineWorkTime" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:IndividualMachineWorkTime">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="ObjectKeyRefOperatorWorkTime" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:OperatorWorkTime/sfd:OperatorIndividualWorkTime">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="ObjectKeyRefIndividualShortDownTime" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:IndividualShortDownTime">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="MonitoringSettingsKeyMonitoringSettings">
+					<xsd:selector xpath="sfd:MonitoringSettings">
+</xsd:selector>
+					<xsd:field xpath="sfd:MonitoringSettingsKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="MonitoringSettingsKeyRefIndividualMachineWorkTime" refer="MonitoringSettingsKeyMonitoringSettings">
+					<xsd:selector xpath="sfd:IndividualMachineWorkTime">
+</xsd:selector>
+					<xsd:field xpath="sfd:MonitoringSettingsKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="CodeListKeyCodeListDefinition">
+					<xsd:selector xpath="sfd:CodeListDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:CodeListKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:key name="IndividualMachineWorkTimeKeyIndividualMachineWorkTIme">
+					<xsd:selector xpath="sfd:IndividualMachineWorkTime">
+</xsd:selector>
+					<xsd:field xpath="sfd:IndividualMachineWorkTimeKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="CodeListKeyRefIndividualMachineWorkTime" refer="CodeListKeyCodeListDefinition">
+					<xsd:selector xpath="sfd:IndividualMachineWorkTime">
+</xsd:selector>
+					<xsd:field xpath="sfd:CodeListKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="ShiftKeyOperatorShitfDefinition">
+					<xsd:selector xpath="sfd:OperatorShiftDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ShiftKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="OperatorKeyRefOperatorShiftDefinition" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:OperatorShiftDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="ObjectKeyRefOperatorShiftDefinition" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:OperatorShiftDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="IndividualMachineWorkTimeKeyRefOperatorIndividualWorkTIme" refer="IndividualMachineWorkTimeKeyIndividualMachineWorkTIme">
+					<xsd:selector xpath="sfd:OperatorWorkTime">
+</xsd:selector>
+					<xsd:field xpath="sfd:IndividualMachineWorkTimeKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="CodeListKeyRefOperatorIndividualWorkTime" refer="CodeListKeyCodeListDefinition">
+					<xsd:selector xpath="sfd:OperatorWorkTime/sfd:OperatorIndividualWorkTime">
+</xsd:selector>
+					<xsd:field xpath="sfd:CodeListKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="ShiftKeyRefOperatorWorkTime" refer="ShiftKeyOperatorShitfDefinition">
+					<xsd:selector xpath="sfd:OperatorWorkTime">
+</xsd:selector>
+					<xsd:field xpath="sfd:ShiftKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="IndividualMachineWorkTimeKeyRefIndividualShortDownTime" refer="IndividualMachineWorkTimeKeyIndividualMachineWorkTIme">
+					<xsd:selector xpath="sfd:IndividualShortDownTime">
+</xsd:selector>
+					<xsd:field xpath="sfd:IndividualMachineWorkTimeKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="OperatorKeyRefOperatorLoginEvent" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:OperatorLoginEvent">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="ObjectKeyRefUserDefinedData" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:UserDefinedData/sfd:DataTableGroup">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="ShiftKeyRefUserDefinedData" refer="ShiftKeyOperatorShitfDefinition">
+					<xsd:selector xpath="sfd:UserDefinedData/sfd:DataTableGroup">
+</xsd:selector>
+					<xsd:field xpath="sfd:ShiftKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="OperatorKeyRefRow" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:UserDefinedData/sfd:DataTableGroup/sfd:DataTable/sfd:Row">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="TrackingKeyTrackCoordinates">
+					<xsd:selector xpath="sfd:TrackCoordinates">
+</xsd:selector>
+					<xsd:field xpath="sfd:TrackingKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="ObjectKeyRefTrackCoordinates" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:TrackCoordinates">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="IndividualMachineWorkTimeKeyRefTrackCoordinates" refer="IndividualMachineWorkTimeKeyIndividualMachineWorkTIme">
+					<xsd:selector xpath="sfd:TrackCoordinates/sfd:IndividualMachineWorkTimeKey">
+</xsd:selector>
+					<xsd:field xpath=".">
+</xsd:field>
+				</xsd:keyref>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="mom">
+			
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup">
+</xsd:attributeGroup>
+	</xsd:complexType>
+	<xsd:complexType name="OperatorIndividualWorkTimeType">
+		
+		<xsd:sequence>
+			<xsd:element name="ObjectKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="SubObjectKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="MonitoringStartTime" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+			<xsd:element name="MonitoringTimeLength" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="MonitoringTimeDescription" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="CodeListKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="operatorWorkTimeCategoryCode" type="xsd:string" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="operatorWorkTimeCategoryName" type="xsd:string">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="OperatorLoginEventType">
+		
+		<xsd:sequence>
+			<xsd:element name="OperatorKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="EventTime" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+			<xsd:element name="EventCoordinates" type="CoordinatesType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="operatorLoginEventCategory" type="OperatorLoginEventCategoryType" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="OperatorShiftDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="ShiftKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="OperatorKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="ObjectKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="SubObjectKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ShiftOrder" type="xsd:positiveInteger" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ShiftCategory" type="ShiftCategoryType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ShiftDescription" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ShiftStartTime" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+			<xsd:element name="ShiftEndTime" type="StanForD2010DateTimeType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="OperatorWorkTimeType">
+		
+		<xsd:sequence>
+			<xsd:element name="OperatorKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="ShiftKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:choice>
+				<xsd:element name="OperatorIndividualWorkTime" type="OperatorIndividualWorkTimeType">
+					
+				</xsd:element>
+				<xsd:element name="IndividualMachineWorkTimeKey" type="KeyType">
+					
+				</xsd:element>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="OtherMachineDataType">
+		
+		<xsd:sequence>
+			<xsd:element name="EngineTime" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="DrivenDistance" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="FuelConsumption" type="NonNegativeDecimal">
+				
+			</xsd:element>
+			<xsd:choice>
+				<xsd:element name="HarvesterData" type="HarvesterDataType" minOccurs="0" maxOccurs="unbounded">
+					
+				</xsd:element>
+				<xsd:element name="ForwarderData" type="ForwarderDataType" minOccurs="0">
+					
+				</xsd:element>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="OtherMachineDownTimeType">
+		
+		<xsd:sequence>
+			<xsd:element name="OtherMachineDownTimeStandardCode">
+				
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="otherMachineDownTimeStandardName" type="xsd:string">
+								
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="OtherMachineDownTimeManufacturerCode" type="ManufacturerCodeType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="RepairType">
+		
+		<xsd:sequence>
+			<xsd:choice>
+				<xsd:element name="CarrierRepairReason" type="CarrierRepairReasonType">
+					
+				</xsd:element>
+				<xsd:element name="LoaderLinkageRepairReason" type="LoaderLinkageRepairReasonType">
+					
+				</xsd:element>
+				<xsd:element name="AttachmentRepairReason" type="AttachmentRepairReasonType">
+					
+				</xsd:element>
+				<xsd:element name="OtherRepairReason">
+					
+					<xsd:complexType>
+						<xsd:simpleContent>
+							<xsd:extension base="xsd:string">
+								<xsd:attribute name="otherRepairReasonName" type="xsd:string">
+									
+								</xsd:attribute>
+							</xsd:extension>
+						</xsd:simpleContent>
+					</xsd:complexType>
+				</xsd:element>
+			</xsd:choice>
+			<xsd:element name="RepairManufacturerCode" type="ManufacturerCodeType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ReportIntervalType">
+		
+		<xsd:sequence>
+			<xsd:element name="ReportStartTime" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+			<xsd:element name="ReportEndTime" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+			<xsd:element name="ReportFilterCategory" type="ReportFilterCategoryType">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ShortDownTimeType">
+		
+		<xsd:sequence>
+			<xsd:element name="OperatorKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="IndividualMachineWorkTimeKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="ObjectKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="SubObjectKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SparePartsType">
+		
+		<xsd:sequence>
+			<xsd:element name="SparePartIdentity" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="SparePartDescription" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="SparePartsNoOfItems" type="xsd:positiveInteger">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SpeciesGroupDefinitionOperationalMonitoringType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CommonSpeciesGroupDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="DBHHeight" type="DBHHeightType" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="Grades" type="GradesType" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="BarkFunction" type="BarkFunctionWithKeyType" nillable="true" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="SoundKnotFunction" type="SoundKnotFunctionType" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="ButtEndProfileExtrapolation" type="ButtEndProfileExtrapolationType" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="EstonianVolumeParameters" type="EstonianVolumeParametersType" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="StemCodes" type="StemCodesType" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="SpeciesGroupKey" type="KeyType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="TotalForwardedVolumeType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="VolumeType">
+				<xsd:attribute name="forwardedVolumeCategory" type="ForwardedVolumeCategoryType" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="TotalVolumeOfHarvestedLogsType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="VolumeType">
+				<xsd:attribute name="harvestedLogsVolumeCategory" type="HarvestedLogsVolumeCategoryType" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="TrackCoordinatesOperationalMonitoringType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="TrackCoordinatesType">
+				<xsd:sequence>
+					<xsd:element name="IndividualMachineWorkTimeKey" type="KeyType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="UserDefinedDataOperationalMonitoringType">
+		
+		<xsd:sequence>
+			<xsd:element name="DataTableGroup" type="DataTableGroupOperationalMonitoringType" maxOccurs="unbounded">
+				
+				<xsd:unique name="UniqueTableIDHOperationalMonitoring">
+					<xsd:selector xpath="sfd:DataTable">
+</xsd:selector>
+					<xsd:field xpath="@tableID">
+</xsd:field>
+				</xsd:unique>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:simpleType name="ForwardedVolumeCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Volume, m3sob">
+</xsd:enumeration>
+			<xsd:enumeration value="Volume, m3sub">
+</xsd:enumeration>
+			<xsd:enumeration value="Loose volume, m3">
+</xsd:enumeration>
+			<xsd:enumeration value="Solid volume including bark, branches and needles, m3">
+</xsd:enumeration>
+			<xsd:enumeration value="Solid volume of bundles (length*cross sectional area), m3">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="HarvestedLogsVolumeCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="m3sob">
+</xsd:enumeration>
+			<xsd:enumeration value="m3sub">
+</xsd:enumeration>
+			<xsd:enumeration value="m3sobEstimated">
+</xsd:enumeration>
+			<xsd:enumeration value="m3subEstimated">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="MachineRunTimeCategoryListType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Processing">
+</xsd:enumeration>
+			<xsd:enumeration value="Terrain travel">
+</xsd:enumeration>
+			<xsd:enumeration value="Other work">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="OperatorLoginEventCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Login">
+</xsd:enumeration>
+			<xsd:enumeration value="Logout">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ReportFilterCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="No filter">
+</xsd:enumeration>
+			<xsd:enumeration value="Object filter">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ShiftCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Not defined">
+</xsd:enumeration>
+			<xsd:enumeration value="Morning">
+</xsd:enumeration>
+			<xsd:enumeration value="Day">
+</xsd:enumeration>
+			<xsd:enumeration value="Evening">
+</xsd:enumeration>
+			<xsd:enumeration value="Night">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

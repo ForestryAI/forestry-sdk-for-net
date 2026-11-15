@@ -1,0 +1,2104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Operational Monitoring XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				OperationalMonitoring_V4p1.xsd
+   Generated On: 				4 September 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010" targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-08-22">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1.xsd"/>
+	<!-- ===== Imports ===== -->
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="OperationalMonitoring" type="OperationalMonitoringType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Description>The root element of the Operational Monitoring message</doc:Description>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:unique name="UniqueMachineKey">
+			<xsd:selector xpath="sfd:Machine"/>
+			<xsd:field xpath="sfd:MachineKey"/>
+		</xsd:unique>
+		<xsd:unique name="UniqueMachineUserID">
+			<xsd:selector xpath="sfd:Machine"/>
+			<xsd:field xpath="sfd:MachineUserID"/>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="AttachmentRepairReasonType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>AttachmentRepairReasonTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:choice>
+			<xsd:element name="ElectricalCode">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>4.0</doc:VersionModified>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Enumeration list with electrical repair reasons. According to code list in mcl file.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="electricalName" type="xsd:string">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. According to code list in mcl file.
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="HydraulicsCode">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>4.0</doc:VersionModified>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Enumeration list with hydraulic repair reasons. According to code list in mcl file.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="hydraulicsName" type="xsd:string">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. According to code list in mcl file.
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="MechanicalCode">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>4.0</doc:VersionModified>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Enumeration list with mechanical repair reasons. According to code list in mcl file.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="mechanicalName" type="xsd:string">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. According to code list in mcl file.
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:choice>
+	</xsd:complexType>
+	<xsd:complexType name="CarrierRepairReasonType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>CarrierRepairReasonTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:choice>
+			<xsd:element name="ElectricalCode">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>4.0</doc:VersionModified>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Enumeration list with electrical repair reasons. According to code list in mcl file.
+</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="electricalName" type="xsd:string">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. According to code list in mcl file.
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="HydraulicsCode">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>4.0</doc:VersionModified>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Enumeration list with hydraulic repair reasons. According to code list in mcl file.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="hydraulicsName" type="xsd:string">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. According to code list in mcl file.
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="MechanicalCode">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>4.0</doc:VersionModified>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Enumeration list with mechanical repair reasons. According to code list in mcl file.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="mechanicalName" type="xsd:string">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. According to code list in mcl file.
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="AirCode">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>4.0</doc:VersionModified>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Enumeration list with air repair reasons. According to code list in mcl file.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="airName" type="xsd:string">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. According to code list in mcl file.
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:choice>
+	</xsd:complexType>
+	<xsd:complexType name="CodeListDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>CodeListDefinitionTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="CommonCodeListDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="CodeListKey" type="KeyType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>4.0</doc:VersionCreated>
+								<doc:Unit>sequential no</doc:Unit>
+								<doc:Description>Machine specific identity per code list set by machine. Must be updated if any modifications to code list is done.Running no reset only when MachineKey is changed. </doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="DataTableGroupOperationalMonitoringType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>DataTableGroupOperationalMonitoringTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="DataTableGroupType">
+				<xsd:choice>
+					<xsd:element name="ObjectKey" type="KeyType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Unit>sequential no</doc:Unit>
+								<doc:Description>Machine specific identity per harvesting object. Set when new harvesting object is started. Running no recommended, reset only when MachineKey is changed.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="ShiftKey" type="KeyType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>2.0</doc:VersionCreated>
+								<doc:Unit>sequential no</doc:Unit>
+								<doc:Description>Machine unique shift identity, set by machine</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:choice>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="DisturbanceType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>DisturbanceTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="DisturbanceStandardCode">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>4.0</doc:VersionModified>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Enumeration list with reason for disturbances. According to code list in mcl file. </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="disturbanceStandardName" type="xsd:string">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. According to code list in mcl file.
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="DisturbanceManufacturerCode" type="ManufacturerCodeType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Manufacturer or user defined codes for disturbances.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ForwarderDataType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>ForwarderDataTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ForwardedGreenMass" type="MassType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>v448_t6</doc:VarNumber>
+						<doc:Unit>kg</doc:Unit>
+						<doc:Description>Total forwarded mass</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="TotalForwardedVolume" type="TotalForwardedVolumeType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>2.0</doc:VersionModified>
+						<doc:VarNumber>v448</doc:VarNumber>
+						<doc:Description>Total forwarded volume.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="NumberOfLoads" type="xsd:nonNegativeInteger" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>v228</doc:VarNumber>
+						<doc:Unit>no</doc:Unit>
+						<doc:Description>Number of loads unloaded</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="LoadNumberOfItems" type="LoadNumberOfItemsType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>v446_t1</doc:VarNumber>
+						<doc:Unit>no</doc:Unit>
+						<doc:Description>Number of loads or bundles</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DeliveryDefinitionEstimation" type="DeliveryEstimationType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Defines primary unit of forwarded products</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="HarvesterDataType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>HarvesterDataTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="TotalVolumeOfHarvestedLogs" type="TotalVolumeOfHarvestedLogsType" minOccurs="0" maxOccurs="4">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>2.0</doc:VersionModified>
+						<doc:VarNumber>v249</doc:VarNumber>
+						<doc:Description>Total solid volume (including unclassified volumes). Also to be used in case of Multi- and SingleTreeFelled stems even though no logs have been cut.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="NumberOfHarvestedStems" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>v221_t1</doc:VarNumber>
+						<doc:Unit>no</doc:Unit>
+						<doc:Description>Number of processed (harvested) stems.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProcessingCategory" type="ProcessingCategoryType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Possible enumeration values are: SingleTreeProcessing,MultiTreeProcessing,  SIngleTreeFelling and MultiTreeFelling</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SpeciesGroupKey" type="KeyType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per species group set by machine. Must be updated if any modifications to species group definition is done. Running number reset only when MachineKey is changed.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="IndividualMachineWorkTimeType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>IndividualMachineWorkTimeTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="MonitoringTimeType">
+				<xsd:sequence>
+					<xsd:element name="IndividualMachineWorkTimeKey" type="KeyType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>4.0</doc:VersionCreated>
+								<doc:Unit>sequential no</doc:Unit>
+								<doc:Description>Machine specific identity per individual machine work time. Must be totally unique for a certain MachineKey. Reset only when MachineKey is changed. </doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="MonitoringSettingsKey" type="KeyType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>2.0</doc:VersionCreated>
+								<doc:Unit>sequential no</doc:Unit>
+								<doc:Description>Machine specific identity per monitoring settings</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="OtherMachineData" type="OtherMachineDataType" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Structure for production, fuel, distance and engine time.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:choice>
+						<xsd:element name="IndividualMachineRunTimeCategory" type="MachineRunTimeCategoryType">
+							<xsd:annotation>
+								<xsd:documentation>
+									<doc:VersionCreated>1.0</doc:VersionCreated>
+									<doc:VersionModified>2.0</doc:VersionModified>
+									<doc:Unit>list</doc:Unit>
+									<doc:Description>Allowed values: "Processing", "Terrain travel", "Other work"</doc:Description>
+								</xsd:documentation>
+							</xsd:annotation>
+						</xsd:element>
+						<xsd:element name="IndividualMachineDownTime" type="MachineDownTimeType">
+							<xsd:annotation>
+								<xsd:documentation>
+									<doc:VersionCreated>1.0</doc:VersionCreated>
+									<doc:Description>Structure for down times.</doc:Description>
+								</xsd:documentation>
+							</xsd:annotation>
+						</xsd:element>
+						<xsd:element name="IndividualUnutilizedTimeCategoryCode" type="IndividualUnutilizedTimeCategoryType">
+							<xsd:annotation>
+								<xsd:documentation>
+									<doc:VersionCreated>1.0</doc:VersionCreated>
+									<doc:VersionModified>4.0</doc:VersionModified>
+									<doc:Unit>list</doc:Unit>
+									<doc:Description>Enumeration list with reasons for unutilized times. According to code list in mcl file. </doc:Description>
+								</xsd:documentation>
+							</xsd:annotation>
+						</xsd:element>
+					</xsd:choice>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="IndividualShortDownTimeType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>IndividualShortDownTimeTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="ShortDownTimeType">
+				<xsd:sequence>
+					<xsd:element name="MonitoringStartTime" type="StanForD2010DateTimeType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+								<doc:Description>Start time for a time interval. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="MonitoringTimeLength" type="xsd:positiveInteger">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Unit>seconds</doc:Unit>
+								<doc:Description>Extension of a time interval </doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="IndividualUnutilizedTimeCategoryType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>IndividualUnutilizedTimeCategoryTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="individualUnutilizedTimeCategoryName" type="xsd:string">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>4.0</doc:VersionCreated>
+							<doc:Unit>free text</doc:Unit>
+							<doc:Description>Descriptive name per unutilized time category codes. According to code list in mcl file.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="LoaderLinkageRepairReasonType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>LoaderLinkageRepairReasonTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:choice>
+			<xsd:element name="ElectricalCode">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>4.0</doc:VersionModified>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Enumeration list with electrical repair reasons. According to code list in mcl file.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="electricalName" type="xsd:string">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. According to code list in mcl file.
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="HydraulicsCode">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>4.0</doc:VersionModified>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Enumeration list with hydraulic repair reasons. According to code list in mcl file.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="hydraulicsName" type="xsd:string">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. According to code list in mcl file.
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="MechanicalCode">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>4.0</doc:VersionModified>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Enumeration list with mechanical repair reasons. According to code list in mcl file.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="mechanicalName" type="xsd:string">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. According to code list in mcl file.
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+		</xsd:choice>
+	</xsd:complexType>
+	<xsd:complexType name="MachineDownTimeType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>MachineDownTimeTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:choice>
+				<xsd:element name="Repair" type="RepairType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Description>Structure with repair reasons</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+				<xsd:element name="Maintenance" type="MaintenanceType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Description>Structure with maintenance reasons</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+				<xsd:element name="Disturbance" type="DisturbanceType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Description>Structure with reasons for disturbances</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+				<xsd:element name="OtherMachineDownTimeCategory" type="OtherMachineDownTimeType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Description>Structure for other down times.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+			</xsd:choice>
+			<xsd:element name="SpareParts" type="SparePartsType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.0</doc:VersionCreated>
+						<doc:Description>Structure for spare parts</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Coordinates" type="CoordinatesType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.4</doc:VersionCreated>
+						<doc:Description>Structure for down time coordinates</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MachineOperationalMonitoringType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>MachineOperationalMonitoringTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="MachineWithAttachmentType">
+				<xsd:sequence>
+					<xsd:element name="SpeciesGroupDefinition" type="SpeciesGroupDefinitionOperationalMonitoringType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Definition of species used in this operational monitoring message</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="ObjectDefinition" type="ObjectDefinitionMachineType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Structure for object specific data</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+						<xsd:unique name="UniqueSubObjectKey">
+							<xsd:selector xpath="sfd:SubObject"/>
+							<xsd:field xpath="sfd:SubObjectKey"/>
+						</xsd:unique>
+						<xsd:unique name="UniqueSubObjectUserIDMachineOperationalMonitoring">
+							<xsd:selector xpath="sfd:SubObject"/>
+							<xsd:field xpath="sfd:SubObjectUserID"/>
+						</xsd:unique>
+					</xsd:element>
+					<xsd:element name="CodeListDefinition" type="CodeListDefinitionType" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>4.0</doc:VersionCreated>
+								<doc:Description>Structure for code list. Can be distributed to machine using mcl-fil.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="IndividualMachineWorkTime" type="IndividualMachineWorkTimeType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Structure for machine work times including run, down and unutilized times.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="OperatorLoginEvent" type="OperatorLoginEventType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>4.0</doc:VersionCreated>
+								<doc:Description>Structure for register when operator is logged into or out of machine software system.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="OperatorShiftDefinition" type="OperatorShiftDefinitionType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>2.0</doc:VersionCreated>
+								<doc:Description>Structure for operator shifts</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="OperatorWorkTime" type="OperatorWorkTimeType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Structure for operator work times, including work outside machine.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="ReportInterval" type="ReportIntervalType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Total time interval covered by the mom file.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="MonitoringSettings" type="MonitoringSettingsType" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:VersionModified>2.0</doc:VersionModified>
+								<doc:Description>Structure for monitoring filter times.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="MachineEngineTime" type="xsd:nonNegativeInteger">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:VersionModified>2.0</doc:VersionModified>
+								<doc:VarNumber>v431_t1</doc:VarNumber>
+								<doc:Unit>minutes</doc:Unit>
+								<doc:Description>Total engine time, covering total life time of the engine up until the time of the report end time.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="MachineDrivenDistance" type="xsd:nonNegativeInteger">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Unit>m</doc:Unit>
+								<doc:Description>Total distance covering the total life time of the machine up until the time of the report end time.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="MachineFuelConsumption" type="xsd:nonNegativeInteger">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Unit>litre</doc:Unit>
+								<doc:Description>Total fuel consumption covering the total life time of the machine up until the time of the report end time.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="IndividualShortDownTime" type="IndividualShortDownTimeType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Structure for individual short down times. Not aggregated.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="UserDefinedData" type="UserDefinedDataOperationalMonitoringType" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>2.1</doc:VersionCreated>
+								<doc:Description>Structure for user defined data</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+						<xsd:unique name="UniqueTableGroupIDUserDefinedDataOperationalMonitoring">
+							<xsd:selector xpath="sfd:DataTableGroup"/>
+							<xsd:field xpath="@tableGroupID"/>
+						</xsd:unique>
+					</xsd:element>
+					<xsd:element name="IndividualEngineTime" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>3.5</doc:VersionCreated>
+								<doc:Description>Structure for engine times, based on when engine is turned on and off. No aggregations.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="EngineStartTime" type="StanForD2010DateTimeType">
+									<xsd:annotation>
+										<xsd:documentation>
+											<doc:VersionCreated>3.5</doc:VersionCreated>
+											<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+											<doc:Description>Start time for a time interval, when engine is turned on. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+										</xsd:documentation>
+									</xsd:annotation>
+								</xsd:element>
+								<xsd:element name="EngineTimeLength" type="xsd:positiveInteger">
+									<xsd:annotation>
+										<xsd:documentation>
+											<doc:VersionCreated>3.5</doc:VersionCreated>
+											<doc:Unit>seconds</doc:Unit>
+											<doc:Description>Extension of a time interval during which engine is turned on.</doc:Description>
+										</xsd:documentation>
+									</xsd:annotation>
+								</xsd:element>
+								<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+									<xsd:annotation>
+										<xsd:documentation>
+											<doc:VersionCreated>1.0</doc:VersionCreated>
+											<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+										</xsd:documentation>
+									</xsd:annotation>
+								</xsd:element>
+							</xsd:sequence>
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="TrackCoordinates" type="TrackCoordinatesOperationalMonitoringType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>4.0</doc:VersionCreated>
+								<doc:Description>Structure for track coordinates</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="MachineRunTimeCategoryType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>2.0</doc:VersionCreated>
+				<doc:Graph>MachineRunTimeCategoryTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleContent>
+			<xsd:extension base="MachineRunTimeCategoryListType">
+				<xsd:attribute name="otherWorkCategoryCode" type="xsd:string">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>2.0</doc:VersionCreated>
+							<doc:VersionModified>4.0</doc:VersionModified>
+							<doc:Unit>list</doc:Unit>
+							<doc:Description>Enumeration list with reason for other machine down times. According to code list in mcl file. E.g.:"Road travel","Preparing strip roads","Towing other machine","Roadside loading of truck","Unspecified"" </doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:attribute name="otherWorkCategoryName" type="xsd:string">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>4.0</doc:VersionCreated>
+							<doc:Unit>free text</doc:Unit>
+							<doc:Description>Descriptive name per other work category codes. According to code list in mcl file.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="MaintenanceType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>MaintenanceTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="MaintenanceStandardCode">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>4.0</doc:VersionModified>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Enumeration list with maintenance reasons. According to code list in mcl file.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="maintenanceStandardName" type="xsd:string">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. According to code list in mcl file.
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="MaintenanceManufacturerCode" type="ManufacturerCodeType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Manufacturer or user defined maintenance reasons</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ManufacturerCodeType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>ManufacturerCodeTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="Code" type="xsd:integer">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Manufacturer or user defined codes</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="CodeDescription" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Manufacturer or user defined code descriptions.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MonitoringSettingsType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>MonitoringSettingsTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="MonitoringFilterTimeDown" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V315_t1</doc:VarNumber>
+						<doc:Unit>seconds</doc:Unit>
+						<doc:Description>Down-filter-time, maximum time allowed for a down time, if down time is longer it will be recorded in MachineDownTime. Default value is 900 s (15 min). The value rules the data in MonitoringFilterTimeMinimum</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MonitoringFilterTimeRun" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V315_t2</doc:VarNumber>
+						<doc:Unit>seconds</doc:Unit>
+						<doc:Description>Run-filter-time, A Main work time (Processing, Terrain travel, Other work or Road travel) in MachineWorkTime, must exceed this filter time in order to be registered as a new Main work time.. Default value is 120 s (2 min). This means e.g. that a run time shorter than this will be considered to be of the same type of time as the previously registered time.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MonitoringFilterTimeMinimum" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V315_t3</doc:VarNumber>
+						<doc:Unit>seconds</doc:Unit>
+						<doc:Description>Minimum-filter-time: Smallest considered time unit. If any time (run time or down time) is shorter it is considered non-existing. Default value is 15 s. This means for example that a down time shorter than this is included in the E0-time, if longer it will not be included in the E0-time</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MonitoringSettingsKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per monitoring settings</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MonitoringTimeType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>monitoringtimetypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="OperatorKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine unique operator identity, set by machine</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ObjectKey" type="KeyType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per harvesting object. Set when new harvesting object is started. Running no recommended, reset only when MachineKey is changed</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SubObjectKey" type="KeyType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per harvesting sub object, set by machine. Set when new harvesting sub object is started. Running no recommended, reset when ObjectKey is updated.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MonitoringStartTime" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Start time for a time interval. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MonitoringTimeLength" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>seconds</doc:Unit>
+						<doc:Description>Extension of a time interval </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MonitoringTimeDescription" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.3</doc:VersionCreated>
+						<doc:Description>Free text created by operator per IndividualMachineWorkTime</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="CodeListKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per code list set by machine. Must be updated if any modifications to code lsit definition is done. Running number reset only when MachineKey is changed.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="OperationalMonitoringType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>operationalmonitoringtypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="OperationalMonitoringHeader" type="MessageHeaderType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>General information for message</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Machine" type="MachineOperationalMonitoringType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>All the oprational monitoring  specific data is included under Machine elements</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:key name="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:SpeciesGroupDefinition"/>
+					<xsd:field xpath="sfd:SpeciesGroupKey"/>
+				</xsd:key>
+				<xsd:keyref name="SpeciesGroupKeyRefIndividualMachineWorkTime" refer="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:IndividualMachineWorkTime/sfd:OtherMachineData/sfd:HarvesterData"/>
+					<xsd:field xpath="sfd:SpeciesGroupKey"/>
+				</xsd:keyref>
+				<xsd:key name="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:OperatorDefinition"/>
+					<xsd:field xpath="sfd:OperatorKey"/>
+				</xsd:key>
+				<xsd:unique name="UniqueOperatorUserID">
+					<xsd:selector xpath="sfd:OperatorDefinition"/>
+					<xsd:field xpath="sfd:OperatorUserID"/>
+				</xsd:unique>
+				<xsd:keyref name="OperatorKeyRefIndividualMachineWorkTime" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:IndividualMachineWorkTime"/>
+					<xsd:field xpath="sfd:OperatorKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="OperatorKeyRefOperatorWorkTime" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:OperatorWorkTime"/>
+					<xsd:field xpath="sfd:OperatorKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="OperatorKeyRefIndividualShortDownTime" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:IndividualShortDownTime"/>
+					<xsd:field xpath="sfd:OperatorKey"/>
+				</xsd:keyref>
+				<xsd:key name="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:ObjectDefinition"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:key>
+				<xsd:unique name="UniqueObjectUserID">
+					<xsd:selector xpath="sfd:ObjectDefinition"/>
+					<xsd:field xpath="sfd:ObjectUserID"/>
+				</xsd:unique>
+				<xsd:keyref name="ObjectKeyRefIndividualMachineWorkTime" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:IndividualMachineWorkTime"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="ObjectKeyRefOperatorWorkTime" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:OperatorWorkTime/sfd:OperatorIndividualWorkTime"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="ObjectKeyRefIndividualShortDownTime" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:IndividualShortDownTime"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:keyref>
+				<xsd:key name="MonitoringSettingsKeyMonitoringSettings">
+					<xsd:selector xpath="sfd:MonitoringSettings"/>
+					<xsd:field xpath="sfd:MonitoringSettingsKey"/>
+				</xsd:key>
+				<xsd:keyref name="MonitoringSettingsKeyRefIndividualMachineWorkTime" refer="MonitoringSettingsKeyMonitoringSettings">
+					<xsd:selector xpath="sfd:IndividualMachineWorkTime"/>
+					<xsd:field xpath="sfd:MonitoringSettingsKey"/>
+				</xsd:keyref>
+				<xsd:key name="CodeListKeyCodeListDefinition">
+					<xsd:selector xpath="sfd:CodeListDefinition"/>
+					<xsd:field xpath="sfd:CodeListKey"/>
+				</xsd:key>
+				<xsd:key name="IndividualMachineWorkTimeKeyIndividualMachineWorkTIme">
+					<xsd:selector xpath="sfd:IndividualMachineWorkTime"/>
+					<xsd:field xpath="sfd:IndividualMachineWorkTimeKey"/>
+				</xsd:key>
+				<xsd:keyref name="CodeListKeyRefIndividualMachineWorkTime" refer="CodeListKeyCodeListDefinition">
+					<xsd:selector xpath="sfd:IndividualMachineWorkTime"/>
+					<xsd:field xpath="sfd:CodeListKey"/>
+				</xsd:keyref>
+				<xsd:key name="ShiftKeyOperatorShitfDefinition">
+					<xsd:selector xpath="sfd:OperatorShiftDefinition"/>
+					<xsd:field xpath="sfd:ShiftKey"/>
+				</xsd:key>
+				<xsd:keyref name="OperatorKeyRefOperatorShiftDefinition" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:OperatorShiftDefinition"/>
+					<xsd:field xpath="sfd:OperatorKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="ObjectKeyRefOperatorShiftDefinition" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:OperatorShiftDefinition"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="IndividualMachineWorkTimeKeyRefOperatorIndividualWorkTIme" refer="IndividualMachineWorkTimeKeyIndividualMachineWorkTIme">
+					<xsd:selector xpath="sfd:OperatorWorkTime"/>
+					<xsd:field xpath="sfd:IndividualMachineWorkTimeKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="CodeListKeyRefOperatorIndividualWorkTime" refer="CodeListKeyCodeListDefinition">
+					<xsd:selector xpath="sfd:OperatorWorkTime/sfd:OperatorIndividualWorkTime"/>
+					<xsd:field xpath="sfd:CodeListKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="ShiftKeyRefOperatorWorkTime" refer="ShiftKeyOperatorShitfDefinition">
+					<xsd:selector xpath="sfd:OperatorWorkTime"/>
+					<xsd:field xpath="sfd:ShiftKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="IndividualMachineWorkTimeKeyRefIndividualShortDownTime" refer="IndividualMachineWorkTimeKeyIndividualMachineWorkTIme">
+					<xsd:selector xpath="sfd:IndividualShortDownTime"/>
+					<xsd:field xpath="sfd:IndividualMachineWorkTimeKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="OperatorKeyRefOperatorLoginEvent" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:OperatorLoginEvent"/>
+					<xsd:field xpath="sfd:OperatorKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="ObjectKeyRefUserDefinedData" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:UserDefinedData/sfd:DataTableGroup"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="ShiftKeyRefUserDefinedData" refer="ShiftKeyOperatorShitfDefinition">
+					<xsd:selector xpath="sfd:UserDefinedData/sfd:DataTableGroup"/>
+					<xsd:field xpath="sfd:ShiftKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="OperatorKeyRefRow" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:UserDefinedData/sfd:DataTableGroup/sfd:DataTable/sfd:Row"/>
+					<xsd:field xpath="sfd:OperatorKey"/>
+				</xsd:keyref>
+				<xsd:key name="TrackingKeyTrackCoordinates">
+					<xsd:selector xpath="sfd:TrackCoordinates"/>
+					<xsd:field xpath="sfd:TrackingKey"/>
+				</xsd:key>
+				<xsd:keyref name="ObjectKeyRefTrackCoordinates" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:TrackCoordinates"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="IndividualMachineWorkTimeKeyRefTrackCoordinates" refer="IndividualMachineWorkTimeKeyIndividualMachineWorkTIme">
+					<xsd:selector xpath="sfd:TrackCoordinates/sfd:IndividualMachineWorkTimeKey"/>
+					<xsd:field xpath="."/>
+				</xsd:keyref>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="mom">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Enumeration list of file extensions of StanForD 2010 messages: Allowed value in Operational Monitoring message is: "mom"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup"/>
+	</xsd:complexType>
+	<xsd:complexType name="OperatorIndividualWorkTimeType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>OperatorIndividualWorkTimeTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ObjectKey" type="KeyType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per harvesting object. Set when new harvesting object is started. Running no recommended, reset only when MachineKey is changed</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SubObjectKey" type="KeyType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per harvesting sub object, set by machine. Set when new harvesting sub object is started. Running no recommended, reset when ObjectKey is updated.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MonitoringStartTime" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Start time for a time interval. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MonitoringTimeLength" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>seconds</doc:Unit>
+						<doc:Description>Extension of a time interval </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MonitoringTimeDescription" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.3</doc:VersionCreated>
+						<doc:Description>Free text created by operator per IndividualMachineWorkTime</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="CodeListKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per code list set by machine. Must be updated if any modifications to code lsit definition is done. Running number reset only when MachineKey is changed.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="operatorWorkTimeCategoryCode" type="xsd:string" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Enumeration list with operator work times. According to code list in mcl file. </doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="operatorWorkTimeCategoryName" type="xsd:string">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>4.0</doc:VersionCreated>
+					<doc:Unit>free text</doc:Unit>
+					<doc:Description>Descriptive name per operator work time category codes. According to code list in mcl file.</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="OperatorLoginEventType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>OperatorLoginEventTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="OperatorKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine unique operator identity, set by machine</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="EventTime" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Time of log-in or log-out, Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="EventCoordinates" type="CoordinatesType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Description>Coordinates of the machine at the time of log-in or log-out.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="operatorLoginEventCategory" type="OperatorLoginEventCategoryType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>4.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Type of log in event. Allowed values: "Login", "Logout".</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="OperatorShiftDefinitionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>2.0</doc:VersionCreated>
+				<doc:Graph>OperatorShiftDefinitionTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ShiftKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine unique shift identity, set by machine</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="OperatorKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine unique operator identity, set by machine</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ObjectKey" type="KeyType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per harvesting object. Set when new harvesting object is started. Running no recommended, reset only when MachineKey is changed</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SubObjectKey" type="KeyType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per harvesting sub object, set by machine. Set when new harvesting sub object is started. Running no recommended, reset when ObjectKey is updated.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ShiftOrder" type="xsd:positiveInteger" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Order number of the shift (First order is 1, seciond is 2 and so on)</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ShiftCategory" type="ShiftCategoryType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.0</doc:VersionCreated>
+						<doc:VarNumber>v329_t4</doc:VarNumber>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Shift type allowed values are: "Not defined", "Morning", "Day", "Evening" and "Night" </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ShiftDescription" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Description of shift</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ShiftStartTime" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.0</doc:VersionCreated>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Start time of the shift. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ShiftEndTime" type="StanForD2010DateTimeType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.0</doc:VersionCreated>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>End time of the shift. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="OperatorWorkTimeType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:VersionModified>4.0</doc:VersionModified>
+				<doc:Graph>OperatorWorkTimeTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="OperatorKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine unique operator identity, set by machine</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ShiftKey" type="KeyType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.1</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine unique shift identity, set by machine</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:choice>
+				<xsd:element name="OperatorIndividualWorkTime" type="OperatorIndividualWorkTimeType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>4.0</doc:VersionCreated>
+							<doc:Description>Structure for operator work times outside machine.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+				<xsd:element name="IndividualMachineWorkTimeKey" type="KeyType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>4.0</doc:VersionCreated>
+							<doc:Unit>sequential no</doc:Unit>
+							<doc:Description>Machine specific identity per individual machine work time. Must be totally unique for a certain MachineKey. Reset only when MachineKey is changed. </doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="OtherMachineDataType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>OtherMachineDataTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="EngineTime" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>2.0</doc:VersionModified>
+						<doc:Unit>seconds</doc:Unit>
+						<doc:Description>Engine time during time included in MachineWorkTime.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DrivenDistance" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>v258</doc:VarNumber>
+						<doc:Unit>m</doc:Unit>
+						<doc:Description>Covered distance during time included in MachineWorkTime.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="FuelConsumption" type="NonNegativeDecimal">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>v430</doc:VarNumber>
+						<doc:Unit>litre</doc:Unit>
+						<doc:Description>Fuel consumption during time included in machine work time.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:choice>
+				<xsd:element name="HarvesterData" type="HarvesterDataType" minOccurs="0" maxOccurs="unbounded">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Description>Structure for harvester production data in mom</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+				<xsd:element name="ForwarderData" type="ForwarderDataType" minOccurs="0">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Description>Forwarder production, fuel and distance</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="OtherMachineDownTimeType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>OtherMachineDownTimeTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="OtherMachineDownTimeStandardCode">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>3.5</doc:VersionModified>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Enumeration list with reason for other machine down times. According to code list in mcl file. Observe that the value “ControllerDefault” can be used in cases where operators have not registered any reason at all. 
+This value is not to be included in the mcl-file. “ControllerDefault” not to be available in GUI and only generated by control system. “ControllerDefault” to be used in system where down time reasons are disabled or there is a “time-out”.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:complexType>
+					<xsd:simpleContent>
+						<xsd:extension base="xsd:string">
+							<xsd:attribute name="otherMachineDownTimeStandardName" type="xsd:string">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>4.0</doc:VersionCreated>
+										<doc:Unit>free text</doc:Unit>
+										<doc:Description>Descriptive name per down time codes. According to code list in mcl file.
+</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:attribute>
+						</xsd:extension>
+					</xsd:simpleContent>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:element name="OtherMachineDownTimeManufacturerCode" type="ManufacturerCodeType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Manufacturer or user defined codes.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="RepairType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>RepairTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:choice>
+				<xsd:element name="CarrierRepairReason" type="CarrierRepairReasonType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Description>Structure with repair reasons for carrier / base machine</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+				<xsd:element name="LoaderLinkageRepairReason" type="LoaderLinkageRepairReasonType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Description>Structure with repair reasons for loader or linkage.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+				<xsd:element name="AttachmentRepairReason" type="AttachmentRepairReasonType">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Description>Repair resons for harvesting head.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:element>
+				<xsd:element name="OtherRepairReason">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:VersionModified>4.0</doc:VersionModified>
+							<doc:Unit>list</doc:Unit>
+							<doc:Description>Enumeration list with other repair reasons. According to code list in mcl file.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+					<xsd:complexType>
+						<xsd:simpleContent>
+							<xsd:extension base="xsd:string">
+								<xsd:attribute name="otherRepairReasonName" type="xsd:string">
+									<xsd:annotation>
+										<xsd:documentation>
+											<doc:VersionCreated>4.0</doc:VersionCreated>
+											<doc:Unit>free text</doc:Unit>
+											<doc:Description>Descriptive name per down time codes. According to code list in mcl file.
+</doc:Description>
+										</xsd:documentation>
+									</xsd:annotation>
+								</xsd:attribute>
+							</xsd:extension>
+						</xsd:simpleContent>
+					</xsd:complexType>
+				</xsd:element>
+			</xsd:choice>
+			<xsd:element name="RepairManufacturerCode" type="ManufacturerCodeType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Manufacturer or user defined codes for repair reasons</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ReportIntervalType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>ReportIntervalTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ReportStartTime" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V53_t1</doc:VarNumber>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Start date for monitoring report. Use ReportStartTime and ReportEndTime to calculate calender time. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ReportEndTime" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V53_t2</doc:VarNumber>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>End date for monitoring report. Use ReportStartTime and ReportEndTime to calculate calender time. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ReportFilterCategory" type="ReportFilterCategoryType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.1</doc:VersionCreated>
+						<doc:VersionModified>3.0</doc:VersionModified>
+						<doc:Unit>tlist</doc:Unit>
+						<doc:Description>Possible enumeration values are: "No filter", "Object filter" and "Other filter". No filter” means that “All run (work) times, down times and meal breaks that occurred between ReportStartTime and ReportEndTime are included, with no exceptions. This means that any times not registered are to be considered to be unutilized.” The value “Object filter” means that only times directly connected to a specific object are included. </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ShortDownTimeType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:VersionModified>4.0</doc:VersionModified>
+				<doc:Graph>ShortDownTimeTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="OperatorKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine unique operator identity, set by machine</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="IndividualMachineWorkTimeKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>4.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per individual machine work time. Must be totally unique for a certain MachineKey. Reset only when MachineKey is changed. </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ObjectKey" type="KeyType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per harvesting object. Set when new harvesting object is started. Running no recommended, reset only when MachineKey is changed</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SubObjectKey" type="KeyType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per harvesting sub object, set by machine. Set when new harvesting sub object is started. Running no recommended, reset when ObjectKey is updated.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SparePartsType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>SparePartsTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="SparePartIdentity" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Identity information of the spare part</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SparePartDescription" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Descriptive information of the spare part</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SparePartsNoOfItems" type="xsd:positiveInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.0</doc:VersionCreated>
+						<doc:Description>Number of spare parts</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SpeciesGroupDefinitionOperationalMonitoringType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.0</doc:VersionCreated>
+				<doc:Graph>SpeciesGroupDefinitionOperationalMonitoringTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="CommonSpeciesGroupDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="DBHHeight" type="DBHHeightType" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:VarNumber>v500_t1</doc:VarNumber>
+								<doc:Unit>cm</doc:Unit>
+								<doc:Description>Height above stump of DBH, when DBH is a measured value (normally 120 cm above stump in Sweden, 110cm in Norway), per species group.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="Grades" type="GradesType" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Structure with alla grade data per species group</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="BarkFunction" type="BarkFunctionWithKeyType" nillable="true" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Structure for species included in a species group.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="SoundKnotFunction" type="SoundKnotFunctionType" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Sound knot function used when calculating the diameter (ob) of the sound knot limit/cylinder. Soundknot function must be used if this structure is included. Observe that all diameters are over bark. </doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="ButtEndProfileExtrapolation" type="ButtEndProfileExtrapolationType" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Structure for butt end profile extrapolation method. Extrapolation method must be used if this structure is included in spi.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="EstonianVolumeParameters" type="EstonianVolumeParametersType" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>2.0</doc:VersionCreated>
+								<doc:Description>Structure for parameters used in Estonian function for volume calculation. This function is also called  Nilson's formula. See appendix</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="StemCodes" type="StemCodesType" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>3.0</doc:VersionCreated>
+								<doc:Unit>Free text</doc:Unit>
+								<doc:Description>List of stem codes to be registered manually by operator in harvester in element StemCode in hpr-message</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="SpeciesGroupKey" type="KeyType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Unit>sequential no</doc:Unit>
+								<doc:Description>Machine specific identity per species group set by machine. Must be updated if any modifications to species group definition is done. Running number reset only when MachineKey is changed.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="TotalForwardedVolumeType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>TotalForwardedVolumeTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleContent>
+			<xsd:extension base="VolumeType">
+				<xsd:attribute name="forwardedVolumeCategory" type="ForwardedVolumeCategoryType" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Unit>list</doc:Unit>
+							<doc:Description>Defines volume registered in TotalForwardedVolume. Allowed values: "Volume, m3sob", "Volume, m3sub", "Loose volume, m3", "Solid volume including bark, branches and needles, m3", "Solid volume of bundles (length*cross sectional area), m3"</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="TotalVolumeOfHarvestedLogsType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>1.0</doc:VersionCreated>
+				<doc:Graph>TotalVolumeOfHarvestedLogsTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleContent>
+			<xsd:extension base="VolumeType">
+				<xsd:attribute name="harvestedLogsVolumeCategory" type="HarvestedLogsVolumeCategoryType" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Unit>list</doc:Unit>
+							<doc:Description>Allowed values: "m3sob", "m3sub", "m3sobEstimated", "m3subEstimated"</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="TrackCoordinatesOperationalMonitoringType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>TrackCoordinatesForwardedProductionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="TrackCoordinatesType">
+				<xsd:sequence>
+					<xsd:element name="IndividualMachineWorkTimeKey" type="KeyType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>4.0</doc:VersionCreated>
+								<doc:Unit>sequential no</doc:Unit>
+								<doc:Description>Machine specific identity per individual machine work time. Must be totally unique for a certain MachineKey. Reset only when MachineKey is changed. </doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="UserDefinedDataOperationalMonitoringType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>2.1</doc:VersionCreated>
+				<doc:Graph>UserDefinedDataOperationalMonitoringTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="DataTableGroup" type="DataTableGroupOperationalMonitoringType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>2.1</doc:VersionCreated>
+						<doc:Description>Structure for user defined data table group</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:unique name="UniqueTableIDHOperationalMonitoring">
+					<xsd:selector xpath="sfd:DataTable"/>
+					<xsd:field xpath="@tableID"/>
+				</xsd:unique>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:simpleType name="ForwardedVolumeCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Volume, m3sob"/>
+			<xsd:enumeration value="Volume, m3sub"/>
+			<xsd:enumeration value="Loose volume, m3"/>
+			<xsd:enumeration value="Solid volume including bark, branches and needles, m3"/>
+			<xsd:enumeration value="Solid volume of bundles (length*cross sectional area), m3"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="HarvestedLogsVolumeCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="m3sob"/>
+			<xsd:enumeration value="m3sub"/>
+			<xsd:enumeration value="m3sobEstimated"/>
+			<xsd:enumeration value="m3subEstimated"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="MachineRunTimeCategoryListType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Processing"/>
+			<xsd:enumeration value="Terrain travel"/>
+			<xsd:enumeration value="Other work"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="OperatorLoginEventCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Login"/>
+			<xsd:enumeration value="Logout"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ReportFilterCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="No filter"/>
+			<xsd:enumeration value="Object filter"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ShiftCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Not defined"/>
+			<xsd:enumeration value="Morning"/>
+			<xsd:enumeration value="Day"/>
+			<xsd:enumeration value="Evening"/>
+			<xsd:enumeration value="Night"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Yarded Production message XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				YardedProduction_V4p1.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010" targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1.xsd"/>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="YardedProduction" type="YardedProductionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.6</doc:VersionCreated>
+				<doc:Description>The root element of the Yarded Production message.</doc:Description>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:unique name="UniqueMachineKey">
+			<xsd:selector xpath="sfd:Machine"/>
+			<xsd:field xpath="sfd:MachineKey"/>
+		</xsd:unique>
+		<xsd:unique name="UniqueMachineUserID">
+			<xsd:selector xpath="sfd:Machine"/>
+			<xsd:field xpath="sfd:MachineUserID"/>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="MachineYarderCarriageModelType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.6</doc:VersionCreated>
+				<doc:Graph>MachineYarderCarriageModelTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="winchYarderCarriageYear" type="xsd:gYear">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>3.6</doc:VersionCreated>
+							<doc:Unit>Year</doc:Unit>
+							<doc:Description>Manufacturing year of yarder carriage.</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="MachineYardedProductionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.6</doc:VersionCreated>
+				<doc:Graph>MachineYardedProductionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="MachineWithWinchType">
+				<xsd:sequence>
+					<xsd:element name="YarderCarriage" type="MachineYarderCarriageModelType" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>3.7</doc:VersionCreated>
+								<doc:Unit>free text</doc:Unit>
+								<doc:Description>Yarder carriager model. Free text that describes the model of the yarder carriage.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="SpeciesGroupDefinition" type="SpeciesGroupDefinitionWithKeyType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Definition of species used in this yarded production message</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="ObjectDefinition" type="ObjectDefinitionMachineType" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Structure for object specific data</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+						<xsd:unique name="UniqueSubObectUserID">
+							<xsd:selector xpath="sfd:SubObject"/>
+							<xsd:field xpath="sfd:SubObjectUserID"/>
+						</xsd:unique>
+						<xsd:unique name="UniqueSubObjectKey">
+							<xsd:selector xpath="sfd:SubObject"/>
+							<xsd:field xpath="sfd:SubObjectKey"/>
+						</xsd:unique>
+					</xsd:element>
+					<xsd:element name="LocationDefinition" type="LocationDefinitionMachineType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:VersionModified>2.1</doc:VersionModified>
+								<doc:Description>Structure for location of yarded production at harvesting object.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="StemLoad" type="StemLoadYardedProductionType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>3.6</doc:VersionCreated>
+								<doc:Description>Structure for yarded stem load data.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+						<xsd:unique name="UniquePartialLoadKey">
+							<xsd:selector xpath="sfd:PartialStemLoad"/>
+							<xsd:field xpath="sfd:PartialStemLoadKey"/>
+						</xsd:unique>
+					</xsd:element>
+					<xsd:element name="YardingStatus" type="YardingStatusType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>3.6</doc:VersionCreated>
+								<doc:Description>Status of yarding per combination of species group and location definition.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="ScaleDefinition" type="ScaleDefinitionType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Structure for scale information.</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="UserDefinedData" type="UserDefinedDataProductionType" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>2.1</doc:VersionCreated>
+								<doc:Description>Structure for user defined data</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+						<xsd:unique name="UniqueTableGroupIDYardedProduction">
+							<xsd:selector xpath="sfd:DataTableGroup"/>
+							<xsd:field xpath="@tableGroupID"/>
+						</xsd:unique>
+					</xsd:element>
+					<xsd:element name="TrackCoordinates" type="TrackCoordinatesWithStemLoadKeyType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>3.3</doc:VersionCreated>
+								<doc:VersionModified>4.0</doc:VersionModified>
+								<doc:Description>Structure for tracking coordinates registered with a constant distance (e.g. every 10 m) or time  interval  (e.g. every 30 seconds) </doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="StemLoadYardedProductionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.6</doc:VersionCreated>
+				<doc:Graph>StemLoadYardedProductionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="StemLoadType">
+				<xsd:sequence>
+					<xsd:element name="YarderRiggingSystem" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>3.6</doc:VersionCreated>
+								<doc:Unit>enumeration list</doc:Unit>
+								<doc:Description>Describes how wire rope systems are operated. No detailed description of different rigging systems. Allowed values are: "Northbend", "Southbend", "Shotgun", "Highlead", "Grabinski" or "Slack pulling carriage"</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:enumeration value="Northbend"/>
+								<xsd:enumeration value="Southbend"/>
+								<xsd:enumeration value="Shotgun"/>
+								<xsd:enumeration value="Highlead"/>
+								<xsd:enumeration value="Grabinski"/>
+								<xsd:enumeration value="Slack pulling carriage"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element name="YarderTailHold" minOccurs="0">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>3.6</doc:VersionCreated>
+								<doc:Unit>enumeration list</doc:Unit>
+								<doc:Description>Type of tail hold describes how the wire ropes on the back line are moved from one extraction line to another. Allowed values are: "Manual", "Mobile" or "Mobile Tele Operated". </doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:enumeration value="Manual"/>
+								<xsd:enumeration value="Mobile"/>
+								<xsd:enumeration value="Mobile Tele Operated"/>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="YardedProductionType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.6</doc:VersionCreated>
+				<doc:Graph>YardedProductionTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="YardedProductionHeader" type="MessageHeaderType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>General information for message</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Machine" type="MachineYardedProductionType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>All the product specific data is included under Machine elements</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:unique name="UniqueOperatorUserID">
+					<xsd:selector xpath="sfd:OperatorDefinition"/>
+					<xsd:field xpath="sfd:OperatorUserID"/>
+				</xsd:unique>
+				<xsd:key name="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:OperatorDefinition"/>
+					<xsd:field xpath="sfd:OperatorKey"/>
+				</xsd:key>
+				<xsd:keyref name="OperatorKeyRefStem" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:StemLoad"/>
+					<xsd:field xpath="sfd:OperatorKey"/>
+				</xsd:keyref>
+				<xsd:key name="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:SpeciesGroupDefinition"/>
+					<xsd:field xpath="sfd:SpeciesGroupKey"/>
+				</xsd:key>
+				<xsd:unique name="UniqueObjectUserID">
+					<xsd:selector xpath="sfd:ObjectDefinition"/>
+					<xsd:field xpath="ObjectUserID"/>
+				</xsd:unique>
+				<xsd:key name="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:ObjectDefinition"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:key>
+				<xsd:keyref name="ObjectKeyRefStem" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:LocationDefinition"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:keyref>
+				<xsd:unique name="UniqueLocationUserIDLocationDefinition">
+					<xsd:selector xpath="sfd:LocationDefinition"/>
+					<xsd:field xpath="sfd:LocationUserID"/>
+				</xsd:unique>
+				<xsd:key name="LocationKeyLocationDefinition">
+					<xsd:selector xpath="sfd:LocationDefinition"/>
+					<xsd:field xpath="sfd:LocationKey"/>
+				</xsd:key>
+				<xsd:keyref name="LocationKeyRefYardingStatus" refer="LocationKeyLocationDefinition">
+					<xsd:selector xpath="sfd:YardingStatus"/>
+					<xsd:field xpath="sfd:LocationKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="LocationKeyRefPartialLoad" refer="LocationKeyLocationDefinition">
+					<xsd:selector xpath="sfd:StemLoad/sfd:PartialStemLoad"/>
+					<xsd:field xpath="sfd:LocationKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="DeliveryKeyRefPartialLoad" refer="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:StemLoad/sfd:PartialStemLoad"/>
+					<xsd:field xpath="sfd:SpeciesGroupKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="DeliveryKeyRefYardingStatus" refer="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:YardingStatus"/>
+					<xsd:field xpath="sfd:SpeciesGroupKey"/>
+				</xsd:keyref>
+				<xsd:key name="StemLoadKeyStemLoad">
+					<xsd:selector xpath="sfd:StemLoad"/>
+					<xsd:field xpath="sfd:StemLoadKey"/>
+				</xsd:key>
+				<xsd:key name="ScaleKeyScaleDefinition">
+					<xsd:selector xpath="sfd:ScaleDefinition"/>
+					<xsd:field xpath="sfd:ScaleKey"/>
+				</xsd:key>
+				<xsd:keyref name="ScaleKeyRefPartialStemLoad" refer="ScaleKeyScaleDefinition">
+					<xsd:selector xpath="sfd:StemLoad/sfd:PartialStemLoad"/>
+					<xsd:field xpath="sfd:ScaleKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="ObjectKeyRefUserDefinedData" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:UserDefinedData/sfd:DataTableGroup"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="LocationKeyRefUserDefinedData" refer="LocationKeyLocationDefinition">
+					<xsd:selector xpath="sfd:UserDefinedData/sfd:DataTableGroup"/>
+					<xsd:field xpath="sfd:LocationKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="OperatorKeyRefRow" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:UserDefinedData/sfd:DataTableGroup/sfd:DataTable/sfd:Row"/>
+					<xsd:field xpath="sfd:OperatorKey"/>
+				</xsd:keyref>
+				<xsd:key name="TrackingKeyTrackCoordinates">
+					<xsd:selector xpath="sfd:TrackCoordinates"/>
+					<xsd:field xpath="sfd:TrackingKey"/>
+				</xsd:key>
+				<xsd:keyref name="ObjectKeyRefTrackCoordinates" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:TrackCoordinates"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="StemLoadKeyRefTrackCoordinates" refer="StemLoadKeyStemLoad">
+					<xsd:selector xpath="sfd:TrackCoordinates"/>
+					<xsd:field xpath="sfd:StemLoadKey"/>
+				</xsd:keyref>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="ypr">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Enumeration list of file extensions of StanForD 2010 messages: Allowed value in yarded production message is: "ypr"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup"/>
+	</xsd:complexType>
+	<xsd:complexType name="YardingStatusType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.6</doc:VersionCreated>
+				<doc:Graph>YardingStatusTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="LocationKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per location.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SpeciesGroupKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per species group set by machine. Must be updated if any modifications to species group definition is done. Running number reset only when MachineKey is changed.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="YardStartDate" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.6</doc:VersionCreated>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Start date (when combination of species group and location definition is used the first time). Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="StemYardEndDate" type="StanForD2010DateTimeType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.6</doc:VersionCreated>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Date when species group and location is completed, no additional unloading at the combination of delivery and location definitions are done after this date. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+</xsd:schema>

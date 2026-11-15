@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Felling bunching Quality Control XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				FellingBunchingQualityControl_V4p1_no_documentation.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1_no_documentation.xsd">
+</xsd:include>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="FellingBunchingQualityControl" type="FellingBunchingQualityControlType">
+		
+		<xsd:unique name="UniqueMachineKey">
+			<xsd:selector xpath="sfd:Machine">
+</xsd:selector>
+			<xsd:field xpath="sfd:MachineKey">
+</xsd:field>
+		</xsd:unique>
+		<xsd:unique name="UniqueMachineUserID">
+			<xsd:selector xpath="sfd:Machine">
+</xsd:selector>
+			<xsd:field xpath="sfd:MachineUserID">
+</xsd:field>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="CalibrationValuesFellingBunchingControlType">
+		
+		<xsd:sequence>
+			<xsd:element name="DiameterCalibration" type="DiameterCalibrationFellingBunchingControlType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ControlStemSettingsFellingBunchingControlType">
+		
+		<xsd:sequence>
+			<xsd:element name="RandomFrequency" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="RandomFrequencyCategory" type="RandomFrequencyCategoryType">
+				
+			</xsd:element>
+			<xsd:element name="RandomMINDBH" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="RandomStartTime" type="xsd:time">
+				
+			</xsd:element>
+			<xsd:element name="RandomEndTime" type="xsd:time">
+				
+			</xsd:element>
+			<xsd:element name="RandomSettingDateTime" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+			<xsd:element name="ProcessingCategory" type="ProcessingCategoryType">
+				
+			</xsd:element>
+			<xsd:element name="SpeciesGroupKey" type="KeyType">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ControlValuesFellingBunchingQualityControlType">
+		
+		<xsd:sequence>
+			<xsd:element name="ObjectDefinition" type="ObjectDefinitionMachineType" maxOccurs="unbounded">
+				
+				<xsd:unique name="UniqueSubObjectKey">
+					<xsd:selector xpath="sfd:SubObject">
+</xsd:selector>
+					<xsd:field xpath="sfd:SubObjectKey">
+</xsd:field>
+				</xsd:unique>
+				<xsd:unique name="UniqueSubObjectUserID">
+					<xsd:selector xpath="sfd:SubObject">
+</xsd:selector>
+					<xsd:field xpath="sfd:SubObjectUserID">
+</xsd:field>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="ControlStemSettings" type="ControlStemSettingsFellingBunchingControlType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="Stem" type="StemFellingBunchingControlType" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterCalibrationAdjustmentFellingBunchingControlType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:decimal">
+				<xsd:attribute name="stemDiameterCategory" type="StemDiameterCategoryType" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterCalibrationFellingBunchingControlType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CommonCalibrationValuesType">
+				<xsd:sequence>
+					<xsd:element name="DiameterCalibrationReason" type="CalibrationReasonType">
+						
+					</xsd:element>
+					<xsd:element name="DiameterCalibrationDescription" type="xsd:string">
+						
+					</xsd:element>
+					<xsd:element name="DiameterCalibrationAdjustment" type="DiameterCalibrationAdjustmentFellingBunchingControlType" maxOccurs="2">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="FellingBunchingQualityControlType">
+		
+		<xsd:sequence>
+			<xsd:element name="FellingBunchingQualityControlHeader" type="MessageHeaderType">
+				
+			</xsd:element>
+			<xsd:element name="Machine" type="MachineFellingBunchingControlType" maxOccurs="unbounded">
+				
+				<xsd:unique name="UniqueStemKey">
+					<xsd:selector xpath="sfd:ControlValues/sfd:Stem">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+					<xsd:field xpath="sfd:StemKey">
+</xsd:field>
+				</xsd:unique>
+				<xsd:unique name="UniqueObjectUserID">
+					<xsd:selector xpath="sfd:ControlValues/sfd:ObjectDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectUserID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:unique name="UniqueOperatorUserID">
+					<xsd:selector xpath="sfd:OperatorDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorUserID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:key name="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:SpeciesGroupDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:SpeciesGroupKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="SpeciesGroupKeyRefStem" refer="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:Stem">
+</xsd:selector>
+					<xsd:field xpath="sfd:SpeciesGroupKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:OperatorDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="OperatorKeyRefStem" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:Stem">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:ObjectDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="ObjectKeyRefStem" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:Stem">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="SpeciesGroupKeyRefControlStemSettings" refer="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:ControlStemSettings">
+</xsd:selector>
+					<xsd:field xpath="sfd:SpeciesGroupKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="OperatorKeyRefDiameterCalibration" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:CalibrationValues/sfd:DiameterCalibration">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:keyref>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="bqc">
+			
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup">
+</xsd:attributeGroup>
+	</xsd:complexType>
+	<xsd:complexType name="MachineFellingBunchingControlType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="MachineWithAttachmentType">
+				<xsd:sequence>
+					<xsd:sequence>
+						<xsd:element name="SpeciesGroupDefinition" type="SpeciesGroupDefinitionWithDBHAndKeyType" maxOccurs="unbounded">
+							
+						</xsd:element>
+					</xsd:sequence>
+					<xsd:choice>
+						<xsd:sequence>
+							<xsd:element name="ControlValues" type="ControlValuesFellingBunchingQualityControlType">
+								
+							</xsd:element>
+							<xsd:element name="CalibrationValues" type="CalibrationValuesFellingBunchingControlType" minOccurs="0">
+								
+							</xsd:element>
+						</xsd:sequence>
+						<xsd:sequence>
+							<xsd:element name="CalibrationValues" type="CalibrationValuesFellingBunchingControlType">
+								
+							</xsd:element>
+						</xsd:sequence>
+					</xsd:choice>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="MultiTreeFelledStemFellingBunchingControlType">
+		
+		<xsd:sequence>
+			<xsd:element name="DBH" type="DiameterType">
+				
+			</xsd:element>
+			<xsd:element name="ReferenceDiameter" type="ReferenceDiameterType">
+				
+			</xsd:element>
+			<xsd:element name="StemMeasurement" type="StemMeasurementFellingBunchingControlType">
+				
+			</xsd:element>
+			<xsd:element name="CalibrationUseStem" type="xsd:boolean" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SingleTreeFelledStemFellingBunchingControlType">
+		
+		<xsd:sequence>
+			<xsd:element name="DBH" type="DiameterType">
+				
+			</xsd:element>
+			<xsd:element name="ReferenceDiameter" type="ReferenceDiameterType">
+				
+			</xsd:element>
+			<xsd:element name="StemMeasurement" type="StemMeasurementFellingBunchingControlType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="CalibrationUseStem" type="xsd:boolean" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="StemDiameterFellingBunchingQualityControlType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:nonNegativeInteger">
+				<xsd:attribute name="stemDiameterCategory" type="StemDiameterCategoryType" use="required">
+					
+				</xsd:attribute>
+				<xsd:attribute name="diameterMeasurementCategory" type="DiameterMeasurementCategoryType" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="StemFellingBunchingControlType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="StemType">
+				<xsd:sequence>
+					<xsd:element name="ControlMeasurementDefinition" type="ControlMeasurementDefinitionType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="ControlStemInfo" type="ControlStemInfoType">
+						
+					</xsd:element>
+					<xsd:choice>
+						<xsd:element name="SingleTreeFelledStem" type="SingleTreeFelledStemFellingBunchingControlType">
+							
+						</xsd:element>
+						<xsd:element name="MultiTreeFelledStem" type="MultiTreeFelledStemFellingBunchingControlType">
+							
+						</xsd:element>
+					</xsd:choice>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="StemMeasurementFellingBunchingControlType">
+		
+		<xsd:sequence>
+			<xsd:element name="StemDiameter" type="StemDiameterFellingBunchingQualityControlType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="MeasurementDate" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="stemMeasurementCategory" type="StemMeasurementCategoryType" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+</xsd:schema>

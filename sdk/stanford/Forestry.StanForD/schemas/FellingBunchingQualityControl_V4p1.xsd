@@ -1,0 +1,602 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Felling bunching Quality Control XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				FellingBunchingQualityControl_V4p1.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010" targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1.xsd"/>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="FellingBunchingQualityControl" type="FellingBunchingQualityControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.6</doc:VersionCreated>
+				<doc:Description>The root element of the felling-bunching quality control message</doc:Description>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:unique name="UniqueMachineKey">
+			<xsd:selector xpath="sfd:Machine"/>
+			<xsd:field xpath="sfd:MachineKey"/>
+		</xsd:unique>
+		<xsd:unique name="UniqueMachineUserID">
+			<xsd:selector xpath="sfd:Machine"/>
+			<xsd:field xpath="sfd:MachineUserID"/>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="CalibrationValuesFellingBunchingControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>CalibrationValuesFellingBunchingControlTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="DiameterCalibration" type="DiameterCalibrationFellingBunchingControlType" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Structure for diameter calibration logg data</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ControlStemSettingsFellingBunchingControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>ControlStemSettingsFellingBunchingControlTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="RandomFrequency" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V361_t3</doc:VarNumber>
+						<doc:Description>Sampling interval for random selection of control and calibration see also RandomFrequencyCategory. The frequency should mean the average number of stems, time or volume between random sampled control stems. The unit should be no of stems, hours or m3sob.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="RandomFrequencyCategory" type="RandomFrequencyCategoryType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V361_t4</doc:VarNumber>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Enumeration list, allowed values are: "Number of stems", "Time" ,"Volume"and "Not in use". All of these alternatives should be implemented.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="RandomMINDBH" type="xsd:nonNegativeInteger">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V361_t5</doc:VarNumber>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>Minimum DBH for randomly selected tree</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="RandomStartTime" type="xsd:time">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V361_t7</doc:VarNumber>
+						<doc:Unit>hh:mm:ss</doc:Unit>
+						<doc:Description>Earliest time when stem is to be randomly selected, used in order to avoid random selection during the dark hours. This variable must be registered if a timer exist for turning off random selection.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="RandomEndTime" type="xsd:time">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V361_t8</doc:VarNumber>
+						<doc:Unit>hh:mm:ss</doc:Unit>
+						<doc:Description>Latest time when stem is to be randomly selected, used in order to avoid random selection during the dark hours. This variable must be registered if a timer exist for turning off random selection.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="RandomSettingDateTime" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Date and time when the random control settings were last modified in any way. Making it possible to track changes in the settings of random selection of control stems. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProcessingCategory" type="ProcessingCategoryType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Possible enumeration values are: SingleTreeProcessing,MultiTreeProcessing,  SingleTreeFelling and MultiTreeFelling</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SpeciesGroupKey" type="KeyType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.5</doc:VersionCreated>
+						<doc:Unit>sequential no</doc:Unit>
+						<doc:Description>Machine specific identity per species group set by machine. Must be updated if any modifications to species group definition is done. Running number reset only when MachineKey is changed.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ControlValuesFellingBunchingQualityControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.6</doc:VersionCreated>
+				<doc:Graph>ControlValuesFellingBunchingQualityControlTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="ObjectDefinition" type="ObjectDefinitionMachineType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Structure for object specific data</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:unique name="UniqueSubObjectKey">
+					<xsd:selector xpath="sfd:SubObject"/>
+					<xsd:field xpath="sfd:SubObjectKey"/>
+				</xsd:unique>
+				<xsd:unique name="UniqueSubObjectUserID">
+					<xsd:selector xpath="sfd:SubObject"/>
+					<xsd:field xpath="sfd:SubObjectUserID"/>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="ControlStemSettings" type="ControlStemSettingsFellingBunchingControlType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Settings for random selection of control stems. Recommended that the last five settings per species group are included in an hqc-file.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Stem" type="StemFellingBunchingControlType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>A list of harvested quality and control stems</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterCalibrationAdjustmentFellingBunchingControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>DiameterCalibrationAdjustmentFellingBunchingControlTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:decimal">
+				<xsd:attribute name="stemDiameterCategory" type="StemDiameterCategoryType" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>4.0</doc:VersionCreated>
+							<doc:Unit>list</doc:Unit>
+							<doc:Description>Allowed values: "DBH" or "ReferenceDiameter"</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterCalibrationFellingBunchingControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>4.0</doc:VersionCreated>
+				<doc:Graph>DiameterCalibrationFellingBunchingControlTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="CommonCalibrationValuesType">
+				<xsd:sequence>
+					<xsd:element name="DiameterCalibrationReason" type="CalibrationReasonType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:VarNumber>V45_t2</doc:VarNumber>
+								<doc:Unit>list</doc:Unit>
+								<doc:Description>List of diameter calibration reasons: "Repair of measurement system", "Change in weather conditions" and "Other reason"</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="DiameterCalibrationDescription" type="xsd:string">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:VarNumber>V45_t1</doc:VarNumber>
+								<doc:Unit>free text</doc:Unit>
+								<doc:Description>Diameter calibration reason</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="DiameterCalibrationAdjustment" type="DiameterCalibrationAdjustmentFellingBunchingControlType" maxOccurs="2">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:VarNumber>V49_t1</doc:VarNumber>
+								<doc:Unit>mm</doc:Unit>
+								<doc:Description>Adjustment per diameter position</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="FellingBunchingQualityControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.6</doc:VersionCreated>
+				<doc:Graph>fellingbunchingqualitycontroltypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="FellingBunchingQualityControlHeader" type="MessageHeaderType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>General information for message</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Machine" type="MachineFellingBunchingControlType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>All the product specific data is included under Machine elements</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:unique name="UniqueStemKey">
+					<xsd:selector xpath="sfd:ControlValues/sfd:Stem"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+					<xsd:field xpath="sfd:StemKey"/>
+				</xsd:unique>
+				<xsd:unique name="UniqueObjectUserID">
+					<xsd:selector xpath="sfd:ControlValues/sfd:ObjectDefinition"/>
+					<xsd:field xpath="sfd:ObjectUserID"/>
+				</xsd:unique>
+				<xsd:unique name="UniqueOperatorUserID">
+					<xsd:selector xpath="sfd:OperatorDefinition"/>
+					<xsd:field xpath="sfd:OperatorUserID"/>
+				</xsd:unique>
+				<xsd:key name="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:SpeciesGroupDefinition"/>
+					<xsd:field xpath="sfd:SpeciesGroupKey"/>
+				</xsd:key>
+				<xsd:keyref name="SpeciesGroupKeyRefStem" refer="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:Stem"/>
+					<xsd:field xpath="sfd:SpeciesGroupKey"/>
+				</xsd:keyref>
+				<xsd:key name="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:OperatorDefinition"/>
+					<xsd:field xpath="sfd:OperatorKey"/>
+				</xsd:key>
+				<xsd:keyref name="OperatorKeyRefStem" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:Stem"/>
+					<xsd:field xpath="sfd:OperatorKey"/>
+				</xsd:keyref>
+				<xsd:key name="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:ObjectDefinition"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:key>
+				<xsd:keyref name="ObjectKeyRefStem" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:Stem"/>
+					<xsd:field xpath="sfd:ObjectKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="SpeciesGroupKeyRefControlStemSettings" refer="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:ControlStemSettings"/>
+					<xsd:field xpath="sfd:SpeciesGroupKey"/>
+				</xsd:keyref>
+				<xsd:keyref name="OperatorKeyRefDiameterCalibration" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:CalibrationValues/sfd:DiameterCalibration"/>
+					<xsd:field xpath="sfd:OperatorKey"/>
+				</xsd:keyref>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="bqc">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Enumeration list of file extensions of StanForD 2010 messages: Allowed value in Feller-buncher Quality Control message is: "bqc"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup"/>
+	</xsd:complexType>
+	<xsd:complexType name="MachineFellingBunchingControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.6</doc:VersionCreated>
+				<doc:Graph>machinefellingbunchingqualitycontroltypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="MachineWithAttachmentType">
+				<xsd:sequence>
+					<xsd:sequence>
+						<xsd:element name="SpeciesGroupDefinition" type="SpeciesGroupDefinitionWithDBHAndKeyType" maxOccurs="unbounded">
+							<xsd:annotation>
+								<xsd:documentation>
+									<doc:VersionCreated>1.0</doc:VersionCreated>
+									<doc:Description>Definition of species used in this production message</doc:Description>
+								</xsd:documentation>
+							</xsd:annotation>
+						</xsd:element>
+					</xsd:sequence>
+					<xsd:choice>
+						<xsd:sequence>
+							<xsd:element name="ControlValues" type="ControlValuesFellingBunchingQualityControlType">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>1.0</doc:VersionCreated>
+										<doc:Description>Control measurement data</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:element>
+							<xsd:element name="CalibrationValues" type="CalibrationValuesFellingBunchingControlType" minOccurs="0">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>1.0</doc:VersionCreated>
+										<doc:Description>Calibration history of harvester, at least the last 5 calibrations are to be registered</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:element>
+						</xsd:sequence>
+						<xsd:sequence>
+							<xsd:element name="CalibrationValues" type="CalibrationValuesFellingBunchingControlType">
+								<xsd:annotation>
+									<xsd:documentation>
+										<doc:VersionCreated>1.0</doc:VersionCreated>
+										<doc:Description>Calibration history of harvester, at least the last 5 calibrations are to be registered</doc:Description>
+									</xsd:documentation>
+								</xsd:annotation>
+							</xsd:element>
+						</xsd:sequence>
+					</xsd:choice>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="MultiTreeFelledStemFellingBunchingControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.6</doc:VersionCreated>
+				<doc:Graph>MultiTreeFelledStemFellingBunchingControlTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="DBH" type="DiameterType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V266_t1(740)</doc:VarNumber>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>DBH (on bark) measured at height according to DBHHeight (in SpeciesGroupDefinition). Same  diameter used in optimisation and volume calculation. DBH is based on butt-end extrapolation function (old SPP)  if such function is  used at DBH position.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ReferenceDiameter" type="ReferenceDiameterType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>2.0</doc:VersionModified>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>Diameter at position used for predicting DBH in multi tree harvesting. Normally the first measured diameter. Not to be an extrapolated diameter (e.g. extrapolated using butt-end extrapolation function, old SPP). Can be used when calculating estimated volumes based on volume of single tree processed stems. </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="StemMeasurement" type="StemMeasurementFellingBunchingControlType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.6</doc:VersionCreated>
+						<doc:Description>Structure for control measurements per stem.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="CalibrationUseStem" type="xsd:boolean" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.6</doc:VersionCreated>
+						<doc:Unit>true/false</doc:Unit>
+						<doc:Description>Manually measured control stem accepted for calibration use, only registered in caliper</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SingleTreeFelledStemFellingBunchingControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.6</doc:VersionCreated>
+				<doc:Graph>SingleTreeFelledStemFellingBunchingControlTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="DBH" type="DiameterType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VarNumber>V266_t1(740)</doc:VarNumber>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>DBH (on bark) measured at height according to DBHHeight (in SpeciesGroupDefinition). Same  diameter used in optimisation and volume calculation. DBH is based on butt-end extrapolation function (old SPP)  if such function is  used at DBH position.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ReferenceDiameter" type="ReferenceDiameterType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:VersionModified>2.0</doc:VersionModified>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>Diameter at position used for predicting DBH in multi tree harvesting. Normally the first measured diameter. Not to be an extrapolated diameter (e.g. extrapolated using butt-end extrapolation function, old SPP). Can be used when calculating estimated volumes based on volume of single tree processed stems. </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="StemMeasurement" type="StemMeasurementFellingBunchingControlType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.6</doc:VersionCreated>
+						<doc:VersionModified>4.0</doc:VersionModified>
+						<doc:Description>Structure for control measurements per stem.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="CalibrationUseStem" type="xsd:boolean" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.6</doc:VersionCreated>
+						<doc:Unit>true/false</doc:Unit>
+						<doc:Description>Manually measured control stem accepted for calibration use, only registered in caliper</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="StemDiameterFellingBunchingQualityControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.6</doc:VersionCreated>
+				<doc:Graph>StemDiameterFellingBunchingQualityControlTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:nonNegativeInteger">
+				<xsd:attribute name="stemDiameterCategory" type="StemDiameterCategoryType" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>3.6</doc:VersionCreated>
+							<doc:Unit>list</doc:Unit>
+							<doc:Description>Enumeration list describing how stem is measured:DBH and ReferenceDiameter</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+				<xsd:attribute name="diameterMeasurementCategory" type="DiameterMeasurementCategoryType" use="required">
+					<xsd:annotation>
+						<xsd:documentation>
+							<doc:VersionCreated>1.0</doc:VersionCreated>
+							<doc:Unit>list</doc:Unit>
+							<doc:Description>Enumeration list, allowed values: "Average", "First" and  "Second"</doc:Description>
+						</xsd:documentation>
+					</xsd:annotation>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="StemFellingBunchingControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.6</doc:VersionCreated>
+				<doc:Graph>stemfellingbunchingqualitycontroltypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:complexContent>
+			<xsd:extension base="StemType">
+				<xsd:sequence>
+					<xsd:element name="ControlMeasurementDefinition" type="ControlMeasurementDefinitionType" minOccurs="0" maxOccurs="unbounded">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:VersionModified>2.0</doc:VersionModified>
+								<doc:Description>Structure for other down times.</doc:Description>
+								<doc:Description>Information about when and who carried out a control measurement</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:element name="ControlStemInfo" type="ControlStemInfoType">
+						<xsd:annotation>
+							<xsd:documentation>
+								<doc:VersionCreated>1.0</doc:VersionCreated>
+								<doc:Description>Information about rejection and selection of control stem</doc:Description>
+							</xsd:documentation>
+						</xsd:annotation>
+					</xsd:element>
+					<xsd:choice>
+						<xsd:element name="SingleTreeFelledStem" type="SingleTreeFelledStemFellingBunchingControlType">
+							<xsd:annotation>
+								<xsd:documentation>
+									<doc:VersionCreated>3.6</doc:VersionCreated>
+									<doc:Description>Structure for singlei tree felled stem</doc:Description>
+								</xsd:documentation>
+							</xsd:annotation>
+						</xsd:element>
+						<xsd:element name="MultiTreeFelledStem" type="MultiTreeFelledStemFellingBunchingControlType">
+							<xsd:annotation>
+								<xsd:documentation>
+									<doc:VersionCreated>3.6</doc:VersionCreated>
+									<doc:Description>Structure for multi tree felled stem</doc:Description>
+								</xsd:documentation>
+							</xsd:annotation>
+						</xsd:element>
+					</xsd:choice>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="StemMeasurementFellingBunchingControlType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.6</doc:VersionCreated>
+				<doc:Graph>StemMeasurementFellingBunchingQualityControlTypeGraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="StemDiameter" type="StemDiameterFellingBunchingQualityControlType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.6</doc:VersionCreated>
+						<doc:Unit>mm</doc:Unit>
+						<doc:Description>Measured diameter of felled stem</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="MeasurementDate" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Date and time of measurement. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="stemMeasurementCategory" type="StemMeasurementCategoryType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>3.6</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Type of stem measurement. Allowed values: "Machine", "Operator" and "Auditor"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+</xsd:schema>

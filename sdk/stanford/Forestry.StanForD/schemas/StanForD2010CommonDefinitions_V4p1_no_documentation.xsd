@@ -1,0 +1,4045 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  StanForD 2010 Common Definitions file 						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				StanForD2010CommonDefinitions_V4p1_no_documentation.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010">
+	<xsd:complexType name="AddressType">
+		
+		<xsd:sequence>
+			<xsd:element name="Street" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="City" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Province" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Country" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="AverageCorrectionFactorInUseType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="PositiveDecimal">
+				<xsd:attribute name="underBark" type="xsd:boolean" use="required">
+					
+				</xsd:attribute>
+				<xsd:attribute name="numberOfControlBunches" type="xsd:positiveInteger" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="BarkDeductionType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="NonNegativeDecimal">
+				<xsd:attribute name="lowerDiameterLimit" type="xsd:nonNegativeInteger" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="BarkDeductionDistanceType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="NonNegativeDecimal">
+				<xsd:attribute name="distanceClassLowerLimit" type="xsd:nonNegativeInteger" use="required">
+					
+				</xsd:attribute>
+				<xsd:attribute name="dBHClassLowerLimit" type="xsd:nonNegativeInteger" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="BarkFunctionType">
+		
+		<xsd:sequence>
+			<xsd:element name="BarkFunctionUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="BarkFunctionName" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="BarkFunctionInfo" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="BarkFunctionVersion" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:choice>
+				<xsd:element name="ConsolidatedFunction" type="ConsolidatedFunctionType">
+					
+				</xsd:element>
+				<xsd:element name="MatrixDiameter" type="MatrixDiameterType">
+					
+				</xsd:element>
+				<xsd:element name="MatrixDistanceDBH" type="MatrixDistanceDBHType">
+					
+				</xsd:element>
+				<xsd:element name="NonLinearLatitude" type="NonLinearLatitudeType">
+					
+				</xsd:element>
+				<xsd:element name="LogisticDistanceDiameter" type="LogisticDistanceDiameterType">
+					
+				</xsd:element>
+			</xsd:choice>
+		</xsd:sequence>
+		<xsd:attribute name="barkFunctionCategory" type="BarkFunctionCategoryType" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="barkFunctionDefault" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="BarkFunctionWithKeyType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="BarkFunctionType">
+				<xsd:sequence>
+					<xsd:element name="BarkFunctionKey" type="KeyType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="BarkReferenceType">
+		
+		<xsd:sequence>
+			<xsd:element name="SpeciesGroupUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="BarkFunctionUserID" type="UserIDType">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="BoomPositioningType">
+		
+		<xsd:sequence>
+			<xsd:element name="BoomAngle" type="DegreeType">
+				
+			</xsd:element>
+			<xsd:element name="BoomExtension" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="MachineBearing" type="MachineBearingType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="boomPositioningCategory" type="BoomPositioningCategoryType" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ButtEndProfileExtrapolationFunctionParameterType">
+		
+		<xsd:sequence>
+			<xsd:element name="ParameterName" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="ParameterValue" type="xsd:decimal">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ButtEndProfileExtrapolationFunctionType">
+		
+		<xsd:sequence>
+			<xsd:element name="Parameter" type="ButtEndProfileExtrapolationFunctionParameterType" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="ButtEndProfileExtrapolationFunctionCategory" type="ButtEndProfileExtrapolationFunctionCategoryType" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ButtEndProfileExtrapolationTableType">
+		
+		<xsd:sequence>
+			<xsd:element name="ExtrapolationCoefficient" type="ExtrapolationCoefficientType" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ButtEndProfileExtrapolationType">
+		
+		<xsd:sequence>
+			<xsd:element name="ReferenceHeight" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="ButtEndProfileExtrapolationTable" type="ButtEndProfileExtrapolationTableType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ButtEndProfileExtrapolationFunction" type="ButtEndProfileExtrapolationFunctionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="buttEndProfileExtrapolationMethod" type="ButtEndProfileExtrapolationMethodType" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="CalibrationValuesType">
+		
+		<xsd:sequence>
+			<xsd:element name="DiameterCalibration" type="DiameterCalibrationType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="LengthCalibration" type="LengthCalibrationType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ClassifiedProductDefinitionMachineHarvestedProductionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="ProductDefinitionWithDetailsType">
+				<xsd:sequence>
+					<xsd:element name="ProductUserID" type="UserIDType">
+						
+					</xsd:element>
+					<xsd:element name="SpeciesGroupKey" type="KeyType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ColumnDataType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="columnID" type="xsd:string" use="required">
+					
+				</xsd:attribute>
+				<xsd:attribute name="columnName" type="xsd:string" use="required">
+					
+				</xsd:attribute>
+				<xsd:attribute name="columnOrder" type="xsd:nonNegativeInteger" use="required">
+					
+				</xsd:attribute>
+				<xsd:attribute name="cellID" type="xsd:string" use="optional">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="CommonCalibrationValuesType">
+		
+		<xsd:sequence>
+			<xsd:element name="SpeciesGroupUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="OperatorKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="CalibrationDate" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="CommonCodeListDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="CodeListInfo" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="codeListVersion" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="CodeListModificationDate" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="CommonDeliveryDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="DeliveryUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="DeliveryName" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ModificationDate" type="ModificationDateType">
+				
+			</xsd:element>
+			<xsd:element name="DeliveryInfo" type="InfoType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="DeliveryVersion" type="VersionType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="DeliveryDestination" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Density" type="xsd:decimal">
+				
+			</xsd:element>
+			<xsd:element name="ForwardingVolumeCategory" type="LoadVolumeCategoryType">
+				
+			</xsd:element>
+			<xsd:element name="DeliveryPresentationOrder" type="OrderType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="DeliveryDescription" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="CommonLocationDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="LocationUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="LocationName" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="LocationInfo" type="InfoType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="LocationVersion" type="VersionType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="HarvestDate" type="StanForD2010DateTimeType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="LocationCoordinates" type="CoordinatesType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="RoadCondition" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="LocationDescription" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="CommonObjectDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="ObjectUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="ObjectName" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ObjectModificationDate" type="ModificationDateType">
+				
+			</xsd:element>
+			<xsd:element name="ForestCertification" type="ForestCertificationType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="LoggingForm" type="LoggingFormType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ObjectArea" type="PositiveDecimal" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="LoggingOrganisation" type="LoggingOrganisationType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ForestOwner" type="ContactInformationType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ContractNumber" type="ContractNumberType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="RealEstateIDObject" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="AuditingOrganisation" type="ContactInformationType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="BorderPolygon" type="MultiPolygonType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="CommonProductDefinitionType" abstract="true">
+		
+		<xsd:sequence>
+			<xsd:element name="ProductName" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ModificationDate" type="ModificationDateType">
+				
+			</xsd:element>
+			<xsd:element name="ProductInfo" type="InfoType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ProductVersion" type="VersionType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ProductBuyer" type="ContactInformationType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ProductClass" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="LoggingOrganisation" type="LoggingOrganisationType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ProductDestination" type="ContactInformationType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="ProductGroupName" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="StemTypeCode" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ProductPresentationOrder" type="OrderType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ProductDescription" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="CommonSpeciesGroupDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="SpeciesGroupModificationDate" type="ModificationDateType">
+				
+			</xsd:element>
+			<xsd:element name="SpeciesGroupUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="SpeciesGroupName" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="SpeciesGroupInfo" type="InfoType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="SpeciesGroupVersion" type="VersionType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="StemTypeDefinition" type="StemTypeDefinitionType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="LoggingOrganisation" type="LoggingOrganisationType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="SpeciesGroupPresentationOrder" type="OrderType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ComplementaryGISFilesType">
+		
+		<xsd:sequence>
+			<xsd:element name="ComplementaryGISFilename" type="xsd:string" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ConsolidatedFunctionType">
+		
+		<xsd:sequence>
+			<xsd:element name="a0" type="xsd:decimal">
+				
+			</xsd:element>
+			<xsd:element name="b0" type="xsd:decimal">
+				
+			</xsd:element>
+			<xsd:element name="b1" type="xsd:decimal">
+				
+			</xsd:element>
+			<xsd:element name="c0" type="xsd:decimal">
+				
+			</xsd:element>
+			<xsd:element name="c1" type="xsd:decimal">
+				
+			</xsd:element>
+			<xsd:element name="d0" type="xsd:decimal">
+				
+			</xsd:element>
+			<xsd:element name="d1" type="xsd:decimal">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="CoordinatesType">
+		
+		<xsd:sequence>
+			<xsd:element name="Latitude" type="LatitudeType">
+				
+			</xsd:element>
+			<xsd:element name="Longitude" type="LongitudeType">
+				
+			</xsd:element>
+			<xsd:element name="Altitude" type="xsd:decimal">
+				
+			</xsd:element>
+			<xsd:element name="CoordinateDate" type="StanForD2010DateTimeType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attributeGroup ref="CoordinatesAttributeGroup">
+</xsd:attributeGroup>
+	</xsd:complexType>
+	<xsd:complexType name="ContactInformationType">
+		
+		<xsd:sequence>
+			<xsd:element name="FirstName" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="LastName" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Address" type="AddressType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Phone" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Fax" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Email" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="BusinessName" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="BusinessID" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ContractNumberType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="ContractCategory" type="xsd:string">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="ControlMeasurementDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="Measurer" type="MeasurerType">
+				
+			</xsd:element>
+			<xsd:element name="CaliperApplication" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="CaliperID" type="xsd:string">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="logMeasurementCategory" type="LogMeasurementCategoryType" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ControlStemInfoType">
+		
+		<xsd:sequence>
+			<xsd:element name="RandomControlStemRejectedReason" type="RandomControlStemRejectedReasonType">
+				
+			</xsd:element>
+			<xsd:element name="RandomControlStemMeasurementMode" type="RandomControlStemMeasurementModeType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="RandomControlStemSelection" type="RandomControlStemSelectionType">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ControlStemSettingsType">
+		
+		<xsd:sequence>
+			<xsd:element name="RandomFrequency" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="RandomFrequencyCategory" type="RandomFrequencyCategoryType">
+				
+			</xsd:element>
+			<xsd:element name="RandomMINDBH" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="RandomMINLength" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="RandomLogNotification" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="RandomStartTime" type="xsd:time">
+				
+			</xsd:element>
+			<xsd:element name="RandomEndTime" type="xsd:time">
+				
+			</xsd:element>
+			<xsd:element name="RandomSettingDateTime" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+			<xsd:element name="SpeciesGroupUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="ProcessingCategory" type="ProcessingCategoryType">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="CountryCodeType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="countryCodeCategory" type="CountryCodeCategoryType" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="CuttingCategoryType">
+		
+		<xsd:sequence>
+			<xsd:element name="CuttingReason" type="CuttingReasonType">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="CuttingWindowDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="LowerLengthLimit" type="xsd:integer">
+				
+			</xsd:element>
+			<xsd:element name="UpperLengthLimit" type="xsd:integer">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="DataTableGroupHarvestedProductionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="DataTableGroupType">
+				<xsd:sequence>
+					<xsd:element name="ObjectKey" type="KeyType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="DataTableGroupProductionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="DataTableGroupType">
+				<xsd:choice>
+					<xsd:element name="ObjectKey" type="KeyType">
+						
+					</xsd:element>
+					<xsd:element name="LocationKey" type="KeyType">
+						
+					</xsd:element>
+				</xsd:choice>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="DataTableGroupType">
+		
+		<xsd:sequence>
+			<xsd:element name="DataTable" type="DataTableType" maxOccurs="unbounded">
+				
+				<xsd:unique name="UniqueRowID">
+					<xsd:selector xpath="sfd:Row">
+</xsd:selector>
+					<xsd:field xpath="@rowID">
+</xsd:field>
+				</xsd:unique>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="tableGroupID" type="xsd:string" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="tableGroupName" type="xsd:string" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="DataTableType">
+		
+		<xsd:sequence>
+			<xsd:element name="Row" type="RowType" maxOccurs="unbounded">
+				
+				<xsd:unique name="UniqueColumnID">
+					<xsd:selector xpath="sfd:ColumnData">
+</xsd:selector>
+					<xsd:field xpath="@columnID">
+</xsd:field>
+				</xsd:unique>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="tableID" type="xsd:string" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="tableName" type="xsd:string" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="DBHHeightType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:positiveInteger">
+				<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="DeliveryDefinitionWithDetailsType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CommonDeliveryDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="DeliveryKey" type="KeyType">
+						
+					</xsd:element>
+					<xsd:element name="DeliveryEstimation" type="DeliveryEstimationType">
+						
+					</xsd:element>
+					<xsd:element name="ProductKey" type="KeyType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="DeliveryEstimationType">
+		
+		<xsd:sequence>
+			<xsd:element name="DeliveryEstimationMethod" type="DeliveryEstimationMethodType">
+				
+			</xsd:element>
+			<xsd:element name="DeliveryEstimationUnit" type="DeliveryEstimationUnitType">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterAdjustmentMatrixItemType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:integer">
+				<xsd:attribute name="referenceDiameterLowerLimit" type="xsd:nonNegativeInteger" use="required">
+					
+				</xsd:attribute>
+				<xsd:attribute name="referenceDiameterHeightLowerLimit" type="xsd:nonNegativeInteger" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterCalibrationAdjustmentType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:decimal">
+				<xsd:attribute name="diameterCalibrationPosition" type="xsd:positiveInteger" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterCalibrationType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CommonCalibrationValuesType">
+				<xsd:sequence>
+					<xsd:element name="DiameterCalibrationReason" type="CalibrationReasonType">
+						
+					</xsd:element>
+					<xsd:element name="DiameterCalibrationDescription" type="xsd:string">
+						
+					</xsd:element>
+					<xsd:element name="DiameterCalibrationAdjustment" type="DiameterCalibrationAdjustmentType" maxOccurs="unbounded">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterClassesType">
+		
+		<xsd:sequence>
+			<xsd:element name="DiameterClass" type="DiameterClassType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="DiameterClassMAX" type="DiameterType">
+				
+			</xsd:element>
+			<xsd:element name="DiameterClassAdjustment" type="DiameterClassAdjustmentType">
+				
+			</xsd:element>
+			<xsd:element name="DiameterUnderBark" type="xsd:boolean">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="diameterClassCategory" type="DiameterClassCategoryType" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterClassType">
+		
+		<xsd:sequence>
+			<xsd:element name="DiameterClassLowerLimit" type="DiameterType">
+				
+			</xsd:element>
+			<xsd:element name="DiameterClassName" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="DiameterClasses" type="DiameterClassesType">
+				
+			</xsd:element>
+			<xsd:element name="DiameterMINTop" type="xsd:nonNegativeInteger" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="DiameterMAXButt" type="DiameterType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="DiameterTopPosition" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterSectionDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="DiameterSectionUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="DiameterSectionName" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="MinimumDiameter" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="MinimumLength" type="xsd:nonNegativeInteger" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="DiameterSectionUsage" type="DiameterSectionUsageType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="DiameterSectionModificationDate" type="ModificationDateType">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterSectionDefinitionMachineType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="DiameterSectionDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="DiameterSectionKey" type="KeyType">
+						
+					</xsd:element>
+					<xsd:element name="SpeciesGroupKey" type="KeyType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterSectionDefinitionsHarvestedProductionType">
+		
+		<xsd:sequence>
+			<xsd:element name="DiameterSectionDefinition" type="DiameterSectionDefinitionMachineType" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterSectionProductionType">
+		
+		<xsd:sequence>
+			<xsd:element name="DiameterSectionKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="DiameterSectionVolume" type="VolumeType">
+				
+			</xsd:element>
+			<xsd:element name="DiameterSectionLimitPosition" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterVectorType">
+		
+		<xsd:sequence>
+			<xsd:element name="DIA" type="DiameterValueType" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="diameterMeasurementCategory" type="DiameterMeasurementCategoryType" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="DiameterValueType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="DiameterType">
+				<xsd:attribute name="POS" type="xsd:nonNegativeInteger" use="required">
+					
+				</xsd:attribute>
+				<xsd:attribute name="RAW" type="xsd:nonNegativeInteger">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="DisruptedMeasuringType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:boolean">
+				<xsd:attribute name="disruptedMeasuringDescription" type="xsd:string">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="EstonianVolumeParametersType">
+		
+		<xsd:sequence>
+			<xsd:element name="ParameterA1" type="xsd:decimal">
+				
+			</xsd:element>
+			<xsd:element name="ParameterA2" type="xsd:decimal">
+				
+			</xsd:element>
+			<xsd:element name="ParameterA3" type="xsd:decimal">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ExtensionType">
+		
+		<xsd:sequence>
+			<xsd:any namespace="##any" processContents="lax" minOccurs="0" maxOccurs="unbounded">
+</xsd:any>
+		</xsd:sequence>
+		<xsd:attribute name="extensionAction" type="ExtensionActionType">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ExtrapolationCoefficientType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:decimal">
+				<xsd:attribute name="diameterClass" type="xsd:nonNegativeInteger" use="required">
+					
+				</xsd:attribute>
+				<xsd:attribute name="distanceClass" type="xsd:nonNegativeInteger" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="FeatureCollectionType">
+		
+		<xsd:sequence>
+			<xsd:element name="FeatureCollectionUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="FeatureCollectionName" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="FeatureCollectionInfo" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="FeatureCollectionOrder" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="ModificationDate" type="ModificationDateType">
+				
+			</xsd:element>
+			<xsd:element name="Feature" type="FeatureType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="FeaturePropertyDefinition" type="FeaturePropertyDefinitionType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="FeaturePropertyDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="FeaturePropertyUserID" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="FeaturePropertyName" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="FeaturePropertyInfo" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="FeaturePropertyValueDefault" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="FeaturePropertyType">
+		
+		<xsd:sequence>
+			<xsd:element name="FeaturePropertyUserID" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="FeaturePropertyValue" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="FeatureType">
+		
+		<xsd:sequence>
+			<xsd:element name="FeatureUserID" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="FeatureName" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="FeatureInfo" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="FeatureDescription" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="FeatureTreatment" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="PhysicallyMarked" type="xsd:boolean">
+				
+			</xsd:element>
+			<xsd:element name="Warning" type="WarningType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:choice>
+				<xsd:element name="MultiPointExtended" type="MultiPointExtendedType">
+					
+				</xsd:element>
+				<xsd:element name="MultiLineExtended" type="MultiLineExtendedType">
+					
+				</xsd:element>
+				<xsd:element name="MultiPolygonExtended" type="MultiPolygonExtendedType">
+					
+				</xsd:element>
+			</xsd:choice>
+			<xsd:element name="FeatureProperty" type="FeaturePropertyType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="FelledStemCoordinatesType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CoordinatesType">
+				<xsd:sequence>
+					<xsd:element name="FelledStemBearing" type="MachineBearingType" minOccurs="0">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="FormatFontType">
+		
+		<xsd:sequence>
+			<xsd:element name="FormatFontFileName" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="FormatFontName" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="FormatSymbolNumber" type="xsd:integer">
+				
+			</xsd:element>
+			<xsd:element name="FormatSymbolSize" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="GISDatabaseFileSpecificationType">
+		
+		<xsd:sequence>
+			<xsd:element name="ColumnNameObject" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="ColumnNameSubObject" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ColumnNameFeature" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="ColumnNameID" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ColumnNameDescription" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ColumnNameTreatment" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ColumnNameMarked" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ColumnNameWarning" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ColumnNameWarningDistance" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ColumnNameFormatID" type="xsd:string">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="GISFileFormatType">
+		
+		<xsd:sequence>
+			<xsd:element name="FormatID" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="FormatName" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="FormatDefaultClass" type="xsd:boolean">
+				
+			</xsd:element>
+			<xsd:element name="FormatColor" type="xsd:integer">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="GISFileFormatLineType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="GISFileFormatType">
+				<xsd:sequence>
+					<xsd:element name="FormatLineStyle" type="FormatLineStyleType">
+						
+					</xsd:element>
+					<xsd:element name="FormatLineThickness" type="xsd:nonNegativeInteger">
+						
+					</xsd:element>
+					<xsd:element name="TopRendering" type="TopRenderingLineType" minOccurs="0">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="GISFileFormatPointType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="GISFileFormatType">
+				<xsd:sequence>
+					<xsd:element name="FormatFont" type="FormatFontType">
+						
+					</xsd:element>
+					<xsd:element name="TopRendering" type="TopRenderingPointType" minOccurs="0">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="GISFileFormatPolygonType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="GISFileFormatType">
+				<xsd:sequence>
+					<xsd:element name="FormatLineStyle" type="FormatLineStyleType">
+						
+					</xsd:element>
+					<xsd:element name="FormatLineThickness" type="xsd:nonNegativeInteger">
+						
+					</xsd:element>
+					<xsd:element name="FormatFillStyle" type="FormatFillStyleType">
+						
+					</xsd:element>
+					<xsd:element name="TopRendering" type="TopRenderingPolygonType" minOccurs="0">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="GISLayerGroupType">
+		
+		<xsd:sequence>
+			<xsd:element name="GISLayerGroupUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="GISLAyerGroupName" type="xsd:string">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="GISLayerType">
+		
+		<xsd:sequence>
+			<xsd:element name="GISFileName" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="GISLayerUserID" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="GISLayerModificationDate" type="StanForD2010DateTimeType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="GISFileOrder" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="ComplementaryGISFiles" type="ComplementaryGISFilesType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="GISCoordinateReferenceSystem" type="GISCoordinateReferenceSystemType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="GISLayerGroupUserID" type="UserIDType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="GradesType">
+		
+		<xsd:sequence>
+			<xsd:element name="StartGrade" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="MTHStartGrade" type="xsd:positiveInteger" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Grade" type="GradeType" maxOccurs="16">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="GradeType">
+		
+		<xsd:sequence>
+			<xsd:element name="GradeNumber" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="GradeName" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="GradeValueType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:nonNegativeInteger">
+				<xsd:attribute name="gradeStartPosition" type="xsd:nonNegativeInteger" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="InfoType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="LatitudeType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="LatitudeLongitudeValueType">
+				<xsd:attribute name="latitudeCategory" type="LatitudeCategoryType" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="LengthCalibrationAdjustmentButtLogType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:decimal">
+				<xsd:attribute name="lengthCalibrationPosition" type="xsd:positiveInteger" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="LengthCalibrationAdjustmentType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:decimal">
+				<xsd:attribute name="lengthCalibrationPosition" type="xsd:positiveInteger" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="LengthCalibrationType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CommonCalibrationValuesType">
+				<xsd:sequence>
+					<xsd:element name="LengthCalibrationReason" type="CalibrationReasonType">
+						
+					</xsd:element>
+					<xsd:element name="LengthCalibrationDescription" type="xsd:string">
+						
+					</xsd:element>
+					<xsd:element name="LengthCalibrationAdjustment" type="LengthCalibrationAdjustmentType" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="LengthCalibrationAdjustmentButtLog" type="LengthCalibrationAdjustmentButtLogType" minOccurs="0">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="LengthDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="LengthClassAdjustment" type="LengthClassAdjustmentType">
+				
+			</xsd:element>
+			<xsd:element name="LengthClass" type="LengthClassType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="LengthClassMAX" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="LengthDistributionDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="DistributionAllowed" type="xsd:boolean">
+				
+			</xsd:element>
+			<xsd:element name="DistributionCategory" type="DistributionCategoryType">
+				
+			</xsd:element>
+			<xsd:element name="MAXDeviation" type="NonNegativeDecimal">
+				
+			</xsd:element>
+			<xsd:element name="DistributionWithinProduct" type="xsd:boolean">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="LengthClassType">
+		
+		<xsd:sequence>
+			<xsd:element name="LengthClassLowerLimit" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="LengthClassMargin" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="LongTimberDefinition" type="LongTimberDefinitionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="LimitationDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="LimitationCategory" type="LimitationCategoryType">
+				
+			</xsd:element>
+			<xsd:element name="LimitationResult" type="LimitationResultType">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="LoadNumberOfItemsType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:integer">
+				<xsd:attribute name="loadNumberOfCategory" type="LoadNumberCategoryType" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="LocationDefinitionMachineType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CommonLocationDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="LocationKey" type="KeyType">
+						
+					</xsd:element>
+					<xsd:element name="ObjectKey" type="KeyType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="LocationDefinitionWithModificationDateType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CommonLocationDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="ModificationDate" type="ModificationDateType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="LogColorMarkingType">
+		
+		<xsd:sequence>
+			<xsd:element name="Color1" type="xsd:boolean">
+				
+			</xsd:element>
+			<xsd:element name="Color2" type="xsd:boolean">
+				
+			</xsd:element>
+			<xsd:element name="Color3" type="xsd:boolean">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="LogCoordinatesType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CoordinatesType">
+				<xsd:sequence>
+					<xsd:element name="LogBearing" type="MachineBearingType" minOccurs="0">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="LogDiameterType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="DiameterType">
+				<xsd:attribute name="logDiameterCategory" type="LogDiameterCategoryType" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="LoggingFormType">
+		
+		<xsd:sequence>
+			<xsd:element name="LoggingFormCode" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="LoggingFormDescription" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="agency" type="AgencyType">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="LoggingOrganisationType">
+		
+		<xsd:sequence>
+			<xsd:element name="ContactInformation" type="ContactInformationType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="District" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Team" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="LogHarvestedProductionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="LogType">
+				<xsd:sequence>
+					<xsd:element name="LogMeasurement" type="LogMeasurementType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="LogisticDistanceDiameterType">
+		
+		<xsd:sequence>
+			<xsd:element name="a1" type="xsd:decimal">
+				
+			</xsd:element>
+			<xsd:element name="a2" type="xsd:decimal">
+				
+			</xsd:element>
+			<xsd:element name="a3" type="xsd:decimal">
+				
+			</xsd:element>
+			<xsd:element name="b1" type="xsd:decimal">
+				
+			</xsd:element>
+			<xsd:element name="b2" type="xsd:decimal">
+				
+			</xsd:element>
+			<xsd:element name="b3" type="xsd:decimal">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="LogMeasurementType">
+		
+		<xsd:sequence>
+			<xsd:element name="LogDiameter" type="LogDiameterType" maxOccurs="8">
+				
+			</xsd:element>
+			<xsd:element name="LogLength" type="LogLengthType">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="logMeasurementCategory" type="LogMeasurementCategoryType" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="LogType">
+		
+		<xsd:sequence>
+			<xsd:element name="LogKey" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="ProductKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="LogVolume" type="LogVolumeType" maxOccurs="18">
+				
+			</xsd:element>
+			<xsd:element name="CuttingCategory" type="CuttingCategoryType">
+				
+			</xsd:element>
+			<xsd:element name="DiameterSectionProduction" type="DiameterSectionProductionType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="TopSawing" type="xsd:boolean" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="FindButtEndFunction" type="xsd:boolean" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="LogCoordinates" type="LogCoordinatesType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="DisruptedMeasuring" type="DisruptedMeasuringType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="LogVolumeType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="VolumeType">
+				<xsd:attribute name="logVolumeCategory" type="LogVolumeCategoryType" use="required">
+					
+				</xsd:attribute>
+				<xsd:attribute name="logMeasurementCategory" type="LogMeasurementCategoryType" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="LongitudeType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="LatitudeLongitudeValueType">
+				<xsd:attribute name="longitudeCategory" type="LongitudeCategoryType" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="LongTimberDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="LongLogButtMIN" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="LongLogButtMAX" type="xsd:positiveInteger" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MachineBaseModelType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="baseModelYear" type="xsd:gYear" use="optional">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="MachineBearingType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="DegreeType">
+				<xsd:attribute name="accuracyMachineBearing" type="NonNegativeDecimal" use="optional">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="MachineHarvestedProductionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="MachineWithAttachmentType">
+				<xsd:sequence>
+					<xsd:element name="SpeciesGroupDefinition" type="SpeciesGroupDefinitionWithDetailsAndBarkFunctionAndKeyType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="ProductDefinition" type="ProductDefinitionMachineHarvestedProductionType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="ObjectDefinition" type="ObjectDefinitionMachineWithDiameterSectionDefinitionsType" maxOccurs="unbounded">
+						
+						<xsd:unique name="UniqueSubObjectKeyMachineHarvestedProduction">
+							<xsd:selector xpath="sfd:SubObject">
+</xsd:selector>
+							<xsd:field xpath="sfd:SubObjectKey">
+</xsd:field>
+						</xsd:unique>
+						<xsd:unique name="UniqueSubObjectUserIDMachineHarvestedProduction">
+							<xsd:selector xpath="sfd:SubObject">
+</xsd:selector>
+							<xsd:field xpath="sfd:SubObjectUserID">
+</xsd:field>
+						</xsd:unique>
+					</xsd:element>
+					<xsd:element name="Stem" type="StemHarvestedProductionType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="UserDefinedData" type="UserDefinedDataHarvestedProductionType" minOccurs="0">
+						
+						<xsd:unique name="UniqueTableGroupID">
+							<xsd:selector xpath="sfd:DataTableGroup">
+</xsd:selector>
+							<xsd:field xpath="@tableGroupID">
+</xsd:field>
+						</xsd:unique>
+					</xsd:element>
+					<xsd:element name="TrackCoordinates" type="TrackCoordinatesWithStemKeyType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="OtherMachineSettings" type="OtherMachineSettingsType" minOccurs="0">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="MachineAttachmentModelType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="attachmentModelYear" type="xsd:gYear">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="MachineType">
+		
+		<xsd:sequence>
+			<xsd:element name="MachineKey" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="MachineUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="MachineOwnerID" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="MachineApplicationVersion" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="MachineBaseManufacturer" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="MachineBaseModel" type="MachineBaseModelType">
+				
+			</xsd:element>
+			<xsd:element name="BaseMachineManufacturerID" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="RegistrationNumber" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="MachineOwner" type="ContactInformationType">
+				
+			</xsd:element>
+			<xsd:element name="LoggingContractor" type="ContactInformationType">
+				
+			</xsd:element>
+			<xsd:element name="OperatorDefinition" type="OperatorDefinitionType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="machineCategory" type="MachineCategoryType" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="MachineWithAttachmentType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="MachineType">
+				<xsd:sequence>
+					<xsd:element name="MachineAttachmentManufacturer" type="xsd:string" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="MachineAttachmentModel" type="MachineAttachmentModelType" minOccurs="0">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="MachineWithWinchType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="MachineType">
+				<xsd:sequence>
+					<xsd:element name="WinchModel" type="MachineWinchModelType" minOccurs="0">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="MachineWinchModelType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="winchModelYear" type="xsd:gYear">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="MatrixDiameterType">
+		
+		<xsd:sequence>
+			<xsd:element name="BarkDeduction" type="BarkDeductionType" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MatrixDistanceDBHType">
+		
+		<xsd:sequence>
+			<xsd:element name="BarkDeduction" type="BarkDeductionDistanceType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="DistanceClassLowerLimit" type="xsd:nonNegativeInteger" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="DBHClassLowerLimit" type="xsd:nonNegativeInteger" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MeasurerType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="ContactInformationType">
+				<xsd:attribute name="auditorCategory" type="AuditorCategoryType">
+</xsd:attribute>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="MessageHeaderType">
+		
+		<xsd:sequence>
+			<xsd:element name="SenderApplication" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="CreationDate" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+			<xsd:element name="ModificationDate" type="ModificationDateType">
+				
+			</xsd:element>
+			<xsd:element name="ApplicationVersionCreated" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="ApplicationVersionModified" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="CountryCode" type="CountryCodeType">
+				
+			</xsd:element>
+			<xsd:element name="CreationCoordinates" type="CoordinatesType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MINRegistrationLogLengthType">
+		
+		<xsd:sequence>
+			<xsd:element name="MINRegistrationLogLengthButt" type="NonNegativeDecimal">
+				
+			</xsd:element>
+			<xsd:element name="MINRegistrationLogLengthOther" type="NonNegativeDecimal">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ModificationDateType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="StanForD2010DateTimeType">
+				<xsd:attribute name="modificationAuthor" type="xsd:string">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="MultiLineType">
+		
+		<xsd:sequence>
+			<xsd:element name="MultiLineGeoJSON">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="GISCoordinateReferenceSystem" type="GISCoordinateReferenceSystemType" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="MultiPolygonType">
+		
+		<xsd:sequence>
+			<xsd:element name="MultiPolygonGeoJSON" type="xsd:string">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="GISCoordinateReferenceSystem" type="GISCoordinateReferenceSystemType" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="MultiPointType">
+		
+		<xsd:sequence>
+			<xsd:element name="MultiPointGeoJSON" type="xsd:string">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="GISCoordinateReferenceSystem" type="GISCoordinateReferenceSystemType" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="MultiLineExtendedType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="MultiLineType">
+				<xsd:sequence>
+					<xsd:element name="StyleUserID" type="UserIDType">
+						
+					</xsd:element>
+					<xsd:element name="SymbolUserID" type="UserIDType" minOccurs="0">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="MultiPointExtendedType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="MultiPointType">
+				<xsd:sequence>
+					<xsd:element name="SymbolUserID" type="UserIDType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="MultiPolygonExtendedType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="MultiPolygonType">
+				<xsd:sequence>
+					<xsd:element name="StyleUserID" type="UserIDType">
+						
+					</xsd:element>
+					<xsd:element name="SymbolUserID" type="UserIDType" minOccurs="0">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="MultiTreeFelledStemType">
+		
+		<xsd:sequence>
+			<xsd:element name="StemBunchKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="DBH" type="DiameterType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ReferenceDiameter" type="ReferenceDiameterType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="StemVolume" type="StemVolumeType" minOccurs="0" maxOccurs="4">
+				
+			</xsd:element>
+			<xsd:element name="FelledStemCoordinates" type="FelledStemCoordinatesType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MultiTreeProcessedStemType">
+		
+		<xsd:sequence>
+			<xsd:element name="StemBunchKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="DBH" type="DiameterType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ReferenceDiameter" type="ReferenceDiameterType">
+				
+			</xsd:element>
+			<xsd:element name="StemGrade" type="StemGradeType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="Log" type="LogHarvestedProductionType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="VolumeCorrectionMultiTreeProcessing" type="VolumeCorrectionMultiTreeProcessingType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="NonLinearLatitudeType">
+		
+		<xsd:sequence>
+			<xsd:element name="Latitude" type="PositiveDecimal" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ObjectDefinitionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CommonObjectDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="TextToMachine" type="xsd:string" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="SubObject" type="SubObjectDefinitionType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ObjectDefinitionMachineType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CommonObjectDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="ObjectKey" type="KeyType">
+						
+					</xsd:element>
+					<xsd:element name="TextFromMachine" type="xsd:string" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="StartDate" type="StanForD2010DateTimeType">
+						
+					</xsd:element>
+					<xsd:element name="EndDate" type="StanForD2010DateTimeType" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="SubObject" type="SubObjectDefinitionMachineType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ObjectDefinitionMachineWithDiameterSectionDefinitionsType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="ObjectDefinitionMachineType">
+				<xsd:sequence>
+					<xsd:element name="DiameterSectionDefinitions" type="DiameterSectionDefinitionsHarvestedProductionType" minOccurs="0">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ObjectDefinitionMachineWithDiameterSectionDefinitionsAndBarkReferenceType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="ObjectDefinitionMachineWithDiameterSectionDefinitionsType">
+				<xsd:sequence>
+					<xsd:element name="BarkReference" type="BarkReferenceType" minOccurs="0" maxOccurs="unbounded">
+</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="OperatorDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="OperatorKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="OperatorUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="ContactInformation" type="ContactInformationType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="OtherMachineSettingsType">
+		
+		<xsd:sequence>
+			<xsd:element name="MINRegistrationLogLength" type="MINRegistrationLogLengthType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="PartialStemLoadType">
+		
+		<xsd:sequence>
+			<xsd:element name="PartialStemLoadKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="SpeciesGroupKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="LocationKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="NumberOfStems" type="xsd:positiveInteger" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="StemLoadVolume" type="StemLoadVolumeType" minOccurs="0" maxOccurs="3">
+				
+			</xsd:element>
+			<xsd:element name="StemLoadGreenMass" type="StemLoadGreenMassType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="LoadingCoordinates" type="CoordinatesType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ScaleKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="SubObjectKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="PermittedGradesDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="PermittedGradeNumber" type="xsd:positiveInteger" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="GradeToleranceTop" type="xsd:nonNegativeInteger" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="GradeToleranceButt" type="xsd:nonNegativeInteger" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="PriceDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="VolumeDiameterAdjustment" type="VolumeDiameterAdjustmentType">
+				
+			</xsd:element>
+			<xsd:element name="VolumeDiameterCategory" type="VolumeDiameterCategoryBaseType">
+				
+			</xsd:element>
+			<xsd:element name="VolumeLengthCategory" type="VolumeLengthCategoryType">
+				
+			</xsd:element>
+			<xsd:element name="VolumeUnderBark" type="xsd:boolean">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ProductDefinitionMachineHarvestedProductionType">
+		
+		<xsd:sequence>
+			<xsd:element name="ProductKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:choice>
+				<xsd:element name="ClassifiedProductDefinition" type="ClassifiedProductDefinitionMachineHarvestedProductionType">
+					
+					<xsd:unique name="UniqueDiameterAndLenghtClasses">
+						<xsd:selector xpath="sfd:ProductMatrixes/sfd:ProductMatrixItem">
+</xsd:selector>
+						<xsd:field xpath="@diameterClassLowerLimit">
+</xsd:field>
+						<xsd:field xpath="@lengthClassLowerLimit">
+</xsd:field>
+					</xsd:unique>
+				</xsd:element>
+				<xsd:element name="UnclassifiedProductDefinition" type="UnclassifiedProductDefinitionMachineType">
+					
+				</xsd:element>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ProductDefinitionWithCommonDetailsType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CommonProductDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="DiameterDefinition" type="DiameterDefinitionType">
+						
+					</xsd:element>
+					<xsd:element name="LengthDefinition" type="LengthDefinitionType">
+						
+					</xsd:element>
+					<xsd:element name="PriceDefinition" type="PriceDefinitionType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ProductDefinitionWithDetailsType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="ProductDefinitionWithCommonDetailsType">
+				<xsd:sequence>
+					<xsd:element name="ProductCreationDate" type="StanForD2010DateTimeType" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="ManualFreeBuck" type="xsd:boolean">
+						
+					</xsd:element>
+					<xsd:element name="TopLogFreeBuck" type="xsd:boolean">
+						
+					</xsd:element>
+					<xsd:element name="ProductCondition" type="ProductConditionType">
+						
+					</xsd:element>
+					<xsd:element name="CuttingWindowDefinition" type="CuttingWindowDefinitionType" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="PermittedGradesDefinition" type="PermittedGradesDefinitionType">
+						
+					</xsd:element>
+					<xsd:element name="LengthDistributionDefinition" type="LengthDistributionDefinitionType">
+						
+					</xsd:element>
+					<xsd:element name="LimitationDefinition" type="LimitationDefinitionType">
+						
+					</xsd:element>
+					<xsd:element name="ProductMatrixes" type="ProductMatrixType">
+						
+					</xsd:element>
+					<xsd:element name="LongLogButtHeight" type="xsd:nonNegativeInteger" minOccurs="0">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ProductMatrixItemType">
+		
+		<xsd:sequence>
+			<xsd:element name="Price" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="Distribution" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="Limitation" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="BuckingCriteria" type="BuckingCriteriaType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="LogColorMarking" type="LogColorMarkingType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="diameterClassLowerLimit" type="DiameterType" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="lengthClassLowerLimit" type="xsd:positiveInteger" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ProductMatrixType">
+		
+		<xsd:sequence>
+			<xsd:element name="ProductMatrixItem" type="ProductMatrixItemType" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestrictedPrice" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="modificationRestrictedDistribution" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="modificationRestrictedLimitation" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="modificationRestrictedBuckingCriteria" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="modificationRestrictedLogColorMarking" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ReferenceDiameterType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="DiameterType">
+				<xsd:attribute name="referenceDiameterHeight" type="xsd:positiveInteger" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="ReversingType">
+		
+		<xsd:sequence>
+			<xsd:element name="ReasonReversing" type="ReasonReversingType">
+				
+			</xsd:element>
+			<xsd:element name="ReversingStartPosition" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="ReversingEndPosition" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="RowType">
+		
+		<xsd:sequence>
+			<xsd:element name="OperatorKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="ModificationDate" type="ModificationDateType">
+				
+			</xsd:element>
+			<xsd:element name="Coordinates" type="CoordinatesType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ColumnData" type="ColumnDataType" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="rowID" type="xsd:string" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="rowOrder" type="xsd:nonNegativeInteger" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ScaleDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="ScaleKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="ScaleID" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="ScaleModel" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="ScaleCategory" type="ScaleCategoryType">
+				
+			</xsd:element>
+			<xsd:element name="ScaleApplicationVersion" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="ScaleCertificate" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SingleTreeFelledStemType">
+		
+		<xsd:sequence>
+			<xsd:element name="DBH" type="DiameterType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ReferenceDiameter" type="ReferenceDiameterType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="StemVolume" type="StemVolumeType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="FelledStemCoordinates" type="FelledStemCoordinatesType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SingleTreeProcessedStemType">
+		
+		<xsd:sequence>
+			<xsd:element name="DBH" type="DiameterType">
+				
+			</xsd:element>
+			<xsd:element name="ReferenceDiameter" type="ReferenceDiameterType">
+				
+			</xsd:element>
+			<xsd:element name="StemGrade" type="StemGradeType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="StemDiameters" type="StemDiametersType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Reversing" type="ReversingType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="Log" type="LogHarvestedProductionType" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SoundKnotFunctionType">
+		
+		<xsd:sequence>
+			<xsd:element name="ConstantA" type="xsd:decimal">
+				
+			</xsd:element>
+			<xsd:element name="FactorB" type="xsd:decimal">
+				
+			</xsd:element>
+			<xsd:element name="FactorC" type="xsd:decimal">
+				
+			</xsd:element>
+			<xsd:element name="ToleranceD" type="xsd:decimal">
+				
+			</xsd:element>
+			<xsd:element name="SoundKnotFunctionGrade" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="GradeIncluded" type="xsd:positiveInteger" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="SpeciesDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="SpeciesName" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="SpeciesUserID" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SpeciesGroupDefinitionWithDBHType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CommonSpeciesGroupDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="DBHHeight" type="DBHHeightType">
+						
+					</xsd:element>
+					<xsd:element name="StemCodes" type="StemCodesType" minOccurs="0">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="SpeciesGroupDefinitionWithDBHAndKeyType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="SpeciesGroupDefinitionWithDBHType">
+				<xsd:sequence>
+					<xsd:element name="SpeciesGroupKey" type="KeyType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="SpeciesGroupDefinitionWithDetailsAndBarkFunctionAndKeyType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="SpeciesGroupDefinitionWithDetailsType">
+				<xsd:sequence>
+					<xsd:element name="BarkFunction" type="BarkFunctionWithKeyType" nillable="true" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="SpeciesGroupKey" type="KeyType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="SpeciesGroupDefinitionWithDetailsAndBarkFunctionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="SpeciesGroupDefinitionWithDetailsType">
+				<xsd:sequence>
+					<xsd:element name="BarkFunction" type="BarkFunctionType" nillable="true" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="SpeciesGroupDefinitionWithDetailsType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CommonSpeciesGroupDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="DBHHeight" type="DBHHeightType">
+						
+					</xsd:element>
+					<xsd:element name="Grades" type="GradesType">
+						
+					</xsd:element>
+					<xsd:element name="SoundKnotFunction" type="SoundKnotFunctionType" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="ButtEndProfileExtrapolation" type="ButtEndProfileExtrapolationType" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="EstonianVolumeParameters" type="EstonianVolumeParametersType" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="StemCodes" type="StemCodesType" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="ButtLogMAXStartHeight" type="xsd:nonNegativeInteger" minOccurs="0">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="SpeciesGroupDefinitionWithKeyType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CommonSpeciesGroupDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="SpeciesGroupKey" type="KeyType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="StemCodesType">
+		
+		<xsd:sequence>
+			<xsd:element name="StemCode" type="StemCodeSpeciesGroupDefinitionType" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="StemCodeHarvestedProductionType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="stemCodeInfo" type="xsd:string">
+					
+				</xsd:attribute>
+				<xsd:attribute name="stemCodeGroup" type="StemCodeGroupType">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="StemCodeSpeciesGroupDefinitionType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="stemCodeInfo" type="xsd:string" use="required">
+					
+				</xsd:attribute>
+				<xsd:attribute name="stemCodeGroup" type="StemCodeGroupType" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="StemDiametersType">
+		
+		<xsd:sequence>
+			<xsd:element name="DiameterMeasuredStartHeight" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="DiameterMeasuredEndHeight" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="DiameterVector" type="DiameterVectorType" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="diameterCategory" type="DiameterCategoryType" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="StemGradeType">
+		
+		<xsd:sequence>
+			<xsd:element name="GradeValue" type="GradeValueType">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="StemHarvestedProductionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="StemType">
+				<xsd:choice>
+					<xsd:element name="SingleTreeProcessedStem" type="SingleTreeProcessedStemType">
+						
+						<xsd:unique name="UniqueSingleTreeProcessedStemLogKeyStemHarvestedProduction">
+							<xsd:selector xpath="sfd:Log">
+</xsd:selector>
+							<xsd:field xpath="sfd:LogKey">
+</xsd:field>
+						</xsd:unique>
+					</xsd:element>
+					<xsd:element name="MultiTreeProcessedStem" type="MultiTreeProcessedStemType">
+						
+						<xsd:unique name="UniqueMultiTreeProcessedStemLogKeyStemHarvestedProduction">
+							<xsd:selector xpath="sfd:Log">
+</xsd:selector>
+							<xsd:field xpath="sfd:LogKey">
+</xsd:field>
+						</xsd:unique>
+					</xsd:element>
+					<xsd:element name="SingleTreeFelledStem" type="SingleTreeFelledStemType" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="MultiTreeFelledStem" type="MultiTreeFelledStemType">
+						
+					</xsd:element>
+				</xsd:choice>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="StemLoadEstimationType">
+		
+		<xsd:sequence>
+			<xsd:element name="StemLoadEstimationMethod" type="StemLoadEstimationMethodType">
+				
+			</xsd:element>
+			<xsd:element name="StemLoadEstimationUnit" type="StemLoadEstimationUnitType">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="StemLoadGreenMassType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="MassType">
+				<xsd:attribute name="stemLoadGreenMassMethod" type="LoadGreenMassMethodType">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="StemLoadType">
+		
+		<xsd:sequence>
+			<xsd:element name="StemLoadKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="OperatorKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="StemLoadNumber" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="DistanceFromLastUnloading" type="xsd:nonNegativeInteger" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="UnloadingTime" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+			<xsd:element name="ExtractionMethod">
+				
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:enumeration value="Grapple">
+</xsd:enumeration>
+						<xsd:enumeration value="Choker">
+</xsd:enumeration>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="StemPresentation">
+				
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:enumeration value="Un-bunched">
+</xsd:enumeration>
+						<xsd:enumeration value="Part bunched">
+</xsd:enumeration>
+						<xsd:enumeration value="Bunched">
+</xsd:enumeration>
+						<xsd:enumeration value="Machine fed">
+</xsd:enumeration>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="Estimation" type="StemLoadEstimationType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="PartialStemLoad" type="PartialStemLoadType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="StemLoadVolumeType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="VolumeType">
+				<xsd:attribute name="stemLoadVolumeCategory" type="StemLoadVolumeCategoryType" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="StemType">
+		
+		<xsd:sequence>
+			<xsd:element name="StemKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="ObjectKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="SubObjectKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="SpeciesGroupKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="OperatorKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:element name="HarvestDate" type="StanForD2010DateTimeType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="BioEnergyAdaption" type="BioEnergyAdaptionType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="StemNumber" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="ProcessingCategory" type="ProcessingCategoryType">
+				
+			</xsd:element>
+			<xsd:element name="StemCoordinates" type="CoordinatesType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="StemCode" type="StemCodeHarvestedProductionType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="StumpTreatment" type="xsd:boolean" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="BoomPositioning" type="BoomPositioningType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="BarkFunctionKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="StemTypeDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="StemTypeCode" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="StemTypeName" type="xsd:string">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="StemVolumeMatrixItemType">
+		
+		<xsd:sequence>
+			<xsd:element name="StemVolume" type="StemVolumeStemVolumeTableInstructionType">
+				
+			</xsd:element>
+			<xsd:element name="StemMass" type="NonNegativeDecimal">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="dbhLowerLimit" type="xsd:positiveInteger" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="StemVolumeStemVolumeTableInstructionType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="NonNegativeDecimal">
+				<xsd:attribute name="stemVolumeCategory" type="StemVolumeCategoryStemVolumeTableInstructionType" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="StemVolumeTableDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="VolumeTableUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="ModificationDate" type="ModificationDateType">
+				
+			</xsd:element>
+			<xsd:element name="StemVolumeMatrixItem" type="StemVolumeMatrixItemType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="SpeciesGroupUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="DiameterAdjustmentMatrixItem" type="DiameterAdjustmentMatrixItemType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="StemVolumeType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="VolumeType">
+				<xsd:attribute name="stemVolumeCategory" type="StemVolumeCategoryType" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="SubObjectDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="SubObjectUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="SubObjectName" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="SubObjectArea" type="PositiveDecimal" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="LoggingForm" type="LoggingFormType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="RealEstateIDSubObject" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SubObjectDefinitionMachineType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="SubObjectDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="SubObjectKey" type="KeyType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="TopRenderingLineType">
+		
+		<xsd:sequence>
+			<xsd:element name="FormatColor" type="xsd:integer">
+				
+			</xsd:element>
+			<xsd:element name="FormatLineStyle" type="FormatLineStyleType">
+				
+			</xsd:element>
+			<xsd:element name="FormatLineThickness" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="TopRenderingPointType">
+		
+		<xsd:sequence>
+			<xsd:element name="FormatColor" type="xsd:integer">
+				
+			</xsd:element>
+			<xsd:element name="FormatFont" type="FormatFontType">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="TopRenderingPolygonType">
+		
+		<xsd:sequence>
+			<xsd:element name="FormatColor" type="xsd:integer">
+				
+			</xsd:element>
+			<xsd:element name="FormatLineStyle" type="FormatLineStyleType">
+				
+			</xsd:element>
+			<xsd:element name="FormatLineThickness" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="FormatFillStyle" type="FormatFillStyleType">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="TrackCoordinatesType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CoordinatesType">
+				<xsd:sequence>
+					<xsd:element name="TrackingKey" type="KeyType">
+						
+					</xsd:element>
+					<xsd:element name="ObjectKey" type="KeyType" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="SubObjectKey" type="KeyType" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="CableTractionAssist" type="xsd:boolean" minOccurs="0">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="TrackCoordinatesWithStemLoadKeyType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="TrackCoordinatesType">
+				<xsd:sequence>
+					<xsd:element name="StemLoadKey" type="KeyType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="TrackCoordinatesWithStemKeyType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="TrackCoordinatesType">
+				<xsd:sequence>
+					<xsd:element name="StemKey" type="KeyType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="UnclassifiedProductDefinitionMachineType">
+		
+		<xsd:sequence>
+			<xsd:element name="ProductName" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="ModificationDate" type="ModificationDateType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ProductInfo" type="InfoType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ProductVersion" type="VersionType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ProductGroupName" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="SpeciesGroupKey" type="KeyType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="UserDefinedDataHarvestedProductionType">
+		
+		<xsd:sequence>
+			<xsd:element name="DataTableGroup" type="DataTableGroupHarvestedProductionType" maxOccurs="unbounded">
+				
+				<xsd:unique name="UniqueTableIDHarvestedProduction">
+					<xsd:selector xpath="sfd:DataTable">
+</xsd:selector>
+					<xsd:field xpath="@tableID">
+</xsd:field>
+				</xsd:unique>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="UserDefinedDataProductionType">
+		
+		<xsd:sequence>
+			<xsd:element name="DataTableGroup" type="DataTableGroupProductionType" maxOccurs="unbounded">
+				
+				<xsd:unique name="UniqueTableID">
+					<xsd:selector xpath="sfd:DataTable">
+</xsd:selector>
+					<xsd:field xpath="@tableID">
+</xsd:field>
+				</xsd:unique>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="VersionType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="VolumeCorrectionMultiTreeProcessingType">
+		
+		<xsd:sequence>
+			<xsd:element name="EstimatedVolumeCorrected" type="xsd:boolean">
+				
+			</xsd:element>
+			<xsd:element name="AverageCorrectionFactorInUse" type="AverageCorrectionFactorInUseType" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="VolumeDiameterCategoryBaseType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="VolumeDiameterCategoryType">
+				<xsd:attribute name="volumeDiameterTopPosition" type="xsd:nonNegativeInteger" use="optional">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="WarningType">
+		
+		<xsd:sequence>
+			<xsd:element name="WarningDistance" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="WarningDescription" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="SymbolUserID" type="xsd:string">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:simpleType name="AgencyType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Buyer">
+</xsd:enumeration>
+			<xsd:enumeration value="ForestOwner">
+</xsd:enumeration>
+			<xsd:enumeration value="LoggingContractor">
+</xsd:enumeration>
+			<xsd:enumeration value="LoggingOrganisation">
+</xsd:enumeration>
+			<xsd:enumeration value="MachineOwner">
+</xsd:enumeration>
+			<xsd:enumeration value="Other">
+</xsd:enumeration>
+			<xsd:enumeration value="Seller">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AreaUnitType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="ha">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="AuditorCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Third party">
+</xsd:enumeration>
+			<xsd:enumeration value="LoggingOrganisation">
+</xsd:enumeration>
+			<xsd:enumeration value="LoggingContractor">
+</xsd:enumeration>
+			<xsd:enumeration value="Other">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="BarkFunctionCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Consolidated">
+</xsd:enumeration>
+			<xsd:enumeration value="MatrixDiameter">
+</xsd:enumeration>
+			<xsd:enumeration value="MatrixDistanceDBH">
+</xsd:enumeration>
+			<xsd:enumeration value="NonLinearLatitude">
+</xsd:enumeration>
+			<xsd:enumeration value="Logistic">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="BioEnergyAdaptionType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Logging residues">
+</xsd:enumeration>
+			<xsd:enumeration value="Stumps">
+</xsd:enumeration>
+			<xsd:enumeration value="Logging residues and stumps">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="BoomPositioningCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Felling">
+</xsd:enumeration>
+			<xsd:enumeration value="Last log cut">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="BuckingCriteriaType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="No limit">
+</xsd:enumeration>
+			<xsd:enumeration value="Forbidden to buck the log even manually">
+</xsd:enumeration>
+			<xsd:enumeration value="The log is excluded from apportionment bucking,only bucking according to value allowed">
+</xsd:enumeration>
+			<xsd:enumeration value="Only logs bucked manually allowed">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ButtEndProfileExtrapolationFunctionCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Poikela 2007">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ButtEndProfileExtrapolationMethodType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="ExtrapolationFunction">
+</xsd:enumeration>
+			<xsd:enumeration value="ExtrapolationTable">
+</xsd:enumeration>
+			<xsd:enumeration value="Both">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CalibrationReasonType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Repair of measurement system">
+</xsd:enumeration>
+			<xsd:enumeration value="Change in weather conditions">
+</xsd:enumeration>
+			<xsd:enumeration value="Other reason">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CoordinateReferenceSystemType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="WGS84">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CountryCodeCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="ISO 3166">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CuttingReasonSpecificationType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Outside cutting window">
+</xsd:enumeration>
+			<xsd:enumeration value="Quality change">
+</xsd:enumeration>
+			<xsd:enumeration value="Unclassified log">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="CuttingReasonType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Automatic">
+</xsd:enumeration>
+			<xsd:enumeration value="Decay">
+</xsd:enumeration>
+			<xsd:enumeration value="Damage">
+</xsd:enumeration>
+			<xsd:enumeration value="Crook">
+</xsd:enumeration>
+			<xsd:enumeration value="Sweep">
+</xsd:enumeration>
+			<xsd:enumeration value="Grade break">
+</xsd:enumeration>
+			<xsd:enumeration value="Pulpwood grade">
+</xsd:enumeration>
+			<xsd:enumeration value="Top break">
+</xsd:enumeration>
+			<xsd:enumeration value="Spinning">
+</xsd:enumeration>
+			<xsd:enumeration value="Other manual">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DegreeType">
+		<xsd:restriction base="NonNegativeDecimal">
+			<xsd:maxInclusive value="360">
+</xsd:maxInclusive>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DeliveryEstimationMethodType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Manual estimation by operator">
+</xsd:enumeration>
+			<xsd:enumeration value="Scale">
+</xsd:enumeration>
+			<xsd:enumeration value="Estimation through Harvested Production message">
+</xsd:enumeration>
+			<xsd:enumeration value="Other">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DeliveryEstimationUnitType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Volume, m3sob">
+</xsd:enumeration>
+			<xsd:enumeration value="Volume, m3sub">
+</xsd:enumeration>
+			<xsd:enumeration value="Green mass, kg">
+</xsd:enumeration>
+			<xsd:enumeration value="Number of logs">
+</xsd:enumeration>
+			<xsd:enumeration value="Number of loads">
+</xsd:enumeration>
+			<xsd:enumeration value="Loose volume, m3">
+</xsd:enumeration>
+			<xsd:enumeration value="Solid volume including bark, branches and needles, m3">
+</xsd:enumeration>
+			<xsd:enumeration value="Solid volume of bundles (length*cross sectional area), m3">
+</xsd:enumeration>
+			<xsd:enumeration value="Number of bundles">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DensityCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Under bark">
+</xsd:enumeration>
+			<xsd:enumeration value="On bark">
+</xsd:enumeration>
+			<xsd:enumeration value="Not specified">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DiameterCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Over bark">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DiameterClassAdjustmentType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="DiameterClassAdjustment1">
+</xsd:enumeration>
+			<xsd:enumeration value="DiameterClassAdjustment2">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DiameterClassCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Top">
+</xsd:enumeration>
+			<xsd:enumeration value="Midpoint">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DiameterMeasurementCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Average">
+</xsd:enumeration>
+			<xsd:enumeration value="First">
+</xsd:enumeration>
+			<xsd:enumeration value="Second">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DiameterSectionUsageType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Buyer">
+</xsd:enumeration>
+			<xsd:enumeration value="Commercial">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DiameterType">
+		<xsd:restriction base="xsd:positiveInteger">
+</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DiameterUnitType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="mm">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="DistributionCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Number of logs">
+</xsd:enumeration>
+			<xsd:enumeration value="Volume of logs">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="EncodingMethodType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Base64">
+</xsd:enumeration>
+			<xsd:enumeration value="None">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ExtensionActionType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Copy">
+</xsd:enumeration>
+			<xsd:enumeration value="Ignore">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ForestCertificationType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="FSC">
+</xsd:enumeration>
+			<xsd:enumeration value="PEFC">
+</xsd:enumeration>
+			<xsd:enumeration value="Other">
+</xsd:enumeration>
+			<xsd:enumeration value="None">
+</xsd:enumeration>
+			<xsd:enumeration value="Not known">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="FormatFillStyleType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="SolidFill">
+</xsd:enumeration>
+			<xsd:enumeration value="TransparentFill">
+</xsd:enumeration>
+			<xsd:enumeration value="HorizontalFill">
+</xsd:enumeration>
+			<xsd:enumeration value="VerticalFill">
+</xsd:enumeration>
+			<xsd:enumeration value="UpwardDiagonalFill">
+</xsd:enumeration>
+			<xsd:enumeration value="DownwardDiagonalFill">
+</xsd:enumeration>
+			<xsd:enumeration value="CrossFill">
+</xsd:enumeration>
+			<xsd:enumeration value="DiagonalCrossFill">
+</xsd:enumeration>
+			<xsd:enumeration value="LightGrayFill">
+</xsd:enumeration>
+			<xsd:enumeration value="GrayFill">
+</xsd:enumeration>
+			<xsd:enumeration value="DarkGrayFill">
+</xsd:enumeration>
+			<xsd:enumeration value="HalfTransparentFill">
+</xsd:enumeration>
+			<xsd:enumeration value="DottedFill">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="FormatLineStyleType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Solid">
+</xsd:enumeration>
+			<xsd:enumeration value="Dash">
+</xsd:enumeration>
+			<xsd:enumeration value="Dot">
+</xsd:enumeration>
+			<xsd:enumeration value="Dash-Dot">
+</xsd:enumeration>
+			<xsd:enumeration value="Double solid">
+</xsd:enumeration>
+			<xsd:enumeration value="HashLine">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="GISCoordinateReferenceSystemType">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="EPSG:[1-9][0-9][0-9][0-9][0-9]*">
+</xsd:pattern>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="KeyType">
+		<xsd:restriction base="xsd:unsignedLong">
+</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LanguageCodeType">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="[a-z][a-z][a-z]">
+</xsd:pattern>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LatitudeCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="North">
+</xsd:enumeration>
+			<xsd:enumeration value="South">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LatitudeLongitudeValueType">
+		<xsd:restriction base="xsd:decimal">
+			<xsd:minInclusive value="0">
+</xsd:minInclusive>
+			<xsd:maxInclusive value="180">
+</xsd:maxInclusive>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LengthClassAdjustmentType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="LengthClassAdjustment1">
+</xsd:enumeration>
+			<xsd:enumeration value="LengthClassAdjustment2">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LengthUnitType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="cm">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LimitationCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="No limitation">
+</xsd:enumeration>
+			<xsd:enumeration value="Total number, quantity per product">
+</xsd:enumeration>
+			<xsd:enumeration value="Total volume, m3 per product">
+</xsd:enumeration>
+			<xsd:enumeration value="Number per diameter class per product">
+</xsd:enumeration>
+			<xsd:enumeration value="Volume per diameter class per product">
+</xsd:enumeration>
+			<xsd:enumeration value="Number per length class per product">
+</xsd:enumeration>
+			<xsd:enumeration value="Volume per length class per product">
+</xsd:enumeration>
+			<xsd:enumeration value="Number per cell (log size class) per product and tree species">
+</xsd:enumeration>
+			<xsd:enumeration value="Volume per cell (log size class) per product and tree species">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LimitationResultType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="No action">
+</xsd:enumeration>
+			<xsd:enumeration value="Production is stopped, forbidden to buck logs, only manually bucked logs allowed">
+</xsd:enumeration>
+			<xsd:enumeration value="Production is stopped, forbidden to buck logs including manual bucking of logs">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LoadGreenMassMethodType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Loading">
+</xsd:enumeration>
+			<xsd:enumeration value="Unloading">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LoadNumberCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Estimated number of logs">
+</xsd:enumeration>
+			<xsd:enumeration value="Number of bundles">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LoadVolumeCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Volume, m3sob">
+</xsd:enumeration>
+			<xsd:enumeration value="Volume, m3sub">
+</xsd:enumeration>
+			<xsd:enumeration value="Loose volume, m3">
+</xsd:enumeration>
+			<xsd:enumeration value="Solid volume including bark, branches and needles, m3">
+</xsd:enumeration>
+			<xsd:enumeration value="Solid volume of bundles (length*cross sectional area), m3">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LongitudeCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="East">
+</xsd:enumeration>
+			<xsd:enumeration value="West">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LogDiameterCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Top ob">
+</xsd:enumeration>
+			<xsd:enumeration value="Top ub">
+</xsd:enumeration>
+			<xsd:enumeration value="Mid ob">
+</xsd:enumeration>
+			<xsd:enumeration value="Mid ub">
+</xsd:enumeration>
+			<xsd:enumeration value="Butt ob">
+</xsd:enumeration>
+			<xsd:enumeration value="Butt ub">
+</xsd:enumeration>
+			<xsd:enumeration value="Mid HKS ob">
+</xsd:enumeration>
+			<xsd:enumeration value="Mid HKS ub">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LogLengthType">
+		<xsd:restriction base="SingleDigitNonNegativeDecimal">
+</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LogMeasurementCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Machine">
+</xsd:enumeration>
+			<xsd:enumeration value="Operator">
+</xsd:enumeration>
+			<xsd:enumeration value="Auditor">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LogBunchVolumeCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="NetVolOb">
+</xsd:enumeration>
+			<xsd:enumeration value="NetVolUb">
+</xsd:enumeration>
+			<xsd:enumeration value="GrossVolOb">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LogVolumeCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="m3 (price)">
+</xsd:enumeration>
+			<xsd:enumeration value="m3sob">
+</xsd:enumeration>
+			<xsd:enumeration value="m3sub">
+</xsd:enumeration>
+			<xsd:enumeration value="m3 (price) Estimated">
+</xsd:enumeration>
+			<xsd:enumeration value="m3sobEstimated">
+</xsd:enumeration>
+			<xsd:enumeration value="m3subEstimated">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="MachineCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Harvester">
+</xsd:enumeration>
+			<xsd:enumeration value="Forwarder">
+</xsd:enumeration>
+			<xsd:enumeration value="FellerBuncher">
+</xsd:enumeration>
+			<xsd:enumeration value="Harwarder">
+</xsd:enumeration>
+			<xsd:enumeration value="Bundler">
+</xsd:enumeration>
+			<xsd:enumeration value="Scarifier">
+</xsd:enumeration>
+			<xsd:enumeration value="Skidder">
+</xsd:enumeration>
+			<xsd:enumeration value="Yarder">
+</xsd:enumeration>
+			<xsd:enumeration value="Other">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="MassType">
+		<xsd:restriction base="NonNegativeDecimal">
+</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="MessageCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="bpr">
+</xsd:enumeration>
+			<xsd:enumeration value="bqc">
+</xsd:enumeration>
+			<xsd:enumeration value="boi">
+</xsd:enumeration>
+			<xsd:enumeration value="din">
+</xsd:enumeration>
+			<xsd:enumeration value="ena">
+</xsd:enumeration>
+			<xsd:enumeration value="env">
+</xsd:enumeration>
+			<xsd:enumeration value="fdi">
+</xsd:enumeration>
+			<xsd:enumeration value="foi">
+</xsd:enumeration>
+			<xsd:enumeration value="fpr">
+</xsd:enumeration>
+			<xsd:enumeration value="fqc">
+</xsd:enumeration>
+			<xsd:enumeration value="hpd">
+</xsd:enumeration>
+			<xsd:enumeration value="hpr">
+</xsd:enumeration>
+			<xsd:enumeration value="hqc">
+</xsd:enumeration>
+			<xsd:enumeration value="ogi">
+</xsd:enumeration>
+			<xsd:enumeration value="ogr">
+</xsd:enumeration>
+			<xsd:enumeration value="oin">
+</xsd:enumeration>
+			<xsd:enumeration value="mcl">
+</xsd:enumeration>
+			<xsd:enumeration value="mom">
+</xsd:enumeration>
+			<xsd:enumeration value="pin">
+</xsd:enumeration>
+			<xsd:enumeration value="soi">
+</xsd:enumeration>
+			<xsd:enumeration value="spi">
+</xsd:enumeration>
+			<xsd:enumeration value="spr">
+</xsd:enumeration>
+			<xsd:enumeration value="udi">
+</xsd:enumeration>
+			<xsd:enumeration value="thp">
+</xsd:enumeration>
+			<xsd:enumeration value="vti">
+</xsd:enumeration>
+			<xsd:enumeration value="yoi">
+</xsd:enumeration>
+			<xsd:enumeration value="ypr">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="NonNegativeDecimal">
+		<xsd:restriction base="xsd:decimal">
+			<xsd:minInclusive value="0">
+</xsd:minInclusive>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="OrderType">
+		<xsd:restriction base="xsd:positiveInteger">
+</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="PositiveDecimal">
+		<xsd:restriction base="xsd:decimal">
+			<xsd:minExclusive value="0">
+</xsd:minExclusive>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ProcessingCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="SingleTreeProcessing">
+</xsd:enumeration>
+			<xsd:enumeration value="MultiTreeProcessing">
+</xsd:enumeration>
+			<xsd:enumeration value="SingleTreeFelling">
+</xsd:enumeration>
+			<xsd:enumeration value="MultiTreeFelling">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ProductConditionType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Buck always">
+</xsd:enumeration>
+			<xsd:enumeration value="Buck butt-log only">
+</xsd:enumeration>
+			<xsd:enumeration value="Do not buck butt log">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="QualityIndicatorGNSSType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Invalid">
+</xsd:enumeration>
+			<xsd:enumeration value="Normal">
+</xsd:enumeration>
+			<xsd:enumeration value="DGPS">
+</xsd:enumeration>
+			<xsd:enumeration value="PPS">
+</xsd:enumeration>
+			<xsd:enumeration value="RTK Fix">
+</xsd:enumeration>
+			<xsd:enumeration value="RTK Float">
+</xsd:enumeration>
+			<xsd:enumeration value="PPP RTK">
+</xsd:enumeration>
+			<xsd:enumeration value="Custom">
+</xsd:enumeration>
+			<xsd:enumeration value="Estimated">
+</xsd:enumeration>
+			<xsd:enumeration value="Manual">
+</xsd:enumeration>
+			<xsd:enumeration value="Simulated">
+</xsd:enumeration>
+			<xsd:enumeration value="PPP RTK Fix">
+</xsd:enumeration>
+			<xsd:enumeration value="PPP RTK Float">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="RandomControlStemMeasurementModeType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Both diameters and lengths registered">
+</xsd:enumeration>
+			<xsd:enumeration value="Only lengths registered">
+</xsd:enumeration>
+			<xsd:enumeration value="No lengths or diameters registered in caliper">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="RandomControlStemRejectedReasonType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Not rejected">
+</xsd:enumeration>
+			<xsd:enumeration value="Stem defect">
+</xsd:enumeration>
+			<xsd:enumeration value="Out of reach">
+</xsd:enumeration>
+			<xsd:enumeration value="Part of stem mixed up with other stems">
+</xsd:enumeration>
+			<xsd:enumeration value="Poor weather">
+</xsd:enumeration>
+			<xsd:enumeration value="Bucking system error">
+</xsd:enumeration>
+			<xsd:enumeration value="Caliper broken">
+</xsd:enumeration>
+			<xsd:enumeration value="Other reasons not defined">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="RandomControlStemSelectionType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Randomly selected stem">
+</xsd:enumeration>
+			<xsd:enumeration value="Manually by operator selected stem">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="RandomFrequencyCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Number of stems">
+</xsd:enumeration>
+			<xsd:enumeration value="Time">
+</xsd:enumeration>
+			<xsd:enumeration value="Volume">
+</xsd:enumeration>
+			<xsd:enumeration value="Not in use">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ReasonReversingType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Manual reversing">
+</xsd:enumeration>
+			<xsd:enumeration value="Predelimbing">
+</xsd:enumeration>
+			<xsd:enumeration value="Re-bucking">
+</xsd:enumeration>
+			<xsd:enumeration value="Stuck-control">
+</xsd:enumeration>
+			<xsd:enumeration value="Other">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ReceiverPositionType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Base machine">
+</xsd:enumeration>
+			<xsd:enumeration value="Attachment center">
+</xsd:enumeration>
+			<xsd:enumeration value="Product position">
+</xsd:enumeration>
+			<xsd:enumeration value="Other">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="RestrictedStringType">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="([\S-[%?&lt;&gt;:&quot;'/\\|*+]])+( ([\S-[%?&lt;&gt;:&quot;'/\\|*+]])+)*">
+</xsd:pattern>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="WeightUnitType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="kg">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ScaleCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Crane tip scale">
+</xsd:enumeration>
+			<xsd:enumeration value="Load bearer scale">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="SingleDigitNonNegativeDecimal">
+		<xsd:restriction base="NonNegativeDecimal">
+			<xsd:fractionDigits value="1" fixed="true">
+</xsd:fractionDigits>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="StanForD2010DateTimeType">
+		<xsd:restriction base="xsd:dateTime">
+			<xsd:pattern value=".+T.+[+-].+">
+</xsd:pattern>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="StanForD2010VersionType">
+		<xsd:restriction base="xsd:string">
+			<xsd:pattern value="[1-9][0-9]*\.[0-9]+">
+</xsd:pattern>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="StemCodeGroupType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Nature">
+</xsd:enumeration>
+			<xsd:enumeration value="Culture">
+</xsd:enumeration>
+			<xsd:enumeration value="Special harvesting">
+</xsd:enumeration>
+			<xsd:enumeration value="Other">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="StemDiameterCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="DBH">
+</xsd:enumeration>
+			<xsd:enumeration value="ReferenceDiameter">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="StemLoadEstimationMethodType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Manual estimation by operator">
+</xsd:enumeration>
+			<xsd:enumeration value="Scale">
+</xsd:enumeration>
+			<xsd:enumeration value="Estimation through Harvested Production message">
+</xsd:enumeration>
+			<xsd:enumeration value="Other">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="StemLoadEstimationUnitType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Volume, m3sob">
+</xsd:enumeration>
+			<xsd:enumeration value="Volume, m3sub">
+</xsd:enumeration>
+			<xsd:enumeration value="Green mass, kg">
+</xsd:enumeration>
+			<xsd:enumeration value="Number of stems">
+</xsd:enumeration>
+			<xsd:enumeration value="Solid volume including bark, branches and needles, m3">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="StemLoadVolumeCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Volume, m3sob">
+</xsd:enumeration>
+			<xsd:enumeration value="Volume, m3sub">
+</xsd:enumeration>
+			<xsd:enumeration value="Solid volume including bark, branches and needles, m3">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="StemMeasurementCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Machine">
+</xsd:enumeration>
+			<xsd:enumeration value="Operator">
+</xsd:enumeration>
+			<xsd:enumeration value="Auditor">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="StemVolumeCategoryStemVolumeTableInstructionType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="m3sobEstimated">
+</xsd:enumeration>
+			<xsd:enumeration value="m3subEstimated">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="StemVolumeCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="m3sob">
+</xsd:enumeration>
+			<xsd:enumeration value="m3sub">
+</xsd:enumeration>
+			<xsd:enumeration value="m3sobEstimated">
+</xsd:enumeration>
+			<xsd:enumeration value="m3subEstimated">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="TrackingCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Points tracking">
+</xsd:enumeration>
+			<xsd:enumeration value="Lines tracking">
+</xsd:enumeration>
+			<xsd:enumeration value="Polygons tracking">
+</xsd:enumeration>
+			<xsd:enumeration value="Tracking not required">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="UserIDType">
+		<xsd:restriction base="RestrictedStringType">
+</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="VolumeDiameterAdjustmentType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Measured diameter in mm">
+</xsd:enumeration>
+			<xsd:enumeration value="Measured diameter rounded downwards to cm">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="VolumeDiameterCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="All diameters (solid volume)">
+</xsd:enumeration>
+			<xsd:enumeration value="Top">
+</xsd:enumeration>
+			<xsd:enumeration value="Mid">
+</xsd:enumeration>
+			<xsd:enumeration value="Calculated Norwegian mid">
+</xsd:enumeration>
+			<xsd:enumeration value="Calculated Estonian mid">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="VolumeLengthCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Physical length cm">
+</xsd:enumeration>
+			<xsd:enumeration value="Length as defined in LengthClasses">
+</xsd:enumeration>
+			<xsd:enumeration value="Rounded downwards to nearest dm-module">
+</xsd:enumeration>
+			<xsd:enumeration value="Rounded to nearest mid-dm">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="VolumeType">
+		<xsd:restriction base="NonNegativeDecimal">
+</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="VolumeUnitType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="m3">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:attributeGroup name="CoordinatesAttributeGroup">
+		<xsd:attribute name="receiverPosition" type="ReceiverPositionType" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="qualityIndicatorGNSS" type="QualityIndicatorGNSSType" use="optional">
+			
+		</xsd:attribute>
+		<xsd:attribute name="noOfSatellitesInUseGNSS" type="xsd:nonNegativeInteger" use="optional">
+			
+		</xsd:attribute>
+		<xsd:attribute name="accuracyCoordinate" type="NonNegativeDecimal" use="optional">
+			
+		</xsd:attribute>
+	</xsd:attributeGroup>
+	<xsd:attributeGroup name="MessageAttributeGroup">
+		<xsd:attribute name="areaUnit" type="AreaUnitType" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="diameterUnit" type="DiameterUnitType" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="lengthUnit" type="LengthUnitType" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="volumeUnit" type="VolumeUnitType" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="weightUnit" type="WeightUnitType" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="version" type="StanForD2010VersionType" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="versionDate" type="xsd:date" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="coordinateReferenceSystem" type="CoordinateReferenceSystemType" use="required">
+			
+		</xsd:attribute>
+	</xsd:attributeGroup>
+</xsd:schema>

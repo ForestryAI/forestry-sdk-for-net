@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Forwarding Object Instruction XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				ForwardingObjectInstruction_V4p1_no_documentation.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1_no_documentation.xsd">
+</xsd:include>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="ForwardingObjectInstruction" type="ForwardingObjectInstructionType">
+		
+		<xsd:unique name="UniqueObjectUserID">
+			<xsd:selector xpath="sfd:ObjectDefinition">
+</xsd:selector>
+			<xsd:field xpath="sfd:ObjectUserID">
+</xsd:field>
+		</xsd:unique>
+		<xsd:key name="LocationKeyLocationDefinition">
+			<xsd:selector xpath="sfd:LocationDefinition">
+</xsd:selector>
+			<xsd:field xpath="sfd:LocationUserID">
+</xsd:field>
+		</xsd:key>
+		<xsd:keyref name="LocationKeyRefLocationUserIDs" refer="LocationKeyLocationDefinition">
+			<xsd:selector xpath="sfd:ObjectDefinition/sfd:LocationUserIDs/sfd:LocationUserID">
+</xsd:selector>
+			<xsd:field xpath=".">
+</xsd:field>
+		</xsd:keyref>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="ObjectDefinitionForwardingObjectInstructionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="ObjectDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="DeliveryUserIDs" type="DeliveryUserIDsType">
+						
+					</xsd:element>
+					<xsd:element name="LocationUserIDs" type="LocationUserIDsType" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="DensityAdjustments" type="DensityAdjustmentsType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="DeliveryUserIDsType">
+		
+		<xsd:sequence>
+			<xsd:element name="DeliveryUserID" type="DeliveryUserIDType" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="DeliveryUserIDType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="UserIDType">
+				<xsd:attribute name="textToMachine" type="xsd:string">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="DensityAdjustmentsType">
+		
+		<xsd:sequence>
+			<xsd:element name="DeliveryUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="DensityAdjustment" type="xsd:decimal" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ForwardingObjectInstructionType">
+		
+		<xsd:sequence>
+			<xsd:element name="ForwardingObjectInstructionHeader" type="MessageHeaderType">
+				
+			</xsd:element>
+			<xsd:element name="ObjectDefinition" type="ObjectDefinitionForwardingObjectInstructionType">
+				
+				<xsd:unique name="UniqueSubObjectUserID">
+					<xsd:selector xpath="sfd:SubObject">
+</xsd:selector>
+					<xsd:field xpath="sfd:SubObjectUserID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:key name="DeliveryKeyDeliveryUserIDs">
+					<xsd:selector xpath="sfd:DeliveryUserIDs/sfd:DeliveryUserID">
+</xsd:selector>
+					<xsd:field xpath=".">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="DeliveryKeyRefDensityAdjustments" refer="DeliveryKeyDeliveryUserIDs">
+					<xsd:selector xpath="sfd:DensityAdjustments">
+</xsd:selector>
+					<xsd:field xpath="sfd:DeliveryUserID">
+</xsd:field>
+				</xsd:keyref>
+			</xsd:element>
+			<xsd:element name="LocationDefinition" type="LocationDefinitionType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="foi">
+			
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup">
+</xsd:attributeGroup>
+	</xsd:complexType>
+	<xsd:complexType name="LocationDefinitionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CommonLocationDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="ModificationDate" type="ModificationDateType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="LocationUserIDsType">
+		
+		<xsd:sequence>
+			<xsd:element name="LocationUserID" type="UserIDType" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="modificationRestricted" type="xsd:boolean" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+</xsd:schema>

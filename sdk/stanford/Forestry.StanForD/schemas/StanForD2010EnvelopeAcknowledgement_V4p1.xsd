@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  StanForD2010 Envelope Acknowledgement XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				StanForD2010EnvelopeAcknowledgement_V4p1.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010" targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1.xsd"/>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="StanForD2010EnvelopeAcknowledgement" type="StanForD2010EnvelopeAcknowledgementType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:Description>The root element of the StanForD2010 envelope acknowledgement message</doc:Description>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:unique name="UniqueTransmissionID">
+			<xsd:selector xpath="EnvelopeTransmissionInfo"/>
+			<xsd:field xpath="TransmissionID"/>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="EnvelopeTransmissionInfoType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.4</doc:VersionCreated>
+				<doc:Graph>EnvelopeTransmissionInfoTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="TransmissionID" type="UserIDType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Unique identifier that can be used in registering and following envelope transmissions.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="TransmissionTime" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Transmission time registered in sender</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="TransmissionSender" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>TransmissionSender could be business sender but the value of this element could be also: transmission appliication or machine that is sending the message, the representative company of the business sender,...  </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="TransmissionReceiver" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>TransmissionReceiver could be business receiver but the value of this element could be also: transmssion appliication or machine that is receiving the message, the representative company of the business sender,... </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="TransmissionStatus" type="StanForD2010AcknowledgementStatusType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.4</doc:VersionCreated>
+						<doc:Unit>list</doc:Unit>
+						<doc:Description>Attribute tells us the status of the acknowledgement. Enumeration list of status of StanForD 2010 acknowledge, allowed values are: "Success", "Failure".</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="TransmissionError" type="xsd:string" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.4</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>If the TransmissionStatus is set to "Failure" then it is possible to store the corresponding errors here</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DocumentName" type="xsd:string" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>The names of original StanForD2010 messages included in envelope.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="AttachmentName" type="xsd:string" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>The names of attachment files included in envelope.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="StanForD2010EnvelopeAcknowledgementHeaderType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.4</doc:VersionCreated>
+				<doc:Graph>StanForD2010EnvelopeAcknowledgementHeaderTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="AcknowledgementID" type="UserIDType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.4</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>Acknowledgement identity, set by the organisation sending the acknowledge.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="AcknowledgementDate" type="StanForD2010DateTimeType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.4</doc:VersionCreated>
+						<doc:Unit>yyyy-mm-ddThh:mm:ss[+|-]hh:mm</doc:Unit>
+						<doc:Description>Date and time when acknowledgement is created. Time stamp must have the following times registered: local time ±offset from UTC.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="AcknowledgementSender" type="xsd:string">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.4</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>AcknowledgementSender is  transmission appliication that recieved StanForD envelope.  </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="AcknowledgementReciever" type="xsd:string" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.4</doc:VersionCreated>
+						<doc:Unit>free text</doc:Unit>
+						<doc:Description>AcknowledgementReciever is  appliication recieving acknowledgment.  </doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="StanForD2010EnvelopeAcknowledgementType">
+		<xsd:annotation>
+			<xsd:documentation>
+				<doc:VersionCreated>3.4</doc:VersionCreated>
+				<doc:Graph>StanForD2010EnvelopeAcknowledgementTypegraph.png</doc:Graph>
+			</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="StanForD2010EnvelopeAcknowledgementHeader" type="StanForD2010EnvelopeAcknowledgementHeaderType">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.4</doc:VersionCreated>
+						<doc:Description>General information for message</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="EnvelopeTransmissionInfo" type="EnvelopeTransmissionInfoType" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>3.4</doc:VersionCreated>
+						<doc:Description>The unique TransmissionId of original StanForD2010 envelope being acknowledged. Following elements must be identical with original envelope being acknowledged: TransmissionID, TransmissionTime, TransmissionSender, TransmissionReciever, DocumentName, AttachmentName.</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				<xsd:annotation>
+					<xsd:documentation>
+						<doc:VersionCreated>1.0</doc:VersionCreated>
+						<doc:Description>Extension element can include whatever data the users want. The only requirement is that it is well-formed XML i.e. it is tagged</doc:Description>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="ena">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>1.0</doc:VersionCreated>
+					<doc:Unit>list</doc:Unit>
+					<doc:Description>Enumeration list of file extensions of StanForD 2010 messages: Allowed value in StanForD2010 Envelope Acknowledgemen message is: "ena"</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="version" type="StanForD2010VersionType" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.0</doc:VersionCreated>
+					<doc:Unit>version number</doc:Unit>
+					<doc:Description>The version number of the message in format:  "major"."minor", where "major" is a sequential number of the major version (start from 1) and "minor" is a sequential number of the minor version.></doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="versionDate" type="xsd:date" use="required">
+			<xsd:annotation>
+				<xsd:documentation>
+					<doc:VersionCreated>2.1</doc:VersionCreated>
+					<doc:Unit>yyyy-mm-dd</doc:Unit>
+					<doc:Description>Date of version</doc:Description>
+				</xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:simpleType name="StanForD2010AcknowledgementStatusType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Success"/>
+			<xsd:enumeration value="Failure"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Forwarding Delivery instruction XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				ForwardingDeliveryInstruction_V4p1_no_documentation.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1_no_documentation.xsd">
+</xsd:include>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="ForwardingDeliveryInstruction" type="ForwardingDeliveryInstructionType">
+		
+		<xsd:unique name="UniqueProductUserID">
+			<xsd:selector xpath="sfd:ProductDefinition">
+</xsd:selector>
+			<xsd:field xpath="sfd:ProductUserID">
+</xsd:field>
+		</xsd:unique>
+		<xsd:unique name="UniqueDeliveryDefinitionUserID">
+			<xsd:selector xpath="sfd:DeliveryDefinition">
+</xsd:selector>
+			<xsd:field xpath="sfd:DeliveryUserID">
+</xsd:field>
+		</xsd:unique>
+		<xsd:key name="SpeciesGroupKeySpeciesGroupDefinition">
+			<xsd:selector xpath="sfd:SpeciesGroupDefinition">
+</xsd:selector>
+			<xsd:field xpath="sfd:SpeciesGroupUserID">
+</xsd:field>
+		</xsd:key>
+		<xsd:keyref name="SpeciesGroupKeyRefProductDefinition" refer="SpeciesGroupKeySpeciesGroupDefinition">
+			<xsd:selector xpath="sfd:ProductDefinition/sfd:ClassifiedProductDefinition">
+</xsd:selector>
+			<xsd:field xpath="sfd:SpeciesGroupUserID">
+</xsd:field>
+		</xsd:keyref>
+		<xsd:key name="ProductKeyProductDefinition">
+			<xsd:selector xpath="sfd:ProductDefinition">
+</xsd:selector>
+			<xsd:field xpath="sfd:ProductUserID">
+</xsd:field>
+		</xsd:key>
+		<xsd:keyref name="ProductUserIDRefProductDefinition" refer="ProductKeyProductDefinition">
+			<xsd:selector xpath="sfd:DeliveryDefinition/sfd:ProductUserID">
+</xsd:selector>
+			<xsd:field xpath=".">
+</xsd:field>
+		</xsd:keyref>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="ClassifiedProductDefinitionForwardingDeliveryInstructionType">
+		
+		<xsd:sequence>
+			<xsd:element name="ProductName" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="ModificationDate" type="ModificationDateType">
+				
+			</xsd:element>
+			<xsd:element name="ProductInfo" type="InfoType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ProductVersion" type="VersionType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ProductBuyer" type="ContactInformationType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ProductClass" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="LoggingOrganisation" type="LoggingOrganisationType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ProductDestination" type="ContactInformationType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="ProductGroupName" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="StemTypeCode" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ProductPresentationOrder" type="xsd:positiveInteger" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ProductDescription" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="SpeciesGroupUserID" type="UserIDType" nillable="false">
+				
+			</xsd:element>
+			<xsd:element name="ProductCreationDate" type="StanForD2010DateTimeType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="DeliveryDefinitionForwardingDeliveryInstructionType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="CommonDeliveryDefinitionType">
+				<xsd:sequence>
+					<xsd:element name="ProductUserID" type="UserIDType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ForwardingDeliveryInstructionType">
+		
+		<xsd:sequence>
+			<xsd:element name="ForwardingDeliveryInstructionHeader" type="MessageHeaderType">
+				
+			</xsd:element>
+			<xsd:element name="SpeciesGroupDefinition" type="CommonSpeciesGroupDefinitionType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="ProductDefinition" type="ProductDefinitionForwardingDeliveryInstructionType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="DeliveryDefinition" type="DeliveryDefinitionForwardingDeliveryInstructionType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="fdi">
+			
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup">
+</xsd:attributeGroup>
+	</xsd:complexType>
+	<xsd:complexType name="ProductDefinitionForwardingDeliveryInstructionType">
+		
+		<xsd:sequence>
+			<xsd:element name="ProductUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:choice>
+				<xsd:element name="ClassifiedProductDefinition" type="ClassifiedProductDefinitionForwardingDeliveryInstructionType">
+					
+				</xsd:element>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+</xsd:schema>

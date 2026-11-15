@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Style Definition XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				StyleDefinition_V4p1_no_documentation.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1_no_documentation.xsd">
+</xsd:include>
+	<xsd:element name="DesignInstruction" type="DesignInstructionType">
+		
+	</xsd:element>
+	<xsd:complexType name="DesignDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="StyleDefinition" type="StyleDefinitionType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="SymbolDefinition" type="SymbolDefinitionType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="DesignInstructionType">
+		
+		<xsd:sequence>
+			<xsd:element name="DesignInstructionHeader" type="MessageHeaderType">
+				
+			</xsd:element>
+			<xsd:element name="DesignDefinition" type="DesignDefinitionType">
+				
+				<xsd:unique name="UniqueStyleUserID">
+					<xsd:selector xpath="sfd:StyleDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:StyleUserID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:unique name="UniqueSymbolUserID">
+					<xsd:selector xpath="sfd:SymbolDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:SymbolUserID">
+</xsd:field>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="din">
+			
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup">
+</xsd:attributeGroup>
+	</xsd:complexType>
+	<xsd:complexType name="EmbeddedType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="pictureFormat" type="PictureFormatType" use="required">
+					
+				</xsd:attribute>
+				<xsd:attribute name="encodingMethod" type="EncodingMethodType" use="required">
+					
+				</xsd:attribute>
+				<xsd:attribute name="attachmentName" type="xsd:string">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="StyleDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="StyleUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="StyleName">
+				
+			</xsd:element>
+			<xsd:element name="StyleInfo" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="StyleVersion" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="StyleGroup" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ModificationDate" type="ModificationDateType">
+				
+			</xsd:element>
+			<xsd:element name="Color" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="LineStyle" type="LineStyleType">
+				
+			</xsd:element>
+			<xsd:element name="LineThickness" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="FillStyle" type="FillStyleType">
+				
+			</xsd:element>
+			<xsd:element name="FillOpacity" type="FillOpacityType">
+				
+			</xsd:element>
+			<xsd:element name="TopRendering" type="TopRenderingType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SymbolDefinitionType">
+		
+		<xsd:sequence>
+			<xsd:element name="SymbolUserID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="SymbolName">
+				
+			</xsd:element>
+			<xsd:element name="SymbolInfo" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="SymbolVersion" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="SymbolGroup" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="ModificationDate" type="ModificationDateType">
+				
+			</xsd:element>
+			<xsd:element name="SymbolSize" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="EmbeddedSymbol" type="EmbeddedType">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="TopRenderingType">
+		
+		<xsd:sequence>
+			<xsd:element name="TopRenderingColor" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="TopRenderingLineStyle" type="LineStyleType">
+				
+			</xsd:element>
+			<xsd:element name="TopRenderingLineThickness" type="xsd:positiveInteger">
+				
+			</xsd:element>
+			<xsd:element name="TopRenderingFillStyle" type="FillStyleType">
+				
+			</xsd:element>
+			<xsd:element name="TopRenderingFillOpacity" type="FillOpacityType">
+				
+			</xsd:element>
+			<xsd:element name="TopRenderingOrder" type="xsd:positiveInteger" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:simpleType name="FillOpacityType">
+		<xsd:restriction base="xsd:nonNegativeInteger">
+			<xsd:maxInclusive value="100">
+</xsd:maxInclusive>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="FillStyleType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="SolidFill">
+</xsd:enumeration>
+			<xsd:enumeration value="TransparentFill">
+</xsd:enumeration>
+			<xsd:enumeration value="HorizontalFill">
+</xsd:enumeration>
+			<xsd:enumeration value="VerticalFill">
+</xsd:enumeration>
+			<xsd:enumeration value="UpwardDiagonalFill">
+</xsd:enumeration>
+			<xsd:enumeration value="DownwardDiagonalFill">
+</xsd:enumeration>
+			<xsd:enumeration value="CrossFill">
+</xsd:enumeration>
+			<xsd:enumeration value="DiagonalCrossFill">
+</xsd:enumeration>
+			<xsd:enumeration value="LightGrayFill">
+</xsd:enumeration>
+			<xsd:enumeration value="GrayFill">
+</xsd:enumeration>
+			<xsd:enumeration value="DarkGrayFill">
+</xsd:enumeration>
+			<xsd:enumeration value="HalfTransparentFill">
+</xsd:enumeration>
+			<xsd:enumeration value="DottedFill">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="LineStyleType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Solid">
+</xsd:enumeration>
+			<xsd:enumeration value="Dash">
+</xsd:enumeration>
+			<xsd:enumeration value="Dot">
+</xsd:enumeration>
+			<xsd:enumeration value="Dash-Dot">
+</xsd:enumeration>
+			<xsd:enumeration value="Double solid">
+</xsd:enumeration>
+			<xsd:enumeration value="HashLine">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="PictureFormatType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="PNG">
+</xsd:enumeration>
+			<xsd:enumeration value="SVG">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

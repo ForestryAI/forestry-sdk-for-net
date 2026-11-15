@@ -8,4 +8,14 @@
     <PackageTags>Forestry StanForD</PackageTags>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\..\..\deserialize\Forestry.Deserialize.Xml\src\Forestry.Deserialize.Xml.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Forestry.StanForD.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
 </Project>

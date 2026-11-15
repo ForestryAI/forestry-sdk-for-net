@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  StanForD2010 Envelope XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				StanForD2010Envelope_V4p1_no_documentation.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1_no_documentation.xsd">
+</xsd:include>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="StanForD2010Envelope" type="StanForD2010EnvelopeType">
+		
+		<xsd:unique name="UniqueTransmissionID">
+			<xsd:selector xpath="sfd:StanForD2010EnvelopeHeader/sfd:TransmissionInfo">
+</xsd:selector>
+			<xsd:field xpath="sfd:TransmissionID">
+</xsd:field>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="AttachmentType">
+		
+		<xsd:sequence>
+			<xsd:choice>
+				<xsd:element name="EmbeddedAttachment" type="EmbeddedType">
+					
+				</xsd:element>
+				<xsd:element name="ExternalAttachment" type="ExternalDocumentType">
+					
+				</xsd:element>
+			</xsd:choice>
+			<xsd:element name="AttachmentName" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="SchemaName" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Signature" type="SignatureType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="CompressionType">
+		
+		<xsd:sequence>
+			<xsd:element name="CompressionCategory" type="CompressionCategoryType">
+				
+			</xsd:element>
+			<xsd:element name="CompressionSoftware" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="MessageType">
+		
+		<xsd:sequence>
+			<xsd:choice>
+				<xsd:element name="EmbeddedDocument" type="EmbeddedType">
+					
+				</xsd:element>
+				<xsd:element name="ExternalDocument" type="ExternalDocumentType">
+					
+				</xsd:element>
+			</xsd:choice>
+			<xsd:element name="DocumentName" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="SchemaName" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Signature" type="SignatureType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="EmbeddedType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="encodingMethod" use="required">
+					
+					<xsd:simpleType>
+						<xsd:restriction base="xsd:string">
+							<xsd:enumeration value="Base64">
+</xsd:enumeration>
+							<xsd:enumeration value="None">
+</xsd:enumeration>
+						</xsd:restriction>
+					</xsd:simpleType>
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="ExternalDocumentType">
+		
+		<xsd:sequence>
+			<xsd:element name="DocumentLocation" type="xsd:string" nillable="true">
+				
+			</xsd:element>
+			<xsd:element name="Compression" type="CompressionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SignatureType">
+		
+		<xsd:sequence>
+			<xsd:any processContents="lax">
+</xsd:any>
+		</xsd:sequence>
+		<xsd:attribute name="signatureCategory" type="SignatureCategoryType" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="StanForD2010EnvelopeHeaderType">
+		
+		<xsd:sequence>
+			<xsd:element name="TransmissionInfo" type="TransmissionInfoType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="BusinessSender" type="ContactInformationType">
+				
+			</xsd:element>
+			<xsd:element name="BusinessReceiver" type="ContactInformationType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="StanForD2010EnvelopeType">
+		
+		<xsd:sequence>
+			<xsd:element name="StanForD2010EnvelopeHeader" type="StanForD2010EnvelopeHeaderType">
+				
+			</xsd:element>
+			<xsd:element name="StanForD2010Message" type="StanForD2010MessageType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="env">
+			
+		</xsd:attribute>
+		<xsd:attribute name="version" type="StanForD2010VersionType" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="versionDate" type="xsd:date" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="StanForD2010MessageType">
+		
+		<xsd:sequence>
+			<xsd:element name="MessageDocument" type="MessageType">
+				
+			</xsd:element>
+			<xsd:element name="MessageAttachment" type="AttachmentType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageCategory" type="MessageCategoryType" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="TransmissionInfoType">
+		
+		<xsd:sequence>
+			<xsd:element name="TransmissionID" type="UserIDType">
+				
+			</xsd:element>
+			<xsd:element name="TransmissionTime" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+			<xsd:element name="TransmissionSender" type="xsd:string">
+				
+			</xsd:element>
+			<xsd:element name="TransmissionReceiver" type="xsd:string" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:simpleType name="CompressionCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="ZIP/DEFLATE">
+</xsd:enumeration>
+			<xsd:enumeration value="Not defined">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="SignatureCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="XML Signature">
+</xsd:enumeration>
+			<xsd:enumeration value="Other">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+</xsd:schema>

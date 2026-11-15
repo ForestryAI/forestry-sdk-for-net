@@ -1,0 +1,434 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2020 sp1 (x64) (http://www.altova.com) by Juha-Antti Sorsa (Metsäteho Oy) -->
+<!-- ******************************************************************************************************************************* -->
+<!-- ***  Harvesting Quality Control XML Schema file   						   			 														     *** -->
+<!-- ******************************************************************************************************************************* -->
+<!--
+
+   Document Name: 				HarvestingQualityControl_V4p1_no_documentation.xsd
+   Generated On: 				26 February 2025
+   Version number:				4.1 Release
+   Schema agency:				Skogforsk
+   Schema web address:			http://www.skogforsk.se/stanford2010/schema/
+
+-->
+<xsd:schema targetNamespace="urn:skogforsk:stanford2010" elementFormDefault="qualified" attributeFormDefault="unqualified" version="release_4.1" sfd:versionDate="2025-02-05" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="urn:skogforsk:stanford2010" xmlns:doc="urn:skogforsk:stanford2010:doc" xmlns:sfd="urn:skogforsk:stanford2010">
+	<!-- ===== Includes ===== -->
+	<xsd:include schemaLocation="StanForD2010CommonDefinitions_V4p1_no_documentation.xsd">
+</xsd:include>
+	<!-- ===== Root Element ===== -->
+	<xsd:element name="HarvestingQualityControl" type="HarvestingQualityControlType">
+		
+		<xsd:unique name="UniqueMachineKey">
+			<xsd:selector xpath="sfd:Machine">
+</xsd:selector>
+			<xsd:field xpath="sfd:MachineKey">
+</xsd:field>
+		</xsd:unique>
+		<xsd:unique name="UniqueMachineUserID">
+			<xsd:selector xpath="sfd:Machine">
+</xsd:selector>
+			<xsd:field xpath="sfd:MachineUserID">
+</xsd:field>
+		</xsd:unique>
+	</xsd:element>
+	<!-- ===== Type Definitions ===== -->
+	<xsd:complexType name="ClassifiedProductDefinitionMachineHarvestingQualityControlType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="ProductDefinitionWithCommonDetailsType">
+				<xsd:sequence>
+					<xsd:element name="ProductUserID" type="UserIDType">
+						
+					</xsd:element>
+					<xsd:element name="SpeciesGroupKey" type="KeyType">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ControlLogDiameterType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:nonNegativeInteger">
+				<xsd:attributeGroup ref="ControlLogDiameterAttributeGroup">
+</xsd:attributeGroup>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="ControlValuesMultiTreeProcessingType">
+		
+		<xsd:sequence>
+			<xsd:element name="ProductDefinition" type="ProductDefinitionMachineHarvestingQualityControlType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="ObjectDefinition" type="ObjectDefinitionMachineType" maxOccurs="unbounded">
+				
+				<xsd:unique name="UniqueSubObjectKey">
+					<xsd:selector xpath="sfd:SubObject">
+</xsd:selector>
+					<xsd:field xpath="sfd:SubObjectKey">
+</xsd:field>
+				</xsd:unique>
+				<xsd:unique name="UniqueSubObjectUserControlValues">
+					<xsd:selector xpath="sfd:SubObject">
+</xsd:selector>
+					<xsd:field xpath="sfd:SubObjectUserID">
+</xsd:field>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="SawCutWidth" type="xsd:positiveInteger" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Stem" type="StemControlValuesMultiTreeProcessingType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="MultiTreeControlStem" type="MultiTreeFelledStemType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="RandomFrequency" type="xsd:nonNegativeInteger">
+				
+			</xsd:element>
+			<xsd:element name="MultiTreeControlValuesUsed" type="xsd:boolean">
+				
+			</xsd:element>
+			<xsd:element name="AverageCorrectionFactorInUse" type="AverageCorrectionFactorInUseType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ControlValuesType">
+		
+		<xsd:sequence>
+			<xsd:element name="ProductDefinition" type="ProductDefinitionMachineHarvestingQualityControlType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="ObjectDefinition" type="ObjectDefinitionMachineType" maxOccurs="unbounded">
+				
+				<xsd:unique name="UniqueSubObjectKeyControlValuesType">
+					<xsd:selector xpath="sfd:SubObject">
+</xsd:selector>
+					<xsd:field xpath="sfd:SubObjectKey">
+</xsd:field>
+				</xsd:unique>
+				<xsd:unique name="UniqueSubObjectUserIControlValues">
+					<xsd:selector xpath="sfd:SubObject">
+</xsd:selector>
+					<xsd:field xpath="sfd:SubObjectUserID">
+</xsd:field>
+				</xsd:unique>
+			</xsd:element>
+			<xsd:element name="ControlStemSettings" type="ControlStemSettingsType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="SawCutWidth" type="xsd:positiveInteger" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Stem" type="StemHarvestingQualityControlType" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="HarvestingQualityControlType">
+		
+		<xsd:sequence>
+			<xsd:element name="HarvestingQualityControlHeader" type="MessageHeaderType">
+				
+			</xsd:element>
+			<xsd:element name="Machine" type="MachineHarvestingQualityControlType" maxOccurs="unbounded">
+				
+				<xsd:unique name="UniqueStemKey">
+					<xsd:selector xpath="sfd:ControlValues/sfd:Stem">
+</xsd:selector>
+					<xsd:field xpath="sfd:StemKey">
+</xsd:field>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:unique>
+				<xsd:unique name="UniqueObjectUserID">
+					<xsd:selector xpath="sfd:ControlValues/sfd:ObjectDefinition">
+</xsd:selector>
+					<xsd:field xpath="ObjectUserID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:unique name="UniqueOperatorUserID">
+					<xsd:selector xpath="sfd:OperatorDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorUserID">
+</xsd:field>
+				</xsd:unique>
+				<xsd:key name="ProductKeyProductDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:ProductDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ProductKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="ProductKeyRefProductLog" refer="ProductKeyProductDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:Stem/sfd:SingleTreeProcessedStem/sfd:Log">
+</xsd:selector>
+					<xsd:field xpath="sfd:ProductKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:SpeciesGroupDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:SpeciesGroupKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="SpeciesGroupKeyRefProductDefinition" refer="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:ProductDefinition/sfd:ClassifiedProductDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:SpeciesGroupKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:keyref name="SpeciesGroupKeyRefStem" refer="SpeciesGroupKeySpeciesGroupDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:Stem">
+</xsd:selector>
+					<xsd:field xpath="sfd:SpeciesGroupKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:OperatorDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="OperatorKeyRefStem" refer="OperatorKeyOperatorDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:Stem">
+</xsd:selector>
+					<xsd:field xpath="sfd:OperatorKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:ObjectDefinition">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="ObjectKeyRefStem" refer="ObjectKeyObjectDefinition">
+					<xsd:selector xpath="sfd:ControlValues/sfd:Stem">
+</xsd:selector>
+					<xsd:field xpath="sfd:ObjectKey">
+</xsd:field>
+				</xsd:keyref>
+				<xsd:key name="BarkFunctionKeyBarkFunction">
+					<xsd:selector xpath="sfd:SpeciesGroupDefinition/sfd:BarkFunction">
+</xsd:selector>
+					<xsd:field xpath="sfd:BarkFunctionKey">
+</xsd:field>
+				</xsd:key>
+				<xsd:keyref name="BarkFunctionKeyRefStem" refer="BarkFunctionKeyBarkFunction">
+					<xsd:selector xpath="sfd:ControlValues/sfd:Stem">
+</xsd:selector>
+					<xsd:field xpath="sfd:BarkFunctionKey">
+</xsd:field>
+				</xsd:keyref>
+			</xsd:element>
+			<xsd:element name="Extension" type="ExtensionType" minOccurs="0">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="messageType" type="MessageCategoryType" use="required" fixed="hqc">
+			
+		</xsd:attribute>
+		<xsd:attributeGroup ref="MessageAttributeGroup">
+</xsd:attributeGroup>
+	</xsd:complexType>
+	<xsd:complexType name="LogDiameterHarvestingQualityControlType">
+		
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:nonNegativeInteger">
+				<xsd:attribute name="logDiameterCategory" type="LogDiameterCategoryType" use="required">
+					
+				</xsd:attribute>
+				<xsd:attribute name="diameterMeasurementCategory" type="DiameterMeasurementCategoryType" use="required">
+					
+				</xsd:attribute>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	<xsd:complexType name="LogHarvestingQualityControlType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="LogType">
+				<xsd:sequence>
+					<xsd:element name="LogMeasurement" type="LogMeasurementHarvestingQualityControlType" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="CalibrationUseLog" type="xsd:boolean" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="LogLengthClass" type="xsd:positiveInteger" minOccurs="0">
+						
+					</xsd:element>
+					<xsd:element name="LogDiameterClass" type="xsd:positiveInteger" minOccurs="0">
+						
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="LogMeasurementHarvestingQualityControlType">
+		
+		<xsd:sequence>
+			<xsd:element name="LogDiameter" type="LogDiameterHarvestingQualityControlType" minOccurs="0" maxOccurs="24">
+				
+			</xsd:element>
+			<xsd:element name="LogLength" type="LogLengthType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="MeasurementDate" type="StanForD2010DateTimeType">
+				
+			</xsd:element>
+			<xsd:element name="ControlLogDiameter" type="ControlLogDiameterType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+		<xsd:attribute name="logMeasurementCategory" type="LogMeasurementCategoryType" use="required">
+			
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="MachineHarvestingQualityControlType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="MachineWithAttachmentType">
+				<xsd:sequence>
+					<xsd:sequence>
+						<xsd:element name="SpeciesGroupDefinition" type="SpeciesGroupDefinitionWithDetailsAndBarkFunctionAndKeyType" maxOccurs="unbounded">
+							
+						</xsd:element>
+					</xsd:sequence>
+					<xsd:choice>
+						<xsd:sequence>
+							<xsd:element name="ControlValues" type="ControlValuesType">
+								
+							</xsd:element>
+							<xsd:element name="CalibrationValues" type="CalibrationValuesType" minOccurs="0">
+								
+							</xsd:element>
+						</xsd:sequence>
+						<xsd:sequence>
+							<xsd:element name="CalibrationValues" type="CalibrationValuesType">
+								
+							</xsd:element>
+						</xsd:sequence>
+						<xsd:element name="ControlValuesMultiTreeProcessing" type="ControlValuesMultiTreeProcessingType" maxOccurs="unbounded">
+</xsd:element>
+					</xsd:choice>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ProductDefinitionMachineHarvestingQualityControlType">
+		
+		<xsd:sequence>
+			<xsd:element name="ProductKey" type="KeyType">
+				
+			</xsd:element>
+			<xsd:choice>
+				<xsd:element name="ClassifiedProductDefinition" type="ClassifiedProductDefinitionMachineHarvestingQualityControlType">
+					
+				</xsd:element>
+				<xsd:element name="UnclassifiedProductDefinition" type="UnclassifiedProductDefinitionMachineType">
+					
+				</xsd:element>
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SingleTreeProcessedStemHarvestingQualityControlType">
+		
+		<xsd:sequence>
+			<xsd:element name="DBH" type="DiameterType">
+				
+			</xsd:element>
+			<xsd:element name="ReferenceDiameter" type="ReferenceDiameterType">
+				
+			</xsd:element>
+			<xsd:element name="StemGrade" type="StemGradeType" maxOccurs="unbounded">
+				
+			</xsd:element>
+			<xsd:element name="StemDiameters" type="StemDiametersType" minOccurs="0">
+				
+			</xsd:element>
+			<xsd:element name="Log" type="LogHarvestingQualityControlType" minOccurs="0" maxOccurs="unbounded">
+				
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="StemControlValuesMultiTreeProcessingType">
+		<xsd:complexContent>
+			<xsd:extension base="StemType">
+				<xsd:sequence>
+					<xsd:element name="SingleTreeProcessedStem" type="SingleTreeProcessedStemHarvestingQualityControlType">
+						
+						<xsd:unique name="UniqueSingleTreeProcessedStemLogKey">
+							<xsd:selector xpath="sfd:Log">
+</xsd:selector>
+							<xsd:field xpath="sfd:LogKey">
+</xsd:field>
+						</xsd:unique>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="StemHarvestingQualityControlType">
+		
+		<xsd:complexContent>
+			<xsd:extension base="StemType">
+				<xsd:sequence>
+					<xsd:element name="ControlMeasurementDefinition" type="ControlMeasurementDefinitionType" minOccurs="0" maxOccurs="unbounded">
+						
+					</xsd:element>
+					<xsd:element name="ControlStemInfo" type="ControlStemInfoType">
+						
+					</xsd:element>
+					<xsd:choice>
+						<xsd:element name="SingleTreeProcessedStem" type="SingleTreeProcessedStemHarvestingQualityControlType">
+							
+							<xsd:unique name="UniqueSingleTreeProcessedStemLogKeyStemHarvestingQualityControlType">
+								<xsd:selector xpath="sfd:Log">
+</xsd:selector>
+								<xsd:field xpath="sfd:LogKey">
+</xsd:field>
+							</xsd:unique>
+						</xsd:element>
+					</xsd:choice>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:simpleType name="ControlLogDiameterCategoryType">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="ub">
+</xsd:enumeration>
+			<xsd:enumeration value="ob">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="HarvestingQualityControlMessageCategory">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Measurement control">
+</xsd:enumeration>
+			<xsd:enumeration value="Log data to caliper">
+</xsd:enumeration>
+			<xsd:enumeration value="Calibration log">
+</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:attributeGroup name="ControlLogDiameterAttributeGroup">
+		<xsd:attribute name="diameterPosition" type="xsd:nonNegativeInteger" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="controlLogDiameterCategory" type="ControlLogDiameterCategoryType" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="diameterMeasurementCategory" type="DiameterMeasurementCategoryType" use="required">
+			
+		</xsd:attribute>
+		<xsd:attribute name="diameterPositionCaliper" type="xsd:nonNegativeInteger" use="optional">
+			
+		</xsd:attribute>
+	</xsd:attributeGroup>
+</xsd:schema>
