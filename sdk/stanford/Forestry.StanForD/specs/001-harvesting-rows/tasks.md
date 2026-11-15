@@ -311,9 +311,9 @@ carries them. **Needs**: US7. Only the detail query (G4) uses them (developer, 2
 
 ## Phase 10: Polish & Cross-Cutting Concerns
 
-- [ ] T065 [P] XML doc comments on every public member in `src/Harvesting/` (D0)
-- [ ] T066 [P] Update the usage, rows and policies sections in `README.md` and `ARCHITECTURE.md` (D0)
-- [ ] T067 [P] Add the release notes in `CHANGELOG.md`
+- [X] T065 [P] XML doc comments on every public member (D0) (2026-11-15: met by the build, which warns on any public member without a doc comment and reports none; Harvesting-specific documentation moves to a future Forestry.StanForD.Harvesting package, developer, 2026-11-15)
+- [X] T066 [P] Update the usage, rows and policies sections in `README.md` and `ARCHITECTURE.md` (D0) (2026-11-15: README shows `AddHarvesting()`, what a row gives, choices, failures, duplicates, scope and tests; ARCHITECTURE describes what was built: rows, policies, options, findings and POC debt #109, #110)
+- [X] T067 [P] Add the release notes in `CHANGELOG.md` (2026-11-15: 1.0.0-beta.1, unreleased)
 - [ ] T068 Run every quickstart row and record the result in `specs/001-harvesting-rows/quickstart.md`
 
 ---
