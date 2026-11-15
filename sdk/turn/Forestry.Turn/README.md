@@ -5,6 +5,16 @@ borrowed from conversation analysis: something is raised, it goes through a pipe
 directives, and it comes back paired with its answer. It's the .NET counterpart to the pipeline
 in the private Forestry AI SDK for Python.
 
+## Direction: renamed Forestry.Core soon
+
+Turn will soon be renamed Forestry.Core, in the spirit of Azure.Core in the Azure SDK for .NET. It
+becomes the core for clients that talk with third-party cloud resources or local resources. Unlike
+Azure.Core, a client here is not mainly an HTTP client: an intention goes through direction policies,
+primarily from one format to another, and the answer comes back through matching answer policies.
+For example, StanForD Harvesting rows are written as Parquet and handed to an Azure Storage client,
+and the storage response becomes a Harvesting answer. Document-specific policies live in their own
+packages, such as [Forestry.StanForD.Harvesting](../../stanford/Forestry.StanForD.Harvesting/README.md).
+
 > **Naming notes:**
 > - This used to be called `Question` (`QuestionType`, `QuestionContent`, `QuestionDimensions`)
 >   in code as well as docs. It's now `Intention` throughout — "question" implied something
