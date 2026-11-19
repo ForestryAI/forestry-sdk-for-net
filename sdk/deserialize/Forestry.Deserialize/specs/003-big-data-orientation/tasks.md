@@ -154,7 +154,7 @@ and every existing test passes (quickstart 10, 11, search check).
 
 ### Test shells for User Story 3 ⚠️
 
-- [ ] T033 [P] [US3] Test shell, SC-002 (quickstart 10): reflect over `typeof(Row).Assembly`'s exported types and their public and protected members; assert no type named `Field`, `RowAttribute` or `FieldAttribute`, and no type or member name containing `Media`, in a new `Forestry.Deserialize/test/PublicSurfaceTests.cs`
+- [X] T033 [P] [US3] Test shell, SC-002 (quickstart 10): reflect over `typeof(Row).Assembly`'s exported types and their public and protected members; assert no type named `Field`, `RowAttribute` or `FieldAttribute`, and no type or member name containing `Media`, in a new `Forestry.Deserialize/test/PublicSurfaceTests.cs` (2026-11-19: fails today only for `MediaConverters`, `MediaRowEnumerator` and `MediaRowAsyncEnumerator`; the US2 removals already pass)
 - [ ] T034 [US3] **Test review gate**: the developer reviews T033 on the board before T035 (C4)
 
 ### Implementation for User Story 3
