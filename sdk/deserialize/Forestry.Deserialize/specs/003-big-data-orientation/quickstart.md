@@ -30,7 +30,8 @@ dotnet test Forestry.Deserialize.Xml/test -s Forestry.Deserialize.Xml/test/Perfo
 
 | # | Row type or document | Expected | Spec |
 |---|---|---|---|
-| 1 | Row type with `int`, `string`, enum, `decimal`, `Guid`, `DateTimeOffset`, `DateOnly`, `int?` members | options lock; rows as before | US1-1 |
+| 1 | Row type with `bool`, `char`, `int`, `long`, `double`, `string`, `decimal`, `Guid`, `DateTimeOffset`, `int?`, `Guid?` and a struct of your own with its converter | options lock; each member has a resolved converter | US1-1 |
+| 1a | Row type with an enum, `DateOnly` and `TimeSpan` members (single values with no built-in converter yet) | lock fails once, for the converter only, never as a nested structure | R32, R33 |
 | 2 | Row type with a `Measurement` class member and a `List<int>` member | lock fails once, naming the type, both members and the flat-row rule | US1-2, US1-3, SC-001 |
 | 3 | Row type with an `int[]`, a `Dictionary<string, int>`, a struct without a text form, and another row type as members | lock fails, naming each | US1-3, US1-4, SC-001 |
 | 4 | Composite type with a registered converter, used as a member | lock still fails | US1-5, SC-001 |

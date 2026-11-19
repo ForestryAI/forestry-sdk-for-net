@@ -30,6 +30,10 @@
 ### Behavior Changes
 - The package now references `Forestry.Deserialize.Xml` and is a shipping library.
 
+### Other Changes
+- Uses Forestry.Deserialize.Xml's renamed attributes, `XmlAttributeName` and `XmlElementText`
+  (Forestry.Deserialize spec 003, #127); no behavior change.
+
 ### Breaking Changes
 - `MachineType`, `DiameterUnitType` and `ValidationExtensions`, `System.Xml.Serialization` types from
   before the row model, are removed. They were never released.

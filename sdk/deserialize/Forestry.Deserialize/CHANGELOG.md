@@ -3,9 +3,10 @@
 ## 1.0.0-beta.1 (Unreleased)
 
 ### Features Added
-- Shred a document into flat rows in one forward pass: one instance of your own class per occurrence,
+- Flatten a document into rows in one forward pass: one instance of your own class per occurrence,
   handed out as soon as it is complete (spec 001 US1, #57).
-- Work with rows without knowing their class, through `Row` and its fields (spec 001 US2, #58).
+- Work with rows without knowing their class, through `Row` (`Is<T>()`, `AsType<T>()`) (spec 001 US2,
+  #58).
 - Synchronous input over memory and strings, asynchronous input over a pipe or stream (spec 001 US3,
   #60).
 - Policies: `DefinitionPolicy` chooses a row type's members and `EnumerationPolicy` acts as rows are
@@ -23,6 +24,27 @@
 - Rows of several types nested in one pass, each recording its parent
   (`ContextRow.Container`, a `ContainerRelationship`), with `Parent`, `Ancestors`, `Children` and
   `Siblings` on the context (spec 002 US2, #101).
+- Flat rows checked when the options lock: every member of a row type must be a single value (a
+  primitive, `string`, an enum, or a struct that formats to UTF-8 and parses from text, or a nullable of
+  one of these); a row type fails with one exception naming every member that is a nested structure,
+  formats only to chars, or has no converter. Each `PropertyDefinition` resolves its own converter
+  (spec 003 US1, #126).
+- `ReadingInformation`: where a value is read in the document (depth, name, path), generic and in the
+  top namespace, with `Utf8Extensions.ToUtf8String` (spec 003 US2, #127).
+
+### Breaking Changes
+All before this version's release (spec 003, #125):
+- `Field` and `PropertyDefinition.Field` are removed; `PropertyDefinition.Converter` is
+  `PropertyDefinition.ResolvedConverter`, with `Member`, `MemberType` and `Name` beside it (#126,
+  #127).
+- `RowAttribute` and `FieldAttribute` are removed: names in the document belong to the format package
+  (`XmlElementNameAttribute` in Forestry.Deserialize.Xml) (#127).
+- `Forestry.Deserialize.Reading.FieldContext` is `Forestry.Deserialize.ReadingInformation`, and
+  `FieldContextExtensions` is `Forestry.Deserialize.Utf8Extensions` (#127).
+- `MediaRowEnumerator`, `MediaRowAsyncEnumerator` and `DeserializeOptions.MediaConverters` are
+  `FormatRowEnumerator`, `FormatRowAsyncEnumerator` and `FormatConverters` (#128).
+- A row type with a member that is not a single value (e.g. a nested class with its own converter)
+  now fails when the options lock (#126).
 
 ### Other Changes
 - The policy surface changed before this version's release (spec 002): `EnumerationPolicy.Enumerate`

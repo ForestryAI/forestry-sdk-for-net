@@ -174,9 +174,9 @@ and every existing test passes (quickstart 10, 11, search check).
 
 ## Phase 4: Polish & Cross-Cutting Concerns
 
-- [ ] T043 [P] Changelogs (FR-014): list every breaking change from `contracts/public-api.md` under Breaking Changes in the Unreleased `1.0.0-beta.1` section of `Forestry.Deserialize/CHANGELOG.md` and `Forestry.Deserialize.Xml/CHANGELOG.md`, and add the flat check under Features Added in `Forestry.Deserialize/CHANGELOG.md`; reword "Shred" in its existing entry to "Flatten"
-- [ ] T044 Run every quickstart.md scenario (1-11) and the search check; record the result here
-- [ ] T045 Mark `spec.md` **Status** Implemented with the date and story issues, and bring the board in sync: story issues' checklists and Architecture match this file, #125 notes the implementation, and #118 is reminded of StanForD's wording follow-on
+- [X] T043 [P] Changelogs (FR-014): list every breaking change from `contracts/public-api.md` under Breaking Changes in the Unreleased `1.0.0-beta.1` section of `Forestry.Deserialize/CHANGELOG.md` and `Forestry.Deserialize.Xml/CHANGELOG.md`, and add the flat check under Features Added in `Forestry.Deserialize/CHANGELOG.md`; reword "Shred" in its existing entry to "Flatten" (2026-11-19: also an Other Changes entry in Forestry.StanForD's changelog for its attribute renames)
+- [X] T044 Run every quickstart.md scenario (1-11) and the search check; record the result here (2026-11-19: all pass: core 58, XML 188, StanForD 46 + 1 skipped; the scenario tests alone: core 24, XML 32; the search finds only `PublicSurfaceTests.cs`. Scenario 1 corrected to kinds with converters, and 1a added for the enum, `DateOnly` and `TimeSpan`)
+- [X] T045 Mark `spec.md` **Status** Implemented with the date and story issues, and bring the board in sync: story issues' checklists and Architecture match this file, #125 notes the implementation, and #118 is reminded of StanForD's wording follow-on (2026-11-19: spec Implemented; #126-#128 match this file; implementation note on #125 and reminder on #118)
 
 ---
 
