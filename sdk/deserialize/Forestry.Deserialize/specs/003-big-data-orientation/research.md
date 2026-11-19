@@ -90,19 +90,28 @@ Proposed. Constitution 3.1.0.
 - **Ignored members**: a member a definition policy leaves out never becomes a property definition,
   so it is never checked. A developer can keep a non-flat member on a class and exclude it.
 - **One message per type**: the type definition throws once, naming the type and each failing
-  member with its type and reason: not a single value (with the flat-row rule and the two fixes:
-  copy the values onto the row as single values, or make it its own row type), or no converter.
+  member with its type and one of three reasons: a nested structure, a struct that formats only
+  to chars, or no converter.
   This answers the spec's edge case "several failing members", and improves today's behavior,
   where a type with two members without converters fails one at a time.
-- **Messages**: a new resource `MemberNotSingleValue`, beside today's `MemberWithoutConverter`, in
-  `Formatting.Resource.cs`; thrown as `InvalidOperationException` like the other definition
-  failures.
+- **Messages (developer, 2026-11-19)**: two new resources in `Formatting.Resource.cs`, beside
+  today's `MemberWithoutConverter`, each saying exactly what is wrong:
+
+  | Resource | When | Says |
+  | :--- | :--- | :--- |
+  | `MemberTypeIsNestedStructure` | Several values in one member: a class, another row type, an array, a collection, or a struct with no text form | The flat-row rule and the two fixes: copy the values onto the row as single values, or make it its own row type |
+  | `MemberTypeNotUtf8Formattable` | A value type implementing `ISpanFormattable` without `IUtf8SpanFormattable`: one value that formats only to chars (R32) | The fix: implement `IUtf8SpanFormattable`, so rows can be written without a string per value |
+
+  Every rejected type gets the first message except a value type implementing `ISpanFormattable`
+  without `IUtf8SpanFormattable`, which gets the second. Both, and `MemberWithoutConverter`, are
+  gathered into the one `InvalidOperationException` per row type. The first name was
+  `MemberNotSingleValue`; the developer asked for more explicit names.
 - **Later paths**: any future way to create property definitions (e.g. members configured through
   options, as spec 001 foresaw) gets the check and the resolution without remembering to call
   them.
 - **Existing tests affected**:
   - `DefinitionValidationTests` asserts "converter" for `LogWithNestedProperty` (a nested
-    `Measurement` class). It changes to assert the flat-row message.
+    `Measurement` class). It changes to assert `MemberTypeIsNestedStructure`'s message.
   - `ConverterResolutionTests` reads `PropertyDefinition.Converter`; it reads `ResolvedConverter`.
 - **Alternatives considered**:
   - *The check in `TypeDefinition.Create`'s loop* (this item's first proposal): works only while

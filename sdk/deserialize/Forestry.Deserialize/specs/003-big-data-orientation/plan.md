@@ -131,7 +131,7 @@ Forestry.Deserialize/
 │   │   ├── FormatRowAsyncEnumerator.cs # was MediaRowAsyncEnumerator.cs (R38)
 │   │   └── RowBuilder.cs               # information parameter (R36)
 │   ├── DeserializeOptions*.cs          # FormatConverters, region, docs (R38)
-│   ├── Throwing.cs, Formatting.Resource.cs  # MemberNotSingleValue (R33); wording (R41)
+│   ├── Throwing.cs, Formatting.Resource.cs  # MemberTypeIsNestedStructure, MemberTypeNotUtf8Formattable (R33); wording (R41)
 │   └── (doc comments elsewhere)        # format and flatten (R41)
 ├── test/
 │   ├── DefinitionValidationTests.cs    # flat check, one test per kind (R42)
