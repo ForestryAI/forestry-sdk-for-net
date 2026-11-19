@@ -155,9 +155,9 @@ Workflow). Terms are defined under Definitions.
 - **Format reader package**: A package that reads one format forward and turns it into rows through
   the deserialization package's abstractions, using its own reader and tokens (e.g.
   Forestry.Deserialize.Xml). Names of document parts (e.g. an XML element or attribute) are its own.
-- **Format information**: What a format reports with each value: its depth, name and path in the
-  document (`FormatInformation`). Never a value, and never kept unless a policy or option asks for
-  it.
+- **Reading information**: Where a value is read in the document: its depth, name and path
+  (`ReadingInformation`), reported by the format with each value. Generic, not specific to one
+  format. Never a value, and never kept unless a policy or option asks for it.
 - **Type definition**: A developer's flat class extending `Row`, with its property definitions
   (typed members, with converters and setters) and parameter definitions (constructor parameters,
   e.g. an ancestor row), built once per options and cached.
@@ -191,10 +191,14 @@ Workflow). Terms are defined under Definitions.
   - A5 added: no attribute or option naming a part of a document.
   - C0, C2, C3, S1 and A4 reworded: "media" -> "format", "shredding" -> "flattening", including the
     titles of C0, C2 and C3.
-  - Definitions: Format and Format information added; Media reader package renamed Format reader
+  - Definitions: Format and Reading information added; Media reader package renamed Format reader
     package; Shredding renamed Flattening; Row redefined (single-value members, not row-based vs
-    columnar); Field removed (its member, type and effective converter belong to the property
-    definition, its per-value metadata is format information); Document reworded.
+    columnar); Field removed (its member, type and resolved converter belong to the property
+    definition, its per-value metadata is reading information); Document reworded.
+  - Reworded 2026-11-19, after the 3.1.0 agreement, before merge (developer, during spec 003's
+    plan): "Format information" (`FormatInformation`) renamed "Reading information"
+    (`ReadingInformation`), since depth, name and path are generic; "effective converter" renamed
+    "resolved converter" (spec 003 research R33, R36).
 - **3.0.0** (2026-11-10, confirmed by the developer, takes effect on merge to `main`). Reason: net9.0
   left Microsoft support on 2026-11-10 and the SDK now targets net10.0 only (engineering spec 001,
   research R8).

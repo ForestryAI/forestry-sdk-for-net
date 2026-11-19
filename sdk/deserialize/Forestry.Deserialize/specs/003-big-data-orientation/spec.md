@@ -32,6 +32,9 @@ before the README is written.
   live? → A: In the deserialization package, without a prefix: converters turn UTF-8 bytes into a
   value whatever the format, so the attribute is about definitions (A5 allows it). Not built in
   this spec.
+- Q: What is `FieldContext` renamed? → A: `ReadingInformation`, not `FormatInformation` (decided
+  during planning): depth, name and path are generic reading information, and after the POC the
+  developer wants them known when the options lock, as definitions are built (research R36).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -92,9 +95,9 @@ A developer declares where a row type and its members are in the document with o
 format package attributes, each named after the part of the document: `XmlElementName` (a row
 type's element, or a member's child element), `XmlAttributeName` (an attribute of the row's own
 element) and `XmlElementText` (the row's own element's text). The deserialization package has no attribute or option
-naming a part of a document (A5), and no `Field` type: a member's type and effective converter
-belong to its property definition, and what a format reports with a value (depth, name, path) is
-format information.
+naming a part of a document (A5), and no `Field` type: a member's type and resolved
+converter belong to its property definition, and what a format reports with a value (depth, name, path) is
+reading information.
 
 **Why this priority**: `[Row]` and `[Field]` are XML names living in the generic package; a JSON or
 CSV format would interpret them differently or not at all. `Field` mixes a member's converter with
@@ -125,7 +128,7 @@ before; the deserialization package's public surface has no `RowAttribute`, `Fie
 5. **Given** a property definition, **When** a developer or policy asks for the member's
    converter, **Then** the property definition gives it directly, with no `Field` in between.
 6. **Given** a policy or format reading the position of a value, **When** it asks for the depth,
-   name and path, **Then** it gets them as format information, from the top namespace
+   name and path, **Then** it gets them as reading information, from the top namespace
    `Forestry.Deserialize`.
 
 ---
@@ -134,7 +137,7 @@ before; the deserialization package's public surface has no `RowAttribute`, `Fie
 
 Code, documentation and the constitution use the same words: **format** (never "media") for what
 a document is written in, and **flatten** (never "shred") for turning a document into rows. Types
-named after "media" are renamed after "format", and `Row` and format information live at the top
+named after "media" are renamed after "format", and `Row` and reading information live at the top
 of the package rather than in subfolders and sub-namespaces.
 
 **Why this priority**: The words are what a README reader, a developer and the next spec all lean
@@ -154,7 +157,7 @@ renames.
    "format" (e.g. a format row enumerator), not "media".
 2. **Given** the options, **When** a format package supplies its own converters, **Then** the
    member it overrides is named after "format".
-3. **Given** `Row` and format information, **When** a developer uses them, **Then** they are in
+3. **Given** `Row` and reading information, **When** a developer uses them, **Then** they are in
    the namespace `Forestry.Deserialize` and their files are at the top of the source folder; the
    `Rows` folder is gone.
 4. **Given** the packages' README, ARCHITECTURE and CHANGELOG, and Forestry.Deserialize.Xml's,
@@ -214,7 +217,9 @@ renames.
   and of a member, with the same defaults as today (the class or member name when not declared).
   Both are declared with one attribute, `XmlElementName("…")`, on the class or the member. Spec
   002's `XmlAttributeValue("…")` MUST be renamed `XmlAttributeName("…")` and `XmlTextValue`
-  `XmlElementText`, with unchanged behavior.
+  `XmlElementText`, with unchanged behavior; the XML options' `TextValue<TRow>(memberName)`, its
+  options counterpart, MUST be renamed `ElementText<TRow>(memberName)` (added in plan research
+  R37).
 - **FR-006a**: A member with two or more of `XmlElementName`, `XmlAttributeName` and
   `XmlElementText` MUST fail when the options lock, since each says where the value comes from. A
   member with none is read from the child element named after the member.
@@ -222,12 +227,13 @@ renames.
   prefix (`Xml…`) and MUST NOT reuse a name from System.Xml.Serialization.
 - **FR-007**: Name collisions within a row type MUST still fail when the options lock, with a
   message naming the XML attribute.
-- **FR-008**: The `Field` type MUST be removed. A property definition MUST expose the member's
-  effective converter itself; anything else `Field` carried (member, type) MUST be reachable from
-  the property definition.
+- **FR-008**: The `Field` type MUST be removed. A property definition MUST resolve and expose the
+  member's converter itself, as `ResolvedConverter` (research R33); anything else `Field` carried
+  (member, type) MUST be reachable from the property definition.
 - **FR-009**: The per-value position a format reports (today `FieldContext`, with depth, name and
-  path) MUST be named `FormatInformation`, with its extensions `FormatInformationExtensions`, in
-  the namespace `Forestry.Deserialize`.
+  path) MUST be named `ReadingInformation`, in the namespace `Forestry.Deserialize`. Its companion
+  `FieldContextExtensions`, which extends a UTF-8 span rather than the position, MUST be named
+  `Utf8Extensions`, in the same namespace (developer, 2026-11-19, research R36).
 
 **One vocabulary (US3)**
 
@@ -249,10 +255,10 @@ renames.
   Every member is a single value. Unrelated to row-based vs columnar formats.
 - **Single value**: a primitive type, `string`, an enum, a single-value struct with a text form,
   or a nullable of one of these. What a big data format can store as one column.
-- **Property definition**: one mapped member of a row type, with its type and effective
+- **Property definition**: one mapped member of a row type, with its type and resolved
   converter (no separate `Field`).
 - **Format**: what a document is written in (XML now, JSON later), read by a format package.
-- **Format information**: what a format reports with each value: depth, name and path. Never a
+- **Reading information**: what a format reports with each value: depth, name and path. Never a
   value, and not kept unless a policy or option asks for it.
 - **Document name**: the name a row type or member has in a document; declared in the format
   package, defaulting to the class or member name.
@@ -292,9 +298,11 @@ For traceability only; nothing here is a requirement on the package.
   spec and is flat keeps working.
 - How a single-value struct is recognized (e.g. by a text-parsing and text-formatting contract) is
   a plan decision; the rule is the constitution's C7.
-- Forestry.StanForD needs no code change: its row types are already flat (its C0 and
-  `RowShapeTests`) and it uses none of `Field`, `[Field]`, `[Row]` or `FieldContext`. Its
-  documentation and constitution follow this spec's words through #118.
+- Forestry.StanForD's row types are already flat (its C0 and `RowShapeTests`), and it uses none of
+  `Field`, `[Field]`, `[Row]` or `FieldContext`. It does use `XmlAttributeValue` and `XmlTextValue`
+  (12 places), so their renames reach its source mechanically, with no behavior change; found
+  during planning (research R40). Its documentation and constitution follow this spec's words
+  through #118.
 - The SDK README and `sdk/deserialize/CLAUDE.md` (a superseded design note) say "media"; the
   README's wording is updated as a documentation task of this spec, the design note stays as
   history.
