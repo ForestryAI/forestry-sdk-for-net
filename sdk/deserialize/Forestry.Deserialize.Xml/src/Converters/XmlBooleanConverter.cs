@@ -1,6 +1,6 @@
 using Forestry.Deserialize.Converters;
 
-namespace Forestry.Deserialize.Xml
+namespace Forestry.Deserialize.Xml.Converters
 {
     /// <summary>
     /// XML default converter for <see cref="bool"/>: XML Schema accepts <c>true</c>, <c>false</c>,

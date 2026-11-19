@@ -39,11 +39,6 @@ namespace Forestry.Deserialize.Definitions
         public Converter ResolvedConverter { get; private set; } = null!;
 
         /// <summary>
-        /// Metadata about the member (research R4); removed in spec 003 US2 (research R35)
-        /// </summary>
-        public Field Field { get; private set; } = null!;
-
-        /// <summary>
         /// Position in its type definition's <see cref="TypeDefinition.Properties"/>
         /// </summary>
         internal int Index { get; set; }
@@ -54,9 +49,9 @@ namespace Forestry.Deserialize.Definitions
         /// </summary>
         /// <param name="row"></param>
         /// <param name="utf8"></param>
-        /// <param name="context"></param>
+        /// <param name="information"></param>
         /// <param name="set">The composed set step, an <c>Action&lt;ContextRow, T&gt;</c> from <see cref="ComposeSet"/></param>
-        internal abstract void ReadAndSet(ContextRow row, ReadOnlySpan<byte> utf8, in FieldContext context, Delegate set);
+        internal abstract void ReadAndSet(ContextRow row, ReadOnlySpan<byte> utf8, in ReadingInformation information, Delegate set);
 
         /// <summary>
         /// Compose the enumeration policies acting on this member's set into one
@@ -90,7 +85,6 @@ namespace Forestry.Deserialize.Definitions
             }
 
             ResolvedConverter = converter;
-            Field = new Field(Member, MemberType, converter);
             return null;
         }
 

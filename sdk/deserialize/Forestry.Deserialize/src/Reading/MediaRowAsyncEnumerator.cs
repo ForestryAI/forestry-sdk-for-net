@@ -64,18 +64,18 @@ namespace Forestry.Deserialize.Reading
         /// </summary>
         /// <param name="property"></param>
         /// <param name="utf8"></param>
-        /// <param name="context"></param>
-        protected void Set(PropertyInfo property, ReadOnlySpan<byte> utf8, in FieldContext context) =>
-            Builder.Set(property, utf8, in context);
+        /// <param name="information"></param>
+        protected void Set(PropertyInfo property, ReadOnlySpan<byte> utf8, in ReadingInformation information) =>
+            Builder.Set(property, utf8, in information);
 
         /// <summary>
         /// A field of the top open row has this UTF-8 value
         /// </summary>
         /// <param name="field"></param>
         /// <param name="utf8"></param>
-        /// <param name="context"></param>
-        protected void Set(FieldInfo field, ReadOnlySpan<byte> utf8, in FieldContext context) =>
-            Builder.Set(field, utf8, in context);
+        /// <param name="information"></param>
+        protected void Set(FieldInfo field, ReadOnlySpan<byte> utf8, in ReadingInformation information) =>
+            Builder.Set(field, utf8, in information);
 
         /// <summary>
         /// The top open row is complete

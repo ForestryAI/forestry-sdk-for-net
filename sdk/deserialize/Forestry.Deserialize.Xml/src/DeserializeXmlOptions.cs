@@ -1,13 +1,14 @@
 using System.IO.Pipelines;
 using Forestry.Deserialize.Converters;
+using Forestry.Deserialize.Xml.Converters;
 using Forestry.Deserialize.Reading;
 
 namespace Forestry.Deserialize.Xml
 {
     /// <summary>
     /// Options of the XML media: the row types to shred, converters and settings. Associates elements
-    /// with row types and members by name, or by <see cref="RowAttribute"/> and
-    /// <see cref="FieldAttribute"/> names (research R6, R8)
+    /// with row types and members by name, or by <see cref="XmlElementNameAttribute"/> names (research R6,
+    /// R8; spec 003 R37)
     /// </summary>
     public sealed class DeserializeXmlOptions : DeserializeOptions
     {
@@ -15,31 +16,32 @@ namespace Forestry.Deserialize.Xml
 
         private XmlAssociation? _association;
 
-        private Dictionary<Type, string>? _textValues;
+        private Dictionary<Type, string>? _elementTexts;
 
         /// <summary>
-        /// Set <typeparamref name="TRow"/>'s member <paramref name="memberName"/> from the text directly
-        /// inside the row's element, as <see cref="XmlTextValueAttribute"/> does; it wins over the
-        /// attribute (spec 002 US3, research R30). A type not added or a member it does not have fails
-        /// when the options lock
+        /// Set <typeparamref name="TRow"/>'s member <paramref name="memberName"/> from the text of the row's
+        /// own element, as <see cref="XmlElementTextAttribute"/> does; it wins over the attribute (spec 002
+        /// US3, research R30; named in spec 003, R37, spec 002 <c>TextValue</c>). A type not added, a member it
+        /// does not have, or a member with another source (<see cref="XmlElementNameAttribute"/>,
+        /// <see cref="XmlAttributeNameAttribute"/>) fails when the options lock
         /// </summary>
         /// <typeparam name="TRow">An added row type</typeparam>
         /// <param name="memberName">The member's C# name, e.g. <c>nameof(Price.Amount)</c></param>
         /// <returns>These options, to chain</returns>
         /// <exception cref="InvalidOperationException">The options are read-only</exception>
-        public DeserializeXmlOptions TextValue<TRow>(string memberName) where TRow : Row
+        public DeserializeXmlOptions ElementText<TRow>(string memberName) where TRow : Row
         {
             ArgumentException.ThrowIfNullOrEmpty(memberName);
             ThrowingAssertNotReadOnly();
 
-            (_textValues ??= [])[typeof(TRow)] = memberName;
+            (_elementTexts ??= [])[typeof(TRow)] = memberName;
             return this;
         }
 
         /// <summary>
-        /// The member names set through <see cref="TextValue{TRow}(string)"/>, by row type
+        /// The member names set through <see cref="ElementText{TRow}(string)"/>, by row type
         /// </summary>
-        internal IReadOnlyDictionary<Type, string> TextValues => _textValues ?? [];
+        internal IReadOnlyDictionary<Type, string> ElementTexts => _elementTexts ?? [];
 
         /// <summary>
         /// XML defaults, e.g. XML Schema booleans

@@ -238,8 +238,8 @@ namespace Forestry.Deserialize.Xml
 
         private void SetMember(RowBuilder builder, XmlAssociation.MemberAssociation member, int depth, ReadOnlySpan<byte> name, ReadOnlySpan<byte> utf8)
         {
-            FieldContext context = new(depth, name, _path.AsSpan(0, _pathLength));
-            member.Set(builder, utf8, in context);
+            ReadingInformation information = new(depth, name, _path.AsSpan(0, _pathLength));
+            member.Set(builder, utf8, in information);
         }
 
         /// <summary>

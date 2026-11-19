@@ -11,7 +11,7 @@ namespace Forestry.StanForD {
         /// <summary>
         /// The coordinate reference system, e.g. "WGS84", from the <c>coordinateReferenceSystem</c> attribute
         /// </summary>
-        [XmlAttributeValue("coordinateReferenceSystem")]
+        [XmlAttributeName("coordinateReferenceSystem")]
         public CoordinateReferenceSystem CoordinateReferenceSystem { get; set; }
 
         /// <summary>
@@ -29,13 +29,13 @@ namespace Forestry.StanForD {
         /// <summary>
         /// "North" or "South", from the <c>latitudeCategory</c> attribute
         /// </summary>
-        [XmlAttributeValue("latitudeCategory")]
+        [XmlAttributeName("latitudeCategory")]
         public string LatitudeCategory { get; set; } = string.Empty;
 
         /// <summary>
         /// The latitude's absolute value in decimal degrees
         /// </summary>
-        [XmlTextValue]
+        [XmlElementText]
         public decimal Value { get; set; }
     }
 
@@ -48,13 +48,13 @@ namespace Forestry.StanForD {
         /// <summary>
         /// "East" or "West", from the <c>longitudeCategory</c> attribute
         /// </summary>
-        [XmlAttributeValue("longitudeCategory")]
+        [XmlAttributeName("longitudeCategory")]
         public string LongitudeCategory { get; set; } = string.Empty;
 
         /// <summary>
         /// The longitude's absolute value in decimal degrees
         /// </summary>
-        [XmlTextValue]
+        [XmlElementText]
         public decimal Value { get; set; }
     }
 
@@ -67,7 +67,7 @@ namespace Forestry.StanForD {
         /// <summary>
         /// "Felling" or "Last log cut", from the <c>boomPositioningCategory</c> attribute
         /// </summary>
-        [XmlAttributeValue("boomPositioningCategory")]
+        [XmlAttributeName("boomPositioningCategory")]
         public string BoomPositioningCategory { get; set; } = string.Empty;
 
         /// <summary>

@@ -33,15 +33,17 @@ namespace Forestry.Deserialize.Xml
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Each member has one source (spec 002 R30, FR-018): an attribute of the row's element
-        /// (<see cref="XmlAttributeValueAttribute"/>), the element's text (<see cref="XmlTextValueAttribute"/>
-        /// or <see cref="DeserializeXmlOptions.TextValue{TRow}(string)"/>, the options winning), or by
-        /// default a direct child element. Each source has its own name lookup and duplicate check.
+        /// Each member has one source (spec 002 R30, FR-018; spec 003 FR-006a): an attribute of the row's
+        /// element (<see cref="XmlAttributeNameAttribute"/>), the element's own text
+        /// (<see cref="XmlElementTextAttribute"/> or <see cref="DeserializeXmlOptions.ElementText{TRow}(string)"/>,
+        /// the options winning), or a direct child element (<see cref="XmlElementNameAttribute"/>, or by
+        /// default the member name). A member declaring two sources fails. Each source has its own name
+        /// lookup and duplicate check.
         /// </para>
         /// <para>
-        /// Row and child-element names are resolved here from <see cref="RowAttribute"/> and
-        /// <see cref="FieldAttribute"/>, or the class and member names: core annotations the media
-        /// interprets (research R8), a known debt (#103).
+        /// Row and child-element names are resolved here from <see cref="XmlElementNameAttribute"/>, or the
+        /// class and member names (spec 003 research R37; spec 001 read the core's <c>[Row]</c> and
+        /// <c>[Field]</c>).
         /// </para>
         /// </remarks>
         /// <param name="options"></param>
@@ -51,11 +53,11 @@ namespace Forestry.Deserialize.Xml
             MethodInfo start = typeof(RowBuilder).GetMethod(nameof(RowBuilder.Start), genericParameterCount: 1, Type.EmptyTypes)!;
             Dictionary<byte[], RowAssociation> rows = new(Utf8NameComparer.Instance);
 
-            foreach (Type type in options.TextValues.Keys)
+            foreach (Type type in options.ElementTexts.Keys)
             {
                 if (!options.Rows.Contains(type))
                 {
-                    Throwing.WhenTextValueTypeNotAdded(type);
+                    Throwing.WhenElementTextTypeNotAdded(type);
                 }
             }
 
@@ -65,31 +67,36 @@ namespace Forestry.Deserialize.Xml
                 Dictionary<byte[], MemberAssociation> members = new(Utf8NameComparer.Instance);
                 Dictionary<byte[], MemberAssociation> attributes = new(Utf8NameComparer.Instance);
                 MemberAssociation? text = null;
-                bool textByOptions = options.TextValues.TryGetValue(type, out string? textMemberName);
+                bool textByOptions = options.ElementTexts.TryGetValue(type, out string? textMemberName);
 
                 if (textByOptions && !typeDefinition.Properties.Any(property => property.Name == textMemberName))
                 {
-                    Throwing.WhenTextValueMemberNotFound(type, textMemberName!);
+                    Throwing.WhenElementTextMemberNotFound(type, textMemberName!);
                 }
 
                 foreach (PropertyDefinition property in typeDefinition.Properties)
                 {
-                    bool isText = textByOptions
-                        ? property.Name == textMemberName
-                        : property.Member.IsDefined(typeof(XmlTextValueAttribute), inherit: false);
+                    XmlElementNameAttribute? elementName = property.Member.GetCustomAttribute<XmlElementNameAttribute>(inherit: false);
+                    XmlAttributeNameAttribute? attribute = property.Member.GetCustomAttribute<XmlAttributeNameAttribute>(inherit: false);
+                    bool textByAttribute = property.Member.IsDefined(typeof(XmlElementTextAttribute), inherit: false);
+                    bool textByOption = textByOptions && property.Name == textMemberName;
+
+                    ThrowingAssertOneSource(type, property.Member, elementName, attribute, textByAttribute, textByOption);
+
+                    bool isText = textByOptions ? textByOption : textByAttribute;
 
                     if (isText)
                     {
                         if (text is not null)
                         {
-                            Throwing.WhenMoreThanOneTextValue(type, text.Member, property.Member);
+                            Throwing.WhenMoreThanOneElementText(type, text.Member, property.Member);
                         }
 
                         text = new MemberAssociation(property.Member);
                         continue;
                     }
 
-                    if (property.Member.GetCustomAttribute<XmlAttributeValueAttribute>(inherit: false) is { } attribute)
+                    if (attribute is not null)
                     {
                         byte[] utf8AttributeName = Encoding.UTF8.GetBytes(attribute.Name);
 
@@ -102,7 +109,7 @@ namespace Forestry.Deserialize.Xml
                         continue;
                     }
 
-                    string memberName = property.Member.GetCustomAttribute<FieldAttribute>(inherit: false)?.Name is { Length: > 0 } fieldName ? fieldName : property.Member.Name;
+                    string memberName = elementName?.Name ?? property.Member.Name;
                     byte[] utf8MemberName = Encoding.UTF8.GetBytes(memberName);
 
                     if (members.TryGetValue(utf8MemberName, out MemberAssociation? other))
@@ -113,7 +120,7 @@ namespace Forestry.Deserialize.Xml
                     members.Add(utf8MemberName, new MemberAssociation(property.Member));
                 }
 
-                string rowName = type.GetCustomAttribute<RowAttribute>(inherit: false)?.Name is { Length: > 0 } name ? name : type.Name;
+                string rowName = type.GetCustomAttribute<XmlElementNameAttribute>(inherit: false)?.Name ?? type.Name;
                 byte[] utf8RowName = Encoding.UTF8.GetBytes(rowName);
 
                 if (rows.TryGetValue(utf8RowName, out RowAssociation? otherRow))
@@ -127,6 +134,53 @@ namespace Forestry.Deserialize.Xml
             }
 
             return new XmlAssociation(rows);
+        }
+
+        /// <summary>
+        /// A member is read from one place (spec 003 FR-006a, research R37): two or more of
+        /// <see cref="XmlElementNameAttribute"/>, <see cref="XmlAttributeNameAttribute"/> and
+        /// <see cref="XmlElementTextAttribute"/>, or <see cref="DeserializeXmlOptions.ElementText{TRow}(string)"/>
+        /// with either of the first two, fail. The option with the text attribute names the same source
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="member"></param>
+        /// <param name="elementName"></param>
+        /// <param name="attribute"></param>
+        /// <param name="textByAttribute"></param>
+        /// <param name="textByOption"></param>
+        private static void ThrowingAssertOneSource(
+            Type type,
+            MemberInfo member,
+            XmlElementNameAttribute? elementName,
+            XmlAttributeNameAttribute? attribute,
+            bool textByAttribute,
+            bool textByOption
+        ) {
+            List<string> sources = [];
+
+            if (elementName is not null)
+            {
+                sources.Add("[XmlElementName]");
+            }
+
+            if (attribute is not null)
+            {
+                sources.Add("[XmlAttributeName]");
+            }
+
+            if (textByAttribute)
+            {
+                sources.Add("[XmlElementText]");
+            }
+            else if (textByOption)
+            {
+                sources.Add("ElementText<TRow> in the options");
+            }
+
+            if (sources.Count > 1)
+            {
+                Throwing.WhenMemberWithMoreThanOneSource(type, member, sources);
+            }
         }
 
         /// <summary>
@@ -200,15 +254,15 @@ namespace Forestry.Deserialize.Xml
 
             private readonly FieldInfo? _field = member as FieldInfo;
 
-            public void Set(RowBuilder builder, ReadOnlySpan<byte> utf8, in FieldContext context)
+            public void Set(RowBuilder builder, ReadOnlySpan<byte> utf8, in ReadingInformation information)
             {
                 if (_property is not null)
                 {
-                    builder.Set(_property, utf8, in context);
+                    builder.Set(_property, utf8, in information);
                 }
                 else
                 {
-                    builder.Set(_field!, utf8, in context);
+                    builder.Set(_field!, utf8, in information);
                 }
             }
         }

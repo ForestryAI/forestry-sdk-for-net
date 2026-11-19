@@ -4,7 +4,7 @@ using System.Reflection;
 namespace Forestry.Deserialize.Xml
 {
     /// <summary>
-    /// Throws for the XML media's association of elements with rows and members; the reader's own
+    /// Throws for the XML format's association of elements with rows and members; the reader's own
     /// exceptions are Forestry.Xml's
     /// </summary>
     internal static partial class Throwing
@@ -29,21 +29,27 @@ namespace Forestry.Deserialize.Xml
         }
 
         [DoesNotReturn]
-        public static void WhenMoreThanOneTextValue(Type type, MemberInfo first, MemberInfo second)
+        public static void WhenMoreThanOneElementText(Type type, MemberInfo first, MemberInfo second)
         {
-            throw new InvalidOperationException(Deserialize.Formatting.Format(Formatting.MoreThanOneTextValue, type.FullName, first.Name, second.Name));
+            throw new InvalidOperationException(Deserialize.Formatting.Format(Formatting.MoreThanOneElementText, type.FullName, first.Name, second.Name));
         }
 
         [DoesNotReturn]
-        public static void WhenTextValueTypeNotAdded(Type type)
+        public static void WhenElementTextTypeNotAdded(Type type)
         {
-            throw new InvalidOperationException(Deserialize.Formatting.Format(Formatting.TextValueTypeNotAdded, type.FullName));
+            throw new InvalidOperationException(Deserialize.Formatting.Format(Formatting.ElementTextTypeNotAdded, type.FullName));
         }
 
         [DoesNotReturn]
-        public static void WhenTextValueMemberNotFound(Type type, string memberName)
+        public static void WhenElementTextMemberNotFound(Type type, string memberName)
         {
-            throw new InvalidOperationException(Deserialize.Formatting.Format(Formatting.TextValueMemberNotFound, type.FullName, memberName));
+            throw new InvalidOperationException(Deserialize.Formatting.Format(Formatting.ElementTextMemberNotFound, type.FullName, memberName));
+        }
+
+        [DoesNotReturn]
+        public static void WhenMemberWithMoreThanOneSource(Type type, MemberInfo member, IEnumerable<string> sources)
+        {
+            throw new InvalidOperationException(Deserialize.Formatting.Format(Formatting.MemberWithMoreThanOneSource, type.FullName, member.Name, string.Join(", ", sources)));
         }
         #endregion
     }
