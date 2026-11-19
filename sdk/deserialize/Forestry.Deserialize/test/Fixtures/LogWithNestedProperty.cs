@@ -1,7 +1,7 @@
 namespace Forestry.Deserialize.Tests.Fixtures
 {
     /// <summary>
-    /// A row class with a property whose type no converter handles (FR-008, research R14)
+    /// A row class with a nested class member (spec 001 FR-008; spec 003 US1-2: a nested structure)
     /// </summary>
     public sealed class LogWithNestedProperty : Row
     {
@@ -11,8 +11,8 @@ namespace Forestry.Deserialize.Tests.Fixtures
     }
 
     /// <summary>
-    /// A nested class with no converter: rejected in this slice; read from a structure in the
-    /// document it would be a complex (owned) member, a later slice (research R16)
+    /// A nested class: a member of this type is a nested structure, rejected by the flat-row rule
+    /// (constitution C7; spec 003 research R34 rejects spec 001's deferred owned members, R16)
     /// </summary>
     public sealed class Measurement
     {
