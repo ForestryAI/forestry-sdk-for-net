@@ -78,7 +78,7 @@ gives its rows (quickstart 1, 2).
 - [X] T007 [US1] Test shell, R33 "ignored members" (quickstart 5): `LogWithExcludedList` with `ExcludingPolicy` locks, and its type definition has no property definition for the list, in `DefinitionValidationTests.cs`
 - [X] T008 [US1] Change the existing test for `LogWithNestedProperty` (asserting "converter") to assert `MemberTypeIsNestedStructure`'s message, in `DefinitionValidationTests.cs` (R33 "existing tests affected"); renamed `Deserialize_ForANestedClassMember_ItShould_ThrowBeforeAnyByteIsRead`
 - [X] T009 [P] [US1] Change `logKey.Converter` to `logKey.ResolvedConverter` in `Forestry.Deserialize/test/ConverterResolutionTests.cs` (R33)
-- [ ] T010 [US1] **Test review gate**: the developer reviews T001-T009 on the board and closes the review task before T011 (C4)
+- [X] T010 [US1] **Test review gate**: the developer reviews T001-T009 on the board and closes the review task before T011 (C4) (developer, 2026-11-19: passed with no changes; the missing built-in converters for enums, `DateOnly`, `TimeOnly` and `TimeSpan` noted as next after the READMEs)
 
 ### Implementation for User Story 1
 
