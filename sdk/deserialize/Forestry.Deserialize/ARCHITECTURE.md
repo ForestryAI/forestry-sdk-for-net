@@ -2,7 +2,8 @@
 
 > **Superseded (2026-10-22)**: this describes the pre-spec-kit design, which is wrong (see
 > `specs/001-walking-skeleton/research.md` R0). The truth is `.specify/memory/constitution.md` and
-> `specs/`. Do not infer design from this file.
+> `specs/`. Do not infer design from this file. Its words also predate spec 003
+> ("media" for format, "shredding" for flattening, `Field`); they are kept as written.
 
 ## 1. Purpose
 

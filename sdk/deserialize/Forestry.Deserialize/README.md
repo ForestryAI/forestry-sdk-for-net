@@ -1,6 +1,6 @@
 # Forestry Deserialize
 
-Forestry Deserialize reads large documents in one forward pass and shreds them into flat rows: one
+Forestry Deserialize reads large documents in one forward pass and flattens them into rows: one
 instance of your own class per occurrence in the document, handed out as soon as it is complete.
 Nothing keeps a row once it is handed out unless a policy asks to, so a document of a million rows
 costs about the same memory as one of a thousand. The need comes from StanForD XML from harvesting and forwarding
@@ -9,8 +9,9 @@ machines, which is the real data this is developed and tested against, but neith
 
 The design is specified with spec-kit: the rules are in the
 [constitution](.specify/memory/constitution.md), the slices are
-[spec 001, walking skeleton](specs/001-walking-skeleton/spec.md) and
-[spec 002, deserialization context](specs/002-reading-context/spec.md), each with its decisions in
+[spec 001, walking skeleton](specs/001-walking-skeleton/spec.md),
+[spec 002, deserialization context](specs/002-reading-context/spec.md) and
+[spec 003, big data orientation](specs/003-big-data-orientation/spec.md), each with its decisions in
 its research.md. Some of the design is adapted from
 Microsoft's open-source .NET runtime; see [THIRD-PARTY-NOTICES.md](../../../THIRD-PARTY-NOTICES.md).
 
@@ -27,12 +28,12 @@ dotnet add package Forestry.Deserialize --prerelease
 
 ## Packages
 
-- **Forestry.Deserialize**: the media-agnostic core: rows, options, type definitions, converters and
-  the pipelines that build rows. It knows no media.
-- **Forestry.Deserialize.Xml**: the XML media. Its options (`DeserializeXmlOptions`) choose XML and
+- **Forestry.Deserialize**: the format-agnostic core: rows, options, type definitions, converters and
+  the pipelines that build rows. It knows no format.
+- **Forestry.Deserialize.Xml**: the XML format. Its options (`DeserializeXmlOptions`) choose XML and
   its reader feeds the core.
 
-## Shredding a document into rows
+## Flattening a document into rows
 
 A row class extends `Row`. Its public properties and fields are set from the document by name:
 
@@ -45,7 +46,13 @@ public sealed class Log : Row
 }
 ```
 
-Add the row types to the media's options, then deserialize. Every `<Log>` element becomes one `Log`
+A row is the unit deserialization hands out, and it is flat: every member is a single value, a
+primitive, a `string`, an enum, or a struct that formats to UTF-8 and parses from text (e.g. `Guid`,
+`DateTimeOffset`), or a nullable of one of these. Never a nested object, a collection or a composite
+struct, so each member can become one column in any big data format, JSON Lines or Parquet alike.
+"Row" names that unit; it has nothing to do with row-based vs columnar formats.
+
+Add the row types to the format's options, then deserialize. Every `<Log>` element becomes one `Log`
 row, in document order; elements and members that match nothing are ignored.
 
 ```csharp
@@ -109,20 +116,21 @@ await foreach (Row row in Deserialization.DeserializeAsync(file, options, cancel
 ### Names, constructors and converters
 
 - **Names**: by default a row matches an element named like its class and a member an element named
-  like the member. `[Row("Tree")]` on the class and `[Field("Volume")]` on a property or field use
-  the document's name instead.
+  like the member. The XML package's `[XmlElementName("Tree")]` on the class, or
+  `[XmlElementName("Volume")]` on a property or field, uses the document's name instead: names in the
+  document belong to the format, not to this package.
 - **Constructor**: a row type needs exactly one public constructor, or exactly one constructor
   marked `[RowConstructor]`, whatever its accessibility. In this slice it takes no parameters.
 - **Converters**: each member's text is converted to its type once, invariant culture: text,
   booleans, integers, decimals, `DateTime`, `DateTimeOffset`, `Guid` and the other types parsable
-  from UTF-8, plus their `Nullable<T>`. A media adds its own defaults (XML reads `1` and `0` as
+  from UTF-8, plus their `Nullable<T>`. A format adds its own defaults (XML reads `1` and `0` as
   booleans). Your own `Converter<T>` added to `options.Converters` wins over both.
 - **Empty elements**: `<LogVolume />` sets `null` where the member allows it, otherwise the type's
   default.
 
 ### Changing behavior with policies
 
-Policies change what happens while rows are built, without touching the media. Two kinds, in
+Policies change what happens while rows are built, without touching the format. Two kinds, in
 `Forestry.Deserialize.Policies`:
 
 - **Enumeration policies** (`EnumerationPolicy`) act per row: when it is constructed (`Construct`),
@@ -226,32 +234,34 @@ options.Policies.Add<Site>(new SiteKeptOut()).Add<Order>(new OrderWithSiteKey())
   that tells values apart (e.g. `<BoomPositioning boomPositioningCategory="Felling">`) works the
   same way, its policy choosing which member of the parent to set.
 - **Attributes and text** come from `Forestry.Deserialize.Xml`'s own attributes, since where a value
-  comes from is the media's:
+  comes from is the format's:
 
   ```csharp
   public sealed class Price : Row
   {
-      [XmlAttributeValue("currency")]
+      [XmlAttributeName("currency")]
       public string? Currency { get; set; }   // <Price currency="EUR">
 
-      [XmlTextValue]
+      [XmlElementText]
       public decimal Amount { get; set; }     // <Price ...>0.59</Price>
   }
   ```
 
-  A member marked `[XmlAttributeValue]` is set only from that attribute of the row's own element,
+  A member marked `[XmlAttributeName]` is set only from that attribute of the row's own element,
   never from a child element of the same name. The text member (or the one named with
-  `options.TextValue<TRow>(memberName)`, which wins) takes the last text directly inside the element;
-  with no text it is set empty. Attributes no member asks for are ignored.
+  `options.ElementText<TRow>(memberName)`, which wins) takes the last text of the row's own element;
+  with no text it is set empty. A member has one source: two of `[XmlElementName]`,
+  `[XmlAttributeName]` and `[XmlElementText]` on it fail. Attributes no member asks for are ignored.
 
 ### Failing fast
 
-- Before any byte is read, at the `Deserialize` call: no row type added, a member whose type no
-  converter handles, no constructor that can be chosen, a chosen constructor with parameters,
+- Before any byte is read, at the `Deserialize` call: no row type added, a member that is not a single
+  value (a nested structure, or a struct that formats only to chars), a member whose type no converter
+  handles (every failing member of a row type in one message), no constructor that can be chosen, a chosen constructor with parameters,
   two row types or two members read from the same element, and a policy that cannot apply (one on
   a member overriding more than `Set`, or registered for a type or member the options do not have).
-- Also before any byte is read (XML): two members reading the same attribute, or two text members
-  in one row type; `MaxContextRows` changed after the options are used.
+- Also before any byte is read (XML): two members reading the same attribute, two text members
+  in one row type, or a member with more than one source; `MaxContextRows` changed after the options are used.
 - While reading, from a policy: a completion action taken twice or on another row than the one
   completing, a member set on a row that already came out, or more kept rows than
   `MaxContextRows` allows.
@@ -266,7 +276,10 @@ synchronous and asynchronous entry points, `Row.Is<T>()` / `Row.AsType<T>()` (a 
 checked cast naming both classes when it fails), and policies attached by attribute or by options.
 Spec 002's three are done too ([tasks.md](specs/002-reading-context/tasks.md)): the deserialization
 context, rows of several types nested in one pass with their containment relationships, and XML
-attributes and element text as members. The policy model is good enough for the POC; its polish
+attributes and element text as members. Spec 003's three are done too
+([tasks.md](specs/003-big-data-orientation/tasks.md)): flat rows checked when the options lock, names
+in the document declared with the XML package's attributes, and one vocabulary, format and flatten.
+The policy model is good enough for the POC; its polish
 before a release is tracked separately.
 
 Later slices add relationships by keys and references, and rows that take their ancestors as
@@ -279,6 +292,6 @@ dotnet test test/Forestry.Deserialize.Tests.csproj
 ```
 
 The core's tests need no document: definitions, constructor choice and converter resolution.
-Shredding is tested through the real XML reader in `Forestry.Deserialize.Xml`. Slow performance
+Flattening is tested through the real XML reader in `Forestry.Deserialize.Xml`. Slow performance
 tests (trait `Category=Performance`) are left out of a plain `dotnet test` and run as the gate at
 the end of every user story: `dotnet test -s Performance.runsettings`.

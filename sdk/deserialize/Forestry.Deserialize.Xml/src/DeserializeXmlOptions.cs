@@ -6,13 +6,13 @@ using Forestry.Deserialize.Reading;
 namespace Forestry.Deserialize.Xml
 {
     /// <summary>
-    /// Options of the XML media: the row types to shred, converters and settings. Associates elements
+    /// Options of the XML format: the row types to flatten, converters and settings. Associates elements
     /// with row types and members by name, or by <see cref="XmlElementNameAttribute"/> names (research R6,
     /// R8; spec 003 R37)
     /// </summary>
     public sealed class DeserializeXmlOptions : DeserializeOptions
     {
-        private static readonly Converter[] s_mediaConverters = [new XmlBooleanConverter()];
+        private static readonly Converter[] s_formatConverters = [new XmlBooleanConverter()];
 
         private XmlAssociation? _association;
 
@@ -46,7 +46,7 @@ namespace Forestry.Deserialize.Xml
         /// <summary>
         /// XML defaults, e.g. XML Schema booleans
         /// </summary>
-        protected override IEnumerable<Converter> MediaConverters => s_mediaConverters;
+        protected override IEnumerable<Converter> FormatConverters => s_formatConverters;
 
         /// <summary>
         /// Association of elements with row types and members, built once when the options are locked
@@ -71,7 +71,7 @@ namespace Forestry.Deserialize.Xml
         /// </summary>
         /// <param name="utf8"></param>
         /// <returns></returns>
-        protected internal override MediaRowEnumerator CreateRowEnumerator(ReadOnlyMemory<byte> utf8) => new XmlRowEnumerator(utf8, this);
+        protected internal override FormatRowEnumerator CreateRowEnumerator(ReadOnlyMemory<byte> utf8) => new XmlRowEnumerator(utf8, this);
 
         /// <summary>
         /// False: <c>Utf8XmlReader</c> reads a byte order mark itself and checks it against the declared
@@ -85,7 +85,7 @@ namespace Forestry.Deserialize.Xml
         /// <param name="utf8"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        protected internal override MediaRowAsyncEnumerator CreateRowAsyncEnumerator(PipeReader utf8, CancellationToken cancellationToken) =>
+        protected internal override FormatRowAsyncEnumerator CreateRowAsyncEnumerator(PipeReader utf8, CancellationToken cancellationToken) =>
             new XmlRowAsyncEnumerator(utf8, this, cancellationToken);
     }
 }

@@ -21,7 +21,7 @@ namespace Forestry.Deserialize.Xml.Tests
     /// whether the two parts come in one buffer of two segments or in two reads (T064 review).</item>
     /// <item><c>Deserialization.DeserializeAsync(Stream, DeserializeOptions, CancellationToken = default)</c>,
     /// the stream read through a <see cref="PipeReader"/> (R3).</item>
-    /// <item>R18 (T083): the media decides whether the core skips a byte order mark; the XML media leaves it
+    /// <item>R18 (T083): the format decides whether the core skips a byte order mark; the XML format leaves it
     /// to <c>Utf8XmlReader</c>, which checks it against the declaration. (a), (b) and (d) already pass
     /// while the core still skips the mark, and guard that nothing breaks once it does not; (c) fails until
     /// T085, since the reader never sees the mark.</item>

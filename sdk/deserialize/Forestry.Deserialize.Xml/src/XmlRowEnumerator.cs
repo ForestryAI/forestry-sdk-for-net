@@ -4,10 +4,10 @@ using Forestry.Deserialize.Reading;
 namespace Forestry.Deserialize.Xml
 {
     /// <summary>
-    /// The XML media's synchronous row enumerator: the core writes the moves, this override reads
+    /// The XML format's synchronous row enumerator: the core writes the moves, this override reads
     /// (research R2)
     /// </summary>
-    internal sealed class XmlRowEnumerator : MediaRowEnumerator
+    internal sealed class XmlRowEnumerator : FormatRowEnumerator
     {
         public XmlRowEnumerator(ReadOnlyMemory<byte> utf8, DeserializeXmlOptions options) : base(utf8, options)
         {

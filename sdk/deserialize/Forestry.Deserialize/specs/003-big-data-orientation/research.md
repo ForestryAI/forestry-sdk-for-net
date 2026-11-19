@@ -246,14 +246,16 @@ Proposed. Constitution 3.1.0.
 
 - **Status**: Confirmed (developer, 2026-11-19)
 - **Changed in this spec**:
-  - Forestry.Deserialize: `README.md`, `ARCHITECTURE.md`, `CHANGELOG.md` (Unreleased section).
-  - Forestry.Deserialize.Xml: `README.md`, `ARCHITECTURE.md`, `CHANGELOG.md`.
+  - Forestry.Deserialize: `README.md`, `CHANGELOG.md` (Unreleased section), and a line in the superseded `ARCHITECTURE.md`'s banner.
+  - Forestry.Deserialize.Xml: `README.md`, `CHANGELOG.md`, and a line in the superseded `ARCHITECTURE.md`'s banner.
   - XML doc comments and resource messages in both packages' source.
   - The SDK `README.md`: "through a media" and "XML media".
 - **Excluded from SC-003's search**:
   - specs 001 and 002 (history)
   - the constitution's amendment record
   - `sdk/deserialize/CLAUDE.md` (a superseded design note, kept as history)
+  - both packages' `ARCHITECTURE.md`, superseded since 2026-10-22 and 2026-11-03; each banner now
+    says its words predate spec 003 (found during implementation, T039)
   - `.claude/` (spec-kit's own tooling, which says "media" in its generic sense)
   - generated release notes under `artifacts/`
 - **Released changelog entries**: none; both changelogs only have an Unreleased `1.0.0-beta.1`,

@@ -2,7 +2,7 @@ namespace Forestry.Deserialize
 {
     /// <summary>
     /// Abstract base of the developer's row classes. A row is an instance of a class extending
-    /// <see cref="Row"/> whose typed properties and fields hold the values shredded for one
+    /// <see cref="Row"/> whose typed properties and fields hold the values flattened for one
     /// occurrence in the document (research R4); a row is the unit deserialization enumerates
     /// </summary>
     /// <remarks>

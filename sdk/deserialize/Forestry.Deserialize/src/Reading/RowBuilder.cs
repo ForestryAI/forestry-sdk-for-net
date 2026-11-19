@@ -5,10 +5,10 @@ using Forestry.Deserialize.Policies;
 namespace Forestry.Deserialize.Reading
 {
     /// <summary>
-    /// Builds rows as a media reads (research R2, R6, R7, R19; spec 002 R20-R25): <see cref="Start{T}"/>
+    /// Builds rows as a format reads (research R2, R6, R7, R19; spec 002 R20-R25): <see cref="Start{T}"/>
     /// constructs a row, <c>Set</c> converts and sets its members, <see cref="Complete"/> completes it, an
-    /// entity that no longer changes once it comes out. The media drives it the same way for every row
-    /// type. One instance per deserialization; a media's shared reading class calls it, its enumerators
+    /// entity that no longer changes once it comes out. The format drives it the same way for every row
+    /// type. One instance per deserialization; a format's shared reading class calls it, its enumerators
     /// expose it
     /// </summary>
     /// <remarks>

@@ -4,15 +4,15 @@ using Forestry.Deserialize.Reading;
 namespace Forestry.Deserialize.Tests.Fixtures
 {
     /// <summary>
-    /// Concrete options for core tests, which reference no media package (C0, C3): definitions,
+    /// Concrete options for core tests, which reference no format package (C0, C3): definitions,
     /// validation and converter resolution only; reading a document is not supported
     /// </summary>
     public sealed class TestingDeserializeOptions : DeserializeOptions
     {
-        protected internal override MediaRowEnumerator CreateRowEnumerator(ReadOnlyMemory<byte> utf8) =>
+        protected internal override FormatRowEnumerator CreateRowEnumerator(ReadOnlyMemory<byte> utf8) =>
             throw new NotSupportedException("Core tests read no document");
 
-        protected internal override MediaRowAsyncEnumerator CreateRowAsyncEnumerator(PipeReader utf8, CancellationToken cancellationToken) =>
+        protected internal override FormatRowAsyncEnumerator CreateRowAsyncEnumerator(PipeReader utf8, CancellationToken cancellationToken) =>
             throw new NotSupportedException("Core tests read no document");
     }
 }

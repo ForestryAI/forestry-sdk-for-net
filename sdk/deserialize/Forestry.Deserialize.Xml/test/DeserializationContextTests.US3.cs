@@ -9,7 +9,7 @@ namespace Forestry.Deserialize.Xml.Tests
     /// <remarks>
     /// Test shells written before any code (C4), so they do not compile until T055 declares the surface
     /// they assume (research R30, contracts/public-api.md). Where a member's value comes from is the
-    /// media's, so the attributes are the XML package's, not the core's (developer, 2026-11-12). For the
+    /// format's, so the attributes are the XML package's, not the core's (developer, 2026-11-12). For the
     /// review gate (T054), the assumed surface, in namespace <c>Forestry.Deserialize.Xml</c> (names
     /// Deferred; named in spec 003, research R37: one family after the part of the document):
     /// <list type="bullet">

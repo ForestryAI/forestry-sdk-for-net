@@ -1,7 +1,7 @@
 namespace Forestry.Deserialize.Reading
 {
     /// <summary>
-    /// What a media's read call achieved (research R2)
+    /// What a format's read call achieved (research R2)
     /// </summary>
     public enum ReadStatus : byte
     {

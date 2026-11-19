@@ -17,7 +17,7 @@ namespace Forestry.Deserialize.Tests
     /// </remarks>
     public sealed class ConverterResolutionTests
     {
-        // T028 - a converter added to the options wins over the primitive (options, attributes, media defaults, primitives)
+        // T028 - a converter added to the options wins over the primitive (options, attributes, format defaults, primitives)
         [Fact]
         public void EffectiveConverter_ForAnInt32ConverterInTheOptions_ItShould_BeUsedInsteadOfThePrimitive()
         {

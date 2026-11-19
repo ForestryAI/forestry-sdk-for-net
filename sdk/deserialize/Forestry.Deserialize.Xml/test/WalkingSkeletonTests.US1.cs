@@ -6,7 +6,7 @@ using Xunit;
 namespace Forestry.Deserialize.Xml.Tests
 {
     /// <summary>
-    /// Spec 001, User Story 1: shred a flat class into rows (tasks.md T010-T020)
+    /// Spec 001, User Story 1: flatten a document into rows of a flat class (tasks.md T010-T020)
     /// </summary>
     /// <remarks>
     /// Test shells written before any code (C4), so they do not compile until US1's implementation
@@ -315,7 +315,7 @@ namespace Forestry.Deserialize.Xml.Tests
             Assert.False(((LogWithFlag)rows[1]).TopSawing);
         }
 
-        // T080 - flow 3: a converter added to the options wins over the XML default (options, media defaults, primitives)
+        // T080 - flow 3: a converter added to the options wins over the XML default (options, format defaults, primitives)
         [Theory]
         [InlineData(EntryPoint.Sync)]
         [InlineData(EntryPoint.Async)]

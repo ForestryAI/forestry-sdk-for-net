@@ -44,12 +44,13 @@ dotnet test Forestry.Deserialize.Xml/test -s Forestry.Deserialize.Xml/test/Perfo
 
 ## Search check (SC-003)
 
-From `sdk/deserialize`, outside the exclusions in research R41 (specs 001 and 002, the
-constitution's amendment record, `CLAUDE.md`, `.claude/`):
+From `sdk/deserialize`, outside the exclusions in research R41 (specs 001-003, the constitution's
+amendment record, `CLAUDE.md`, `.claude/`, both superseded `ARCHITECTURE.md`; the changelogs are
+T043's, in Polish):
 
 ```bash
-grep -rniE "media|shred" --include=*.cs --include=*.md --include=*.resx Forestry.Deserialize Forestry.Deserialize.Xml | grep -vE "/specs/00[12]-|/\.claude/|/obj/|/bin/|constitution\.md"
+grep -rniE "\bmedia|\bshred" --include=*.cs --include=*.md --include=*.resx Forestry.Deserialize Forestry.Deserialize.Xml | grep -vE "/specs/00[123]-|/\.claude/|/obj/|/bin/|constitution\.md|ARCHITECTURE\.md|CHANGELOG\.md"
 ```
 
-Expected: no output, apart from lines of this spec's own documents that name the old words on
-purpose (e.g. the rename tables).
+Expected: no output, apart from `test/PublicSurfaceTests.cs`, which names "Media" because it checks
+for it. Words are matched from their start, so "immediately" is not a hit.

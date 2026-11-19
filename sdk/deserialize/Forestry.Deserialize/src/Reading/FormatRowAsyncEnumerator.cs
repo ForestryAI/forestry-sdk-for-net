@@ -1,35 +1,40 @@
 using System.Buffers;
-using System.Collections;
+using System.IO.Pipelines;
 using System.Reflection;
 
 namespace Forestry.Deserialize.Reading
 {
     /// <summary>
-    /// Synchronous row enumerator over UTF-8 bytes in memory. The core writes the moves; a media derives
-    /// from it and overrides <see cref="Read"/>, driving its own reader and the core's row builder
+    /// Asynchronous row enumerator over a <see cref="PipeReader"/>. The core writes the moves; a format
+    /// derives from it and overrides <see cref="Read"/>, driving its own reader and the core's row builder
     /// (research R2). One row per move
     /// </summary>
-    public abstract class MediaRowEnumerator : IEnumerator<Row>
+    public abstract class FormatRowAsyncEnumerator : IAsyncEnumerator<Row>
     {
         /// <summary>
-        /// Row enumerator over a whole document in memory
+        /// Row enumerator over the bytes of a pipe
         /// </summary>
-        /// <param name="utf8"></param>
+        /// <param name="pipe">UTF-8 bytes of the document</param>
         /// <param name="options"></param>
-        protected MediaRowEnumerator(ReadOnlyMemory<byte> utf8, DeserializeOptions options)
+        /// <param name="cancellationToken">Cancels a move waiting for bytes</param>
+        protected FormatRowAsyncEnumerator(PipeReader pipe, DeserializeOptions options, CancellationToken cancellationToken)
         {
+            ArgumentNullException.ThrowIfNull(pipe);
             ArgumentNullException.ThrowIfNull(options);
 
-            _remaining = new ReadOnlySequence<byte>(utf8);
+            _buffering = new PipeReaderBuffering(pipe, options.SkipsByteOrderMark);
+            _cancellationToken = cancellationToken;
             Builder = new RowBuilder(options);
         }
 
-        private ReadOnlySequence<byte> _remaining;
+        private PipeReaderBuffering _buffering;
+
+        private readonly CancellationToken _cancellationToken;
 
         private bool _isDone;
 
         /// <summary>
-        /// The core's row builder for this deserialization, for a media's shared reading class
+        /// The core's row builder for this deserialization, for a format's shared reading class
         /// </summary>
         protected RowBuilder Builder { get; }
 
@@ -37,8 +42,6 @@ namespace Forestry.Deserialize.Reading
         /// Current row
         /// </summary>
         public Row Current { get; private set; } = null!;
-
-        object IEnumerator.Current => Current;
 
         /// <summary>
         /// Read from the unconsumed bytes until the core completed a row, or nothing is left
@@ -81,15 +84,35 @@ namespace Forestry.Deserialize.Reading
         protected Row? Complete() => Builder.Complete();
 
         /// <summary>
-        /// Move to the next row
+        /// Move to the next row: refill, read, advance by the bytes consumed (even 0), refill again
+        /// while the format needs more bytes
         /// </summary>
         /// <returns></returns>
-        public bool MoveNext()
+        public async ValueTask<bool> MoveNextAsync()
         {
             while (!_isDone)
             {
-                ReadStatus state = Read(_remaining, isFinalBlock: true, out Row? row, out long consumed);
-                _remaining = _remaining.Slice(consumed);
+                _buffering = await _buffering.ReadAsync(_cancellationToken).ConfigureAwait(false);
+
+                if (_buffering.IsStarting)
+                {
+                    _buffering.Advance(0, isExamined: true);  // a byte order mark not complete yet
+                    continue;
+                }
+
+                ReadStatus state;
+                Row? row;
+
+                try
+                {
+                    state = Read(_buffering.Bytes, _buffering.IsCompleted, out row, out long consumed);
+                    _buffering.Advance(consumed, isExamined: state == ReadStatus.Partial);
+                }
+                catch
+                {
+                    _buffering.Release();
+                    throw;
+                }
 
                 switch (state)
                 {
@@ -103,8 +126,11 @@ namespace Forestry.Deserialize.Reading
                         Builder.Clear();  // the enumeration ended: its policies are cleared now
                         break;
                     default:
-                        Throwing.WhenPartialAtFinalBlock();
-                        break;
+                        if (_buffering.IsCompleted)
+                        {
+                            Throwing.WhenPartialAtFinalBlock();
+                        }
+                        break;  // refill
                 }
             }
 
@@ -113,19 +139,18 @@ namespace Forestry.Deserialize.Reading
         }
 
         /// <summary>
-        /// Not supported: the input is read forward only (C2)
+        /// Release the state and the pipe's buffer; rows still open are never handed out
         /// </summary>
-        public void Reset() => throw new NotSupportedException();
-
-        /// <summary>
-        /// Release the state; rows still open are never handed out
-        /// </summary>
-        public void Dispose()
+        /// <returns></returns>
+        public virtual ValueTask DisposeAsync()
         {
             _isDone = true;
-            _remaining = default;
+            _buffering.Release();
+            Current = null!;
             Builder.Clear();
             GC.SuppressFinalize(this);
+
+            return ValueTask.CompletedTask;
         }
     }
 }

@@ -8,8 +8,8 @@ namespace Forestry.Deserialize.Policies
     /// </summary>
     /// <remarks>
     /// Attached to a row type (by attribute on the class or through <c>options.Policies</c>) or
-    /// options-wide; never to a member. A name decision comes when media names move into the core
-    /// (research R8).
+    /// options-wide; never to a member. Names in the document are not decided here: they belong to the
+    /// format package (constitution A5; spec 003 research R37).
     /// </remarks>
     public abstract class DefinitionPolicy : Policy
     {
