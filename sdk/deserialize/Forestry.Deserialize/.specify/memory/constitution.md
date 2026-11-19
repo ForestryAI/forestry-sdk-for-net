@@ -6,20 +6,20 @@ Workflow). Terms are defined under Definitions.
 
 ## Core Principles
 
-### C0. Media-agnostic deserialization
+### C0. Format-agnostic deserialization
 
 - **Covers**: Architecture
-- **Rule**: The deserialization package MUST NOT reference any media reader package. It owns what
-  is shared by every media: the entry points, the abstract options, the enumerators and buffering,
-  type, property and parameter definitions, policies, and `Row`. A media reader package references
+- **Rule**: The deserialization package MUST NOT reference any format reader package. It owns what
+  is shared by every format: the entry points, the abstract options, the enumerators and buffering,
+  type, property and parameter definitions, policies, and `Row`. A format reader package references
   it, extends the options, and supplies its own reader and a synchronous, resumable step that turns
   buffered bytes into rows, much as System.Text.Json's serializer owns buffering and runs its
-  converters over `Utf8JsonReader`. There is no media-neutral token or Value model between the two:
-  each media's tokens stay inside its own package.
-- **Rationale**: One storage model whatever the media: storage designed for analytics and high
-  write throughput. Media grammars differ too much to share tokens (e.g. XML's end element, JSON's
-  separate property names); what is shared is the shredding.
-- **Checked by**: Project references of src and test (the reference goes media -> deserialization,
+  converters over `Utf8JsonReader`. There is no format-neutral token or Value model between the two:
+  each format's tokens stay inside its own package.
+- **Rationale**: One storage model whatever the format: storage designed for analytics and high
+  write throughput. Format grammars differ too much to share tokens (e.g. XML's end element, JSON's
+  separate property names); what is shared is the flattening.
+- **Checked by**: Project references of src and test (the reference goes format -> deserialization,
   never back).
 
 ### C1. Partial deserialization
@@ -33,31 +33,31 @@ Workflow). Terms are defined under Definitions.
 - **Checked by**: A test reading a generated document with many rows and nothing held by choice
   shows memory doesn't grow with the number of rows.
 
-### C2. Single pass shredding
+### C2. Single pass flattening
 
 - **Covers**: Architecture
 - **Rule**: Deserialization MUST read the document once, forward only. Type, property and
   parameter definitions, with their policies, are built once; each part of the document is then
   ignored, starts a row, or sets a typed member of a row. Several type definitions (e.g. Stem and
-  Log rows) come from the same pass, never from re-reading. Deserialization only goes from media to
+  Log rows) come from the same pass, never from re-reading. Deserialization only goes from format to
   type definitions (no serialization back).
-- **Rationale**: Re-reading multi-GB documents is not an option; the target is flat NoSQL rows,
-  not a mirror of the media.
+- **Rationale**: Re-reading multi-GB documents is not an option; the target is flat rows, not a
+  mirror of the format.
 - **Checked by**: Tests enumerating several row types from one document read once.
 
-### C3. Tested through a real media reader, real data later
+### C3. Tested through a real format reader, real data later
 
 - **Covers**: Code quality
-- **Rule**: Deserialization behavior MUST be tested through a real media reader package (XML first,
-  JSON later) over small hand-written documents, in that media package's tests. No fake media or
-  fake token producer is built. The deserialization package's own tests cover only what needs no
-  document (e.g. definitions, policy precedence, `Row.AsType<T>()`). Confirmation against real StanForD
-  samples happens where a media reader is combined with deserialization. StanForD-specific behavior
-  is an edge case (hook), never the general rule.
-- **Rationale**: A fake media duplicates the effort of a real reader for every media (XML, then
+- **Rule**: Deserialization behavior MUST be tested through a real format reader package (XML
+  first, JSON later) over small hand-written documents, in that format package's tests. No fake
+  format or fake token producer is built. The deserialization package's own tests cover only what
+  needs no document (e.g. definitions, policy precedence, `Row.AsType<T>()`). Confirmation against
+  real StanForD samples happens where a format reader is combined with deserialization.
+  StanForD-specific behavior is an edge case (hook), never the general rule.
+- **Rationale**: A fake format duplicates the effort of a real reader for every format (XML, then
   JSON) and can hide the reader's real behavior; assumptions about StanForD have been wrong before.
-- **Checked by**: Test project references (deserialization tests reference no media package);
-  shredding tests live in the media package's tests; StanForD confirmation in the combining
+- **Checked by**: Test project references (deserialization tests reference no format package);
+  flattening tests live in the format package's tests; StanForD confirmation in the combining
   project.
 
 ### C4. Test-first
@@ -81,11 +81,24 @@ Workflow). Terms are defined under Definitions.
 ### C6. Working example first
 
 - **Covers**: Workflow
-- **Rule**: A working end-to-end example (StanForD file -> rows, in a project combining a media
+- **Rule**: A working end-to-end example (StanForD file -> rows, in a project combining a format
   reader and deserialization) MUST come before performance work. Performance is then measured, not
   assumed.
 - **Rationale**: Performance matters, but a working example matters more right now.
 - **Checked by**: Plan/task order; performance tasks only after the example works.
+
+### C7. Flat rows
+
+- **Covers**: Architecture
+- **Rule**: A type definition MUST be flat: every member is a single value, a primitive C# type or
+  a single-value struct that parses from and formats to a byte span or string (e.g. `Guid`,
+  `DateTimeOffset`). Never composite structs, nested objects or collections. Dimensions are copied
+  onto the rows that need them, not nested or joined.
+- **Rationale**: The target is big data: a single-value member can become one column in any
+  format, row-based or columnar (JSON Lines now, Parquet later). Without this rule, flat rows were
+  only promised by Forestry.StanForD (its C0).
+- **Checked by**: Building a type definition with a member that isn't a single value throws; a test
+  per rejected kind (nested object, collection, composite struct).
 
 ### D0. Public documentation
 
@@ -111,9 +124,8 @@ Workflow). Terms are defined under Definitions.
   definitions: an unexpected root; no type definition matched within a limit (depth or number of
   bytes); a value larger than a limit (e.g. string length); a row needing ancestor data that
   has not been read yet. Limits are generic options with defaults, defined by the deserialization
-  package; media reader packages honor them (e.g. maximum value length) so an oversized value fails
-  in the reader before it is fully buffered. The limit
-  values are a plan decision.
+  package; format reader packages honor them (e.g. maximum value length) so an oversized value
+  fails in the reader before it is fully buffered. The limit values are a plan decision.
 - **Rationale**: Wrong or corrupt input, unintentional or intentional, must not keep consuming CPU
   and memory.
 - **Checked by**: Tests at and just beyond each limit; a test with a wrong root fails on the first
@@ -128,29 +140,37 @@ Workflow). Terms are defined under Definitions.
   `doc/dev/`), referenced, not copied, including CI/CD.
 - **A4** (Code quality): Every test separates its steps with the comments `// Arrange`, `// Act` and
   `// Assert`, with one blank line between steps; steps done in one statement are labelled together
-  (`// Arrange + Act`, `// Act + Assert`). A media test reads its own document, a local constant
+  (`// Arrange + Act`, `// Act + Assert`). A format test reads its own document, a local constant
   written one element per line, never one shared between tests.
+- **A5** (Architecture): The deserialization package has no attribute or option naming a part of a
+  document (e.g. an element or attribute name); those belong to the format reader package (e.g.
+  Forestry.Deserialize.Xml). Attributes in the deserialization package are about definitions and
+  policies only.
 
 ## Definitions
 
-- **Document**: The input: one file or stream in one media (e.g. an HPR file in XML).
-- **Media reader package**: A package that reads one media forward and turns it into rows through
+- **Document**: The input: one file or stream in one format (e.g. an HPR file in XML).
+- **Format**: The encoding a document is written in (XML now, JSON later), read forward by a format
+  reader package.
+- **Format reader package**: A package that reads one format forward and turns it into rows through
   the deserialization package's abstractions, using its own reader and tokens (e.g.
-  Forestry.Deserialize.Xml).
+  Forestry.Deserialize.Xml). Names of document parts (e.g. an XML element or attribute) are its own.
+- **Format information**: What a format reports with each value: its depth, name and path in the
+  document (`FormatInformation`). Never a value, and never kept unless a policy or option asks for
+  it.
 - **Type definition**: A developer's flat class extending `Row`, with its property definitions
   (typed members, with converters and setters) and parameter definitions (constructor parameters,
   e.g. an ancestor row), built once per options and cached.
-- **Row**: An instance of a developer's class extending the abstract `Row`, whose typed members
-  (properties or fields) hold the values shredded for one occurrence in the document. It reports
-  its C# type and casts to its concrete class (`AsType<T>()`).
-- **Field**: Metadata about one member of a row (e.g. its member info, media name, path, depth,
-  media-specific dimensions); never a value and never cast. Per-occurrence metadata is kept only
-  when a policy or option asks for it.
+- **Row**: An instance of a developer's class extending the abstract `Row`, whose members hold the
+  values flattened for one occurrence in the document. Every member is a single value (C7). It
+  reports its C# type and casts to its concrete class (`AsType<T>()`). *Row* is the unit
+  enumerated, and has nothing to do with row-based vs columnar formats.
 - **Policy**: Behavior attached to a type, property or parameter definition at a row lifecycle
   moment (construction, member set, child row start, end, hand-out, retention), by attribute or by
   options; options win over attributes.
-- **Shredding**: Taking parts of one document into one or more flat type definitions (rows of
-  typed members), rather than mirroring the document's hierarchy.
+- **Flattening**: Taking parts of one document into one or more flat type definitions (rows of
+  single-value members), rather than mirroring the document's hierarchy. Not Parquet's (Dremel's)
+  shredding, which stores nested records with levels.
 
 ## Governance
 
@@ -164,6 +184,17 @@ Workflow). Terms are defined under Definitions.
 
 ## Amendments
 
+- **3.1.0** (2026-11-18, agreed by the developer in #125, takes effect on merge to `main`). Reason:
+  big data orientation (#125): "format" and "flatten" settled as terms, flat rows made explicit,
+  format-specific names leave the deserialization package.
+  - C7 added: flat rows (from Forestry.StanForD's C0), checked when a type definition is built.
+  - A5 added: no attribute or option naming a part of a document.
+  - C0, C2, C3, S1 and A4 reworded: "media" -> "format", "shredding" -> "flattening", including the
+    titles of C0, C2 and C3.
+  - Definitions: Format and Format information added; Media reader package renamed Format reader
+    package; Shredding renamed Flattening; Row redefined (single-value members, not row-based vs
+    columnar); Field removed (its member, type and effective converter belong to the property
+    definition, its per-value metadata is format information); Document reworded.
 - **3.0.0** (2026-11-10, confirmed by the developer, takes effect on merge to `main`). Reason: net9.0
   left Microsoft support on 2026-11-10 and the SDK now targets net10.0 only (engineering spec 001,
   research R8).
@@ -195,4 +226,4 @@ Workflow). Terms are defined under Definitions.
     value of a row" to metadata about a member; values live on the row's typed members (research
     R4).
 
-**Version**: 3.0.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-11-10
+**Version**: 3.1.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-11-18
