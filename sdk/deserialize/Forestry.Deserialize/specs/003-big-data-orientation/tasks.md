@@ -11,6 +11,8 @@ R32-R43, data-model.md, contracts/public-api.md, quickstart.md) and `.specify/me
 
 **Prerequisites**: every research item is Confirmed (research.md, 2026-11-19; R34 as a rejection).
 
+**Board**: feature #125; story issues #126 (US1), #127 (US2), #128 (US3), each with its review gate.
+
 **Tests**: Required (constitution C4), as in specs 001 and 002. In every story phase: test shells
 first, one per acceptance scenario, quickstart row or edge case; then a **test review gate** (the
 developer reviews the shells on the board before any code); then implementation. A story's shells
@@ -52,7 +54,7 @@ and the XML package.
 
 ---
 
-## Phase 1: User Story 1 - Rows are flat, and the package says so (Priority: P1) 🎯 MVP
+## Phase 1: User Story 1 - Rows are flat, and the package says so (Priority: P1) 🎯 MVP (#126)
 
 **Goal**: Locking the options fails, once per row type, for every included member that is not a
 single value or has no converter. Each property definition checks its member and resolves its own
@@ -98,7 +100,7 @@ gives its rows (quickstart 1, 2).
 
 ---
 
-## Phase 2: User Story 2 - Document names belong to the format (Priority: P1)
+## Phase 2: User Story 2 - Document names belong to the format (Priority: P1) (#127)
 
 **Goal**: `[Row]` and `[Field]` leave the core for the XML package's `XmlElementName`;
 `XmlAttributeValue` and `XmlTextValue` become `XmlAttributeName` and `XmlElementText`, with one
@@ -144,7 +146,7 @@ the same rows with names declared through `XmlElementName`; the core has no `Row
 
 ---
 
-## Phase 3: User Story 3 - One vocabulary: format and flatten (Priority: P2)
+## Phase 3: User Story 3 - One vocabulary: format and flatten (Priority: P2) (#128)
 
 **Goal**: `Media*` becomes `Format*`, `Row` moves to the top of `src/`, and source documentation,
 messages and the docs say "format" and "flatten" (R38, R39, R41).
