@@ -120,7 +120,7 @@ the same rows with names declared through `XmlElementName`; the core has no `Row
 - [X] T021 [US2] Test shells, US2-2b / FR-006a (quickstart 8): each T020 fixture fails when the options lock, the message naming the member and both sources (for the option case, `XmlAttributeName` and `ElementText`), in `Forestry.Deserialize.Xml/test/DeserializationContextTests.US3.cs`
 - [X] T022 [US2] Test shell, R37 "the name is required": `new XmlElementNameAttribute("")` and `new XmlElementNameAttribute(null!)` throw an `ArgumentException` (`ArgumentNullException` for null), in `Forestry.Deserialize.Xml/test/WalkingSkeletonTests.US1.cs`
 - [X] T023 [P] [US2] Test shell, US2-6 / FR-009: `new ReadingInformation(2, "Log"u8, "/Root/Log"u8)` from `Forestry.Deserialize` reports `Depth` 2, and `Name.ToUtf8String()` and `Path.ToUtf8String()` (from `Utf8Extensions`) give `"Log"` and `"/Root/Log"`, in a new `Forestry.Deserialize/test/ReadingInformationTests.cs`
-- [ ] T024 [US2] **Test review gate**: the developer reviews T017-T023 on the board before T025 (C4)
+- [X] T024 [US2] **Test review gate**: the developer reviews T017-T023 on the board before T025 (C4) (developer, 2026-11-19: passed with no changes)
 
 ### Implementation for User Story 2
 
