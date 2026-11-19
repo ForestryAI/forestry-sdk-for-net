@@ -12,7 +12,7 @@ namespace Forestry.Deserialize.Xml.Tests
     /// Test shells written before any code (C4), so they do not compile until US1's implementation
     /// (T030-T042) declares the surface they assume. For the review gate (T029), the assumed surface:
     /// <list type="bullet">
-    /// <item><c>Row</c>, <c>RowAttribute</c>, <c>FieldAttribute</c> in <c>Forestry.Deserialize</c>.</item>
+    /// <item><c>Row</c> in <c>Forestry.Deserialize</c>; names in the document declared with <c>XmlElementNameAttribute</c> in <c>Forestry.Deserialize.Xml</c> (spec 003 US2, research R37; spec 001 had <c>RowAttribute</c> and <c>FieldAttribute</c> in the core).</item>
     /// <item><c>DeserializeXmlOptions.Rows.Add&lt;T&gt;()</c> (R12).</item>
     /// <item><c>Deserialization.Deserialize(string, DeserializeOptions)</c>, reached through <see cref="EntryPoints"/>.</item>
     /// <item>An unconvertible value throws <see cref="FormatException"/> naming the member, its place (path) and the class (FR-007).</item>
@@ -232,11 +232,11 @@ namespace Forestry.Deserialize.Xml.Tests
             Assert.Equal(0.50m, ((LogWithFieldMember)rows[1]).LogVolume);
         }
 
-        // T017 - flow 2: [Field("Volume")] renames a member
+        // T017 - flow 2: [XmlElementName("Volume")] on a member renames it (spec 001 [Field("Volume")]; spec 003 T018)
         [Theory]
         [InlineData(EntryPoint.Sync)]
         [InlineData(EntryPoint.Async)]
-        public void Deserialize_ForARenamedField_ItShould_SetItFromTheMediaNameOnly(EntryPoint entryPoint)
+        public void Deserialize_ForARenamedMember_ItShould_SetItFromTheElementNameOnly(EntryPoint entryPoint)
         {
             // Arrange
             const string document = """
@@ -253,19 +253,19 @@ namespace Forestry.Deserialize.Xml.Tests
                 """;
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith<LogWithRenamedField>());
+            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith<LogWithRenamedMember>());
 
             // Assert
             Assert.Equal(2, rows.Count);
-            Assert.Equal(0.59m, ((LogWithRenamedField)rows[0]).LogVolume);
-            Assert.Equal(0m, ((LogWithRenamedField)rows[1]).LogVolume);
+            Assert.Equal(0.59m, ((LogWithRenamedMember)rows[0]).LogVolume);
+            Assert.Equal(0m, ((LogWithRenamedMember)rows[1]).LogVolume);
         }
 
-        // T018 - flows 1 and 2: [Row("Tree")] renames a row
+        // T018 - flows 1 and 2: [XmlElementName("Tree")] on a class renames a row (spec 001 [Row("Tree")]; spec 003 T018)
         [Theory]
         [InlineData(EntryPoint.Sync)]
         [InlineData(EntryPoint.Async)]
-        public void Deserialize_ForARenamedRow_ItShould_ShredTheMediaNameOnly(EntryPoint entryPoint)
+        public void Deserialize_ForARenamedRow_ItShould_ReadTheElementNameOnly(EntryPoint entryPoint)
         {
             // Arrange
             const string document = """
@@ -375,7 +375,7 @@ namespace Forestry.Deserialize.Xml.Tests
         {
             // Arrange
             DeserializeXmlOptions options = new();
-            options.Rows.Add<Log>().Add<LogWithRenamedField>();
+            options.Rows.Add<Log>().Add<LogWithRenamedMember>();
 
             // Act
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
@@ -383,23 +383,36 @@ namespace Forestry.Deserialize.Xml.Tests
 
             // Assert
             Assert.Contains(nameof(Log), exception.Message);
-            Assert.Contains(nameof(LogWithRenamedField), exception.Message);
+            Assert.Contains(nameof(LogWithRenamedMember), exception.Message);
             Assert.Contains("'Log'", exception.Message);
         }
 
-        // T076 - FR-008 / R8: two members read from the same element throw at the call, naming both, the element and the class.
+        // T076 - FR-008 / R8: two members read from the same element throw at the call, naming both, the element and the class;
+        // spec 003 T019: and the attribute to change, XmlElementName (US2-4, FR-007).
         // The options are rejected before any byte is read, so the document is never read.
         [Fact]
         public void Deserialize_ForTwoMembersWithTheSameElementName_ItShould_ThrowAtTheCall()
         {
             // Arrange + Act
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
-                () => Deserialization.Deserialize("<Root />", OptionsWith<LogWithDuplicateField>()));
+                () => Deserialization.Deserialize("<Root />", OptionsWith<LogWithDuplicateMember>()));
 
             // Assert
-            Assert.Contains(nameof(LogWithDuplicateField), exception.Message);
-            Assert.Contains(nameof(LogWithDuplicateField.Volume), exception.Message);
+            Assert.Contains(nameof(LogWithDuplicateMember), exception.Message);
+            Assert.Contains(nameof(LogWithDuplicateMember.Volume), exception.Message);
             Assert.Contains("'LogVolume'", exception.Message);
+            Assert.Contains("XmlElementName", exception.Message);  // spec 003 T019, FR-007
+        }
+
+        // Spec 003 T022 - research R37: XmlElementName requires a name; without the attribute the class or
+        // member name is used, so an empty one has no use
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        public void XmlElementName_ForAnEmptyName_ItShould_ThrowArgumentException(string? name)
+        {
+            // Arrange + Act + Assert
+            Assert.ThrowsAny<ArgumentException>(() => new XmlElementNameAttribute(name!));
         }
     }
 }

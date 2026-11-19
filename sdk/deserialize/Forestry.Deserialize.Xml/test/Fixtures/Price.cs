@@ -6,13 +6,13 @@ namespace Forestry.Deserialize.Xml.Tests.Fixtures
     /// </summary>
     public sealed class Price : Row
     {
-        [XmlAttributeValue("currency")]
+        [XmlAttributeName("currency")]
         public string? Currency { get; set; }
 
-        [XmlAttributeValue("kind")]
+        [XmlAttributeName("kind")]
         public string? Kind { get; set; }
 
-        [XmlTextValue]
+        [XmlElementText]
         public decimal Amount { get; set; }
     }
 }

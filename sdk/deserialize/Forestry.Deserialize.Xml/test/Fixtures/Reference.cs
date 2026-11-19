@@ -6,10 +6,10 @@ namespace Forestry.Deserialize.Xml.Tests.Fixtures
     /// </summary>
     public sealed class Reference : Row
     {
-        [XmlAttributeValue("type")]
+        [XmlAttributeName("type")]
         public string? Type { get; set; }
 
-        [XmlTextValue]
+        [XmlElementText]
         public string? Value { get; set; }
     }
 }

@@ -9,7 +9,7 @@ namespace Forestry.Deserialize.Xml.Tests.Fixtures
     /// be rejected in this slice); the marked one is private and parameterless. Which constructor ran
     /// is told by a method, not a member, so the document cannot set it.
     /// </remarks>
-    [Row("Log")]
+    [XmlElementName("Log")]
     public sealed class LogWithMarkedConstructor : Row
     {
         private readonly bool _constructedByMarked;
