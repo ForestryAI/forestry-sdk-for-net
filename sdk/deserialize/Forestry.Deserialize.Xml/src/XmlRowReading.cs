@@ -6,7 +6,7 @@ using Forestry.Xml.Reading;
 namespace Forestry.Deserialize.Xml
 {
     /// <summary>
-    /// The XML media's reading, shared by its sync and async row enumerators (research R2): rebuilds
+    /// The XML format's reading, shared by its sync and async row enumerators (research R2): rebuilds
     /// the reader from its saved state each call, turns elements, attributes and text into the core's
     /// row builder calls, and returns as soon as a row is completed
     /// </summary>
@@ -238,8 +238,8 @@ namespace Forestry.Deserialize.Xml
 
         private void SetMember(RowBuilder builder, XmlAssociation.MemberAssociation member, int depth, ReadOnlySpan<byte> name, ReadOnlySpan<byte> utf8)
         {
-            FieldContext context = new(depth, name, _path.AsSpan(0, _pathLength));
-            member.Set(builder, utf8, in context);
+            ReadingInformation information = new(depth, name, _path.AsSpan(0, _pathLength));
+            member.Set(builder, utf8, in information);
         }
 
         /// <summary>

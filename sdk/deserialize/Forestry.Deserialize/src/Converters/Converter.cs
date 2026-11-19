@@ -1,7 +1,7 @@
 namespace Forestry.Deserialize.Converters
 {
     /// <summary>
-    /// Converts a value the media hands over as UTF-8 text into a member's type, independent of any
+    /// Converts a value the format hands over as UTF-8 text into a member's type, independent of any
     /// reader (research R14). Derive from <see cref="Converter{T}"/> for one type or from
     /// <see cref="ConverterFactory"/> for a family of types
     /// </summary>

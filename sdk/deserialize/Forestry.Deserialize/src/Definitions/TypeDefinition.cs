@@ -2,7 +2,6 @@ using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
-using Forestry.Deserialize.Converters;
 
 namespace Forestry.Deserialize.Definitions
 {
@@ -39,7 +38,8 @@ namespace Forestry.Deserialize.Definitions
         public DeserializeOptions Options { get; }
 
         /// <summary>
-        /// One property definition per property or field whose type a converter handles
+        /// One property definition per included property or field: each a single value with a resolved
+        /// converter (spec 003, research R33)
         /// </summary>
         public IReadOnlyList<PropertyDefinition> Properties { get; }
 
@@ -75,7 +75,8 @@ namespace Forestry.Deserialize.Definitions
             _indexesByName.TryGetValue(memberName, out index);
 
         /// <summary>
-        /// Build the definition of a row type, rejecting it before any byte is read (FR-008)
+        /// Build the definition of a row type, rejecting it before any byte is read (FR-008), with one
+        /// exception naming every member that cannot be mapped (spec 003, research R33)
         /// </summary>
         /// <param name="type"></param>
         /// <param name="options"></param>
@@ -92,25 +93,32 @@ namespace Forestry.Deserialize.Definitions
             }
 
             List<PropertyDefinition> properties = [];
+            List<string>? failures = null;
 
             foreach (MemberInfo member in GetMembers(type))
             {
                 if (!includeMember(member))
                 {
-                    continue;  // left out by a definition policy (research R19)
+                    continue;  // left out by a definition policy (research R19): never checked (spec 003 R33)
                 }
 
                 Type memberType = member is PropertyInfo property ? property.PropertyType : ((FieldInfo)member).FieldType;
-                Converter? converter = options.ResolveConverter(memberType);
 
-                if (converter is null)
+                // The property definition checks the single value and resolves its converter; failures
+                // of all members are gathered into one exception (spec 003, research R33)
+                if (!PropertyDefinition.TryCreate(member, memberType, options, out PropertyDefinition? definition, out string? failure))
                 {
-                    Throwing.WhenMemberWithoutConverter(type, member, memberType);
+                    (failures ??= []).Add(failure);
+                    continue;
                 }
 
-                PropertyDefinition definition = PropertyDefinition.Create(member, memberType, converter);
                 definition.Index = properties.Count;
                 properties.Add(definition);
+            }
+
+            if (failures is not null)
+            {
+                Throwing.WhenRowTypeMembersInvalid(type, failures);
             }
 
             Func<Row> construct = Expression.Lambda<Func<Row>>(Expression.Convert(Expression.New(constructor), typeof(Row))).Compile();

@@ -20,11 +20,173 @@ namespace Forestry.Deserialize.Tests
     /// </remarks>
     public sealed class DefinitionValidationTests
     {
+        /// <summary>
+        /// Words <c>MemberTypeIsNestedStructure</c>'s message contains (spec 003 research R33)
+        /// </summary>
+        private const string NestedStructure = "nested structure";
+
+        /// <summary>
+        /// The flat-row rule as <c>MemberTypeIsNestedStructure</c>'s message states it (constitution C7)
+        /// </summary>
+        private const string SingleValue = "single value";
+
+        /// <summary>
+        /// The second fix <c>MemberTypeIsNestedStructure</c>'s message gives (research R33)
+        /// </summary>
+        private const string OwnRowType = "own row type";
+
         private static TestingDeserializeOptions OptionsWith<TRow>() where TRow : Row
         {
             TestingDeserializeOptions options = new();
             options.Rows.Add<TRow>();
             return options;
+        }
+
+        // Spec 003, US1 (#126): rows are flat (tasks.md T002-T008, research R32, R33).
+        //
+        // Test shells written before any code (C4). For the review gate (T010), the assumed surface:
+        // - MakeReadOnly() builds the type definitions and throws one InvalidOperationException per
+        //   row type, naming the type and each failing member with its type and reason (R33).
+        // - MemberTypeIsNestedStructure's message contains "nested structure", the rule ("single
+        //   value") and the fix "own row type"; MemberTypeNotUtf8Formattable's names
+        //   IUtf8SpanFormattable; MemberWithoutConverter's (spec 001) says "converter".
+        // - PropertyDefinition.ResolvedConverter replaces PropertyDefinition.Converter (R33).
+
+        // T002 - US1-1 / quickstart 1: every single-value kind with a converter locks, and each member
+        // gets a resolved converter for its type
+        [Fact]
+        public void MakeReadOnly_ForARowTypeOfSingleValues_ItShould_ResolveAConverterForEachMember()
+        {
+            // Arrange
+            TestingDeserializeOptions options = OptionsWith<FlatRow>();
+            options.Converters.Add(new MeasureConverter());
+
+            // Act
+            options.MakeReadOnly();
+
+            // Assert
+            Assert.True(options.TryGetTypeDefinition(typeof(FlatRow), out Definitions.TypeDefinition? definition));
+            Assert.Equal(12, definition!.Properties.Count);
+            Assert.All(definition.Properties, property => Assert.True(property.ResolvedConverter.CanConvert(property.MemberType), property.Name));
+        }
+
+        // T002 (R32, R33) - single values without a built-in converter (enum, DateOnly, TimeSpan) pass
+        // the flat check and fail only for lack of a converter, all three in one message
+        [Fact]
+        public void MakeReadOnly_ForSingleValuesWithoutConverters_ItShould_ThrowForTheConverterOnly()
+        {
+            // Arrange
+            TestingDeserializeOptions options = OptionsWith<SingleValuesWithoutConverters>();
+
+            // Act
+            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(options.MakeReadOnly);
+
+            // Assert
+            Assert.Contains(nameof(SingleValuesWithoutConverters), exception.Message);
+            Assert.Contains(nameof(SingleValuesWithoutConverters.Grade), exception.Message);
+            Assert.Contains(nameof(SingleValuesWithoutConverters.Felled), exception.Message);
+            Assert.Contains(nameof(SingleValuesWithoutConverters.Duration), exception.Message);
+            Assert.Contains("converter", exception.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(NestedStructure, exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // T003 - US1-2 / US1-3 / US1-4 / SC-001 (quickstart 2, 3): each nested-structure kind fails,
+        // naming the row type, the member, its type and the rule
+        [Theory]
+        [InlineData(typeof(LogWithNestedProperty), nameof(LogWithNestedProperty.Measurement), nameof(Measurement))]
+        [InlineData(typeof(LogWithRowMember), nameof(LogWithRowMember.Stem), nameof(Stem))]
+        [InlineData(typeof(LogWithArray), nameof(LogWithArray.Diameters), "Int32[]")]
+        [InlineData(typeof(LogWithList), nameof(LogWithList.Diameters), "List")]
+        [InlineData(typeof(LogWithDictionary), nameof(LogWithDictionary.Diameters), "Dictionary")]
+        [InlineData(typeof(LogWithCompositeStruct), nameof(LogWithCompositeStruct.Position), nameof(Coordinate))]
+        public void MakeReadOnly_ForANestedStructureMember_ItShould_ThrowNamingTheMemberAndTheRule(Type rowType, string member, string memberType)
+        {
+            // Arrange
+            TestingDeserializeOptions options = new();
+            options.Rows.Add(rowType);
+
+            // Act
+            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(options.MakeReadOnly);
+
+            // Assert
+            Assert.Contains(rowType.Name, exception.Message);
+            Assert.Contains(member, exception.Message);
+            Assert.Contains(memberType, exception.Message);
+            Assert.Contains(NestedStructure, exception.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains(SingleValue, exception.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains(OwnRowType, exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // T004 - US1-5 / FR-003 / SC-001 (quickstart 4): a converter does not make a composite member flat
+        [Fact]
+        public void MakeReadOnly_ForACompositeMemberWithAConverter_ItShould_StillThrowForTheNestedStructure()
+        {
+            // Arrange
+            TestingDeserializeOptions options = OptionsWith<LogWithConvertedComposite>();
+            options.Converters.Add(new MeasurementConverter());
+
+            // Act
+            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(options.MakeReadOnly);
+
+            // Assert
+            Assert.Contains(nameof(LogWithConvertedComposite), exception.Message);
+            Assert.Contains(nameof(LogWithConvertedComposite.Measurement), exception.Message);
+            Assert.Contains(NestedStructure, exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // T005 - R32 / R33: a struct that formats only to chars fails with MemberTypeNotUtf8Formattable's
+        // message, not as a nested structure
+        [Fact]
+        public void MakeReadOnly_ForAStructFormattingOnlyToChars_ItShould_ThrowNamingIUtf8SpanFormattable()
+        {
+            // Arrange
+            TestingDeserializeOptions options = OptionsWith<LogWithCharsOnlyStruct>();
+
+            // Act
+            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(options.MakeReadOnly);
+
+            // Assert
+            Assert.Contains(nameof(LogWithCharsOnlyStruct), exception.Message);
+            Assert.Contains(nameof(LogWithCharsOnlyStruct.Diameter), exception.Message);
+            Assert.Contains(nameof(IUtf8SpanFormattable), exception.Message);
+            Assert.DoesNotContain(NestedStructure, exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // T006 - R33, one message per type: a nested structure and a single value without a converter
+        // in one row type fail together, in one exception
+        [Fact]
+        public void MakeReadOnly_ForTwoFailingMembers_ItShould_NameBothInOneException()
+        {
+            // Arrange
+            TestingDeserializeOptions options = OptionsWith<LogWithTwoFailingMembers>();
+
+            // Act
+            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(options.MakeReadOnly);
+
+            // Assert
+            Assert.Contains(nameof(LogWithTwoFailingMembers), exception.Message);
+            Assert.Contains(nameof(LogWithTwoFailingMembers.Diameters), exception.Message);
+            Assert.Contains(nameof(LogWithTwoFailingMembers.Length), exception.Message);
+            Assert.Contains(NestedStructure, exception.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("converter", exception.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // T007 - R33, ignored members (quickstart 5): a member a definition policy leaves out is never
+        // checked
+        [Fact]
+        public void MakeReadOnly_ForANestedStructureLeftOutByAPolicy_ItShould_Lock()
+        {
+            // Arrange
+            TestingDeserializeOptions options = OptionsWith<LogWithExcludedList>();
+            options.Policies.Add<LogWithExcludedList>(new ExcludingPolicy());
+
+            // Act
+            options.MakeReadOnly();
+
+            // Assert
+            Assert.True(options.TryGetTypeDefinition(typeof(LogWithExcludedList), out Definitions.TypeDefinition? definition));
+            Assert.DoesNotContain(definition!.Properties, property => property.Name == nameof(LogWithExcludedList.ExcludedDiameters));
+            Assert.Contains(definition.Properties, property => property.Name == nameof(LogWithExcludedList.LogKey));
         }
 
         // T021 - quickstart 13 / FR-008: no row type added
@@ -39,12 +201,14 @@ namespace Forestry.Deserialize.Tests
             Assert.Contains("row type", exception.Message, StringComparison.OrdinalIgnoreCase);
         }
 
-        // T022 - FR-008: a property whose type no converter handles (no converter for Measurement).
+        // T022 - FR-008: a nested class member, rejected before any byte is read.
         //
-        // The message must name the member's type and the reason, not only the class, so a rejection
-        // for another reason (e.g. the constructor) does not pass this test.
+        // Spec 003 T008: spec 001 rejected it for lack of a converter; the flat check now runs first
+        // (research R33), so it fails as a nested structure. The message must name the member's type
+        // and the reason, not only the class, so a rejection for another reason (e.g. the
+        // constructor) does not pass this test.
         [Fact]
-        public void Deserialize_ForAPropertyWithoutAConverter_ItShould_ThrowBeforeAnyByteIsRead()
+        public void Deserialize_ForANestedClassMember_ItShould_ThrowBeforeAnyByteIsRead()
         {
             // Arrange + Act
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
@@ -53,7 +217,7 @@ namespace Forestry.Deserialize.Tests
             // Assert
             Assert.Contains(nameof(LogWithNestedProperty), exception.Message);
             Assert.Contains(nameof(Measurement), exception.Message);
-            Assert.Contains("converter", exception.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains(NestedStructure, exception.Message, StringComparison.OrdinalIgnoreCase);
         }
 
         // T023 - FR-008 (this slice): the chosen constructor has parameters.

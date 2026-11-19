@@ -6,19 +6,36 @@ using Forestry.Deserialize.Reading;
 namespace Forestry.Deserialize.Definitions
 {
     /// <summary>
-    /// Definition of a member of type <typeparamref name="T"/>: its effective <see cref="Converter{T}"/>
-    /// and a setter built once (research R14)
+    /// Definition of a member of type <typeparamref name="T"/>: its resolved <see cref="Converter{T}"/>
+    /// and a setter built once (research R14; spec 003 R33)
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public sealed class PropertyDefinition<T> : PropertyDefinition
     {
-        internal PropertyDefinition(MemberInfo member, Converter converter) : base(member, typeof(T), converter)
+        internal PropertyDefinition(MemberInfo member) : base(member, typeof(T))
         {
-            _converter = (Converter<T>)converter;
             _setter = CreateSetter(member);
         }
 
-        private readonly Converter<T> _converter;
+        private Converter<T> _converter = null!;
+
+        /// <summary>
+        /// Resolve the typed <see cref="Converter{T}"/> for <typeparamref name="T"/> through the options
+        /// (spec 003, research R33)
+        /// </summary>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        private protected override Converter? ResolveConverter(DeserializeOptions options)
+        {
+            Converter<T>? converter = options.ResolveConverter(typeof(T)) as Converter<T>;
+
+            if (converter is not null)
+            {
+                _converter = converter;
+            }
+
+            return converter;
+        }
 
         private readonly Action<Row, T> _setter;
 
@@ -29,9 +46,9 @@ namespace Forestry.Deserialize.Definitions
         /// </summary>
         /// <param name="row"></param>
         /// <param name="utf8"></param>
-        /// <param name="context"></param>
+        /// <param name="information"></param>
         /// <param name="set">The composed set step, an <c>Action&lt;ContextRow, T&gt;</c></param>
-        internal override void ReadAndSet(ContextRow row, ReadOnlySpan<byte> utf8, in FieldContext context, Delegate set)
+        internal override void ReadAndSet(ContextRow row, ReadOnlySpan<byte> utf8, in ReadingInformation information, Delegate set)
         {
             T value;
 
@@ -47,7 +64,7 @@ namespace Forestry.Deserialize.Definitions
                 }
                 catch (Exception exception) when (exception is FormatException or OverflowException)
                 {
-                    Throwing.WhenUnconvertible(this, row.Row.GetType(), context.Path.ToUtf8String(), exception);
+                    Throwing.WhenUnconvertible(this, row.Row.GetType(), information.Path.ToUtf8String(), exception);
                     return;
                 }
             }

@@ -187,7 +187,7 @@ namespace Forestry.Deserialize
         }
 
         /// <summary>
-        /// Effective converter of a type: the developer's converters, then the media's defaults, then
+        /// Resolved converter of a type: the developer's converters, then the format's defaults, then
         /// the primitives; null when none handles it (research R14)
         /// </summary>
         /// <param name="type"></param>
@@ -201,7 +201,7 @@ namespace Forestry.Deserialize
                 return resolved;
             }
 
-            resolved = FindConverter(_converters, type) ?? FindConverter(MediaConverters, type) ?? FindConverter(s_primitiveConverters, type);
+            resolved = FindConverter(_converters, type) ?? FindConverter(FormatConverters, type) ?? FindConverter(s_primitiveConverters, type);
             _resolvedConverters[type] = resolved;
 
             return resolved;

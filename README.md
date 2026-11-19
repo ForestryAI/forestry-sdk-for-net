@@ -115,7 +115,7 @@ Whatever the resource, every StanForD client does the same work in two layers:
   the resource, and that the answer passes back through. Directives handle what concerns a whole
   document or file: validation, Biometria extras, partition folders and file names, retries.
 - **Deserialization, per row.** Inside the pipeline, `Forestry.Deserialize` reads the document through
-  a media (`Forestry.Deserialize.Xml`, built on `Forestry.Xml`), and policies flatten it into rows:
+  a format package (`Forestry.Deserialize.Xml`, built on `Forestry.Xml`), and policies flatten it into rows:
   identification, partitioning, conditional mapping, Extensions from Sender. The rows are then written
   in the client's format (JSON Lines, later Parquet).
 
@@ -152,7 +152,7 @@ In the order of the path from a StanForD document to big data files:
 |---|---|---|---|
 | [Forestry.Xml](sdk/xml/Forestry.Xml/README.md) | `sdk/xml` | Forward-only UTF-8 XML reader over byte sequences, with no allocation per value. | 1.0.0-beta.1 on GitHub releases |
 | [Forestry.Deserialize](sdk/deserialize/Forestry.Deserialize/README.md) | `sdk/deserialize` | Flattens large documents into rows through type definitions and policies, without loading them fully into memory. | In development |
-| [Forestry.Deserialize.Xml](sdk/deserialize/Forestry.Deserialize.Xml/README.md) | `sdk/deserialize` | XML media for Forestry.Deserialize, built on Forestry.Xml. | In development |
+| [Forestry.Deserialize.Xml](sdk/deserialize/Forestry.Deserialize.Xml/README.md) | `sdk/deserialize` | XML format for Forestry.Deserialize, built on Forestry.Xml. | In development |
 | [Forestry.StanForD](sdk/stanford/Forestry.StanForD/README.md) | `sdk/stanford` | [StanForD](https://www.skogforsk.se/) Harvesting documents as Stem and Log rows. | In development, spec 001 done |
 | [Forestry.StanForD.Harvesting](sdk/stanford/Forestry.StanForD.Harvesting/README.md) | `sdk/stanford` | Harvesting-specific logic: deserialization policies and pipeline directives. | Planned |
 | [Forestry.Turn](sdk/turn/Forestry.Turn/README.md) | `sdk/turn` | Pipeline that carries an intention through directives to an answer. To be renamed Forestry.Core. | In development |

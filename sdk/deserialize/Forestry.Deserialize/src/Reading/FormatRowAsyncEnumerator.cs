@@ -5,11 +5,11 @@ using System.Reflection;
 namespace Forestry.Deserialize.Reading
 {
     /// <summary>
-    /// Asynchronous row enumerator over a <see cref="PipeReader"/>. The core writes the moves; a media
+    /// Asynchronous row enumerator over a <see cref="PipeReader"/>. The core writes the moves; a format
     /// derives from it and overrides <see cref="Read"/>, driving its own reader and the core's row builder
     /// (research R2). One row per move
     /// </summary>
-    public abstract class MediaRowAsyncEnumerator : IAsyncEnumerator<Row>
+    public abstract class FormatRowAsyncEnumerator : IAsyncEnumerator<Row>
     {
         /// <summary>
         /// Row enumerator over the bytes of a pipe
@@ -17,7 +17,7 @@ namespace Forestry.Deserialize.Reading
         /// <param name="pipe">UTF-8 bytes of the document</param>
         /// <param name="options"></param>
         /// <param name="cancellationToken">Cancels a move waiting for bytes</param>
-        protected MediaRowAsyncEnumerator(PipeReader pipe, DeserializeOptions options, CancellationToken cancellationToken)
+        protected FormatRowAsyncEnumerator(PipeReader pipe, DeserializeOptions options, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(pipe);
             ArgumentNullException.ThrowIfNull(options);
@@ -34,7 +34,7 @@ namespace Forestry.Deserialize.Reading
         private bool _isDone;
 
         /// <summary>
-        /// The core's row builder for this deserialization, for a media's shared reading class
+        /// The core's row builder for this deserialization, for a format's shared reading class
         /// </summary>
         protected RowBuilder Builder { get; }
 
@@ -64,18 +64,18 @@ namespace Forestry.Deserialize.Reading
         /// </summary>
         /// <param name="property"></param>
         /// <param name="utf8"></param>
-        /// <param name="context"></param>
-        protected void Set(PropertyInfo property, ReadOnlySpan<byte> utf8, in FieldContext context) =>
-            Builder.Set(property, utf8, in context);
+        /// <param name="information"></param>
+        protected void Set(PropertyInfo property, ReadOnlySpan<byte> utf8, in ReadingInformation information) =>
+            Builder.Set(property, utf8, in information);
 
         /// <summary>
         /// A field of the top open row has this UTF-8 value
         /// </summary>
         /// <param name="field"></param>
         /// <param name="utf8"></param>
-        /// <param name="context"></param>
-        protected void Set(FieldInfo field, ReadOnlySpan<byte> utf8, in FieldContext context) =>
-            Builder.Set(field, utf8, in context);
+        /// <param name="information"></param>
+        protected void Set(FieldInfo field, ReadOnlySpan<byte> utf8, in ReadingInformation information) =>
+            Builder.Set(field, utf8, in information);
 
         /// <summary>
         /// The top open row is complete
@@ -85,7 +85,7 @@ namespace Forestry.Deserialize.Reading
 
         /// <summary>
         /// Move to the next row: refill, read, advance by the bytes consumed (even 0), refill again
-        /// while the media needs more bytes
+        /// while the format needs more bytes
         /// </summary>
         /// <returns></returns>
         public async ValueTask<bool> MoveNextAsync()

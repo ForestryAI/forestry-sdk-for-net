@@ -12,19 +12,19 @@ namespace Forestry.StanForD {
         /// Volume category, e.g. "m3sob", "m3sub" or "m3 (price)", from the <c>logVolumeCategory</c>
         /// attribute
         /// </summary>
-        [XmlAttributeValue("logVolumeCategory")]
+        [XmlAttributeName("logVolumeCategory")]
         public string LogVolumeCategory { get; set; } = string.Empty;
 
         /// <summary>
         /// Who measured, e.g. "Machine", from the <c>logMeasurementCategory</c> attribute
         /// </summary>
-        [XmlAttributeValue("logMeasurementCategory")]
+        [XmlAttributeName("logMeasurementCategory")]
         public string LogMeasurementCategory { get; set; } = string.Empty;
 
         /// <summary>
         /// The volume, in the document's volume unit
         /// </summary>
-        [XmlTextValue]
+        [XmlElementText]
         public decimal Value { get; set; }
     }
 
@@ -37,7 +37,7 @@ namespace Forestry.StanForD {
         /// <summary>
         /// Who measured, e.g. "Machine", from the <c>logMeasurementCategory</c> attribute
         /// </summary>
-        [XmlAttributeValue("logMeasurementCategory")]
+        [XmlAttributeName("logMeasurementCategory")]
         public string LogMeasurementCategory { get; set; } = string.Empty;
 
         /// <summary>
@@ -55,13 +55,13 @@ namespace Forestry.StanForD {
         /// <summary>
         /// Diameter category, e.g. "Butt ob" or "Mid HKS ub", from the <c>logDiameterCategory</c> attribute
         /// </summary>
-        [XmlAttributeValue("logDiameterCategory")]
+        [XmlAttributeName("logDiameterCategory")]
         public string LogDiameterCategory { get; set; } = string.Empty;
 
         /// <summary>
         /// The diameter, in the document's diameter unit
         /// </summary>
-        [XmlTextValue]
+        [XmlElementText]
         public int Value { get; set; }
     }
 }

@@ -10,7 +10,7 @@ namespace Forestry.Deserialize
         /// cannot be defined throws here (FR-008)
         /// </summary>
         /// <param name="document"></param>
-        /// <param name="options">A media's options with the row types added</param>
+        /// <param name="options">A format's options with the row types added</param>
         /// <returns>The rows in document order, enumerable once</returns>
         public static IEnumerable<Row> Deserialize(string document, DeserializeOptions options)
         {

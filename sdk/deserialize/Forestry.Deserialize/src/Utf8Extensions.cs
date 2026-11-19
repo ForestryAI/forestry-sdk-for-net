@@ -1,11 +1,12 @@
 using System.Text;
 
-namespace Forestry.Deserialize.Reading
+namespace Forestry.Deserialize
 {
     /// <summary>
-    /// Turn <see cref="FieldContext"/> spans into strings only when asked (research R15)
+    /// UTF-8 spans, such as <see cref="ReadingInformation.Name"/> and <see cref="ReadingInformation.Path"/>,
+    /// as strings only when asked (spec 001 research R15; named after what it extends in spec 003, R36)
     /// </summary>
-    public static class FieldContextExtensions
+    public static class Utf8Extensions
     {
         /// <summary>
         /// UTF-8 bytes as a string

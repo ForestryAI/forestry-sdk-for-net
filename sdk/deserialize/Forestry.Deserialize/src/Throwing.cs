@@ -65,10 +65,41 @@ namespace Forestry.Deserialize
             throw new InvalidOperationException(Formatting.Format(Formatting.ConstructorHasParameters, type.FullName));
         }
 
+        /// <summary>
+        /// One exception for a row type naming every member that failed when its definition was built:
+        /// a nested structure, a struct formatting only to chars, or no converter (spec 003, research R33)
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="failures">One message per failing member, from <see cref="Formatting.MemberTypeIsNestedStructure"/>,
+        /// <see cref="Formatting.MemberTypeNotUtf8Formattable"/> or <see cref="Formatting.MemberWithoutConverter"/></param>
         [DoesNotReturn]
-        public static void WhenMemberWithoutConverter(Type type, MemberInfo member, Type memberType)
+        public static void WhenRowTypeMembersInvalid(Type type, IReadOnlyList<string> failures)
         {
-            throw new InvalidOperationException(Formatting.Format(Formatting.MemberWithoutConverter, type.FullName, member.Name, memberType.FullName));
+            string list = string.Concat(failures.Select(failure => Environment.NewLine + "- " + failure));
+            throw new InvalidOperationException(Formatting.Format(Formatting.RowTypeMembersInvalid, type.FullName, list));
+        }
+
+        /// <summary>
+        /// A type's name for a message: its full name, with generic arguments written as in C#
+        /// (<c>System.Collections.Generic.List&lt;System.Int32&gt;</c>) instead of the runtime's form
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        internal static string DisplayName(Type type)
+        {
+            if (type.IsArray)
+            {
+                return DisplayName(type.GetElementType()!) + "[" + new string(',', type.GetArrayRank() - 1) + "]";
+            }
+
+            if (!type.IsGenericType)
+            {
+                return type.FullName ?? type.Name;
+            }
+
+            string name = type.GetGenericTypeDefinition().FullName ?? type.Name;
+            int tick = name.IndexOf('`');
+            return (tick < 0 ? name : name[..tick]) + "<" + string.Join(", ", type.GetGenericArguments().Select(DisplayName)) + ">";
         }
 
         [DoesNotReturn]

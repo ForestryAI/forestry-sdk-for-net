@@ -8,7 +8,7 @@ namespace Forestry.Deserialize
         /// <summary>
         /// Rows from a document read from a pipe, lazily and asynchronously. Each row is handed out as soon
         /// as its end is read, without waiting for more input; a UTF-8 byte order mark is skipped unless the
-        /// media's reader reads it (research R18). The
+        /// format's reader reads it (research R18). The
         /// options are locked and their definitions built before this returns, so a row type that cannot
         /// be defined throws here (FR-008)
         /// </summary>
@@ -17,7 +17,7 @@ namespace Forestry.Deserialize
         /// completes the pipe, so the caller can read on after the document or complete it themselves.
         /// </remarks>
         /// <param name="utf8">UTF-8 bytes of the document; the caller completes it</param>
-        /// <param name="options">A media's options with the row types added</param>
+        /// <param name="options">A format's options with the row types added</param>
         /// <param name="cancellationToken">Cancels a move waiting for bytes</param>
         /// <returns>The rows in document order, enumerable once</returns>
         public static IAsyncEnumerable<Row> DeserializeAsync(PipeReader utf8, DeserializeOptions options, CancellationToken cancellationToken = default)
@@ -41,7 +41,7 @@ namespace Forestry.Deserialize
         /// stream).
         /// </remarks>
         /// <param name="utf8">UTF-8 bytes of the document; left open</param>
-        /// <param name="options">A media's options with the row types added</param>
+        /// <param name="options">A format's options with the row types added</param>
         /// <param name="cancellationToken">Cancels a move waiting for bytes</param>
         /// <returns>The rows in document order, enumerable once</returns>
         public static IAsyncEnumerable<Row> DeserializeAsync(Stream utf8, DeserializeOptions options, CancellationToken cancellationToken = default)
@@ -56,7 +56,7 @@ namespace Forestry.Deserialize
         }
 
         /// <summary>
-        /// Rows from a pipe, enumerated once: the media's row enumerator is created when enumeration
+        /// Rows from a pipe, enumerated once: the format's row enumerator is created when enumeration
         /// starts, a second enumeration throws (research R2)
         /// </summary>
         /// <remarks>
@@ -66,10 +66,10 @@ namespace Forestry.Deserialize
         /// completed here.
         /// </para>
         /// <para>
-        /// The media creates the <see cref="MediaRowAsyncEnumerator"/> and does not know who owns the pipe, so the
+        /// The format creates the <see cref="FormatRowAsyncEnumerator"/> and does not know who owns the pipe, so the
         /// extra clean-up lives in <see cref="OwningRowAsyncEnumerator"/>: completing an owned pipe, and
         /// disposing the source that links the entry point's and the enumeration's cancellation tokens.
-        /// With neither to clean up, the media's enumerator is returned as it is.
+        /// With neither to clean up, the format's enumerator is returned as it is.
         /// </para>
         /// </remarks>
         /// <param name="pipe"></param>
@@ -95,7 +95,7 @@ namespace Forestry.Deserialize
                     ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, enumerationToken)
                     : null;
                 CancellationToken token = linked?.Token ?? (enumerationToken.CanBeCanceled ? enumerationToken : cancellationToken);
-                MediaRowAsyncEnumerator rows;
+                FormatRowAsyncEnumerator rows;
 
                 try
                 {
@@ -121,13 +121,13 @@ namespace Forestry.Deserialize
 
         /// <summary>
         /// A row enumerator that also completes the pipe the entry point created, and disposes the linked
-        /// cancellation, after the media's enumerator has given back its buffer
+        /// cancellation, after the format's enumerator has given back its buffer
         /// </summary>
-        /// <param name="rows">The media's enumerator</param>
+        /// <param name="rows">The format's enumerator</param>
         /// <param name="pipe">The pipe to complete, or null when the caller owns it</param>
         /// <param name="linked">The linked cancellation source to dispose, or null</param>
         private sealed class OwningRowAsyncEnumerator(
-            MediaRowAsyncEnumerator rows,
+            FormatRowAsyncEnumerator rows,
             PipeReader? pipe,
             CancellationTokenSource? linked) : IAsyncEnumerator<Row>
         {

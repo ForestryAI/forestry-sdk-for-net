@@ -6,14 +6,14 @@ using Forestry.Deserialize.Reading;
 namespace Forestry.Deserialize
 {
     /// <summary>
-    /// Options of one media (e.g. <c>DeserializeXmlOptions</c>): the row types, converters and settings
+    /// Options of one format (e.g. <c>DeserializeXmlOptions</c>): the row types, converters and settings
     /// of a deserialization. The options own and build all definitions; once first used they are
     /// read-only (research R6)
     /// </summary>
     public abstract partial class DeserializeOptions
     {
         /// <summary>
-        /// Options of a media
+        /// Options of a format
         /// </summary>
         protected DeserializeOptions()
         {
@@ -29,7 +29,7 @@ namespace Forestry.Deserialize
 
         #region Converters
         /// <summary>
-        /// Converters added by the developer; they win over the media's defaults and the primitives
+        /// Converters added by the developer; they win over the format's defaults and the primitives
         /// (research R14)
         /// </summary>
         public IList<Converter> Converters => _converters ??= new OptionsObservableList<Converter>(this);
@@ -37,10 +37,10 @@ namespace Forestry.Deserialize
         private OptionsObservableList<Converter>? _converters;
 
         /// <summary>
-        /// The media's default converters, e.g. XML Schema booleans; after the developer's converters,
+        /// The format's default converters, e.g. XML Schema booleans; after the developer's converters,
         /// before the primitives
         /// </summary>
-        protected virtual IEnumerable<Converter> MediaConverters => [];
+        protected virtual IEnumerable<Converter> FormatConverters => [];
         #endregion
 
         #region Policies
@@ -117,7 +117,7 @@ namespace Forestry.Deserialize
         }
 
         /// <summary>
-        /// The media builds what it derives from the definitions, once, before the options are locked;
+        /// The format builds what it derives from the definitions, once, before the options are locked;
         /// it throws to reject them, at the call like any definition error (FR-008)
         /// </summary>
         protected virtual void OnMakingReadOnly() { }
@@ -134,25 +134,25 @@ namespace Forestry.Deserialize
         }
         #endregion
 
-        #region Media
+        #region Format
         /// <summary>
-        /// The media's synchronous row enumerator over UTF-8 bytes (research R2)
+        /// The format's synchronous row enumerator over UTF-8 bytes (research R2)
         /// </summary>
         /// <param name="utf8"></param>
         /// <returns></returns>
-        protected internal abstract MediaRowEnumerator CreateRowEnumerator(ReadOnlyMemory<byte> utf8);
+        protected internal abstract FormatRowEnumerator CreateRowEnumerator(ReadOnlyMemory<byte> utf8);
 
         /// <summary>
-        /// The media's asynchronous row enumerator over the UTF-8 bytes of a pipe (research R2)
+        /// The format's asynchronous row enumerator over the UTF-8 bytes of a pipe (research R2)
         /// </summary>
         /// <param name="utf8"></param>
         /// <param name="cancellationToken">Cancels a move waiting for bytes</param>
         /// <returns></returns>
-        protected internal abstract MediaRowAsyncEnumerator CreateRowAsyncEnumerator(PipeReader utf8, CancellationToken cancellationToken);
+        protected internal abstract FormatRowAsyncEnumerator CreateRowAsyncEnumerator(PipeReader utf8, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Whether the core skips a leading UTF-8 byte order mark before the media's reader sees the bytes
-        /// (research R18). True by default, for a reader that does not handle one (e.g. JSON's); a media
+        /// Whether the core skips a leading UTF-8 byte order mark before the format's reader sees the bytes
+        /// (research R18). True by default, for a reader that does not handle one (e.g. JSON's); a format
         /// whose reader checks the mark itself (XML's, against the declared encoding) returns false
         /// </summary>
         protected internal virtual bool SkipsByteOrderMark => true;

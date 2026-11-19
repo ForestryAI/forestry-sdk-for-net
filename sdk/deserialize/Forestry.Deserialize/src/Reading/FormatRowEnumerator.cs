@@ -5,18 +5,18 @@ using System.Reflection;
 namespace Forestry.Deserialize.Reading
 {
     /// <summary>
-    /// Synchronous row enumerator over UTF-8 bytes in memory. The core writes the moves; a media derives
+    /// Synchronous row enumerator over UTF-8 bytes in memory. The core writes the moves; a format derives
     /// from it and overrides <see cref="Read"/>, driving its own reader and the core's row builder
     /// (research R2). One row per move
     /// </summary>
-    public abstract class MediaRowEnumerator : IEnumerator<Row>
+    public abstract class FormatRowEnumerator : IEnumerator<Row>
     {
         /// <summary>
         /// Row enumerator over a whole document in memory
         /// </summary>
         /// <param name="utf8"></param>
         /// <param name="options"></param>
-        protected MediaRowEnumerator(ReadOnlyMemory<byte> utf8, DeserializeOptions options)
+        protected FormatRowEnumerator(ReadOnlyMemory<byte> utf8, DeserializeOptions options)
         {
             ArgumentNullException.ThrowIfNull(options);
 
@@ -29,7 +29,7 @@ namespace Forestry.Deserialize.Reading
         private bool _isDone;
 
         /// <summary>
-        /// The core's row builder for this deserialization, for a media's shared reading class
+        /// The core's row builder for this deserialization, for a format's shared reading class
         /// </summary>
         protected RowBuilder Builder { get; }
 
@@ -61,18 +61,18 @@ namespace Forestry.Deserialize.Reading
         /// </summary>
         /// <param name="property"></param>
         /// <param name="utf8"></param>
-        /// <param name="context"></param>
-        protected void Set(PropertyInfo property, ReadOnlySpan<byte> utf8, in FieldContext context) =>
-            Builder.Set(property, utf8, in context);
+        /// <param name="information"></param>
+        protected void Set(PropertyInfo property, ReadOnlySpan<byte> utf8, in ReadingInformation information) =>
+            Builder.Set(property, utf8, in information);
 
         /// <summary>
         /// A field of the top open row has this UTF-8 value
         /// </summary>
         /// <param name="field"></param>
         /// <param name="utf8"></param>
-        /// <param name="context"></param>
-        protected void Set(FieldInfo field, ReadOnlySpan<byte> utf8, in FieldContext context) =>
-            Builder.Set(field, utf8, in context);
+        /// <param name="information"></param>
+        protected void Set(FieldInfo field, ReadOnlySpan<byte> utf8, in ReadingInformation information) =>
+            Builder.Set(field, utf8, in information);
 
         /// <summary>
         /// The top open row is complete

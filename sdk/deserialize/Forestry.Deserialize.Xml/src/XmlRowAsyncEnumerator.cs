@@ -5,10 +5,10 @@ using Forestry.Deserialize.Reading;
 namespace Forestry.Deserialize.Xml
 {
     /// <summary>
-    /// The XML media's asynchronous row enumerator: the core writes the moves over the pipe, this
+    /// The XML format's asynchronous row enumerator: the core writes the moves over the pipe, this
     /// override reads with the same reading as the synchronous one (research R2)
     /// </summary>
-    internal sealed class XmlRowAsyncEnumerator : MediaRowAsyncEnumerator
+    internal sealed class XmlRowAsyncEnumerator : FormatRowAsyncEnumerator
     {
         public XmlRowAsyncEnumerator(PipeReader utf8, DeserializeXmlOptions options, CancellationToken cancellationToken)
             : base(utf8, options, cancellationToken)

@@ -9,18 +9,21 @@ namespace Forestry.Deserialize.Xml.Tests
     /// <remarks>
     /// Test shells written before any code (C4), so they do not compile until T055 declares the surface
     /// they assume (research R30, contracts/public-api.md). Where a member's value comes from is the
-    /// media's, so the attributes are the XML package's, not the core's (developer, 2026-11-12). For the
+    /// format's, so the attributes are the XML package's, not the core's (developer, 2026-11-12). For the
     /// review gate (T054), the assumed surface, in namespace <c>Forestry.Deserialize.Xml</c> (names
-    /// Deferred):
+    /// Deferred; named in spec 003, research R37: one family after the part of the document):
     /// <list type="bullet">
-    /// <item><c>[XmlAttributeValue("name")]</c>: a member set only from the row element's attribute of that
+    /// <item><c>[XmlAttributeName("name")]</c> (spec 002 <c>[XmlAttributeValue]</c>): a member set only from the row element's attribute of that
     /// name; a child element never sets it; attributes no member matches are ignored.</item>
-    /// <item><c>[XmlTextValue]</c>: the member set only from the text directly inside the row element, the
+    /// <item><c>[XmlElementText]</c> (spec 002 <c>[XmlTextValue]</c>): the member set only from the text directly inside the row element, the
     /// last text winning; with no text by the row's end it is set empty (null where the member allows it,
     /// else its default) and marked set. More than one per type fails when the options lock.</item>
-    /// <item><c>DeserializeXmlOptions.TextValue&lt;TRow&gt;(memberName)</c>: the same through the options,
+    /// <item><c>DeserializeXmlOptions.ElementText&lt;TRow&gt;(memberName)</c> (spec 002 <c>TextValue</c>): the same through the options,
     /// winning over the attribute.</item>
-    /// <item>A member with no marker (or the core's <c>[Field]</c>) is set only from a direct child element.</item>
+    /// <item>A member with no marker (or <c>[XmlElementName]</c>, spec 002's core <c>[Field]</c>) is set only from a direct child element.</item>
+    /// <item>Spec 003 (T021, FR-006a): a member has at most one source; two of <c>[XmlElementName]</c>,
+    /// <c>[XmlAttributeName]</c>, <c>[XmlElementText]</c>, or <c>ElementText&lt;TRow&gt;</c> with either of the
+    /// first two, fail when the options lock, naming the member and both sources.</item>
     /// </list>
     /// Theories run both entry points.
     /// </remarks>
@@ -215,7 +218,7 @@ namespace Forestry.Deserialize.Xml.Tests
                 </Root>
                 """;
             DeserializeXmlOptions options = OptionsWith(typeof(PriceWithTextOption));
-            options.TextValue<PriceWithTextOption>(nameof(PriceWithTextOption.Other));
+            options.ElementText<PriceWithTextOption>(nameof(PriceWithTextOption.Other));
 
             // Act
             List<Row> rows = EntryPoints.Read(entryPoint, document, options);
@@ -224,6 +227,87 @@ namespace Forestry.Deserialize.Xml.Tests
             PriceWithTextOption price = Assert.Single(rows).AsType<PriceWithTextOption>();
             Assert.Equal(0.59m, price.Other);
             Assert.Equal(0m, price.Amount);
+        }
+
+        // Spec 003 T021 - US2-2b / FR-006a (quickstart 8): a member from a child element and from the row's
+        // own text fails when the options lock, naming the member and both sources
+        [Theory]
+        [InlineData(EntryPoint.Sync)]
+        [InlineData(EntryPoint.Async)]
+        public void Deserialize_ForAMemberFromAnElementAndTheText_ItShould_ThrowNamingBothSources(EntryPoint entryPoint)
+        {
+            // Arrange
+            const string document = """
+                <Root>
+                  <Price>0.59</Price>
+                </Root>
+                """;
+
+            // Act
+            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+                () => EntryPoints.Read(entryPoint, document, OptionsWith(typeof(PriceWithElementAndText))));
+
+            // Assert
+            Assert.Contains(nameof(PriceWithElementAndText), exception.Message);
+            Assert.Contains(nameof(PriceWithElementAndText.Amount), exception.Message);
+            Assert.Contains("XmlElementName", exception.Message);
+            Assert.Contains("XmlElementText", exception.Message);
+        }
+
+        // Spec 003 T021 - US2-2b / FR-006a: a member from an attribute and from a child element fails when
+        // the options lock, naming the member and both sources
+        [Theory]
+        [InlineData(EntryPoint.Sync)]
+        [InlineData(EntryPoint.Async)]
+        public void Deserialize_ForAMemberFromAnAttributeAndAnElement_ItShould_ThrowNamingBothSources(EntryPoint entryPoint)
+        {
+            // Arrange
+            const string document = """
+                <Root>
+                  <Price currency="EUR">
+                    <Amount>0.59</Amount>
+                  </Price>
+                </Root>
+                """;
+
+            // Act
+            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+                () => EntryPoints.Read(entryPoint, document, OptionsWith(typeof(PriceWithAttributeAndElement))));
+
+            // Assert
+            Assert.Contains(nameof(PriceWithAttributeAndElement), exception.Message);
+            Assert.Contains(nameof(PriceWithAttributeAndElement.Currency), exception.Message);
+            Assert.Contains("XmlAttributeName", exception.Message);
+            Assert.Contains("XmlElementName", exception.Message);
+        }
+
+        // Spec 003 T021 - US2-2b / FR-006a: a member from an attribute that the options also make the row's
+        // own text fails when the options lock, naming the member, the attribute and the option
+        [Theory]
+        [InlineData(EntryPoint.Sync)]
+        [InlineData(EntryPoint.Async)]
+        public void Deserialize_ForAnAttributeMemberMadeTheTextByTheOptions_ItShould_ThrowNamingBothSources(EntryPoint entryPoint)
+        {
+            // Arrange
+            const string document = """
+                <Root>
+                  <Price currency="EUR">
+                    <Amount>0.59</Amount>
+                  </Price>
+                </Root>
+                """;
+            DeserializeXmlOptions options = OptionsWith(typeof(PriceWithAttributeAndTextOption));
+            options.ElementText<PriceWithAttributeAndTextOption>(nameof(PriceWithAttributeAndTextOption.Currency));
+
+            // Act
+            InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
+                () => EntryPoints.Read(entryPoint, document, options));
+
+            // Assert
+            Assert.Contains(nameof(PriceWithAttributeAndTextOption), exception.Message);
+            Assert.Contains(nameof(PriceWithAttributeAndTextOption.Currency), exception.Message);
+            Assert.Contains("XmlAttributeName", exception.Message);
+            Assert.Contains("ElementText", exception.Message);
         }
 
         // T052 - R29 with attributes: a wrapper row type's attribute is set before its children arrive, and

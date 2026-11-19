@@ -2,12 +2,22 @@ namespace Forestry.Deserialize
 {
     /// <summary>
     /// Abstract base of the developer's row classes. A row is an instance of a class extending
-    /// <see cref="Row"/> whose typed properties and fields hold the values shredded for one
-    /// occurrence in the document (research R4)
+    /// <see cref="Row"/> whose typed properties and fields hold the values flattened for one
+    /// occurrence in the document (research R4); a row is the unit deserialization enumerates
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// A row is flat: every member is a single value, a primitive, a <see cref="string"/>, an enum, or a
+    /// struct that formats to UTF-8 and parses from text (e.g. <see cref="Guid"/>,
+    /// <see cref="DateTimeOffset"/>), or a nullable of one of these. Never a nested object, a collection
+    /// or a composite struct; a row type with such a member fails when the options lock (constitution
+    /// C7; spec 003, research R32, R33). So each member can become one column in any big data format.
+    /// "Row" names the unit enumerated and has nothing to do with row-based vs columnar formats.
+    /// </para>
+    /// <para>
     /// A row's public surface is only <see cref="Is{T}"/> and <see cref="AsType{T}"/>; both are
     /// non-virtual and need nothing stored on the row, so a row costs only its typed members (C1)
+    /// </para>
     /// </remarks>
     public abstract class Row
     {

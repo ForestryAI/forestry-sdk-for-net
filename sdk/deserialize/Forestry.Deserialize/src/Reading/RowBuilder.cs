@@ -5,10 +5,10 @@ using Forestry.Deserialize.Policies;
 namespace Forestry.Deserialize.Reading
 {
     /// <summary>
-    /// Builds rows as a media reads (research R2, R6, R7, R19; spec 002 R20-R25): <see cref="Start{T}"/>
+    /// Builds rows as a format reads (research R2, R6, R7, R19; spec 002 R20-R25): <see cref="Start{T}"/>
     /// constructs a row, <c>Set</c> converts and sets its members, <see cref="Complete"/> completes it, an
-    /// entity that no longer changes once it comes out. The media drives it the same way for every row
-    /// type. One instance per deserialization; a media's shared reading class calls it, its enumerators
+    /// entity that no longer changes once it comes out. The format drives it the same way for every row
+    /// type. One instance per deserialization; a format's shared reading class calls it, its enumerators
     /// expose it
     /// </summary>
     /// <remarks>
@@ -55,18 +55,18 @@ namespace Forestry.Deserialize.Reading
         /// </summary>
         /// <param name="property"></param>
         /// <param name="utf8"></param>
-        /// <param name="context"></param>
-        public void Set(PropertyInfo property, ReadOnlySpan<byte> utf8, in FieldContext context) =>
-            SetMember(property, utf8, in context);
+        /// <param name="information"></param>
+        public void Set(PropertyInfo property, ReadOnlySpan<byte> utf8, in ReadingInformation information) =>
+            SetMember(property, utf8, in information);
 
         /// <summary>
         /// A field of the innermost open row has this UTF-8 value: convert and set it
         /// </summary>
         /// <param name="field"></param>
         /// <param name="utf8"></param>
-        /// <param name="context"></param>
-        public void Set(FieldInfo field, ReadOnlySpan<byte> utf8, in FieldContext context) =>
-            SetMember(field, utf8, in context);
+        /// <param name="information"></param>
+        public void Set(FieldInfo field, ReadOnlySpan<byte> utf8, in ReadingInformation information) =>
+            SetMember(field, utf8, in information);
 
         /// <summary>
         /// The innermost open row is complete: pop it, let its policies decide, keep it in the context or
@@ -115,7 +115,7 @@ namespace Forestry.Deserialize.Reading
             }
         }
 
-        private void SetMember(MemberInfo member, ReadOnlySpan<byte> utf8, in FieldContext context)
+        private void SetMember(MemberInfo member, ReadOnlySpan<byte> utf8, in ReadingInformation information)
         {
             if (!_context.TryPeek(out ContextRow? row))
             {
@@ -129,7 +129,7 @@ namespace Forestry.Deserialize.Reading
                 Throwing.WhenMemberNotOfRow(member, definition.Type);
             }
 
-            property.ReadAndSet(row, utf8, in context, row.Chains.Setters[property.Index]);
+            property.ReadAndSet(row, utf8, in information, row.Chains.Setters[property.Index]);
         }
     }
 }
