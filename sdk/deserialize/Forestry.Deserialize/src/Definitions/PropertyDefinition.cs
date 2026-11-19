@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Forestry.Deserialize.Converters;
 using Forestry.Deserialize.Reading;
@@ -10,11 +11,10 @@ namespace Forestry.Deserialize.Definitions
     /// </summary>
     public abstract class PropertyDefinition
     {
-        private protected PropertyDefinition(MemberInfo member, Type memberType, Converter converter)
+        private protected PropertyDefinition(MemberInfo member, Type memberType)
         {
             Member = member;
             MemberType = memberType;
-            Field = new Field(member, memberType, converter);
         }
 
         /// <summary>
@@ -33,14 +33,15 @@ namespace Forestry.Deserialize.Definitions
         public Type MemberType { get; }
 
         /// <summary>
-        /// Effective converter of the member's type
+        /// The converter this member uses, resolved from the options when the definition is configured
+        /// (spec 003, research R33)
         /// </summary>
-        public Converter Converter => Field.Converter;
+        public Converter ResolvedConverter { get; private set; } = null!;
 
         /// <summary>
-        /// Metadata about the member (research R4)
+        /// Metadata about the member (research R4); removed in spec 003 US2 (research R35)
         /// </summary>
-        public Field Field { get; }
+        public Field Field { get; private set; } = null!;
 
         /// <summary>
         /// Position in its type definition's <see cref="TypeDefinition.Properties"/>
@@ -67,19 +68,126 @@ namespace Forestry.Deserialize.Definitions
         internal abstract Delegate ComposeSet(IReadOnlyList<Policies.EnumerationPolicy> chain);
 
         /// <summary>
-        /// Create the generic definition for the member's type, once when definitions are built
+        /// Resolve this member's converter from the options, once when definitions are built; null when
+        /// none handles its type (research R33). Format packages take no part in it
+        /// </summary>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        private protected abstract Converter? ResolveConverter(DeserializeOptions options);
+
+        /// <summary>
+        /// Resolve and keep the converter (research R33, step 3)
+        /// </summary>
+        /// <param name="options"></param>
+        /// <returns>Null when configured; otherwise why the member cannot be mapped</returns>
+        private string? Configure(DeserializeOptions options)
+        {
+            Converter? converter = ResolveConverter(options);
+
+            if (converter is null)
+            {
+                return Formatting.Format(Formatting.MemberWithoutConverter, Member.Name, Throwing.DisplayName(MemberType));
+            }
+
+            ResolvedConverter = converter;
+            Field = new Field(Member, MemberType, converter);
+            return null;
+        }
+
+        /// <summary>
+        /// Create and configure the definition of a member, once when definitions are built (research
+        /// R33): check the member's type is a single value (R32) before the generic definition exists,
+        /// since some types cannot be a generic argument; create it; resolve its converter
         /// </summary>
         /// <param name="member"></param>
         /// <param name="memberType"></param>
-        /// <param name="converter"></param>
+        /// <param name="options"></param>
+        /// <param name="definition">The definition, when the member can be mapped</param>
+        /// <param name="failure">Why it cannot, for the type definition to gather</param>
         /// <returns></returns>
-        internal static PropertyDefinition Create(MemberInfo member, Type memberType, Converter converter) =>
-            (PropertyDefinition)Activator.CreateInstance(
+        internal static bool TryCreate(
+            MemberInfo member,
+            Type memberType,
+            DeserializeOptions options,
+            [NotNullWhen(true)] out PropertyDefinition? definition,
+            [NotNullWhen(false)] out string? failure
+        ) {
+            definition = null;
+            failure = CheckSingleValue(member, memberType);
+
+            if (failure is not null)
+            {
+                return false;
+            }
+
+            PropertyDefinition created = (PropertyDefinition)Activator.CreateInstance(
                 typeof(PropertyDefinition<>).MakeGenericType(memberType),
                 BindingFlags.Instance | BindingFlags.NonPublic,
                 binder: null,
-                args: [member, converter],
+                args: [member],
                 culture: null
             )!;
+
+            failure = created.Configure(options);
+
+            if (failure is not null)
+            {
+                return false;
+            }
+
+            definition = created;
+            return true;
+        }
+
+        /// <summary>
+        /// Whether a member's type is a single value (constitution C7, research R32): after unwrapping
+        /// <see cref="Nullable{T}"/>, a primitive, <see cref="string"/>, an enum, or a value type that
+        /// formats to UTF-8 (<see cref="IUtf8SpanFormattable"/>) and parses from text
+        /// (<see cref="IUtf8SpanParsable{TSelf}"/> or <see cref="ISpanParsable{TSelf}"/>)
+        /// </summary>
+        /// <param name="member"></param>
+        /// <param name="memberType"></param>
+        /// <returns>Null for a single value; otherwise why not: a value type formatting only to chars, or a
+        /// nested structure</returns>
+        private static string? CheckSingleValue(MemberInfo member, Type memberType)
+        {
+            Type type = Nullable.GetUnderlyingType(memberType) ?? memberType;
+
+            if (type.IsPrimitive || type == typeof(string) || type.IsEnum)
+            {
+                return null;
+            }
+
+            if (type.IsValueType)
+            {
+                bool formatsToUtf8 = typeof(IUtf8SpanFormattable).IsAssignableFrom(type);
+
+                if (formatsToUtf8 && (Implements(type, typeof(IUtf8SpanParsable<>)) || Implements(type, typeof(ISpanParsable<>))))
+                {
+                    return null;
+                }
+
+                if (!formatsToUtf8 && typeof(ISpanFormattable).IsAssignableFrom(type))
+                {
+                    return Formatting.Format(Formatting.MemberTypeNotUtf8Formattable, member.Name, Throwing.DisplayName(memberType));
+                }
+            }
+
+            return Formatting.Format(Formatting.MemberTypeIsNestedStructure, member.Name, Throwing.DisplayName(memberType));
+        }
+
+        /// <summary>
+        /// Whether <paramref name="type"/> implements the self-referencing generic interface for itself,
+        /// e.g. <c>ISpanParsable&lt;Guid&gt;</c> for <see cref="Guid"/>; looked up among its interfaces,
+        /// since constructing the interface for a type outside its constraint would throw
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="genericInterface"></param>
+        /// <returns></returns>
+        private static bool Implements(Type type, Type genericInterface) =>
+            type.GetInterfaces().Any(contract =>
+                contract.IsGenericType &&
+                contract.GetGenericTypeDefinition() == genericInterface &&
+                contract.GetGenericArguments()[0] == type);
     }
 }

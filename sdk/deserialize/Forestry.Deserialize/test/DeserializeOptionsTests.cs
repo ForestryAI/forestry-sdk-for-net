@@ -1,4 +1,3 @@
-using Forestry.Deserialize.Converters;
 using Forestry.Deserialize.Tests.Fixtures;
 using Xunit;
 
@@ -16,14 +15,6 @@ namespace Forestry.Deserialize.Tests
         /// </summary>
         public abstract class AbstractRow : Row
         {
-        }
-
-        /// <summary>
-        /// A converter for the member <see cref="LogWithNestedProperty"/> has no default for
-        /// </summary>
-        private sealed class MeasurementConverter : Converter<Measurement>
-        {
-            public override Measurement Convert(ReadOnlySpan<byte> utf8) => new();
         }
 
         #region Rows
@@ -156,18 +147,19 @@ namespace Forestry.Deserialize.Tests
 
         // The options stay unlocked when a definition cannot be built, so the developer can add what
         // was missing: the converter resolved as "none" during the failed build must not be remembered
-        // (developer's review at T026, 2026-11-10)
+        // (developer's review at T026, 2026-11-10). Spec 003: the missing converter is for a single value
+        // (FlatRow's Measure); a converter for a nested class no longer helps (FR-003, research R33)
         [Fact]
         public void MakeReadOnly_AfterAFailedBuildAndAddingTheMissingConverter_ItShould_Lock()
         {
             // Arrange
             TestingDeserializeOptions options = new();
-            options.Rows.Add<LogWithNestedProperty>();
+            options.Rows.Add<FlatRow>();
             Assert.Throws<InvalidOperationException>(options.MakeReadOnly);
             Assert.False(options.IsReadOnly);
 
             // Act
-            options.Converters.Add(new MeasurementConverter());
+            options.Converters.Add(new MeasureConverter());
             options.MakeReadOnly();
 
             // Assert

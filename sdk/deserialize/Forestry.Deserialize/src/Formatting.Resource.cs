@@ -39,7 +39,13 @@ namespace Forestry.Deserialize
 
         internal static string EnumerationRunning => GetResourceString(nameof(EnumerationRunning), @"These options have enumeration policies and are already used by a running enumeration; policies keep state for one enumeration at a time, so use another options instance for a concurrent deserialization.");
 
-        internal static string MemberWithoutConverter => GetResourceString(nameof(MemberWithoutConverter), @"Type '{0}': member '{1}' of type '{2}' has no converter; add one to the options.");
+        internal static string RowTypeMembersInvalid => GetResourceString(nameof(RowTypeMembersInvalid), @"Type '{0}' cannot be a row type:{1}");
+
+        internal static string MemberTypeIsNestedStructure => GetResourceString(nameof(MemberTypeIsNestedStructure), @"member '{0}' of type '{1}' is a nested structure, but every member of a row must be a single value (a primitive, a string, an enum, or a struct that formats to UTF-8 and parses from text). Copy its values onto the row as single values, or make it its own row type.");
+
+        internal static string MemberTypeNotUtf8Formattable => GetResourceString(nameof(MemberTypeNotUtf8Formattable), @"member '{0}' of type '{1}' formats only to chars: implement IUtf8SpanFormattable, so rows can be written without a string per value.");
+
+        internal static string MemberWithoutConverter => GetResourceString(nameof(MemberWithoutConverter), @"member '{0}' of type '{1}' has no converter; add one to the options.");
 
         internal static string NoConverter => GetResourceString(nameof(NoConverter), @"No converter handles type '{0}'.");
 

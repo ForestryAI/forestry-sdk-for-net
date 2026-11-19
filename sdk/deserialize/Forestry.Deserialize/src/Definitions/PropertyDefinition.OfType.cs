@@ -6,19 +6,36 @@ using Forestry.Deserialize.Reading;
 namespace Forestry.Deserialize.Definitions
 {
     /// <summary>
-    /// Definition of a member of type <typeparamref name="T"/>: its effective <see cref="Converter{T}"/>
-    /// and a setter built once (research R14)
+    /// Definition of a member of type <typeparamref name="T"/>: its resolved <see cref="Converter{T}"/>
+    /// and a setter built once (research R14; spec 003 R33)
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public sealed class PropertyDefinition<T> : PropertyDefinition
     {
-        internal PropertyDefinition(MemberInfo member, Converter converter) : base(member, typeof(T), converter)
+        internal PropertyDefinition(MemberInfo member) : base(member, typeof(T))
         {
-            _converter = (Converter<T>)converter;
             _setter = CreateSetter(member);
         }
 
-        private readonly Converter<T> _converter;
+        private Converter<T> _converter = null!;
+
+        /// <summary>
+        /// Resolve the typed <see cref="Converter{T}"/> for <typeparamref name="T"/> through the options
+        /// (spec 003, research R33)
+        /// </summary>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        private protected override Converter? ResolveConverter(DeserializeOptions options)
+        {
+            Converter<T>? converter = options.ResolveConverter(typeof(T)) as Converter<T>;
+
+            if (converter is not null)
+            {
+                _converter = converter;
+            }
+
+            return converter;
+        }
 
         private readonly Action<Row, T> _setter;
 
