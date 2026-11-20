@@ -1,24 +1,25 @@
 # Forestry StanForD
 
-Turns [StanForD](https://www.skogforsk.se/) Harvesting documents into flat rows for big data analysis.
-StanForD is the XML standard published by Skogforsk for exchanging forest machine data.
+This library flattens [StanForD](https://www.skogforsk.se/) documents into rows for big data analysis.
+StanForD is the XML standard published by Skogforsk for exchanging forest machine data; the SDK's
+[README](../../../README.md#scandinavian-stanford) explains why it is where the SDK starts.
 
 Production StanForD is big data: machines produce documents every day, and some are very large. The
-analysis is grouped, usually by an actor (an operator, a machine, a contract and the parties behind
-it), over time. So instead of mirroring StanForD's deep XML hierarchy as C# objects, this package
-shreds each document into flat rows. Rows suit a column-based format such as Parquet, read by Azure
-Data Explorer in this POC, but the final format is yours: JSON, CSV, another format, or an application
-using the rows directly.
+analysis is grouped, usually by an actor (an operator or production planner), a device (a machine) and
+a contract. So instead of mirroring StanForD's deep XML hierarchy as C# objects, this package
+flattens each document into self-contained rows, which feed a client's pipeline on the way to a big
+data resource. The SDK's [README](../../../README.md#big-data-clients) explains the whole path.
 
 It is built on [Forestry.Deserialize](../../deserialize/Forestry.Deserialize/README.md) and its XML
-media package, and is also an example of how to shred a standard with them: everything StanForD-specific
-lives in this package's row types and policies, nothing in the deserialization core. For how it is put
-together, see [ARCHITECTURE.md](ARCHITECTURE.md).
+format package, and is also an example of how to flatten a standard with them: everything
+StanForD-specific lives in this package's row types and policies, nothing in the deserialization core.
+For how it is put together, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
-## Shredding a Harvesting document
+## Flattening a document
 
-One call sets up the options; then deserialize as with any Forestry.Deserialize media. Only `Stem` and
-`Log` rows come out, in completion order (a stem's logs before the stem):
+One call sets up the options; then deserialize as with any Forestry.Deserialize format. `Stem` and
+`Log` are the only metrics, and the only rows that come out, in completion order (a stem's logs before
+the stem):
 
 ```csharp
 using Forestry.Deserialize;
@@ -31,15 +32,13 @@ await using FileStream file = File.OpenRead("harvest.hpr");
 
 await foreach (Row row in Deserialization.DeserializeAsync(file, options, cancellationToken))
 {
-    if (row.Is<Log>())
-    {
-        Log log = row.AsType<Log>();
-        // e.g. log.Id, log.ContractNumber, log.ProductName, log.MachineVolumePrice
-    }
-    else if (row.Is<Stem>())
+    if (row.Is<Stem>())
     {
         Stem stem = row.AsType<Stem>();
-        // e.g. stem.Id, stem.SpeciesGroupName, stem.Latitude, stem.DBH
+        // identification: stem.Id
+        // partitioning:   stem.HarvestingCreationTime, stem.ContractNumber
+        // metrics:        stem.DBH, stem.Latitude
+        // dimensions:     stem.SpeciesGroupName
     }
 }
 ```
@@ -50,7 +49,8 @@ at a time).
 
 ## What a row gives you
 
-Every Stem and Log row has four kinds of members:
+Stem and Log show what a machine's metrics expose. So that each row is self-contained, every Stem and
+Log row has four kinds of members:
 
 - **Identification**: `Id` is globally unique, `{machine key}-{stem key}` on a stem and
   `{machine key}-{stem key}-{log key}` on a log, with the machine key as a GUID without dashes. The keys
@@ -65,7 +65,25 @@ Every Stem and Log row has four kinds of members:
   destination, with their names and StanForD identifiers. They are copied onto every row, a stem's onto
   its logs too, so no query needs a join.
 
-Every member is a single value, one per column.
+Every member is a single value.
+
+## How the code is organized
+
+The source is grouped by the same terms, in folders under `src/`; the namespace is `Forestry.StanForD`
+throughout:
+
+- **`Metrics`**: `Stem` and `Log`, the rows that come out.
+- **`Dimensions`**: the object, species group, product and operator definitions and the machine, read
+  so their names and identifiers can be copied onto every metric row. They never come out themselves.
+- **`Parts`**: rows that only carry values one level down, such as a log's volumes and diameters or a
+  stem's coordinates, whose policies copy them onto their parent.
+- **`Policies`**: identification, partitioning, conditional mapping and dimensions, per row type.
+
+The split also shows what stays shared once Harvesting moves to
+[Forestry.StanForD.Harvesting](../Forestry.StanForD.Harvesting/README.md). Metrics depend on the
+message: Stem and Log are harvesting metrics, while forwarding has loads. So the metrics, the
+Harvesting header and their policies move. Dimensions and parts are shared by StanForD's production
+messages, so they stay here.
 
 ## Choices
 
@@ -104,7 +122,6 @@ different creation times, so they land in two time partitions; remove duplicates
 - **The latest schema version only**, V4p1, for the POC; the document's version is not checked. The
   real documents tested against are version 3.5.
 - **XML only.** StanForD's older, non-XML format is out of scope.
-- **Rows, not storage.** Writing rows to storage (e.g. Azure Blob) is done by whoever enumerates them.
 - **Production, not monitoring.** Work time, fuel and machine effectiveness are in StanForD's
   operational monitoring (MOM) documents; the commercial chain (agreements, production plans, actor
   perspectives) is Biometria's. Neither is read here.

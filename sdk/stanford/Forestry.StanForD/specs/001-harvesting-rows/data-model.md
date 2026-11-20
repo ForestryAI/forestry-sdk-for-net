@@ -13,7 +13,7 @@ source of each member's StanForD origin (its doc comment). Each row has four reg
 definition sit next to the key that refers to it. Set by: *name* = read directly by element name;
 *policy* = set by an identification, partition or conditional-mapping policy (none written yet).
 
-### Stem (`src/Stem.cs`)
+### Stem (`src/Metrics/Stem.cs`)
 
 | Region | Members | Set by |
 |---|---|---|
@@ -22,7 +22,7 @@ definition sit next to the key that refers to it. Set by: *name* = read directly
 | metrics | `ProcessingCategory`, `Latitude`, `Longitude` (signed `decimal` degrees), `Altitude`, `CoordinateReferenceSystem`, `BoomAngleFelling`, `BoomAngleLastLogCut`, `BoomExtensionFelling`, `BoomExtensionLastLogCut` (`int`; 65535 is the schema's default value), `DBH` (`int`) | policy (US8): from the `StemCoordinates`, `Latitude`, `Longitude`, `BoomPositioning` and `SingleTreeProcessedStem` rows; `ProcessingCategory` by name |
 | dimensions | `ObjectKey`, `ObjectName`, `SpeciesGroupKey`, `SpeciesGroupName`, `OperatorKey`, `OperatorBusinessName` | keys by name; names by policy from the definitions |
 
-### Log (`src/Log.cs`)
+### Log (`src/Metrics/Log.cs`)
 
 | Region | Members | Set by |
 |---|---|---|
@@ -61,7 +61,7 @@ User Ids are StanForD's external references, the keys a Biometria add-on would j
 `agency` attribute is left out for now. Stem metrics in wrapper elements (coordinates, altitude,
 coordinate reference system, boom positions, DBH) are User Story 8 (built 2026-11-14).
 
-### Common definitions (`src/*Definition.cs`, `src/Machine.cs`)
+### Common definitions (`src/Dimensions/`)
 
 | Row | Identification | Members the rows copy |
 |---|---|---|
