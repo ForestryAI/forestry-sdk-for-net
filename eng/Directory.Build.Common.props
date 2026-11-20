@@ -84,6 +84,6 @@
 
     <!-- Client libraries -->
     <PropertyGroup Condition="'$(IsClientLibrary)' == 'true'">
-        <TurnSharedSources>$(MSBuildThisFileDirectory)/../sdk/turn/Forestry.Turn/src/Shared/</TurnSharedSources>
+        <CoreSharedSources>$(MSBuildThisFileDirectory)/../sdk/core/Forestry.Core/src/Shared/</CoreSharedSources>
     </PropertyGroup>
 </Project>

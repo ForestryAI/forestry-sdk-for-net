@@ -38,8 +38,8 @@ jobs:
           # Checked but not released in spec 001: they share the central package versions (FR-015)
           - package: Forestry.Raindrop
             slnx: sdk/raindrop/Forestry.Raindrop/Forestry.Raindrop.slnx
-          - package: Forestry.Turn
-            slnx: sdk/turn/Forestry.Turn/Forestry.Turn.slnx
+          - package: Forestry.Core
+            slnx: sdk/core/Forestry.Core/Forestry.Core.slnx
     uses: ./.github/workflows/build-test.yml
     with:
       package: ${{ matrix.package }}
