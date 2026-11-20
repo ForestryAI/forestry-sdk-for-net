@@ -8,6 +8,11 @@ StanForD harvester and forwarder exports are the real documents it is developed 
 but the reader targets XML generally. Parts of the design are adapted from Microsoft's open-source
 .NET runtime; see [THIRD-PARTY-NOTICES.md](../../../THIRD-PARTY-NOTICES.md).
 
+On the path from a device document to big data, this package sits between the reader and the core:
+Forestry.Xml tokenizes the bytes, this package matches elements and attributes to row types and
+members, and Forestry.Deserialize builds the rows that feed a client's pipeline. The SDK's
+[README](../../../README.md#big-data-clients) explains the whole path.
+
 ```csharp
 DeserializeXmlOptions options = new();
 options.Rows.Add<Log>();
@@ -28,6 +33,14 @@ Download `Forestry.Deserialize.Xml.<version>.nupkg` from the latest `Forestry.De
 dotnet nuget add source <folder> -n forestry-preview
 dotnet add package Forestry.Deserialize.Xml --prerelease
 ```
+
+## Dependencies
+
+- **.NET 10** (`net10.0`), the only target framework.
+- **[Forestry.Deserialize](../Forestry.Deserialize/README.md)**: the format-agnostic core: rows,
+  options, policies and converters.
+- **[Forestry.Xml](../../xml/Forestry.Xml/README.md)**: the forward-only UTF-8 XML reader.
+- **No third-party packages**, and nothing from `System.Xml`.
 
 ## How elements become rows
 
