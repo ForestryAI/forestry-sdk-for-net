@@ -172,6 +172,7 @@ In the order of the path from a StanForD document to big data files:
 | [Forestry.Deserialize.Xml](sdk/deserialize/Forestry.Deserialize.Xml/README.md) | `sdk/deserialize` | XML format for Forestry.Deserialize, built on Forestry.Xml. | In development |
 | [Forestry.StanForD](sdk/stanford/Forestry.StanForD/README.md) | `sdk/stanford` | [StanForD](https://www.skogforsk.se/) Harvesting documents as Stem and Log rows. | In development, spec 001 done |
 | [Forestry.StanForD.Harvesting](sdk/stanford/Forestry.StanForD.Harvesting/README.md) | `sdk/stanford` | Harvesting-specific logic: deserialization policies and pipeline directives. | Planned |
+| [Forestry.Biometria](sdk/biometria/README.md) | `sdk/biometria` | [Biometria](https://www.biometria.se/)'s Harvesting on top: Stem and Log rows extended with Sender's Extension, the production planner above all. | Planned |
 | [Forestry.Core](sdk/core/Forestry.Core/README.md) | `sdk/core` | The core for clients: client options and the pipeline that carries an intention through directives to an answer. Formerly Forestry.Turn. | In development |
 | [Forestry.Parquet](sdk/parquet/Forestry.Parquet/README.md) | `sdk/parquet` | Forward-only UTF-8 Parquet writer for flat rows. | Planned, later |
 
@@ -181,8 +182,6 @@ Outside that path:
 |---|---|---|---|
 | [Forestry.Raindrop](sdk/raindrop/Forestry.Raindrop/README.md) | `sdk/raindrop` | Dependency-free unique identity generation, inspired by Twitter Snowflake. | Stable |
 | [Forestry.PapiNet](sdk/papinet/README.md) | `sdk/papinet` | Helper types for [PapiNet](https://www.papinet.org) business agreement documents. | Early scaffolding |
-| [Biometria](sdk/biometria/README.md) | `sdk/biometria` | Helper for publishing/subscribing to [Biometria](https://www.biometria.se/) entities. | Not started |
-
 ## Building
 
 Every package is its own MSBuild SDK-style project with a matching `.slnx`. Shared build,
