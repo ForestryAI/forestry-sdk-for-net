@@ -119,13 +119,12 @@ Whatever the resource, every StanForD client does the same work:
   its configuration decides.
 - **Deserialization, per row.** The client hands each document to `Forestry.Deserialize`, which reads
   it through a format package (`Forestry.Deserialize.Xml`, built on `Forestry.Xml`) while policies
-  flatten it into self-contained rows: identification, partitioning, conditional mapping, Extensions
-  from Sender. Deserialization is mandatory: its rows are what feed the pipeline.
+  flatten it into self-contained rows: identification, partitioning, conditional mapping, dimensions.
+  Deserialization is mandatory: its rows are what feed the pipeline.
 - **Pipeline, per chunk.** A chain of directives that the rows pass through on their way to the
-  resource, and that the answer passes back through. Rows are gathered into chunks, one row type and
-  one partition per chunk, and written in the client's format (JSON Lines, later Parquet). Directives
-  handle what concerns a chunk or the whole input: validation, Biometria extras, partition folders and
-  file names, sending, retries.
+  resource. Rows are gathered into chunks, one row type and one partition per chunk, and written in
+  the client's format (JSON Lines, later Parquet). Directives handle what concerns a chunk or the whole
+  input: validation, Biometria extras, partition folders and file names, sending, retries, monitoring.
 
 There is no one-to-one mapping from a document to a file. Stem and Log rows go to separate chunks,
 and a document is not limited to one contract, so one document can produce chunks in several
@@ -142,7 +141,8 @@ Directives and policies are registered through the client's options. Each librar
 defaults that can be adjusted:
 
 - `Forestry.StanForD.Harvesting` adds Harvesting policies and directives.
-- A Biometria package could add its own.
+- `Forestry.Biometria` builds on it with its own Harvesting: Stem and Log rows extended with
+  Biometria's members, and its own policies and directives, such as Extensions from Sender.
 
 So every StanForD client shares common options (deserialization policies, format, common directives)
 and adds its resource's options, including how it takes in documents and how it chunks, flushes and
@@ -157,8 +157,8 @@ Querying the files happens outside this SDK.
   and Log rows (`Forestry.StanForD` spec 001).
 - **Next**: writing rows in `Forestry.Deserialize`, JSON Lines first; the single local client that turns
   StanForD documents into JSON Lines files in partition folders.
-- **Later**: `Forestry.Turn` renamed `Forestry.Core`; `Forestry.StanForD.Harvesting` split out, with
-  Extensions from Sender; clients for remote resources such as `Forestry.StanForD.Azure.BlobStorage`; a
+- **Later**: `Forestry.Turn` renamed `Forestry.Core`; `Forestry.StanForD.Harvesting` split out;
+  `Forestry.Biometria` with Extensions from Sender; clients for remote resources such as `Forestry.StanForD.Azure.BlobStorage`; a
   UTF-8 Parquet writer (`Forestry.Parquet`); performance testing against real documents.
 
 ## Packages
