@@ -157,7 +157,7 @@ Querying the files happens outside this SDK.
   and Log rows (`Forestry.StanForD` spec 001).
 - **Next**: writing rows in `Forestry.Deserialize`, JSON Lines first; the single local client that turns
   StanForD documents into JSON Lines files in partition folders.
-- **Later**: `Forestry.Turn` renamed `Forestry.Core`; `Forestry.StanForD.Harvesting` split out;
+- **Later**: `Forestry.StanForD.Harvesting` split out;
   `Forestry.Biometria` with Extensions from Sender; clients for remote resources such as `Forestry.StanForD.Azure.BlobStorage`; a
   UTF-8 Parquet writer (`Forestry.Parquet`); performance testing against real documents.
 
@@ -172,7 +172,7 @@ In the order of the path from a StanForD document to big data files:
 | [Forestry.Deserialize.Xml](sdk/deserialize/Forestry.Deserialize.Xml/README.md) | `sdk/deserialize` | XML format for Forestry.Deserialize, built on Forestry.Xml. | In development |
 | [Forestry.StanForD](sdk/stanford/Forestry.StanForD/README.md) | `sdk/stanford` | [StanForD](https://www.skogforsk.se/) Harvesting documents as Stem and Log rows. | In development, spec 001 done |
 | [Forestry.StanForD.Harvesting](sdk/stanford/Forestry.StanForD.Harvesting/README.md) | `sdk/stanford` | Harvesting-specific logic: deserialization policies and pipeline directives. | Planned |
-| [Forestry.Turn](sdk/turn/Forestry.Turn/README.md) | `sdk/turn` | Pipeline that carries an intention through directives to an answer. To be renamed Forestry.Core. | In development |
+| [Forestry.Core](sdk/core/Forestry.Core/README.md) | `sdk/core` | The core for clients: client options and the pipeline that carries an intention through directives to an answer. Formerly Forestry.Turn. | In development |
 | [Forestry.Parquet](sdk/parquet/Forestry.Parquet/README.md) | `sdk/parquet` | Forward-only UTF-8 Parquet writer for flat rows. | Planned, later |
 
 Outside that path:
