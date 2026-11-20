@@ -6,7 +6,7 @@
 
     <ItemGroup>
         <!-- BCL -->
-        <PackageVersion Include="System.Memory.Data" Version="10.0.14" />
+        <PackageVersion Include="System.Memory.Data" Version="10.0.15" />
     </ItemGroup>
 
     <!-- Build -->
