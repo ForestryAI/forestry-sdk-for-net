@@ -89,8 +89,12 @@ Rows written by this SDK follow these conventions:
 - **Dimensions copied, not joined**: contract, species and product are copied onto every Stem and Log
   row, so queries never join. Columnar compression keeps the repetition cheap
 - **Partitions**: rows are partitioned by month and contract, e.g. `/{year}/{month}/harvesting/{contract}/`,
-  which enables partition pruning
+  which enables partition pruning. The keys come from each row, not from the document, so one document
+  can land in several partitions, and partition paths and file names must allow their composite keys
+  (date, contract, etc.) to vary
 - **One row type per file**: Stem and Log rows go to separate files, not mixed
+- **Chunks, not documents**: files are written from chunks of rows, as described under
+  [Big data clients](#big-data-clients)
 
 StanForD metrics as Parquet is the long-term goal. During the POC, [JSON Lines](https://jsonlines.org/)
 speeds up short-term development. Several big data resources support JSON Lines as external tables,
@@ -109,18 +113,30 @@ one resource, local or remote, and carries that resource's own options: location
 security. Clients are named after their resource, e.g. `Forestry.StanForD.Azure.BlobStorage`. During
 the POC there is a single client, which turns local StanForD documents into local files of JSON Lines.
 
-Whatever the resource, every StanForD client does the same work in two layers:
+Whatever the resource, every StanForD client does the same work:
 
-- **Pipeline, per document.** A chain of directives that each document passes through on its way to
-  the resource, and that the answer passes back through. Directives handle what concerns a whole
-  document or file: validation, Biometria extras, partition folders and file names, retries.
-- **Deserialization, per row.** Inside the pipeline, `Forestry.Deserialize` reads the document through
-  a format package (`Forestry.Deserialize.Xml`, built on `Forestry.Xml`), and policies flatten it into rows:
-  identification, partitioning, conditional mapping, Extensions from Sender. The rows are then written
-  in the client's format (JSON Lines, later Parquet).
+- **Input.** The client takes in what to ingest: usually a single document, but possibly several, as
+  its configuration decides.
+- **Deserialization, per row.** The client hands each document to `Forestry.Deserialize`, which reads
+  it through a format package (`Forestry.Deserialize.Xml`, built on `Forestry.Xml`) while policies
+  flatten it into self-contained rows: identification, partitioning, conditional mapping, Extensions
+  from Sender. Deserialization is mandatory: its rows are what feed the pipeline.
+- **Pipeline, per chunk.** A chain of directives that the rows pass through on their way to the
+  resource, and that the answer passes back through. Rows are gathered into chunks, one row type and
+  one partition per chunk, and written in the client's format (JSON Lines, later Parquet). Directives
+  handle what concerns a chunk or the whole input: validation, Biometria extras, partition folders and
+  file names, sending, retries.
 
-The two layers are kept apart on purpose. Policies run for every value and must stay fast, with no
-allocation. Directives run once per document and may wait, retry or call out.
+There is no one-to-one mapping from a document to a file. Stem and Log rows go to separate chunks,
+and a document is not limited to one contract, so one document can produce chunks in several
+partitions. A chunk ends on size, where compaction matters for the format, as with Parquet. Whether
+the end of the input flushes a final chunk, and when chunks are sent, is the client's configuration,
+chosen for its resource: for Azure Data Explorer, for example, appending and compacting locally before
+sending is easier than appending to Parquet already in blob storage. Replaying documents that were
+already ingested needs a feature of its own, after the POC.
+
+Deserialization and the pipeline are kept apart on purpose. Policies run for every value and must
+stay fast, with no allocation. Directives run once per chunk or input and may wait, retry or call out.
 
 Directives and policies are registered through the client's options. Each library plugs itself in with
 defaults that can be adjusted:
@@ -129,7 +145,8 @@ defaults that can be adjusted:
 - A Biometria package could add its own.
 
 So every StanForD client shares common options (deserialization policies, format, common directives)
-and adds its resource's options.
+and adds its resource's options, including how it takes in documents and how it chunks, flushes and
+sends rows.
 
 Querying the files happens outside this SDK.
 

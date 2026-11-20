@@ -1,11 +1,25 @@
 # Forestry Deserialize
 
-Forestry Deserialize reads large documents in one forward pass and flattens them into rows: one
-instance of your own class per occurrence in the document, handed out as soon as it is complete.
-Nothing keeps a row once it is handed out unless a policy asks to, so a document of a million rows
-costs about the same memory as one of a thousand. The need comes from StanForD XML from harvesting and forwarding
-machines, which is the real data this is developed and tested against, but neither this package nor
-`Forestry.Deserialize.Xml` is limited to StanForD.
+Forestry Deserialize is where the Forestry SDK turns operative metrics from forestry devices into big
+data. What a device writes, such as a StanForD Harvesting document from a harvester, is deep and
+nested; what a big data resource reads is flat. This package turns one into the other: it reads a
+document forward, once, and hands out **rows**. A row is an abstraction with no nested structures,
+made before a big data format is chosen and before any pre-washing or customization of the data.
+What matters is that each row is self-contained, so whatever processing comes next needs nothing
+else to make sense of it.
+
+A client takes in the whole incoming document and hands it to deserialization, whose rows feed the
+client's pipeline on the way from device output to big data input: no row reaches the pipeline
+without it. Rows come out one at a time, so the pipeline is free to gather them into chunks for the
+outgoing format rather than turning one document into one output.
+The SDK's [README](../../../README.md#big-data-clients) shows how the pieces fit together.
+
+Rows go forward from the incoming document to what comes next: one instance of your own class per
+occurrence in the document, handed out as soon as it is complete. Nothing keeps a row once it is
+handed out unless a policy asks to, so a document of a million rows costs about the same memory as
+one of a thousand. StanForD from harvesting and forwarding machines was the driving force and is the
+real data this is developed and tested against, but the concept is operative metrics from forestry
+devices: neither this package nor `Forestry.Deserialize.Xml` is limited to StanForD.
 
 The design is specified with spec-kit: the rules are in the
 [constitution](.specify/memory/constitution.md), the slices are
@@ -119,8 +133,11 @@ await foreach (Row row in Deserialization.DeserializeAsync(file, options, cancel
   like the member. The XML package's `[XmlElementName("Tree")]` on the class, or
   `[XmlElementName("Volume")]` on a property or field, uses the document's name instead: names in the
   document belong to the format, not to this package.
-- **Constructor**: a row type needs exactly one public constructor, or exactly one constructor
-  marked `[RowConstructor]`, whatever its accessibility. In this slice it takes no parameters.
+- **Constructor**: deserialization uses the constructor marked `[RowConstructor]`, whatever its
+  accessibility. Without a mark it uses the class's only public constructor, which for a class that
+  declares none is the one C# provides; with several public constructors and no mark, it cannot
+  choose. In this slice the constructor takes no parameters: members are set from the document or
+  by policies.
 - **Converters**: each member's text is converted to its type once, invariant culture: text,
   booleans, integers, decimals, `DateTime`, `DateTimeOffset`, `Guid` and the other types parsable
   from UTF-8, plus their `Nullable<T>`. A format adds its own defaults (XML reads `1` and `0` as
