@@ -1,13 +1,14 @@
+using System.Buffers;
 using System.Globalization;
 
 namespace Forestry.Serialization.Converters.Primitive
 {
     /// <summary>
-    /// Primitive converter for every type parsable from UTF-8 (integers, <see cref="decimal"/>,
-    /// <see cref="double"/>, ...), with invariant culture
+    /// Primitive converter for every type parsable from and formattable to UTF-8 (integers,
+    /// <see cref="decimal"/>, <see cref="double"/>, ...), with invariant culture
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    internal sealed class Utf8SpanParsableConverter<T> : Converter<T> where T : IUtf8SpanParsable<T>
+    internal sealed class Utf8SpanParsableConverter<T> : Converter<T> where T : IUtf8SpanParsable<T>, IUtf8SpanFormattable
     {
         public override T Read(ReadOnlySpan<byte> utf8)
         {
@@ -18,6 +19,8 @@ namespace Forestry.Serialization.Converters.Primitive
 
             throw new FormatException(Formatting.Format(Formatting.NotParsable, typeof(T).Name));
         }
+
+        public override void Write(T value, IBufferWriter<byte> utf8) => Utf8Writing.Write(value, default, utf8);
     }
 
     /// <summary>
@@ -28,6 +31,7 @@ namespace Forestry.Serialization.Converters.Primitive
         public override bool CanConvert(Type type) =>
             type.IsValueType &&
             !type.IsGenericTypeDefinition &&
+            typeof(IUtf8SpanFormattable).IsAssignableFrom(type) &&
             Array.Exists(type.GetInterfaces(), contract =>
                 contract.IsGenericType &&
                 contract.GetGenericTypeDefinition() == typeof(IUtf8SpanParsable<>) &&

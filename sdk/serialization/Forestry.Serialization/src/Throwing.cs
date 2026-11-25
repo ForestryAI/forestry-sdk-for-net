@@ -107,6 +107,12 @@ namespace Forestry.Serialization
         {
             throw new InvalidOperationException(Formatting.Format(Formatting.NoConverter, type.FullName));
         }
+
+        [DoesNotReturn]
+        public static void WhenConverterCannotWrite(Type converterType, Type valueType)
+        {
+            throw new NotSupportedException(Formatting.Format(Formatting.ConverterCannotWrite, DisplayName(converterType), DisplayName(valueType)));
+        }
         #endregion
 
         #region Reading

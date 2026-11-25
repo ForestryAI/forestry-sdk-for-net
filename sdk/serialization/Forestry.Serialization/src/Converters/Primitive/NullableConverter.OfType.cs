@@ -1,3 +1,5 @@
+using System.Buffers;
+
 namespace Forestry.Serialization.Converters.Primitive
 {
     /// <summary>
@@ -8,6 +10,8 @@ namespace Forestry.Serialization.Converters.Primitive
     internal sealed class NullableConverter<T>(Converter<T> converter) : Converter<T?> where T : struct
     {
         public override T? Read(ReadOnlySpan<byte> utf8) => converter.Read(utf8);
+
+        public override void Write(T? value, IBufferWriter<byte> utf8) => converter.Write(value!.Value, utf8);
     }
 
     /// <summary>

@@ -1,10 +1,12 @@
+using System.Buffers;
 using System.Globalization;
 using System.Text;
 
 namespace Forestry.Serialization.Converters.Primitive
 {
     /// <summary>
-    /// Primitive converter for <see cref="DateTime"/>, invariant culture, round-trip kind
+    /// Primitive converter for <see cref="DateTime"/>, invariant culture, round-trip kind; writes the
+    /// round-trip format ("O")
     /// </summary>
     /// <remarks>Decodes to a string first; allocation-free parsing is performance work (C6).</remarks>
     internal sealed class DateTimeConverter : Converter<DateTime>
@@ -18,10 +20,13 @@ namespace Forestry.Serialization.Converters.Primitive
 
             throw new FormatException(Formatting.Format(Formatting.NotParsable, nameof(DateTime)));
         }
+
+        public override void Write(DateTime value, IBufferWriter<byte> utf8) => Utf8Writing.Write(value, "O", utf8);
     }
 
     /// <summary>
-    /// Primitive converter for <see cref="DateTimeOffset"/>, invariant culture, round-trip kind
+    /// Primitive converter for <see cref="DateTimeOffset"/>, invariant culture, round-trip kind; writes
+    /// the round-trip format ("O")
     /// </summary>
     internal sealed class DateTimeOffsetConverter : Converter<DateTimeOffset>
     {
@@ -34,5 +39,7 @@ namespace Forestry.Serialization.Converters.Primitive
 
             throw new FormatException(Formatting.Format(Formatting.NotParsable, nameof(DateTimeOffset)));
         }
+
+        public override void Write(DateTimeOffset value, IBufferWriter<byte> utf8) => Utf8Writing.Write(value, "O", utf8);
     }
 }

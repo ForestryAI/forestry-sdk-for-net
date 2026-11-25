@@ -1,3 +1,5 @@
+using System.Buffers;
+
 namespace Forestry.Serialization.Converters.Primitive
 {
     /// <summary>
@@ -19,6 +21,13 @@ namespace Forestry.Serialization.Converters.Primitive
             }
 
             throw new FormatException(Formatting.Format(Formatting.NotParsable, nameof(Boolean)));
+        }
+
+        public override void Write(bool value, IBufferWriter<byte> utf8)
+        {
+            ReadOnlySpan<byte> text = value ? "true"u8 : "false"u8;
+            text.CopyTo(utf8.GetSpan(text.Length));
+            utf8.Advance(text.Length);
         }
     }
 }
