@@ -62,11 +62,11 @@ back; a custom converter added to the options is the one that writes (quickstart
 
 ### Test shells for User Story 1 ⚠️
 
-- [ ] T001 [P] [US1] Test helper `ArrayBufferWriter<byte>`-based round trip in `Forestry.Serialization/test/Fixtures/ConverterRoundTrip.cs`: write a value through a `Converter<T>` into a buffer writer, then `Read` the written span
-- [ ] T002 [US1] Test shell, US1-1 / SC-001 (quickstart 1): a theory per built-in kind (`bool`, `char`, `int`, `long`, `double`, `decimal`, `string`, `Guid`, `DateTime`, `DateTimeOffset`, `int?` with a value, and `Measure` from spec 003's `FlatTelemetry` fixture with `MeasureConverter`): write then read gives the same value, in `Forestry.Serialization/test/ConverterWriteTests.cs`
-- [ ] T003 [US1] Test shell, US1-2 / FR-002: a `string` of 10 000 characters, with a buffer writer that offers 16 bytes on the first `GetSpan`, is written whole (no retry contract), in `ConverterWriteTests.cs`
-- [ ] T004 [US1] Test shell, US1-3 / FR-004: a custom `Converter<int>` that writes `"x"` added to a test options' `Converters` is the resolved converter used by `PropertyDefinition<int>` for writing, in `ConverterWriteTests.cs`
-- [ ] T005 [US1] Test shell, R45: a converter that does not override `Write` throws `NotSupportedException` naming the converter type when `Write` is called directly, in `ConverterWriteTests.cs`
+- [X] T001 [P] [US1] Test helper `ArrayBufferWriter<byte>`-based round trip in `Forestry.Serialization/test/Fixtures/ConverterRoundTrip.cs`: write a value through a `Converter<T>` into a buffer writer, then `Read` the written span (2026-11-26: also `SmallOfferBufferWriter`, offering 16 bytes without a size hint and recording hints, for T003; and `Fixtures/WritingMarkerInt32Converter.cs` for T004)
+- [X] T002 [US1] Test shell, US1-1 / SC-001 (quickstart 1): a theory per built-in kind (`bool`, `char`, `int`, `long`, `double`, `decimal`, `string`, `Guid`, `DateTime`, `DateTimeOffset`, `int?` with a value, and `Measure` from spec 003's `FlatTelemetry` fixture with `MeasureConverter`): write then read gives the same value, in `Forestry.Serialization/test/ConverterWriteTests.cs`
+- [X] T003 [US1] Test shell, US1-2 / FR-002: a `string` of 10 000 characters, with a buffer writer that offers 16 bytes on the first `GetSpan`, is written whole (no retry contract), in `ConverterWriteTests.cs`
+- [X] T004 [US1] Test shell, US1-3 / FR-004: a custom `Converter<int>` that writes `"x"` added to a test options' `Converters` is the resolved converter used by `PropertyDefinition<int>` for writing, in `ConverterWriteTests.cs`
+- [X] T005 [US1] Test shell, R45: a converter that does not override `Write` throws `NotSupportedException` naming the converter type when `Write` is called directly, in `ConverterWriteTests.cs`
 - [ ] T006 [US1] **Test review gate**: the developer reviews T001-T005 on the board and closes the review task before T007 (C4)
 
 ### Implementation for User Story 1
