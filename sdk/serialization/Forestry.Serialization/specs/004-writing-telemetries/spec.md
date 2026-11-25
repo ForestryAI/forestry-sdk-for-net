@@ -23,9 +23,10 @@ monitoring (#141) uses to collect telemetries into collections.
   telemetries to another format; what they share is the type and property definitions, and the
   converters. Both options have converters: deserializing only uses `Read`, serializing only uses
   `Write`. Each options instance builds and locks its own definitions under the same rules.
-- Q: What is the collection options type named? → A: `TelemetryCollectionOptions`, so it is not
-  read as .NET's `ICollection`. `MonitoringCollectionOptions` was considered: it names the role
-  (monitoring collects for big data) but not what is collected.
+- Q: What is the collection options type named? → A: `MonitoringCollectionOptions` (a custom
+  answer): it names the role, monitoring collecting telemetries into big data ready collections,
+  and is not read as .NET's `ICollection`. `TelemetryCollectionOptions` and `CollectionOptions` were
+  the other options.
 - Q: Where does the default collection options instance sit? → A: On `SerializeOptions`, used when
   a collection writer is created without its own; a format package can set its own default there.
 
@@ -256,8 +257,8 @@ the "ready" hook; repeat with an exception for "abandoned", and with a collectio
   once when a collection writer is created: leave open, target size, an optional maximum number of
   telemetries, whether size counts bytes before or after compression, and buffering settings used
   when the collection `PipeWriter` creates its inner writer from a `Stream`.
-- **FR-025**: The collection options type MUST be named `TelemetryCollectionOptions`.
-- **FR-026**: Serialize options MUST carry a default `TelemetryCollectionOptions`, used when a
+- **FR-025**: The collection options type MUST be named `MonitoringCollectionOptions`.
+- **FR-026**: Serialize options MUST carry a default `MonitoringCollectionOptions`, used when a
   collection writer is created without its own; a format package can set its own default there.
 
 **Testing and documentation**
@@ -279,12 +280,12 @@ the "ready" hook; repeat with an exception for "abandoned", and with a collectio
   definition; a format package may register its own.
 - **Object converter**: writes a whole telemetry in a format; owned by the format package (here,
   the string test format).
-- **Serialize options**: how telemetries are written: telemetry types, converters, format, and a default `TelemetryCollectionOptions`; locked
+- **Serialize options**: how telemetries are written: telemetry types, converters, format, and a default `MonitoringCollectionOptions`; locked
   on first use.
 - **Output / target**: a plain `Stream` or `PipeWriter` owned by the caller.
 - **Collection writer**: a collection stream or collection `PipeWriter` that knows one
   collection's options, sequence, bytes, whether it is full, and how it completed.
-- **Collection options** (`TelemetryCollectionOptions`): immutable settings of one collection: leave open, limits, buffering.
+- **Collection options** (`MonitoringCollectionOptions`): immutable settings of one collection: leave open, limits, buffering.
 
 ## Success Criteria *(mandatory)*
 
