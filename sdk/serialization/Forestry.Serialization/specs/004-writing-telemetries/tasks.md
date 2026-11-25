@@ -1,0 +1,227 @@
+---
+
+description: "Task list for writing telemetries (spec 004)"
+---
+
+# Tasks: Writing telemetries
+
+**Input**: Design documents from `specs/004-writing-telemetries/` (plan.md, spec.md, research.md
+R44-R57, data-model.md, contracts/public-api.md, quickstart.md) and `.specify/memory/constitution.md`
+4.0.0.
+
+**Prerequisites**: research items R44-R57 confirmed by the developer (C5). Open in research: the
+collection writer names (R51) and whether `SizeIsCompressed` is needed now (R53).
+
+**Board**: feature #137; story issues to be created for US1, US2 and US3, each with its review gate.
+
+**Tests**: Required (constitution C4), as in specs 001-003. In every story phase: test shells
+first, one per acceptance scenario, quickstart row or edge case; then a **test review gate** (the
+developer reviews the shells on the board before any code); then implementation. A story's shells
+may not compile until its implementation declares the surface they call (accepted in 001-003).
+
+- **Writing is tested in the core** (C3, 4.0.0): `Forestry.Serialization/test`, through the string
+  test format over a `Stream` (R54). Reading stays tested through the XML package.
+- **Async shells are theories over the targets** where the bytes must match: sync `Stream`, async
+  `Stream`, `PipeWriter` over a `System.IO.Pipelines.Pipe` (SC-003).
+- **Every test** uses `// Arrange`, `// Act`, `// Assert` comments (A4); a test reading a document
+  uses its own local constant, one element per line.
+- **Reading a `MemoryStream` back**: `memory.Position = 0;` then
+  `new StreamReader(memory, leaveOpen: true).ReadToEnd()`.
+- **Performance gate at the end of every story**: `dotnet test -s Performance.runsettings` on both
+  serialization test projects.
+- **Every package builds on main** (R56): the `Convert` → `Read` rename lands in all three packages
+  in one commit, before any writing code.
+
+**Organization**: Phases by user story in priority order: US1 (P1), US2 (P1), US3 (P2). No Setup
+phase: the projects exist. The stories run in order: US2 needs US1's `Write`, US3 needs US2's
+`TelemetrySerializer`.
+
+## Format: `[ID] [P?] [Story] Description`
+
+- **[P]**: Can run in parallel (different files, no dependencies on incomplete tasks)
+- **[Story]**: The user story the task belongs to (US1, US2, US3)
+- Paths are relative to `sdk/serialization/`: the core is `Forestry.Serialization/`, the XML format
+  package is `Forestry.Serialization.Xml/`, and Forestry.StanForD is `../stanford/Forestry.StanForD/`
+
+## Not in this slice
+
+- JSON Lines and its per-kind framing (#138, R50 note); Parquet.
+- The collecting directive, collection stores, transmitting and partitions (#141).
+- Built-in converters for enums, `DateOnly`, `TimeOnly`, `TimeSpan` (R57).
+- Definition policies for writing (choosing members) (R44, R57).
+
+---
+
+## Phase 1: User Story 1 - Converters read and write (Priority: P1) 🎯 MVP
+
+**Goal**: `Convert` is renamed `Read` in all three packages, and every built-in converter has a
+`Write` that writes the text it reads (R45, R56).
+
+**Independent Test**: each built-in converter writes a value into a buffer and reads the same value
+back; a custom converter added to the options is the one that writes (quickstart 1).
+
+### Test shells for User Story 1 ⚠️
+
+- [ ] T001 [P] [US1] Test helper `ArrayBufferWriter<byte>`-based round trip in `Forestry.Serialization/test/Fixtures/ConverterRoundTrip.cs`: write a value through a `Converter<T>` into a buffer writer, then `Read` the written span
+- [ ] T002 [US1] Test shell, US1-1 / SC-001 (quickstart 1): a theory per built-in kind (`bool`, `char`, `int`, `long`, `double`, `decimal`, `string`, `Guid`, `DateTime`, `DateTimeOffset`, `int?` with a value, and `Measure` from spec 003's `FlatTelemetry` fixture with `MeasureConverter`): write then read gives the same value, in `Forestry.Serialization/test/ConverterWriteTests.cs`
+- [ ] T003 [US1] Test shell, US1-2 / FR-002: a `string` of 10 000 characters, with a buffer writer that offers 16 bytes on the first `GetSpan`, is written whole (no retry contract), in `ConverterWriteTests.cs`
+- [ ] T004 [US1] Test shell, US1-3 / FR-004: a custom `Converter<int>` that writes `"x"` added to a test options' `Converters` is the resolved converter used by `PropertyDefinition<int>` for writing, in `ConverterWriteTests.cs`
+- [ ] T005 [US1] Test shell, R45: a converter that does not override `Write` throws `NotSupportedException` naming the converter type when `Write` is called directly, in `ConverterWriteTests.cs`
+- [ ] T006 [US1] **Test review gate**: the developer reviews T001-T005 on the board and closes the review task before T007 (C4)
+
+### Implementation for User Story 1
+
+- [ ] T007 [US1] Rename `Convert` to `Read` (R56), in one commit: `Forestry.Serialization/src/Converters/Converter.OfType.cs` and every built-in converter in `Forestry.Serialization/src/Converters/Primitive/`, every caller in `Forestry.Serialization/src` (e.g. `PropertyDefinition.OfType.cs`'s `ReadAndSet`), `Forestry.Serialization.Xml/src/Converters/XmlBooleanConverter.cs`, `../stanford/Forestry.StanForD/src/Converters/StanForDEnumConverter.cs`, and test converters (e.g. `MeasureConverter`, `MeasurementConverter`); run the three packages' test suites, all green with no behavior change (US1-4, SC-002)
+- [ ] T008 [US1] Add `public virtual void Write(T value, IBufferWriter<byte> utf8)` to `Converter<T>` in `Forestry.Serialization/src/Converters/Converter.OfType.cs`; the default throws `NotSupportedException` through a new `Throwing` method and message naming the converter type (R45); XML docs: "never called with null; ask for more room with `GetSpan(sizeHint)` instead of failing"
+- [ ] T009 [P] [US1] `Write` overrides in `Forestry.Serialization/src/Converters/Primitive/` (R45): `Utf8SpanParsableConverter<T>` through `IUtf8SpanFormattable.TryFormat` with `CultureInfo.InvariantCulture`, growing the size hint (doubling from 32) while it returns false; `StringConverter` with `Encoding.UTF8.GetMaxByteCount(value.Length)` and `Encoding.UTF8.GetBytes`; `BooleanConverter` writes `true`/`false`; `DateTimeConverter` and `DateTimeOffsetConverter` write round-trip format `"O"`; `NullableConverter<T>` writes the inner converter's output for `value.Value`
+- [ ] T010 [P] [US1] `Write` override in `MeasureConverter` (test fixture) so T002 covers a custom struct
+- [ ] T011 [US1] Run `dotnet test` on `Forestry.Serialization/test`, `Forestry.Serialization.Xml/test` and `../stanford/Forestry.StanForD/test`: T002-T005 pass, every earlier test green; then the performance gate (depends on T007-T010)
+
+**Checkpoint**: converters read and write; nothing serializes telemetries yet.
+
+---
+
+## Phase 2: User Story 2 - Serialize telemetries to a Stream or a PipeWriter (Priority: P1)
+
+**Goal**: `TelemetrySerializer.Serialize`/`SerializeAsync` write one telemetry or a sequence to a
+caller's `Stream` (sync and async) or `PipeWriter` (async), through a format's object converter,
+never disposing or completing the target (R44, R46-R50, R54, R55).
+
+**Independent Test**: two telemetries serialized with the string test format into a `MemoryStream`,
+read back as two lines; same bytes over an async `Stream` and a `PipeWriter`; a `foreach` over
+`Deserialize` serializes into one stream with no pipeline (quickstart 2-4, 9).
+
+### Test shells for User Story 2 ⚠️
+
+- [ ] T012 [P] [US2] String test format in `Forestry.Serialization/test/Fixtures/TestingSerializeOptions.cs` (R54): `TestingSerializeOptions : SerializeOptions` whose `CreateObjectConverter` returns an object converter writing members' converter output joined by `;`, one telemetry per line (`\n`), `WriteNull` writing nothing, no escaping; telemetry fixtures `Reading` (`int Id`, `string? Name`, `decimal Value`, `Guid Key`) in `Forestry.Serialization/test/Fixtures/Readings.cs`
+- [ ] T013 [US2] Test shell, US2-1 / quickstart 2: two `Reading` telemetries serialized one by one (sync) into a `MemoryStream`; reading it back gives exactly two lines in order; `memory.CanRead` is still true (not disposed), in `Forestry.Serialization/test/SerializeTests.cs`
+- [ ] T014 [US2] Test shell, US2-2 / SC-003 / SC-004 (quickstart 3): a theory over sync `Stream`, async `Stream` and `PipeWriter` (a `Pipe`, read back from its `Reader` after the call): the same bytes; the `Stream` is not disposed and the `PipeWriter` can still be written to (not completed), in `SerializeTests.cs`
+- [ ] T015 [US2] Test shell, US2-3 / FR-011: `Serialize(IEnumerable<Telemetry>, …)` and `SerializeAsync(IAsyncEnumerable<Telemetry>, …)` write every telemetry in order, and an enumerable that records when each item is pulled shows one item is taken only after the previous one was written, in `SerializeTests.cs`
+- [ ] T016 [US2] Test shell, US2-5 / R50: a `Reading` with `Name` null writes an empty value between separators, and a converter that throws on null is never called, in `SerializeTests.cs`
+- [ ] T017 [US2] Test shell, US2-6 / FR-008 / SC-007: a telemetry type whose member's converter does not override `Write` (a test `Converter<Grade>` for a test struct, reading only) fails when `TestingSerializeOptions` lock, naming the type and member; nothing has been written to the `MemoryStream` (`Length` 0), in `SerializeTests.cs`
+- [ ] T018 [US2] Test shell, US2-7 / FR-017: serializing a telemetry whose type was not added fails naming the type, with `Length` 0, in `SerializeTests.cs`
+- [ ] T019 [US2] Test shell, edge cases: an empty sequence writes nothing; a cancelled token on `SerializeAsync(IAsyncEnumerable…)` stops before the next telemetry and leaves the `Stream` open; a read-only `Stream` fails before writing; changing options after the first serialize throws `InvalidOperationException`, in `SerializeTests.cs`
+- [ ] T020 [P] [US2] Test shell, US2-4 / C8 / SC-005 (quickstart 9, R55): in `Forestry.Serialization.Xml/test/SerializeMemoryTests.cs`, a generated document of N and 10×N `Log` telemetries is read with `foreach` over `TelemetrySerializer.Deserialize` and each telemetry serialized into one `MonitoringCollectionStream` over `Stream.Null`; live-heap growth for 10×N stays within the allowance used by `MemoryTests`, and `Sequence` equals the number read. Link `TestingSerializeOptions.cs` into the XML test project (`<Compile Include="..\..\Forestry.Serialization\test\Fixtures\TestingSerializeOptions.cs" Link="Fixtures\TestingSerializeOptions.cs" />`). Marked with the performance trait so it runs in the performance gate
+- [ ] T021 [US2] **Test review gate**: the developer reviews T012-T020 on the board and closes the review task before T022 (C4)
+
+### Implementation for User Story 2
+
+- [ ] T022 [US2] Options base (R44) in `Forestry.Serialization/src/TelemetrySerializerOptions.cs`: move `Telemetries`, `Converters`, `FormatConverters`, `IsReadOnly`, `MakeReadOnly`, `OnMakingReadOnly`, converter resolution and the definition cache from `DeserializeOptions.cs` and `DeserializeOptions.Caching.cs` into the abstract base; `DeserializeOptions` derives from it and keeps `Policies`, `MaxContextTelemetries`, the enumerator factories and `SkipsByteOrderMark`; `TypeDefinition.Create` and `PropertyDefinition.Create` take the base. Run the three packages' tests: all green
+- [ ] T023 [US2] Compiled getter in `Forestry.Serialization/src/Definitions/PropertyDefinition.OfType.cs` (R46): `Func<Telemetry, T>` built with expression trees next to `CreateSetter`; internal `WriteValue(Telemetry, IBufferWriter<byte>)` returning whether the value was null (null `string`, or `Nullable<T>` without a value) and otherwise calling `((Converter<T>)ResolvedConverter).Write`
+- [ ] T024 [US2] Write check at lock (R45, FR-008): when definitions are built for `SerializeOptions`, a property definition whose resolved converter does not override `Write` is a failure gathered like spec 003's (R33), with a new message `MemberConverterCannotWrite` (member, its type, the converter type, the fix "override `Write`") in `Forestry.Serialization/src/Formatting.Resource.cs`
+- [ ] T025 [P] [US2] `ObjectConverter` in `Forestry.Serialization/src/Writing/ObjectConverter.cs` (R49, contract): `Definition`, `WriteTelemetry(Telemetry, IBufferWriter<byte>)` that calls `WriteStart`, then for each property definition in order either `WriteMember` (with a delegate that calls `WriteValue`) or `WriteNull`, then `WriteEnd`
+- [ ] T026 [US2] `SerializeOptions` in `Forestry.Serialization/src/SerializeOptions.cs`: derives from the base; `protected internal abstract ObjectConverter CreateObjectConverter(TypeDefinition definition)`; object converters created once per type definition when the options lock; `DefaultCollectionOptions` (US3 fills its type; a placeholder property is added with US3's T033 if US3 lands later)
+- [ ] T027 [P] [US2] Internal `PooledBufferWriter` in `Forestry.Serialization/src/Writing/PooledBufferWriter.cs` (R48): `IBufferWriter<byte>` over `ArrayPool<byte>.Shared` (grows by renting a larger array and copying), `WrittenSpan`/`WrittenMemory`, `Clear`, `Dispose` returns the array
+- [ ] T028 [US2] `TelemetrySerializer.Serialize` (sync, `Stream`) in `Forestry.Serialization/src/TelemetrySerializer.Serialize.cs` (R48, FR-010 to FR-017): validate arguments and that the stream `CanWrite`; lock the options; look up the type definition (fail for an unknown type before writing, FR-017); write into a `PooledBufferWriter`; `utf8.Write(buffer.WrittenSpan)` after each telemetry (many-telemetries overload: when the buffer passes 16 KiB and at the end); `Flush`; never dispose the stream
+- [ ] T029 [US2] `SerializeAsync` to a `Stream` (R47, R48): per-telemetry returns `ValueTask`, `IAsyncEnumerable` overload returns `Task`; only `WriteAsync`/`FlushAsync` (FR-013); cancellation checked between telemetries, in `TelemetrySerializer.Serialize.cs`
+- [ ] T030 [US2] `SerializeAsync` to a `PipeWriter` (R48): the object converter writes into the `PipeWriter` itself (no copy); `FlushAsync` after each telemetry (many-telemetries: when `UnflushedBytes` passes 16 KiB and at the end), honoring `FlushResult.IsCanceled`/`IsCompleted`; never `Complete`, in `TelemetrySerializer.Serialize.cs`
+- [ ] T031 [US2] Run `dotnet test` on all three test projects: T013-T020 pass (T020 after US3's `MonitoringCollectionStream` exists, or temporarily over a counting `Stream`), every earlier test green; then the performance gate (depends on T022-T030)
+
+**Checkpoint**: telemetries serialize to a caller's `Stream` or `PipeWriter`; no collections yet.
+
+---
+
+## Phase 3: User Story 3 - Collect telemetries with a collection writer (Priority: P2)
+
+**Goal**: `MonitoringCollectionStream` and `MonitoringCollectionPipeWriter`, sharing
+`ICollectionWriter` and `MonitoringCollectionOptions`, count telemetries and bytes, report full
+between telemetries, and complete as ready or abandoned (R51-R53).
+
+**Independent Test**: three telemetries into a collection stream over a `MemoryStream`: `Sequence`
+3, `BytesWritten` = length; limits make it full only after a whole telemetry; completion with and
+without an exception; the same through the collection `PipeWriter` (quickstart 5-8).
+
+### Test shells for User Story 3 ⚠️
+
+- [ ] T032 [US3] Test shell, US3-1 / US3-2 / SC-006 (quickstart 5): three `Reading` telemetries (one with a 10 000-character `Name`, so it takes several writes) into a `MonitoringCollectionStream` over a `MemoryStream`; `Sequence` is 3 and `BytesWritten` equals `memory.Length`, in `Forestry.Serialization/test/CollectionWriterTests.cs`
+- [ ] T033 [US3] Test shell, US3-3 / FR-021 (quickstart 6): with `MaxTelemetries = 2`, `IsFull` is false after one telemetry and true after two; with `TargetSize` smaller than one telemetry, `IsFull` is false before the first and true after it (never mid-telemetry), in `CollectionWriterTests.cs`
+- [ ] T034 [US3] Test shell, US3-4 / FR-022 (quickstart 7): a subclass overriding `OnCompleted` records its argument; `Complete()` records null after every byte is in the inner `MemoryStream`; `Complete(new IOException())` records the exception; writing after completion throws `InvalidOperationException`, in `CollectionWriterTests.cs`
+- [ ] T035 [US3] Test shell, US3-5 / FR-023: with `LeaveOpen = true` the inner `MemoryStream` is still readable after `Complete`; with `LeaveOpen = false` it is disposed; the same for the collection `PipeWriter` over a `Pipe` (the reader sees completion only without `LeaveOpen`), in `CollectionWriterTests.cs`
+- [ ] T036 [US3] Test shell, US3-6 (quickstart 8): the same three telemetries through `MonitoringCollectionPipeWriter` over a `Pipe` and through `MonitoringCollectionPipeWriter.Create(memory, new() { LeaveOpen = true })`: same bytes, `Sequence` and `BytesWritten` as T032, in `CollectionWriterTests.cs`
+- [ ] T037 [US3] Test shell, US3-7: a subclass of `MonitoringCollectionStream` overriding `Write(ReadOnlySpan<byte>)` to count calls sees its override run, in `CollectionWriterTests.cs`
+- [ ] T038 [US3] Test shell, R53: `MonitoringCollectionOptions` with `TargetSize = 0`, `MaxTelemetries = -1` or `MinimumBufferSize = 0` throws `ArgumentOutOfRangeException`; `Default` has `LeaveOpen` false and no limits; `SerializeOptions.DefaultCollectionOptions` is `Default` until set and cannot be set after the options lock, in `CollectionWriterTests.cs`
+- [ ] T039 [US3] **Test review gate**: the developer reviews T032-T038 on the board and closes the review task before T040 (C4)
+
+### Implementation for User Story 3
+
+- [ ] T040 [P] [US3] `MonitoringCollectionOptions` in `Forestry.Serialization/src/Writing/MonitoringCollectionOptions.cs` (R53): sealed, `init` only: `LeaveOpen` (default false), `TargetSize` (`long?`, "positive when set"), `MaxTelemetries` (`long?`, "positive when set"), `SizeIsCompressed` (default false), `MinimumBufferSize` (default 4096, "positive"), `Pool` (`MemoryPool<byte>?`), static `Default`; validation in the `init` accessors
+- [ ] T041 [P] [US3] `ICollectionWriter` in `Forestry.Serialization/src/Writing/ICollectionWriter.cs` (R51): `Options`, `Sequence`, `BytesWritten`, `IsFull`; and an internal interface `ICollectionWriterSequence` with `void OnTelemetryWritten()` that both classes implement explicitly
+- [ ] T042 [US3] `MonitoringCollectionStream` in `Forestry.Serialization/src/Writing/MonitoringCollectionStream.cs` (R51): public, not sealed; constructor `(Stream inner, MonitoringCollectionOptions? options = null)`; `CanWrite` true until completed, `CanRead`/`CanSeek` false; `Write(ReadOnlySpan<byte>)`, `Write(byte[], int, int)`, `WriteAsync(ReadOnlyMemory<byte>, …)` forward and add to `BytesWritten`; `Flush`/`FlushAsync` forward; `Complete`/`CompleteAsync(Exception?)` flush, dispose the inner stream unless `LeaveOpen`, then `protected virtual OnCompleted(Exception?)`; `Dispose`/`DisposeAsync` complete with null if not completed; `IsFull` per data-model.md
+- [ ] T043 [US3] `MonitoringCollectionPipeWriter` in `Forestry.Serialization/src/Writing/MonitoringCollectionPipeWriter.cs` (R51): public, not sealed; constructor `(PipeWriter inner, MonitoringCollectionOptions? options = null)`; static `Create(Stream utf8, MonitoringCollectionOptions? options = null)` using `PipeWriter.Create(utf8, new StreamPipeWriterOptions(options.Pool, options.MinimumBufferSize, options.LeaveOpen))`; forwards `GetSpan`, `GetMemory`, `FlushAsync`, `CancelPendingFlush`, `CanGetUnflushedBytes`, `UnflushedBytes`; `Advance` counts; `Complete`/`CompleteAsync` complete the inner writer unless `LeaveOpen` (flushing first), then `OnCompleted`
+- [ ] T044 [US3] Sequence at telemetry boundaries (R52) in `TelemetrySerializer.Serialize.cs`: after each whole telemetry has reached the target, call `OnTelemetryWritten()` when the target is an `ICollectionWriter`; for a `Stream` target that is a collection writer, write the pooled buffer after every telemetry (not at the 16 KiB threshold) so `BytesWritten` is exact at each boundary
+- [ ] T045 [US3] `SerializeOptions.DefaultCollectionOptions` typed `MonitoringCollectionOptions` (default `MonitoringCollectionOptions.Default`), setter throws once the options are read-only, in `SerializeOptions.cs` (FR-026)
+- [ ] T046 [US3] Run `dotnet test` on all three test projects: T032-T038 and T020 pass, every earlier test green; then the performance gate (depends on T040-T045)
+
+**Checkpoint**: collections can be counted, limited and completed; monitoring (#141) can build on them.
+
+---
+
+## Phase 4: Polish & Cross-Cutting Concerns
+
+- [ ] T047 [P] README (FR-029, D0, SC-008): a "Serializing" section in `Forestry.Serialization/README.md`: targets (`Stream` sync/async, `PipeWriter` async), the caller owns the target, the `MemoryStream` example reading the string back, converters' `Read`/`Write`, object converters for format authors, and collection writers with `MonitoringCollectionOptions`
+- [ ] T048 [P] XML docs on every new public member (D0); `ValueTask` rules (await once, never concurrently) on the per-telemetry `SerializeAsync` overloads
+- [ ] T049 [P] Changelogs: under Breaking Changes in `Forestry.Serialization/CHANGELOG.md`, `Forestry.Serialization.Xml/CHANGELOG.md` and `../stanford/Forestry.StanForD/CHANGELOG.md`: `Convert` renamed `Read`; `DeserializeOptions` derives from `TelemetrySerializerOptions`; under Features Added in `Forestry.Serialization/CHANGELOG.md`: converters' `Write`, `SerializeOptions`, `TelemetrySerializer.Serialize`/`SerializeAsync`, object converters, collection writers
+- [ ] T050 Run every quickstart.md scenario (1-9); record the result here
+- [ ] T051 Mark `spec.md` **Status** Implemented with the date and story issues; bring the board in sync (story issues' checklists and Architecture match this file; #137 notes the implementation; #138 and #141 reminded of what they can now build on)
+
+---
+
+## Dependencies & Execution Order
+
+### Phase Dependencies
+
+- **US1 (Phase 1)**: shells, review gate, then implementation; T007 (rename) first, alone in its
+  commit
+- **US2 (Phase 2)**: after US1 (needs `Write`); its shells can be written while US1 is implemented.
+  T020 needs US3's `MonitoringCollectionStream` to pass, or a temporary counting `Stream`
+- **US3 (Phase 3)**: after US2 (needs `TelemetrySerializer`); shells can be written during US2
+- **Polish (Phase 4)**: after the stories it records
+
+### Within Each Story
+
+- Test shells, then the **test review gate**, then implementation (C4)
+- US1: rename, then `Write`, then overrides
+- US2: options base, getters and the write check, then object converter and `SerializeOptions`,
+  then the buffer, then the three target paths
+- US3: options and interface, then the two writers, then sequence bumping and the default options
+
+### Parallel Opportunities
+
+- US1: T001; after the gate T009 alongside T010
+- US2: T012 and T020; after the gate T025 and T027 alongside T023-T024
+- US3: after the gate T040 and T041 together
+- Polish: T047, T048, T049
+
+## Parallel Example: User Story 2
+
+```text
+# Shells, in parallel:
+T012 string test format and fixtures (Forestry.Serialization/test/Fixtures/)
+T020 foreach memory test (Forestry.Serialization.Xml/test/)
+
+# After the review gate (T021), in parallel with the definitions work:
+T025 ObjectConverter      T027 PooledBufferWriter
+```
+
+## Implementation Strategy
+
+### MVP First (User Story 1 Only)
+
+1. US1 shells, review gate, implementation (T001-T011)
+2. **Stop and validate**: quickstart 1; every earlier test green
+3. Gives #138 its converters' `Write`
+
+### Incremental Delivery
+
+1. US1 → `Read`/`Write` converters, rename landed everywhere
+2. US2 → `TelemetrySerializer.Serialize`/`SerializeAsync` to `Stream` and `PipeWriter`
+   (unblocks #138's JSON Lines writer)
+3. US3 → collection writers (unblocks #141's collecting directive)
+
+## Notes
+
+- [P] tasks touch different files and depend on no incomplete task
+- Each review gate is a board task the developer closes (C4, C5); story issues on the board carry
+  scope and design decisions in their Architecture section and are kept in sync with this file
+- Commit after each task or logical group; a story's shells reach main only with its
+  implementation (R56)

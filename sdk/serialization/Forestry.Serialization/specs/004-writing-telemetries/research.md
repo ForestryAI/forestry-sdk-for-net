@@ -115,6 +115,17 @@ confirms it (C5).
   core calls the format's `WriteNull` instead of the converter. The string test format writes an
   empty value; JSON Lines (#138) decides between `null` and omitting.
 - **Rationale**: FR-012 and spec edge case: converters never see a missing value.
+- **Per-kind framing belongs to the format** (developer, 2026-11-26): `Utf8JsonWriter` frames each
+  kind of value differently, in partial classes: `WriteStringValue` (quote and escape),
+  `WriteNumberValue`/`WriteBooleanValue` (bare), `WriteNullValue`, `WriteRawValue` (bytes as
+  they are). Here `WriteNull` is the `WriteNullValue` counterpart, and `WriteMember` is where a
+  format decides string or raw: it receives the `PropertyDefinition`, whose `MemberType` tells it
+  (e.g. in JSON, `string`, enums, `Guid` and dates are quoted). A per-kind writer in the core
+  would be a format-neutral token model (C0) and every format frames kinds differently (JSON
+  quotes, Parquet writes typed binary), so the core keeps only `WriteMember` and `WriteNull`. The
+  partial-class-per-kind writer is a good fit inside `Forestry.Serialization.JsonLines` (#138),
+  possibly `Utf8JsonWriter` itself over the converters' bytes. The string test format does not
+  escape, so it needs none of this.
 
 ## R51 - Collection writer contract
 
