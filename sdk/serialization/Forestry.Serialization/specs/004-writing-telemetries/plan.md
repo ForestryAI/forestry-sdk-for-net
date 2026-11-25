@@ -110,9 +110,10 @@ Forestry.Serialization/src/
 │   └── Primitive/*.cs                     # Write overrides
 ├── Definitions/
 │   ├── TypeDefinition.cs                  # built from the base
-│   └── PropertyDefinition.OfType.cs       # compiled getter, WriteValue (R46)
+│   └── PropertyDefinition.OfType.cs       # compiled getter, WriteMember (R46, R49)
 ├── Writing/
 │   ├── ObjectConverter.cs                 # new: format hook per type definition (R49)
+│   ├── MemberSections.cs                  # new: per-property bytes from the format (R49)
 │   ├── PooledBufferWriter.cs              # new, internal: per-call buffer (R48)
 │   ├── ICollectionWriter.cs               # new (R51)
 │   ├── MonitoringCollectionStream.cs      # new (R51)

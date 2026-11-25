@@ -61,14 +61,31 @@ namespace Forestry.Serialization
 
 namespace Forestry.Serialization.Writing
 {
-    public abstract class ObjectConverter
+    public abstract class ObjectConverter                       // R49: System.Text.Json's ObjectDefaultConverter
     {
         protected ObjectConverter(TypeDefinition definition);
         public TypeDefinition Definition { get; }
-        protected virtual void WriteStart(IBufferWriter<byte> writer);
-        protected virtual void WriteMember(PropertyDefinition property, int index, IBufferWriter<byte> writer, Action<IBufferWriter<byte>> writeValue);
-        protected virtual void WriteNull(PropertyDefinition property, int index, IBufferWriter<byte> writer);
-        protected virtual void WriteEnd(IBufferWriter<byte> writer);
+
+        // The walk: WriteStart; per property, PropertyDefinition<T>.WriteMember (separator if a member was
+        // already written, name section, then null section or the converter's Write; omitted nulls skipped);
+        // WriteEnd. Virtual for columnar formats (Parquet) that do not write one byte sequence per telemetry.
+        public virtual void WriteTelemetry(Telemetry telemetry, IBufferWriter<byte> writer);
+
+        protected virtual void WriteStart(IBufferWriter<byte> writer);   // default writes nothing
+        protected virtual void WriteEnd(IBufferWriter<byte> writer);     // default writes nothing
+
+        // Once per property definition when the options lock (as EscapedNameSection is computed once)
+        protected abstract MemberSections CreateMemberSections(PropertyDefinition property);
+    }
+
+    public sealed class MemberSections
+    {
+        public MemberSections(ReadOnlyMemory<byte> name, ReadOnlyMemory<byte> separator, ReadOnlyMemory<byte> nullValue);
+        public static MemberSections OmitNull(ReadOnlyMemory<byte> name, ReadOnlyMemory<byte> separator);
+        public ReadOnlyMemory<byte> Name { get; }        // bytes before the value, e.g. "LogKey":
+        public ReadOnlyMemory<byte> Separator { get; }   // bytes between two written members, e.g. ,
+        public ReadOnlyMemory<byte> NullValue { get; }   // bytes for a null, e.g. null
+        public bool OmitsNull { get; }                   // leave the member out when its value is null
     }
 
     public interface ICollectionWriter

@@ -19,7 +19,7 @@ instances). `SerializeOptions.DefaultCollectionOptions` → one `MonitoringColle
 | Type | Change | Validation |
 |---|---|---|
 | `TypeDefinition` | Built from `TelemetrySerializerOptions` | Flat rule (C7, R32) |
-| `PropertyDefinition<T>` | Adds a compiled getter `Func<Telemetry, T>` and internal `WriteValue` (R46) | Resolved converter must override `Write` when built for `SerializeOptions` (R45) |
+| `PropertyDefinition<T>` | Adds a compiled getter `Func<Telemetry, T>` and internal `WriteMember`, the counterpart of `GetMemberAndWriteJson` (R46, R49) | Resolved converter must override `Write` when built for `SerializeOptions` (R45) |
 
 ## Converters
 
@@ -32,7 +32,8 @@ instances). `SerializeOptions.DefaultCollectionOptions` → one `MonitoringColle
 
 | Type | Kind | Fields / members | Notes |
 |---|---|---|---|
-| `ObjectConverter` | abstract (R49) | `WriteTelemetry`, overridable `WriteStart`, `WriteMember`, `WriteNull`, `WriteEnd` | One per type definition, created by the format |
+| `ObjectConverter` | abstract (R49) | virtual `WriteTelemetry`, overridable `WriteStart` and `WriteEnd`, abstract `CreateMemberSections` | One per type definition, created by the format; member sections computed once at lock |
+| `MemberSections` | sealed (R49) | `Name`, `Separator`, `NullValue`, `OmitsNull` | Bytes the format prepares once per property definition |
 | `PooledBufferWriter` | internal | rented segments, `WrittenSpan`, `Reset` | Lives for one call (R48) |
 | `ICollectionWriter` | interface (R51) | `Options`, `Sequence`, `BytesWritten`, `IsFull` | Recognized by `TelemetrySerializer` |
 | `MonitoringCollectionStream` | `Stream`, public, not sealed | inner `Stream`, options, counters, completion state | Counts in `Write`/`WriteAsync` |
