@@ -21,7 +21,7 @@ namespace Forestry.Serialization.Converters.Primitive
             throw new FormatException(Formatting.Format(Formatting.NotParsable, nameof(DateTime)));
         }
 
-        public override void Write(DateTime value, IBufferWriter<byte> utf8) => Utf8Writing.Write(value, "O", utf8);
+        public override void Write(DateTime value, IBufferWriter<byte> writer) => Utf8Writing.Write(value, "O", writer);
     }
 
     /// <summary>
@@ -40,6 +40,6 @@ namespace Forestry.Serialization.Converters.Primitive
             throw new FormatException(Formatting.Format(Formatting.NotParsable, nameof(DateTimeOffset)));
         }
 
-        public override void Write(DateTimeOffset value, IBufferWriter<byte> utf8) => Utf8Writing.Write(value, "O", utf8);
+        public override void Write(DateTimeOffset value, IBufferWriter<byte> writer) => Utf8Writing.Write(value, "O", writer);
     }
 }

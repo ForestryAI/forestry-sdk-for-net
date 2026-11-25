@@ -20,7 +20,7 @@ namespace Forestry.Serialization.Converters.Primitive
             throw new FormatException(Formatting.Format(Formatting.NotParsable, typeof(T).Name));
         }
 
-        public override void Write(T value, IBufferWriter<byte> utf8) => Utf8Writing.Write(value, default, utf8);
+        public override void Write(T value, IBufferWriter<byte> writer) => Utf8Writing.Write(value, default, writer);
     }
 
     /// <summary>

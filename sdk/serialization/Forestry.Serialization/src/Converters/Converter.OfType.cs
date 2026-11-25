@@ -31,7 +31,7 @@ namespace Forestry.Serialization.Converters
         public abstract T Read(ReadOnlySpan<byte> utf8);
 
         /// <summary>
-        /// Write <paramref name="value"/> as UTF-8 into <paramref name="utf8"/>: ask for room with
+        /// Write <paramref name="value"/> as UTF-8 into <paramref name="writer"/>: ask for room with
         /// <see cref="IBufferWriter{T}.GetSpan(int)"/>, format into it and call
         /// <see cref="IBufferWriter{T}.Advance(int)"/>; when the room offered is too small, ask again with a
         /// larger size hint instead of failing (spec 004 research R45)
@@ -43,9 +43,9 @@ namespace Forestry.Serialization.Converters
         /// writing telemetries.
         /// </remarks>
         /// <param name="value">A value that is there, never null</param>
-        /// <param name="utf8">Where the UTF-8 text goes</param>
+        /// <param name="writer">Where the UTF-8 text goes</param>
         /// <exception cref="NotSupportedException">The converter only reads</exception>
-        public virtual void Write(T value, IBufferWriter<byte> utf8)
+        public virtual void Write(T value, IBufferWriter<byte> writer)
         {
             Throwing.WhenConverterCannotWrite(GetType(), typeof(T));
         }

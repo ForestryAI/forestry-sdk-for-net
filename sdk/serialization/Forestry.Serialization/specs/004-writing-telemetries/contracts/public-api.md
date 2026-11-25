@@ -12,7 +12,7 @@ namespace Forestry.Serialization.Converters
     public abstract class Converter<T> : Converter
     {
         public abstract T Read(ReadOnlySpan<byte> utf8);                   // was Convert (R56)
-        public virtual void Write(T value, IBufferWriter<byte> utf8);     // new (R45); default throws NotSupportedException
+        public virtual void Write(T value, IBufferWriter<byte> writer);     // new (R45); default throws NotSupportedException
     }
 }
 
@@ -65,10 +65,10 @@ namespace Forestry.Serialization.Writing
     {
         protected ObjectConverter(TypeDefinition definition);
         public TypeDefinition Definition { get; }
-        protected virtual void WriteStart(IBufferWriter<byte> utf8);
-        protected virtual void WriteMember(PropertyDefinition property, int index, IBufferWriter<byte> utf8, Action<IBufferWriter<byte>> writeValue);
-        protected virtual void WriteNull(PropertyDefinition property, int index, IBufferWriter<byte> utf8);
-        protected virtual void WriteEnd(IBufferWriter<byte> utf8);
+        protected virtual void WriteStart(IBufferWriter<byte> writer);
+        protected virtual void WriteMember(PropertyDefinition property, int index, IBufferWriter<byte> writer, Action<IBufferWriter<byte>> writeValue);
+        protected virtual void WriteNull(PropertyDefinition property, int index, IBufferWriter<byte> writer);
+        protected virtual void WriteEnd(IBufferWriter<byte> writer);
     }
 
     public interface ICollectionWriter

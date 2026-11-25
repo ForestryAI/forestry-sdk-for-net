@@ -23,11 +23,11 @@ namespace Forestry.Serialization.Converters.Primitive
             throw new FormatException(Formatting.Format(Formatting.NotParsable, nameof(Boolean)));
         }
 
-        public override void Write(bool value, IBufferWriter<byte> utf8)
+        public override void Write(bool value, IBufferWriter<byte> writer)
         {
             ReadOnlySpan<byte> text = value ? "true"u8 : "false"u8;
-            text.CopyTo(utf8.GetSpan(text.Length));
-            utf8.Advance(text.Length);
+            text.CopyTo(writer.GetSpan(text.Length));
+            writer.Advance(text.Length);
         }
     }
 }

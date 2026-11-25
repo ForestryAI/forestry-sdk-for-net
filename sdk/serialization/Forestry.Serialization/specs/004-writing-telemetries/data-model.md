@@ -26,7 +26,7 @@ instances). `SerializeOptions.DefaultCollectionOptions` → one `MonitoringColle
 | Member | Signature | Rule |
 |---|---|---|
 | `Read` | `T Read(ReadOnlySpan<byte> utf8)` | Renamed from `Convert`; behavior unchanged |
-| `Write` | `virtual void Write(T value, IBufferWriter<byte> utf8)` | Never given null; asks for more room instead of failing (FR-002) |
+| `Write` | `virtual void Write(T value, IBufferWriter<byte> writer)` | Never given null; asks for more room instead of failing (FR-002) |
 
 ## Writing
 

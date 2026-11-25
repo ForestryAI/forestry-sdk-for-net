@@ -10,10 +10,10 @@ namespace Forestry.Serialization.Converters.Primitive
     {
         public override string Read(ReadOnlySpan<byte> utf8) => Encoding.UTF8.GetString(utf8);
 
-        public override void Write(string value, IBufferWriter<byte> utf8)
+        public override void Write(string value, IBufferWriter<byte> writer)
         {
-            int written = Encoding.UTF8.GetBytes(value, utf8.GetSpan(Encoding.UTF8.GetMaxByteCount(value.Length)));
-            utf8.Advance(written);
+            int written = Encoding.UTF8.GetBytes(value, writer.GetSpan(Encoding.UTF8.GetMaxByteCount(value.Length)));
+            writer.Advance(written);
         }
     }
 }

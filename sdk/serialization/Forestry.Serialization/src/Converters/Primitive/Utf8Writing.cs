@@ -21,18 +21,18 @@ namespace Forestry.Serialization.Converters.Primitive
         /// <typeparam name="T"></typeparam>
         /// <param name="value"></param>
         /// <param name="format"></param>
-        /// <param name="utf8"></param>
-        public static void Write<T>(T value, ReadOnlySpan<char> format, IBufferWriter<byte> utf8) where T : IUtf8SpanFormattable
+        /// <param name="writer"></param>
+        public static void Write<T>(T value, ReadOnlySpan<char> format, IBufferWriter<byte> writer) where T : IUtf8SpanFormattable
         {
             int hint = FirstHint;
 
             while (true)
             {
-                Span<byte> span = utf8.GetSpan(hint);
+                Span<byte> span = writer.GetSpan(hint);
 
                 if (value.TryFormat(span, out int written, format, CultureInfo.InvariantCulture))
                 {
-                    utf8.Advance(written);
+                    writer.Advance(written);
                     return;
                 }
 

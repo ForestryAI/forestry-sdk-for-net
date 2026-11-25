@@ -11,11 +11,11 @@ namespace Forestry.Serialization.Tests.Fixtures
     {
         public override int Read(ReadOnlySpan<byte> utf8) => -1;
 
-        public override void Write(int value, IBufferWriter<byte> utf8)
+        public override void Write(int value, IBufferWriter<byte> writer)
         {
-            Span<byte> span = utf8.GetSpan(1);
+            Span<byte> span = writer.GetSpan(1);
             span[0] = (byte)'x';
-            utf8.Advance(1);
+            writer.Advance(1);
         }
     }
 }

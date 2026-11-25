@@ -28,7 +28,7 @@ confirms it (C5).
 ## R45 - The converter write signature
 
 - **Decision**: `Converter<T>` gets `public abstract T Read(ReadOnlySpan<byte> utf8)` (renamed from
-  `Convert`) and `public virtual void Write(T value, IBufferWriter<byte> utf8)`. The default
+  `Convert`) and `public virtual void Write(T value, IBufferWriter<byte> writer)`. The default
   `Write` throws `NotSupportedException` naming the converter; every built-in converter overrides
   it. `Write` is never called with a null value (FR-012: the format writes null).
 - **Rationale**: Mirrors `Read` and `JsonConverter<T>.Write`. `IBufferWriter<byte>` is a BCL type,
