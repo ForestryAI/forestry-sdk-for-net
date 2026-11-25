@@ -72,10 +72,10 @@ StanForD document families; StanForD's non-XML format; writing telemetries to st
 ### C6. Test-first
 
 - **Covers**: Code quality
-- **Rule**: Each assertion telemetry MUST get a test shell before code is written. The developer reviews
+- **Rule**: Each assertion row MUST get a test shell before code is written. The developer reviews
   the shells in a test review task before any code.
 - **Rationale**: Same as the other silos.
-- **Checked by**: Every assertion telemetry maps to a test; the review task is closed before coding.
+- **Checked by**: Every assertion row maps to a test; the review task is closed before coding.
 
 ### C7. Design ownership
 
@@ -150,6 +150,10 @@ StanForD document families; StanForD's non-XML format; writing telemetries to st
 
 ## Amendments
 
+- **1.0.2** (2026-11-26, found in #137, takes effect on merge to `main`). Reason: C6 wording fix
+  (PATCH): "assertion telemetry" back to "assertion row", renamed by mistake in 1.0.1. An assertion
+  row is a row of an assertion table, not a telemetry.
+
 - **1.0.1** (2026-11-25, agreed by the developer in #142, takes effect on merge to `main`). Reason:
   *Row* is renamed *Telemetry* (what forestry devices emit, measured at a distance) and
   Forestry.Deserialize is renamed Forestry.Serialization. Wording only (PATCH): "row" -> "telemetry"
@@ -158,4 +162,4 @@ StanForD document families; StanForD's non-XML format; writing telemetries to st
 - **1.0.0** (2026-11-11, agreed by the developer in #90, takes effect on merge to `main`). First
   version, from the assertion table in #90.
 
-**Version**: 1.0.1 | **Ratified**: 2026-11-11 | **Last Amended**: 2026-11-25
+**Version**: 1.0.2 | **Ratified**: 2026-11-11 | **Last Amended**: 2026-11-26
