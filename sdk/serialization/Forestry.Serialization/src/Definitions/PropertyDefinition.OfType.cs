@@ -60,7 +60,7 @@ namespace Forestry.Serialization.Definitions
             {
                 try
                 {
-                    value = _converter.Convert(utf8);
+                    value = _converter.Read(utf8);
                 }
                 catch (Exception exception) when (exception is FormatException or OverflowException)
                 {

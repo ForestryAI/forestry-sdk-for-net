@@ -6,7 +6,7 @@ namespace Forestry.Serialization.Converters.Primitive
     /// </summary>
     internal sealed class BooleanConverter : Converter<bool>
     {
-        public override bool Convert(ReadOnlySpan<byte> utf8)
+        public override bool Read(ReadOnlySpan<byte> utf8)
         {
             if (utf8.SequenceEqual("true"u8))
             {

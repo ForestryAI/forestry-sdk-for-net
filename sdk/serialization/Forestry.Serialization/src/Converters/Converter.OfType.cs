@@ -21,11 +21,11 @@ namespace Forestry.Serialization.Converters
         public override bool CanConvert(Type type) => type == typeof(T);
 
         /// <summary>
-        /// Convert a complete, non-empty value; throw <see cref="FormatException"/> when the text is not a
+        /// Read a complete, non-empty value; throw <see cref="FormatException"/> when the text is not a
         /// <typeparamref name="T"/>
         /// </summary>
         /// <param name="utf8"></param>
         /// <returns></returns>
-        public abstract T Convert(ReadOnlySpan<byte> utf8);
+        public abstract T Read(ReadOnlySpan<byte> utf8);
     }
 }

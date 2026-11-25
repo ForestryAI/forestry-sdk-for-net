@@ -7,6 +7,6 @@ namespace Forestry.Serialization.Tests.Fixtures
     /// </summary>
     public sealed class MarkingInt32Converter : Converter<int>
     {
-        public override int Convert(ReadOnlySpan<byte> utf8) => -1;
+        public override int Read(ReadOnlySpan<byte> utf8) => -1;
     }
 }

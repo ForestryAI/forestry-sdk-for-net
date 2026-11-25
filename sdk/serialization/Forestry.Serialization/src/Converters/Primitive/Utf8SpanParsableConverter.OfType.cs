@@ -9,7 +9,7 @@ namespace Forestry.Serialization.Converters.Primitive
     /// <typeparam name="T"></typeparam>
     internal sealed class Utf8SpanParsableConverter<T> : Converter<T> where T : IUtf8SpanParsable<T>
     {
-        public override T Convert(ReadOnlySpan<byte> utf8)
+        public override T Read(ReadOnlySpan<byte> utf8)
         {
             if (T.TryParse(utf8, CultureInfo.InvariantCulture, out T? value))
             {

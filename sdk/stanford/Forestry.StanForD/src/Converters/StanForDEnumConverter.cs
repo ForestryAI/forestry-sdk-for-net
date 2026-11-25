@@ -21,7 +21,7 @@ namespace Forestry.StanForD.Converters {
 
         /// <inheritdoc/>
         /// <exception cref="FormatException">The text names no member of <typeparamref name="TEnum"/></exception>
-        public override TEnum Convert(ReadOnlySpan<byte> utf8)
+        public override TEnum Read(ReadOnlySpan<byte> utf8)
         {
             string text = Encoding.UTF8.GetString(utf8).Replace(" ", string.Empty, StringComparison.Ordinal);
 

@@ -67,7 +67,7 @@ back; a custom converter added to the options is the one that writes (quickstart
 - [X] T003 [US1] Test shell, US1-2 / FR-002: a `string` of 10 000 characters, with a buffer writer that offers 16 bytes on the first `GetSpan`, is written whole (no retry contract), in `ConverterWriteTests.cs`
 - [X] T004 [US1] Test shell, US1-3 / FR-004: a custom `Converter<int>` that writes `"x"` added to a test options' `Converters` is the resolved converter used by `PropertyDefinition<int>` for writing, in `ConverterWriteTests.cs`
 - [X] T005 [US1] Test shell, R45: a converter that does not override `Write` throws `NotSupportedException` naming the converter type when `Write` is called directly, in `ConverterWriteTests.cs`
-- [ ] T006 [US1] **Test review gate**: the developer reviews T001-T005 on the board and closes the review task before T007 (C4)
+- [X] T006 [US1] **Test review gate**: the developer reviews T001-T005 on the board and closes the review task before T007 (C4) (developer, 2026-11-26: passed with no changes)
 
 ### Implementation for User Story 1
 

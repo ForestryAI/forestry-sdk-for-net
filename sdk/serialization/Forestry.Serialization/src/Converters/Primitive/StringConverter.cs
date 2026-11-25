@@ -7,6 +7,6 @@ namespace Forestry.Serialization.Converters.Primitive
     /// </summary>
     internal sealed class StringConverter : Converter<string>
     {
-        public override string Convert(ReadOnlySpan<byte> utf8) => Encoding.UTF8.GetString(utf8);
+        public override string Read(ReadOnlySpan<byte> utf8) => Encoding.UTF8.GetString(utf8);
     }
 }

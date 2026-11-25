@@ -7,7 +7,7 @@ namespace Forestry.Serialization.Converters.Primitive
     /// <typeparam name="T"></typeparam>
     internal sealed class NullableConverter<T>(Converter<T> converter) : Converter<T?> where T : struct
     {
-        public override T? Convert(ReadOnlySpan<byte> utf8) => converter.Convert(utf8);
+        public override T? Read(ReadOnlySpan<byte> utf8) => converter.Read(utf8);
     }
 
     /// <summary>
