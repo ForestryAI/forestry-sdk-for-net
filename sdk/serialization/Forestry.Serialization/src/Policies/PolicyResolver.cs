@@ -36,7 +36,7 @@ namespace Forestry.Serialization.Policies
             policies?.ForMembers.Where(entry => entry.Type == type && entry.Member == member).Select(entry => entry.Policy) ?? [];
 
         /// <summary>
-        /// Every enumeration policy that applies to the options' row types, each once: cleared when an
+        /// Every enumeration policy that applies to the options' telemetry types, each once: cleared when an
         /// enumeration ends
         /// </summary>
         public EnumerationPolicy[] EnumerationPolicies => [.. _enumerationPolicies];
@@ -85,22 +85,22 @@ namespace Forestry.Serialization.Policies
             EnumerationPolicy[] constructChain = PickEnumeration(type, Construct, [], forType, [], onType, optionsWide);
             EnumerationPolicy[] completeChain = PickEnumeration(type, Complete, [], forType, [], onType, optionsWide);
 
-            Func<DeserializeContext, Row> construct = _ => definition.Construct();
+            Func<DeserializeContext, Telemetry> construct = _ => definition.Construct();
 
             for (int i = constructChain.Length - 1; i >= 0; i--)
             {
                 EnumerationPolicy policy = constructChain[i];
-                Func<DeserializeContext, Row> next = construct;
+                Func<DeserializeContext, Telemetry> next = construct;
                 construct = context => policy.Construct(definition, context, next);
             }
 
-            Action<ContextRow> complete = static _ => { };
+            Action<ContextTelemetry> complete = static _ => { };
 
             for (int i = completeChain.Length - 1; i >= 0; i--)
             {
                 EnumerationPolicy policy = completeChain[i];
-                Action<ContextRow> next = complete;
-                complete = row => policy.Complete(row, row.Context, next);
+                Action<ContextTelemetry> next = complete;
+                complete = telemetry => policy.Complete(telemetry, telemetry.Context, next);
             }
 
             Delegate[] setters = new Delegate[definition.Properties.Count];

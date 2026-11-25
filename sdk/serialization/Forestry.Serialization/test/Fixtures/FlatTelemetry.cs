@@ -5,11 +5,11 @@ using Forestry.Serialization.Converters;
 namespace Forestry.Serialization.Tests.Fixtures
 {
     /// <summary>
-    /// A row type with one member of each single-value kind that has a converter (spec 003 US1-1,
+    /// A telemetry type with one member of each single-value kind that has a converter (spec 003 US1-1,
     /// research R32): primitives, <see cref="string"/>, a text-form struct, nullables, and
     /// <see cref="Measure"/>, a developer's struct whose converter the test adds
     /// </summary>
-    public sealed class FlatRow : Row
+    public sealed class FlatTelemetry : Telemetry
     {
         public bool Flag { get; set; }
 
@@ -40,7 +40,7 @@ namespace Forestry.Serialization.Tests.Fixtures
     /// Single values with no built-in converter today (research R32, R33): an enum, <see cref="DateOnly"/>
     /// and <see cref="TimeSpan"/>. They pass the single-value check and fail only for lack of a converter
     /// </summary>
-    public sealed class SingleValuesWithoutConverters : Row
+    public sealed class SingleValuesWithoutConverters : Telemetry
     {
         public Grade Grade { get; set; }
 

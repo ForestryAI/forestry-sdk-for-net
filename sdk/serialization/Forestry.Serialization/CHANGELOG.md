@@ -4,6 +4,7 @@
 
 ### Breaking Changes
 - Renamed from `Forestry.Deserialize` to `Forestry.Serialization` (and `Forestry.Deserialize.Xml` to `Forestry.Serialization.Xml`); the static `Deserialization` class is now `TelemetrySerializer`, and `DeserializationContext` is now `DeserializeContext` (#142). Entries below keep the names they were written with.
+- `Row` is now `Telemetry`, and every name built on it follows (e.g. `ContextRow` -> `ContextTelemetry`, `RowTypes` -> `TelemetryTypes`, `TRow` -> `TTelemetry`), in code and in messages (#142).
 
 ### Features Added
 - Flatten a document into rows in one forward pass: one instance of your own class per occurrence,

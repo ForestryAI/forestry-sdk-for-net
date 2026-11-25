@@ -6,7 +6,7 @@ using Forestry.Serialization.Reading;
 namespace Forestry.Serialization
 {
     /// <summary>
-    /// Options of one format (e.g. <c>DeserializeXmlOptions</c>): the row types, converters and settings
+    /// Options of one format (e.g. <c>DeserializeXmlOptions</c>): the telemetry types, converters and settings
     /// of a deserialization. The options own and build all definitions; once first used they are
     /// read-only (research R6)
     /// </summary>
@@ -17,14 +17,14 @@ namespace Forestry.Serialization
         /// </summary>
         protected DeserializeOptions()
         {
-            Rows = new RowTypes(this);
+            Telemetries = new TelemetryTypes(this);
         }
 
-        #region Row types
+        #region Telemetry types
         /// <summary>
-        /// Row types added explicitly: only their rows are handed out (research R12)
+        /// Telemetry types added explicitly: only their telemetries are handed out (research R12)
         /// </summary>
-        public RowTypes Rows { get; }
+        public TelemetryTypes Telemetries { get; }
         #endregion
 
         #region Converters
@@ -55,29 +55,29 @@ namespace Forestry.Serialization
 
         #region Deserialization context
         /// <summary>
-        /// Rows policies may keep in the deserialization context after their completion (spec 002 FR-011a,
-        /// S1); open rows do not count. Going past it throws a
+        /// Telemetries policies may keep in the deserialization context after their completion (spec 002 FR-011a,
+        /// S1); open telemetries do not count. Going past it throws a
         /// <see cref="DeserializeContextLimitException"/>. Default 100; locked with the options
         /// </summary>
         /// <exception cref="ArgumentOutOfRangeException">Less than 0</exception>
         /// <exception cref="InvalidOperationException">The options are read-only</exception>
-        public int MaxContextRows
+        public int MaxContextTelemetries
         {
-            get => _maxContextRows;
+            get => _maxContextTelemetries;
             set
             {
                 ThrowingAssertNotReadOnly();
                 ArgumentOutOfRangeException.ThrowIfNegative(value);
-                _maxContextRows = value;
+                _maxContextTelemetries = value;
             }
         }
 
-        private int _maxContextRows = DefaultMaxContextRows;
+        private int _maxContextTelemetries = DefaultMaxContextTelemetries;
 
         /// <summary>
-        /// Default of <see cref="MaxContextRows"/>: StanForD hpr documents keep about 16 rows (research R28)
+        /// Default of <see cref="MaxContextTelemetries"/>: StanForD hpr documents keep about 16 telemetries (research R28)
         /// </summary>
-        internal const int DefaultMaxContextRows = 100;
+        internal const int DefaultMaxContextTelemetries = 100;
         #endregion
 
         #region Read-only
@@ -92,7 +92,7 @@ namespace Forestry.Serialization
 
         /// <summary>
         /// Lock the options and build their definitions, as the first deserialization does; throws when
-        /// an added row type cannot be defined. Idempotent
+        /// an added telemetry type cannot be defined. Idempotent
         /// </summary>
         public void MakeReadOnly()
         {
@@ -136,19 +136,19 @@ namespace Forestry.Serialization
 
         #region Format
         /// <summary>
-        /// The format's synchronous row enumerator over UTF-8 bytes (research R2)
+        /// The format's synchronous telemetry enumerator over UTF-8 bytes (research R2)
         /// </summary>
         /// <param name="utf8"></param>
         /// <returns></returns>
-        protected internal abstract FormatRowEnumerator CreateRowEnumerator(ReadOnlyMemory<byte> utf8);
+        protected internal abstract FormatTelemetryEnumerator CreateTelemetryEnumerator(ReadOnlyMemory<byte> utf8);
 
         /// <summary>
-        /// The format's asynchronous row enumerator over the UTF-8 bytes of a pipe (research R2)
+        /// The format's asynchronous telemetry enumerator over the UTF-8 bytes of a pipe (research R2)
         /// </summary>
         /// <param name="utf8"></param>
         /// <param name="cancellationToken">Cancels a move waiting for bytes</param>
         /// <returns></returns>
-        protected internal abstract FormatRowAsyncEnumerator CreateRowAsyncEnumerator(PipeReader utf8, CancellationToken cancellationToken);
+        protected internal abstract FormatTelemetryAsyncEnumerator CreateTelemetryAsyncEnumerator(PipeReader utf8, CancellationToken cancellationToken);
 
         /// <summary>
         /// Whether the core skips a leading UTF-8 byte order mark before the format's reader sees the bytes

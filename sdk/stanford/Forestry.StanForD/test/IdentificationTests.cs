@@ -15,9 +15,9 @@ namespace Forestry.StanForD.Tests
     /// <list type="bullet">
     /// <item><c>DeserializeXmlOptions AddHarvesting(this DeserializeXmlOptions options,
     /// Action&lt;HarvestingOptions&gt;? configure = null)</c>: adds <see cref="Stem"/> and <see cref="Log"/>
-    /// (the only rows that come out), <see cref="Machine"/> and the common definitions (never come out),
-    /// converters for the StanForD enums the rows use, and the policies.</item>
-    /// <item>Identification is set when a row completes: <see cref="Machine"/> is found as an ancestor,
+    /// (the only telemetries that come out), <see cref="Machine"/> and the common definitions (never come out),
+    /// converters for the StanForD enums the telemetries use, and the policies.</item>
+    /// <item>Identification is set when a telemetry completes: <see cref="Machine"/> is found as an ancestor,
     /// the stem of a log as an ancestor, and the common definitions are kept in the deserialization
     /// context until the document ends.</item>
     /// <item><c>Id</c> is <c>{machine key, GUID format "N"}-{stem key}</c> on a stem and
@@ -30,7 +30,7 @@ namespace Forestry.StanForD.Tests
     {
         private static readonly string MachineKeyN = Fragment.MachineKey.ToString("N");
 
-        private static List<Row> Read(string xml) =>
+        private static List<Telemetry> Read(string xml) =>
             TelemetrySerializer.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting()).ToList();
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace Forestry.StanForD.Tests
 
             // Act
             List<string> ids = Read(first).Concat(Read(second))
-                .Select(row => row switch { Stem stem => stem.Id, Log log => log.Id, _ => throw new InvalidOperationException() })
+                .Select(telemetry => telemetry switch { Stem stem => stem.Id, Log log => log.Id, _ => throw new InvalidOperationException() })
                 .ToList();
 
             // Assert
@@ -232,19 +232,19 @@ namespace Forestry.StanForD.Tests
             string xml = Fragment.Read(Fragment.MinimalHarvesting);
 
             // Act
-            List<Row> rows = Read(xml);
+            List<Telemetry> telemetries = Read(xml);
 
             // Assert
-            Assert.Equal(2, rows.OfType<Stem>().Count());
-            Assert.Equal(3, rows.OfType<Log>().Count());
-            Assert.All(rows, row => Assert.True(row is Stem or Log, row.GetType().Name));
+            Assert.Equal(2, telemetries.OfType<Stem>().Count());
+            Assert.Equal(3, telemetries.OfType<Log>().Count());
+            Assert.All(telemetries, telemetry => Assert.True(telemetry is Stem or Log, telemetry.GetType().Name));
         }
 
-        private static string Id(Row row) => row switch
+        private static string Id(Telemetry telemetry) => telemetry switch
         {
             Stem stem => stem.Id,
             Log log => log.Id,
-            _ => throw new InvalidOperationException(row.GetType().Name)
+            _ => throw new InvalidOperationException(telemetry.GetType().Name)
         };
     }
 }

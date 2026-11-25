@@ -5,7 +5,7 @@ namespace Forestry.StanForD {
     /// A product definition loaded into the machine, from StanForD <c>ProductDefinition</c>;
     /// referenced by logs through their product key
     /// </summary>
-    public sealed class ProductDefinition : Row
+    public sealed class ProductDefinition : Telemetry
     {
         #region identification
         /// <summary>
@@ -34,7 +34,7 @@ namespace Forestry.StanForD {
         /// </summary>
         /// <remarks>
         /// Not a direct child of <c>ProductDefinition</c>, so a policy sets it from a
-        /// <c>ClassifiedProductDefinition</c> contextual row
+        /// <c>ClassifiedProductDefinition</c> contextual telemetry
         /// </remarks>
         public string ProductName { get; set; } = string.Empty;
 
@@ -69,7 +69,7 @@ namespace Forestry.StanForD {
         /// <c>ClassifiedProductDefinition/ProductDestination/BusinessName</c>
         /// </summary>
         /// <remarks>
-        /// Set by a policy from a <see cref="ProductDestination"/> row
+        /// Set by a policy from a <see cref="ProductDestination"/> telemetry
         /// </remarks>
         public string ProductDestinationBusinessName { get; set; } = string.Empty;
 
@@ -78,7 +78,7 @@ namespace Forestry.StanForD {
         /// <c>ClassifiedProductDefinition/ProductDestination/BusinessID</c>
         /// </summary>
         /// <remarks>
-        /// Set by a policy from a <see cref="ProductDestination"/> row
+        /// Set by a policy from a <see cref="ProductDestination"/> telemetry
         /// </remarks>
         public string ProductDestinationBusinessID { get; set; } = string.Empty;
         #endregion

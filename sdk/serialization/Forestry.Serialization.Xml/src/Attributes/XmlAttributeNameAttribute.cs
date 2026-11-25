@@ -1,7 +1,7 @@
 namespace Forestry.Serialization.Xml
 {
     /// <summary>
-    /// Marks a property or field of a row as set only from an attribute of the row's own element (spec
+    /// Marks a property or field of a telemetry as set only from an attribute of the telemetry's own element (spec
     /// 002 US3, research R30; named in spec 003, R37): <c>[XmlAttributeName("currency")]</c> on
     /// <c>Price.Currency</c> reads <c>&lt;Price currency="EUR"&gt;</c>. A child element of the same name
     /// never sets it
@@ -16,7 +16,7 @@ namespace Forestry.Serialization.Xml
     public sealed class XmlAttributeNameAttribute : Attribute
     {
         /// <summary>
-        /// The member is set from the row element's attribute <paramref name="name"/>
+        /// The member is set from the telemetry element's attribute <paramref name="name"/>
         /// </summary>
         /// <param name="name">The attribute's name, as written in the document (a prefix included)</param>
         public XmlAttributeNameAttribute(string name)

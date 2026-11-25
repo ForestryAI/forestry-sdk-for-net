@@ -5,7 +5,7 @@ namespace Forestry.Serialization.Xml.Tests.Fixtures
     /// when the options lock (spec 002 FR-018, tasks.md T047, T051)
     /// </summary>
     [XmlElementName("Price")]
-    public sealed class PriceWithDuplicateName : Row
+    public sealed class PriceWithDuplicateName : Telemetry
     {
         [XmlAttributeName("currency")]
         public string? Currency { get; set; }

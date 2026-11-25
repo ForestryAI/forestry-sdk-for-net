@@ -3,7 +3,7 @@ namespace Forestry.Serialization.Xml.Tests.Fixtures
     /// <summary>
     /// An order inside a site, around its lines (spec 002 fixtures, tasks.md T001)
     /// </summary>
-    public sealed class Order : Row
+    public sealed class Order : Telemetry
     {
         public int OrderNumber { get; set; }
 

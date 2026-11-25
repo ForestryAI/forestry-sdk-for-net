@@ -33,7 +33,7 @@ namespace Forestry.Serialization.Policies
         internal List<(Type Type, string Member, EnumerationPolicy Policy)> ForMembers { get; } = [];
 
         /// <summary>
-        /// Add a policy for every row type of the options
+        /// Add a policy for every telemetry type of the options
         /// </summary>
         /// <param name="policy"></param>
         /// <returns>This collection, for chaining</returns>
@@ -47,41 +47,41 @@ namespace Forestry.Serialization.Policies
         }
 
         /// <summary>
-        /// Add a policy for the row type <typeparamref name="TRow"/>; an enumeration policy overriding
+        /// Add a policy for the telemetry type <typeparamref name="TTelemetry"/>; an enumeration policy overriding
         /// <c>Set</c> acts on every member of the type
         /// </summary>
-        /// <typeparam name="TRow"></typeparam>
+        /// <typeparam name="TTelemetry"></typeparam>
         /// <param name="policy"></param>
         /// <returns>This collection, for chaining</returns>
-        public PolicyCollection Add<TRow>(Policy policy) where TRow : Row
+        public PolicyCollection Add<TTelemetry>(Policy policy) where TTelemetry : Telemetry
         {
             ArgumentNullException.ThrowIfNull(policy);
             _options.ThrowingAssertNotReadOnly();
 
-            ForTypes.Add((typeof(TRow), policy));
+            ForTypes.Add((typeof(TTelemetry), policy));
             return this;
         }
 
         /// <summary>
-        /// Add an enumeration policy for one member of <typeparamref name="TRow"/>, by its C# name; it may
+        /// Add an enumeration policy for one member of <typeparamref name="TTelemetry"/>, by its C# name; it may
         /// override only <c>Set</c>
         /// </summary>
-        /// <typeparam name="TRow"></typeparam>
+        /// <typeparam name="TTelemetry"></typeparam>
         /// <param name="memberName">The property or field name in C#, e.g. <c>nameof(Log.LogKey)</c></param>
         /// <param name="policy"></param>
         /// <returns>This collection, for chaining</returns>
-        public PolicyCollection Add<TRow>(string memberName, EnumerationPolicy policy) where TRow : Row
+        public PolicyCollection Add<TTelemetry>(string memberName, EnumerationPolicy policy) where TTelemetry : Telemetry
         {
             ArgumentException.ThrowIfNullOrEmpty(memberName);
             ArgumentNullException.ThrowIfNull(policy);
             _options.ThrowingAssertNotReadOnly();
 
-            ForMembers.Add((typeof(TRow), memberName, policy));
+            ForMembers.Add((typeof(TTelemetry), memberName, policy));
             return this;
         }
 
         /// <summary>
-        /// The enumeration policies acting on a row type's construction or enumeration, in chain order;
+        /// The enumeration policies acting on a telemetry type's construction or enumeration, in chain order;
         /// empty when only the built-in steps apply or the options are not locked yet
         /// </summary>
         /// <param name="definition"></param>

@@ -6,10 +6,10 @@ namespace Forestry.Serialization
     public static partial class TelemetrySerializer
     {
         /// <summary>
-        /// Rows from a document read from a pipe, lazily and asynchronously. Each row is handed out as soon
+        /// Telemetries from a document read from a pipe, lazily and asynchronously. Each telemetry is handed out as soon
         /// as its end is read, without waiting for more input; a UTF-8 byte order mark is skipped unless the
         /// format's reader reads it (research R18). The
-        /// options are locked and their definitions built before this returns, so a row type that cannot
+        /// options are locked and their definitions built before this returns, so a telemetry type that cannot
         /// be defined throws here (FR-008)
         /// </summary>
         /// <remarks>
@@ -17,21 +17,21 @@ namespace Forestry.Serialization
         /// completes the pipe, so the caller can read on after the document or complete it themselves.
         /// </remarks>
         /// <param name="utf8">UTF-8 bytes of the document; the caller completes it</param>
-        /// <param name="options">A format's options with the row types added</param>
+        /// <param name="options">A format's options with the telemetry types added</param>
         /// <param name="cancellationToken">Cancels a move waiting for bytes</param>
-        /// <returns>The rows in document order, enumerable once</returns>
-        public static IAsyncEnumerable<Row> DeserializeAsync(PipeReader utf8, DeserializeOptions options, CancellationToken cancellationToken = default)
+        /// <returns>The telemetries in document order, enumerable once</returns>
+        public static IAsyncEnumerable<Telemetry> DeserializeAsync(PipeReader utf8, DeserializeOptions options, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(utf8);
             ArgumentNullException.ThrowIfNull(options);
 
             options.MakeReadOnly();
 
-            return new RowAsyncEnumerable(utf8, options, cancellationToken, isPipeOwned: false);
+            return new TelemetryAsyncEnumerable(utf8, options, cancellationToken, isPipeOwned: false);
         }
 
         /// <summary>
-        /// Rows from a document read from a stream, lazily and asynchronously, through a
+        /// Telemetries from a document read from a stream, lazily and asynchronously, through a
         /// <see cref="PipeReader"/>. As <see cref="DeserializeAsync(PipeReader, DeserializeOptions, CancellationToken)"/>
         /// </summary>
         /// <remarks>
@@ -41,10 +41,10 @@ namespace Forestry.Serialization
         /// stream).
         /// </remarks>
         /// <param name="utf8">UTF-8 bytes of the document; left open</param>
-        /// <param name="options">A format's options with the row types added</param>
+        /// <param name="options">A format's options with the telemetry types added</param>
         /// <param name="cancellationToken">Cancels a move waiting for bytes</param>
-        /// <returns>The rows in document order, enumerable once</returns>
-        public static IAsyncEnumerable<Row> DeserializeAsync(Stream utf8, DeserializeOptions options, CancellationToken cancellationToken = default)
+        /// <returns>The telemetries in document order, enumerable once</returns>
+        public static IAsyncEnumerable<Telemetry> DeserializeAsync(Stream utf8, DeserializeOptions options, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(utf8);
             ArgumentNullException.ThrowIfNull(options);
@@ -52,11 +52,11 @@ namespace Forestry.Serialization
             options.MakeReadOnly();
             PipeReader pipe = PipeReader.Create(utf8, new StreamPipeReaderOptions(leaveOpen: true));
 
-            return new RowAsyncEnumerable(pipe, options, cancellationToken, isPipeOwned: true);
+            return new TelemetryAsyncEnumerable(pipe, options, cancellationToken, isPipeOwned: true);
         }
 
         /// <summary>
-        /// Rows from a pipe, enumerated once: the format's row enumerator is created when enumeration
+        /// Telemetries from a pipe, enumerated once: the format's telemetry enumerator is created when enumeration
         /// starts, a second enumeration throws (research R2)
         /// </summary>
         /// <remarks>
@@ -66,8 +66,8 @@ namespace Forestry.Serialization
         /// completed here.
         /// </para>
         /// <para>
-        /// The format creates the <see cref="FormatRowAsyncEnumerator"/> and does not know who owns the pipe, so the
-        /// extra clean-up lives in <see cref="OwningRowAsyncEnumerator"/>: completing an owned pipe, and
+        /// The format creates the <see cref="FormatTelemetryAsyncEnumerator"/> and does not know who owns the pipe, so the
+        /// extra clean-up lives in <see cref="OwningTelemetryAsyncEnumerator"/>: completing an owned pipe, and
         /// disposing the source that links the entry point's and the enumeration's cancellation tokens.
         /// With neither to clean up, the format's enumerator is returned as it is.
         /// </para>
@@ -76,15 +76,15 @@ namespace Forestry.Serialization
         /// <param name="options"></param>
         /// <param name="cancellationToken">The entry point's token</param>
         /// <param name="isPipeOwned">The entry point created <paramref name="pipe"/> and completes it</param>
-        private sealed class RowAsyncEnumerable(
+        private sealed class TelemetryAsyncEnumerable(
             PipeReader pipe,
             DeserializeOptions options,
             CancellationToken cancellationToken,
-            bool isPipeOwned) : IAsyncEnumerable<Row>
+            bool isPipeOwned) : IAsyncEnumerable<Telemetry>
         {
             private int _isEnumerated;
 
-            public IAsyncEnumerator<Row> GetAsyncEnumerator(CancellationToken enumerationToken = default)
+            public IAsyncEnumerator<Telemetry> GetAsyncEnumerator(CancellationToken enumerationToken = default)
             {
                 if (Interlocked.Exchange(ref _isEnumerated, 1) == 1)
                 {
@@ -95,11 +95,11 @@ namespace Forestry.Serialization
                     ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, enumerationToken)
                     : null;
                 CancellationToken token = linked?.Token ?? (enumerationToken.CanBeCanceled ? enumerationToken : cancellationToken);
-                FormatRowAsyncEnumerator rows;
+                FormatTelemetryAsyncEnumerator telemetries;
 
                 try
                 {
-                    rows = options.CreateRowAsyncEnumerator(pipe, token);
+                    telemetries = options.CreateTelemetryAsyncEnumerator(pipe, token);
                 }
                 catch
                 {
@@ -115,29 +115,29 @@ namespace Forestry.Serialization
                     throw;
                 }
 
-                return linked is null && !isPipeOwned ? rows : new OwningRowAsyncEnumerator(rows, isPipeOwned ? pipe : null, linked);
+                return linked is null && !isPipeOwned ? telemetries : new OwningTelemetryAsyncEnumerator(telemetries, isPipeOwned ? pipe : null, linked);
             }
         }
 
         /// <summary>
-        /// A row enumerator that also completes the pipe the entry point created, and disposes the linked
+        /// A telemetry enumerator that also completes the pipe the entry point created, and disposes the linked
         /// cancellation, after the format's enumerator has given back its buffer
         /// </summary>
-        /// <param name="rows">The format's enumerator</param>
+        /// <param name="telemetries">The format's enumerator</param>
         /// <param name="pipe">The pipe to complete, or null when the caller owns it</param>
         /// <param name="linked">The linked cancellation source to dispose, or null</param>
-        private sealed class OwningRowAsyncEnumerator(
-            FormatRowAsyncEnumerator rows,
+        private sealed class OwningTelemetryAsyncEnumerator(
+            FormatTelemetryAsyncEnumerator telemetries,
             PipeReader? pipe,
-            CancellationTokenSource? linked) : IAsyncEnumerator<Row>
+            CancellationTokenSource? linked) : IAsyncEnumerator<Telemetry>
         {
-            public Row Current => rows.Current;
+            public Telemetry Current => telemetries.Current;
 
-            public ValueTask<bool> MoveNextAsync() => rows.MoveNextAsync();
+            public ValueTask<bool> MoveNextAsync() => telemetries.MoveNextAsync();
 
             public async ValueTask DisposeAsync()
             {
-                await rows.DisposeAsync().ConfigureAwait(false);
+                await telemetries.DisposeAsync().ConfigureAwait(false);
 
                 if (pipe is not null)
                 {

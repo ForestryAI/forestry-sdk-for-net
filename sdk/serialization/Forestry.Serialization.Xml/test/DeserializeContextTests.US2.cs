@@ -13,13 +13,13 @@ namespace Forestry.Serialization.Xml.Tests
     /// surface they assume (research R21, R29, contracts/public-api.md). For the review gate (T041), the
     /// assumed surface, beyond US1's:
     /// <list type="bullet">
-    /// <item><c>ContextRow.Container</c>: a <c>ContainerRelationship</c> with <c>long Id</c> and
-    /// <c>long? ParentId</c>, the innermost open row's id when the row was constructed (null for none).</item>
-    /// <item><c>DeserializeContext.Parent(ContextRow)</c>, <c>Children(ContextRow)</c> and
-    /// <c>Siblings(ContextRow)</c>: by parent id, among the rows still in the context (open or kept);
+    /// <item><c>ContextTelemetry.Container</c>: a <c>ContainerRelationship</c> with <c>long Id</c> and
+    /// <c>long? ParentId</c>, the innermost open telemetry's id when the telemetry was constructed (null for none).</item>
+    /// <item><c>DeserializeContext.Parent(ContextTelemetry)</c>, <c>Children(ContextTelemetry)</c> and
+    /// <c>Siblings(ContextTelemetry)</c>: by parent id, among the telemetries still in the context (open or kept);
     /// <c>Parent</c> returns null when the parent left.</item>
-    /// <item>XML members stay direct children of their row's element (R29 option A): a value inside a
-    /// wrapper is reached by adding the wrapper as a row type that is not enumerated, whose policy sets what
+    /// <item>XML members stay direct children of their telemetry's element (R29 option A): a value inside a
+    /// wrapper is reached by adding the wrapper as a telemetry type that is not enumerated, whose policy sets what
     /// its parent needs.</item>
     /// </list>
     /// Policies are <see cref="ContextPolicy"/> instances whose hooks each test writes in place. Theories run
@@ -27,10 +27,10 @@ namespace Forestry.Serialization.Xml.Tests
     /// </remarks>
     public sealed class DeserializeContextTestsUS2
     {
-        private static DeserializeXmlOptions OptionsWith(params Type[] rowTypes)
+        private static DeserializeXmlOptions OptionsWith(params Type[] telemetryTypes)
         {
             DeserializeXmlOptions options = new();
-            options.Rows.Add(rowTypes);
+            options.Telemetries.Add(telemetryTypes);
             return options;
         }
 
@@ -120,13 +120,13 @@ namespace Forestry.Serialization.Xml.Tests
                 """;
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith(typeof(Order), typeof(Line)));
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, OptionsWith(typeof(Order), typeof(Line)));
 
             // Assert
-            Assert.Equal(["Line", "Line", "Order"], rows.Select(row => row.GetType().Name));
-            Assert.Equal([1, 2], rows.Take(2).Select(row => row.AsType<Line>().LineNumber));
-            Assert.Equal(["first", "second"], rows.Take(2).Select(row => row.AsType<Line>().Note));
-            Assert.Equal(1, rows[2].AsType<Order>().OrderNumber);
+            Assert.Equal(["Line", "Line", "Order"], telemetries.Select(telemetry => telemetry.GetType().Name));
+            Assert.Equal([1, 2], telemetries.Take(2).Select(telemetry => telemetry.AsType<Line>().LineNumber));
+            Assert.Equal(["first", "second"], telemetries.Take(2).Select(telemetry => telemetry.AsType<Line>().Note));
+            Assert.Equal(1, telemetries[2].AsType<Order>().OrderNumber);
         }
 
         // T034 - US2-2 / FR-013: an order's member after its lines is set on the order, not on a line
@@ -148,18 +148,18 @@ namespace Forestry.Serialization.Xml.Tests
                 """;
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith(typeof(Order), typeof(Line)));
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, OptionsWith(typeof(Order), typeof(Line)));
 
             // Assert
-            Assert.Equal(0, rows[0].AsType<Line>().OrderNumber);
-            Assert.Equal(5, rows[1].AsType<Order>().OrderNumber);
+            Assert.Equal(0, telemetries[0].AsType<Line>().OrderNumber);
+            Assert.Equal(5, telemetries[1].AsType<Order>().OrderNumber);
         }
 
-        // T034 - FR-002 / edge case (quickstart 8): an empty line is a row like any other, its members unset
+        // T034 - FR-002 / edge case (quickstart 8): an empty line is a telemetry like any other, its members unset
         [Theory]
         [InlineData(EntryPoint.Sync)]
         [InlineData(EntryPoint.Async)]
-        public void Deserialize_ForAnEmptyLine_ItShould_GiveARowWithNothingSet(EntryPoint entryPoint)
+        public void Deserialize_ForAnEmptyLine_ItShould_GiveATelemetryWithNothingSet(EntryPoint entryPoint)
         {
             // Arrange
             const string document = """
@@ -174,15 +174,15 @@ namespace Forestry.Serialization.Xml.Tests
             DeserializeXmlOptions options = OptionsWith(typeof(Order), typeof(Line));
             options.Policies.Add<Line>(new ContextPolicy
             {
-                OnComplete = (row, context) => anyMemberSet.Add(
-                    row.Definition.Properties.Any(property => row.IsSet(property)))
+                OnComplete = (telemetry, context) => anyMemberSet.Add(
+                    telemetry.Definition.Properties.Any(property => telemetry.IsSet(property)))
             });
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, options);
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, options);
 
             // Assert
-            Assert.Equal(["Line", "Order"], rows.Select(row => row.GetType().Name));
+            Assert.Equal(["Line", "Order"], telemetries.Select(telemetry => telemetry.GetType().Name));
             Assert.Equal([false], anyMemberSet);
         }
 
@@ -209,25 +209,25 @@ namespace Forestry.Serialization.Xml.Tests
             DeserializeXmlOptions options = OptionsWith(typeof(Line), typeof(Measurement));
             options.Policies.Add<Measurement>(new ContextPolicy
             {
-                OnComplete = (row, context) =>
+                OnComplete = (telemetry, context) =>
                 {
-                    ContextRow parent = context.Parent(row)!;
-                    parentSeen.Add((parent.Row.Is<Line>(), parent.IsOpen));
-                    row.Enumerate(false);
+                    ContextTelemetry parent = context.Parent(telemetry)!;
+                    parentSeen.Add((parent.Telemetry.Is<Line>(), parent.IsOpen));
+                    telemetry.Enumerate(false);
                 }
             });
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, options);
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, options);
 
             // Assert
             Assert.Equal([(true, true)], parentSeen);
-            Assert.True(Assert.Single(rows).Is<Line>());
+            Assert.True(Assert.Single(telemetries).Is<Line>());
         }
 
-        // T036 - US2-4 / C2: several row types come out of one forward pass, each byte read once
+        // T036 - US2-4 / C2: several telemetry types come out of one forward pass, each byte read once
         [Fact]
-        public async Task DeserializeAsync_ForSeveralRowTypes_ItShould_ReadTheDocumentOnce()
+        public async Task DeserializeAsync_ForSeveralTelemetryTypes_ItShould_ReadTheDocumentOnce()
         {
             // Arrange
             byte[] document = """
@@ -246,14 +246,14 @@ namespace Forestry.Serialization.Xml.Tests
             using CountingStream stream = new(document);
 
             // Act
-            List<Row> rows = [];
-            await foreach (Row row in TelemetrySerializer.DeserializeAsync(stream, OptionsWith(typeof(Site), typeof(Order), typeof(Line))))
+            List<Telemetry> telemetries = [];
+            await foreach (Telemetry telemetry in TelemetrySerializer.DeserializeAsync(stream, OptionsWith(typeof(Site), typeof(Order), typeof(Line))))
             {
-                rows.Add(row);
+                telemetries.Add(telemetry);
             }
 
             // Assert
-            Assert.Equal(["Line", "Order", "Site"], rows.Select(row => row.GetType().Name));
+            Assert.Equal(["Line", "Order", "Site"], telemetries.Select(telemetry => telemetry.GetType().Name));
             Assert.Equal(document.Length, stream.BytesRead);
         }
 
@@ -287,19 +287,19 @@ namespace Forestry.Serialization.Xml.Tests
             DeserializeXmlOptions options = OptionsWith(typeof(Order), typeof(Line));
             options.Policies.Add<Line>(new ContextPolicy
             {
-                OnComplete = (row, context) =>
+                OnComplete = (telemetry, context) =>
                 {
-                    if (row.Row.AsType<Line>().LineNumber == 3)
+                    if (telemetry.Telemetry.AsType<Line>().LineNumber == 3)
                     {
-                        foreach (ContextRow sibling in context.Siblings(row))
+                        foreach (ContextTelemetry sibling in context.Siblings(telemetry))
                         {
-                            siblingsOfThird.Add(sibling.Row.AsType<Line>().LineNumber);
+                            siblingsOfThird.Add(sibling.Telemetry.AsType<Line>().LineNumber);
                             siblingsClosed.Add(!sibling.IsOpen);
-                            siblingsParentIsOrder.Add(context.Parent(sibling)!.Row.Is<Order>());
+                            siblingsParentIsOrder.Add(context.Parent(sibling)!.Telemetry.Is<Order>());
                         }
                     }
 
-                    row.Keep(Lifetime.UntilEnd);
+                    telemetry.Keep(Lifetime.UntilEnd);
                 }
             });
 
@@ -336,12 +336,12 @@ namespace Forestry.Serialization.Xml.Tests
             DeserializeXmlOptions options = OptionsWith(typeof(Order), typeof(Line));
             options.Policies.Add<Line>(new ContextPolicy
             {
-                OnComplete = (row, context) => row.Keep(Lifetime.UntilEnd)
+                OnComplete = (telemetry, context) => telemetry.Keep(Lifetime.UntilEnd)
             });
             options.Policies.Add<Order>(new ContextPolicy
             {
-                OnComplete = (row, context) => childrenOfOrder.AddRange(
-                    context.Children(row).Select(child => child.Row.AsType<Line>().LineNumber))
+                OnComplete = (telemetry, context) => childrenOfOrder.AddRange(
+                    context.Children(telemetry).Select(child => child.Telemetry.AsType<Line>().LineNumber))
             });
 
             // Act
@@ -375,7 +375,7 @@ namespace Forestry.Serialization.Xml.Tests
             DeserializeXmlOptions options = OptionsWith(typeof(Order), typeof(Line));
             options.Policies.Add<Order>(new ContextPolicy
             {
-                OnComplete = (row, context) => childrenOfOrder.Add(context.Children(row).Count())
+                OnComplete = (telemetry, context) => childrenOfOrder.Add(context.Children(telemetry).Count())
             });
 
             // Act
@@ -385,7 +385,7 @@ namespace Forestry.Serialization.Xml.Tests
             Assert.Equal([0], childrenOfOrder);
         }
 
-        // T038 - FR-014: the outermost row has no parent; an inner row's parent id is the row open around it
+        // T038 - FR-014: the outermost telemetry has no parent; an inner telemetry's parent id is the telemetry open around it
         [Theory]
         [InlineData(EntryPoint.Sync)]
         [InlineData(EntryPoint.Async)]
@@ -407,11 +407,11 @@ namespace Forestry.Serialization.Xml.Tests
             DeserializeXmlOptions options = OptionsWith(typeof(Order), typeof(Line));
             options.Policies.Add<Line>(new ContextPolicy
             {
-                OnComplete = (row, context) => lines.Add((row.Container.Id, row.Container.ParentId))
+                OnComplete = (telemetry, context) => lines.Add((telemetry.Container.Id, telemetry.Container.ParentId))
             });
             options.Policies.Add<Order>(new ContextPolicy
             {
-                OnComplete = (row, context) => orders.Add((row.Container.Id, row.Container.ParentId))
+                OnComplete = (telemetry, context) => orders.Add((telemetry.Container.Id, telemetry.Container.ParentId))
             });
 
             // Act
@@ -446,15 +446,15 @@ namespace Forestry.Serialization.Xml.Tests
             DeserializeXmlOptions options = OptionsWith(typeof(Order), typeof(Line));
             options.Policies.Add<Line>(new ContextPolicy
             {
-                OnComplete = (row, context) => row.Keep(Lifetime.UntilEnd)
+                OnComplete = (telemetry, context) => telemetry.Keep(Lifetime.UntilEnd)
             });
             options.Policies.Add<Order>(new ContextPolicy
             {
-                OnComplete = (row, context) =>
+                OnComplete = (telemetry, context) =>
                 {
-                    if (row.Row.AsType<Order>().OrderNumber == 2)
+                    if (telemetry.Telemetry.AsType<Order>().OrderNumber == 2)
                     {
-                        parentFound.Add(context.Parent(context.Rows<Line>().Single()) is not null);
+                        parentFound.Add(context.Parent(context.Telemetries<Line>().Single()) is not null);
                     }
                 }
             });
@@ -466,11 +466,11 @@ namespace Forestry.Serialization.Xml.Tests
             Assert.Equal([false], parentFound);
         }
 
-        // T039 - edge case: a part nested in a part gives two rows, inner first, the outer one the inner one's parent
+        // T039 - edge case: a part nested in a part gives two telemetries, inner first, the outer one the inner one's parent
         [Theory]
         [InlineData(EntryPoint.Sync)]
         [InlineData(EntryPoint.Async)]
-        public void Deserialize_ForAPartInsideAPart_ItShould_GiveTwoRowsInnerFirst(EntryPoint entryPoint)
+        public void Deserialize_ForAPartInsideAPart_ItShould_GiveTwoTelemetriesInnerFirst(EntryPoint entryPoint)
         {
             // Arrange
             const string document = """
@@ -487,20 +487,20 @@ namespace Forestry.Serialization.Xml.Tests
             DeserializeXmlOptions options = OptionsWith(typeof(Part));
             options.Policies.Add<Part>(new ContextPolicy
             {
-                OnComplete = (row, context) =>
+                OnComplete = (telemetry, context) =>
                 {
-                    if (row.Row.AsType<Part>().PartNumber == 2)
+                    if (telemetry.Telemetry.AsType<Part>().PartNumber == 2)
                     {
-                        parentOfInner.Add(context.Parent(row)!.Row.AsType<Part>().PartNumber);
+                        parentOfInner.Add(context.Parent(telemetry)!.Telemetry.AsType<Part>().PartNumber);
                     }
                 }
             });
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, options);
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, options);
 
             // Assert
-            Assert.Equal([2, 1], rows.Select(row => row.AsType<Part>().PartNumber));
+            Assert.Equal([2, 1], telemetries.Select(telemetry => telemetry.AsType<Part>().PartNumber));
             Assert.Equal([1], parentOfInner);
         }
 
@@ -525,23 +525,23 @@ namespace Forestry.Serialization.Xml.Tests
             DeserializeXmlOptions options = OptionsWith(typeof(Order));
             options.Policies.Add<Order>(new ContextPolicy
             {
-                OnComplete = (row, context) => orderNumberSet.Add(row.IsSet(nameof(Order.OrderNumber)))
+                OnComplete = (telemetry, context) => orderNumberSet.Add(telemetry.IsSet(nameof(Order.OrderNumber)))
             });
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, options);
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, options);
 
             // Assert
             Assert.Equal([false], orderNumberSet);
-            Assert.Equal(0, Assert.Single(rows).AsType<Order>().OrderNumber);
+            Assert.Equal(0, Assert.Single(telemetries).AsType<Order>().OrderNumber);
         }
 
-        // T040 - R29 option A (quickstart 15): the wrapper added as a row type that is not enumerated, its
+        // T040 - R29 option A (quickstart 15): the wrapper added as a telemetry type that is not enumerated, its
         // policy copying the member onto its parent, reaches the value
         [Theory]
         [InlineData(EntryPoint.Sync)]
         [InlineData(EntryPoint.Async)]
-        public void Deserialize_ForADetailsRowCopyingOntoItsOrder_ItShould_SetTheOrderNumber(EntryPoint entryPoint)
+        public void Deserialize_ForADetailsTelemetryCopyingOntoItsOrder_ItShould_SetTheOrderNumber(EntryPoint entryPoint)
         {
             // Arrange
             const string document = """
@@ -556,21 +556,21 @@ namespace Forestry.Serialization.Xml.Tests
             DeserializeXmlOptions options = OptionsWith(typeof(Order), typeof(Details));
             options.Policies.Add<Details>(new ContextPolicy
             {
-                OnComplete = (row, context) =>
+                OnComplete = (telemetry, context) =>
                 {
-                    context.Parent(row)!.Set(nameof(Order.OrderNumber), row.Row.AsType<Details>().OrderNumber);
-                    row.Enumerate(false);
+                    context.Parent(telemetry)!.Set(nameof(Order.OrderNumber), telemetry.Telemetry.AsType<Details>().OrderNumber);
+                    telemetry.Enumerate(false);
                 }
             });
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, options);
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, options);
 
             // Assert
-            Assert.Equal(5, Assert.Single(rows).AsType<Order>().OrderNumber);
+            Assert.Equal(5, Assert.Single(telemetries).AsType<Order>().OrderNumber);
         }
 
-        // T040 - R29 (quickstart 16): a wrapper with meaning, added as a row type that is not enumerated,
+        // T040 - R29 (quickstart 16): a wrapper with meaning, added as a telemetry type that is not enumerated,
         // sets the right member on its parent
         [Theory]
         [InlineData(EntryPoint.Sync)]
@@ -592,24 +592,24 @@ namespace Forestry.Serialization.Xml.Tests
             DeserializeXmlOptions options = OptionsWith(typeof(Line), typeof(Measurement));
             options.Policies.Add<Measurement>(new ContextPolicy
             {
-                OnComplete = (row, context) =>
+                OnComplete = (telemetry, context) =>
                 {
-                    Measurement measurement = row.Row.AsType<Measurement>();
+                    Measurement measurement = telemetry.Telemetry.AsType<Measurement>();
 
                     if (measurement.Unit == "kg")
                     {
-                        context.Parent(row)!.Set(nameof(Line.WeightAmount), measurement.Amount);
+                        context.Parent(telemetry)!.Set(nameof(Line.WeightAmount), measurement.Amount);
                     }
 
-                    row.Enumerate(false);
+                    telemetry.Enumerate(false);
                 }
             });
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, options);
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, options);
 
             // Assert
-            Assert.Equal(3m, Assert.Single(rows).AsType<Line>().WeightAmount);
+            Assert.Equal(3m, Assert.Single(telemetries).AsType<Line>().WeightAmount);
         }
     }
 }

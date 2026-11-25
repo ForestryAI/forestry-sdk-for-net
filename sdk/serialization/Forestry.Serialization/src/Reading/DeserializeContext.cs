@@ -1,109 +1,109 @@
 namespace Forestry.Serialization.Reading
 {
     /// <summary>
-    /// What one enumeration holds that its policies share (spec 002, research R20, R26): the rows open
-    /// around the current one and the rows policies keep after their completion. Created when the
+    /// What one enumeration holds that its policies share (spec 002, research R20, R26): the telemetries open
+    /// around the current one and the telemetries policies keep after their completion. Created when the
     /// enumeration starts, emptied when it ends, after the policies' <c>Clear</c>
     /// </summary>
     /// <remarks>
     /// <para>
-    /// A row is in the context from its construction until its completion (open), and afterwards while a
-    /// policy keeps it. Rows that come out and are not kept leave before they are handed out, so the
-    /// common case costs no more than a push and a pop. The number of kept rows is limited by
-    /// <see cref="DeserializeOptions.MaxContextRows"/>.
+    /// A telemetry is in the context from its construction until its completion (open), and afterwards while a
+    /// policy keeps it. Telemetries that come out and are not kept leave before they are handed out, so the
+    /// common case costs no more than a push and a pop. The number of kept telemetries is limited by
+    /// <see cref="DeserializeOptions.MaxContextTelemetries"/>.
     /// </para>
     /// <para>
-    /// A row and its policies only have what has been read so far: an open row's members that come
-    /// later in the document are not set yet (<see cref="ContextRow.IsSet(string)"/>).
+    /// A telemetry and its policies only have what has been read so far: an open telemetry's members that come
+    /// later in the document are not set yet (<see cref="ContextTelemetry.IsSet(string)"/>).
     /// </para>
     /// </remarks>
     public sealed class DeserializeContext
     {
-        internal DeserializeContext(int maxKeptRows)
+        internal DeserializeContext(int maxKeptTelemetries)
         {
-            _maxKeptRows = maxKeptRows;
+            _maxKeptTelemetries = maxKeptTelemetries;
         }
 
-        private readonly int _maxKeptRows;
+        private readonly int _maxKeptTelemetries;
 
         /// <summary>
-        /// Open rows, outermost first
+        /// Open telemetries, outermost first
         /// </summary>
-        private readonly List<ContextRow> _open = [];
+        private readonly List<ContextTelemetry> _open = [];
 
         /// <summary>
-        /// Closed rows a policy kept, in the order they were kept
+        /// Closed telemetries a policy kept, in the order they were kept
         /// </summary>
-        private readonly List<ContextRow> _kept = [];
+        private readonly List<ContextTelemetry> _kept = [];
 
         private long _nextSequence;
 
         /// <summary>
-        /// The row being built (the innermost open row) or, during its completion, the row being completed
+        /// The telemetry being built (the innermost open telemetry) or, during its completion, the telemetry being completed
         /// </summary>
-        public ContextRow? Current => Completing ?? (_open.Count > 0 ? _open[^1] : null);
+        public ContextTelemetry? Current => Completing ?? (_open.Count > 0 ? _open[^1] : null);
 
         /// <summary>
-        /// The row whose completion is running, if any
+        /// The telemetry whose completion is running, if any
         /// </summary>
-        internal ContextRow? Completing { get; private set; }
+        internal ContextTelemetry? Completing { get; private set; }
 
         /// <summary>
-        /// Number of open rows
+        /// Number of open telemetries
         /// </summary>
         internal int OpenCount => _open.Count;
 
         /// <summary>
-        /// The open and kept rows of type <typeparamref name="TRow"/> (or deriving from it), oldest first,
-        /// including the row being completed; released rows are left out. A query is a snapshot: releasing
-        /// rows while iterating it takes effect for later queries
+        /// The open and kept telemetries of type <typeparamref name="TTelemetry"/> (or deriving from it), oldest first,
+        /// including the telemetry being completed; released telemetries are left out. A query is a snapshot: releasing
+        /// telemetries while iterating it takes effect for later queries
         /// </summary>
-        /// <typeparam name="TRow"></typeparam>
+        /// <typeparam name="TTelemetry"></typeparam>
         /// <returns>Empty when there are none, never null</returns>
-        public IEnumerable<ContextRow> Rows<TRow>() where TRow : Row
+        public IEnumerable<ContextTelemetry> Telemetries<TTelemetry>() where TTelemetry : Telemetry
         {
-            List<ContextRow> rows = [];
+            List<ContextTelemetry> telemetries = [];
 
-            AddRows<TRow>(_kept, rows);
+            AddTelemetries<TTelemetry>(_kept, telemetries);
 
-            if (Completing is { } completing && completing.Row is TRow && !completing.IsReleased)
+            if (Completing is { } completing && completing.Telemetry is TTelemetry && !completing.IsReleased)
             {
-                rows.Add(completing);
+                telemetries.Add(completing);
             }
 
-            AddRows<TRow>(_open, rows);
+            AddTelemetries<TTelemetry>(_open, telemetries);
 
-            rows.Sort(static (x, y) => x.Sequence.CompareTo(y.Sequence));
+            telemetries.Sort(static (x, y) => x.Sequence.CompareTo(y.Sequence));
 
-            return rows;
+            return telemetries;
         }
 
         /// <summary>
-        /// The rows open around <paramref name="row"/>, innermost first: all open rows for the row being
-        /// completed, the outer ones for an open row, none for a row whose completion is over
+        /// The telemetries open around <paramref name="telemetry"/>, innermost first: all open telemetries for the telemetry being
+        /// completed, the outer ones for an open telemetry, none for a telemetry whose completion is over
         /// </summary>
-        /// <param name="row"></param>
+        /// <param name="telemetry"></param>
         /// <returns></returns>
-        public IEnumerable<ContextRow> Ancestors(ContextRow row)
+        public IEnumerable<ContextTelemetry> Ancestors(ContextTelemetry telemetry)
         {
-            ArgumentNullException.ThrowIfNull(row);
+            ArgumentNullException.ThrowIfNull(telemetry);
 
             int start;
 
-            if (ReferenceEquals(row, Completing))
+            if (ReferenceEquals(telemetry, Completing))
             {
                 start = _open.Count - 1;
             }
-            else if (row.IsOpen)
+            else if (telemetry.IsOpen)
             {
-                start = _open.IndexOf(row) - 1;
+                start = _open.IndexOf(telemetry) - 1;
             }
             else
             {
                 return [];
             }
 
-            List<ContextRow> ancestors = new(Math.Max(start + 1, 0));
+            List<ContextTelemetry> ancestors = new(Math.Max(start + 1, 0));
 
             for (int i = start; i >= 0; i--)
             {
@@ -114,21 +114,21 @@ namespace Forestry.Serialization.Reading
         }
 
         /// <summary>
-        /// The row that was open around <paramref name="row"/> when it was constructed, while it is still in
-        /// the context (open or kept); null for a row with no parent, or whose parent left (FR-015)
+        /// The telemetry that was open around <paramref name="telemetry"/> when it was constructed, while it is still in
+        /// the context (open or kept); null for a telemetry with no parent, or whose parent left (FR-015)
         /// </summary>
-        /// <param name="row"></param>
+        /// <param name="telemetry"></param>
         /// <returns></returns>
-        public ContextRow? Parent(ContextRow row)
+        public ContextTelemetry? Parent(ContextTelemetry telemetry)
         {
-            ArgumentNullException.ThrowIfNull(row);
+            ArgumentNullException.ThrowIfNull(telemetry);
 
-            if (row.Container.ParentId is not long parentId)
+            if (telemetry.Container.ParentId is not long parentId)
             {
                 return null;
             }
 
-            foreach (ContextRow candidate in InContext())
+            foreach (ContextTelemetry candidate in InContext())
             {
                 if (candidate.Sequence == parentId)
                 {
@@ -140,111 +140,111 @@ namespace Forestry.Serialization.Reading
         }
 
         /// <summary>
-        /// The rows whose parent is <paramref name="row"/>, still in the context, oldest first: at a row's
+        /// The telemetries whose parent is <paramref name="telemetry"/>, still in the context, oldest first: at a telemetry's
         /// completion, its children that policies kept (FR-015)
         /// </summary>
-        /// <param name="row"></param>
+        /// <param name="telemetry"></param>
         /// <returns></returns>
-        public IEnumerable<ContextRow> Children(ContextRow row)
+        public IEnumerable<ContextTelemetry> Children(ContextTelemetry telemetry)
         {
-            ArgumentNullException.ThrowIfNull(row);
+            ArgumentNullException.ThrowIfNull(telemetry);
 
-            return WithParent(row.Sequence, except: null);
+            return WithParent(telemetry.Sequence, except: null);
         }
 
         /// <summary>
-        /// The other rows with the same parent as <paramref name="row"/>, still in the context, oldest first
-        /// (FR-015); rows with no parent are siblings of each other
+        /// The other telemetries with the same parent as <paramref name="telemetry"/>, still in the context, oldest first
+        /// (FR-015); telemetries with no parent are siblings of each other
         /// </summary>
-        /// <param name="row"></param>
+        /// <param name="telemetry"></param>
         /// <returns></returns>
-        public IEnumerable<ContextRow> Siblings(ContextRow row)
+        public IEnumerable<ContextTelemetry> Siblings(ContextTelemetry telemetry)
         {
-            ArgumentNullException.ThrowIfNull(row);
+            ArgumentNullException.ThrowIfNull(telemetry);
 
-            return WithParent(row.Container.ParentId, except: row);
+            return WithParent(telemetry.Container.ParentId, except: telemetry);
         }
 
         /// <summary>
-        /// A kept, closed row leaves the context; at most once, and not for a row kept until the end
+        /// A kept, closed telemetry leaves the context; at most once, and not for a telemetry kept until the end
         /// </summary>
-        /// <param name="row"></param>
+        /// <param name="telemetry"></param>
         /// <exception cref="InvalidOperationException">Open, not kept, released already, or kept until the end</exception>
-        public void Release(ContextRow row)
+        public void Release(ContextTelemetry telemetry)
         {
-            ArgumentNullException.ThrowIfNull(row);
+            ArgumentNullException.ThrowIfNull(telemetry);
 
-            row.Release();
-            _kept.Remove(row);
+            telemetry.Release();
+            _kept.Remove(telemetry);
         }
 
         /// <summary>
-        /// A row was constructed: it is open and the innermost
+        /// A telemetry was constructed: it is open and the innermost
         /// </summary>
         /// <param name="chains"></param>
-        /// <param name="row"></param>
+        /// <param name="telemetry"></param>
         /// <returns></returns>
-        internal ContextRow Push(Policies.TypeChains chains, Row row)
+        internal ContextTelemetry Push(Policies.TypeChains chains, Telemetry telemetry)
         {
-            ContextRow contextRow = new(this, chains, row, _nextSequence++, _open.Count > 0 ? _open[^1].Sequence : null);
-            _open.Add(contextRow);
-            return contextRow;
+            ContextTelemetry contextTelemetry = new(this, chains, telemetry, _nextSequence++, _open.Count > 0 ? _open[^1].Sequence : null);
+            _open.Add(contextTelemetry);
+            return contextTelemetry;
         }
 
         /// <summary>
-        /// The innermost open row
+        /// The innermost open telemetry
         /// </summary>
-        /// <param name="row"></param>
+        /// <param name="telemetry"></param>
         /// <returns></returns>
-        internal bool TryPeek([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out ContextRow? row)
+        internal bool TryPeek([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out ContextTelemetry? telemetry)
         {
-            row = _open.Count > 0 ? _open[^1] : null;
-            return row is not null;
+            telemetry = _open.Count > 0 ? _open[^1] : null;
+            return telemetry is not null;
         }
 
         /// <summary>
-        /// The innermost open row closes and its completion starts
+        /// The innermost open telemetry closes and its completion starts
         /// </summary>
         /// <returns></returns>
-        internal bool TryBeginCompletion([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out ContextRow? row)
+        internal bool TryBeginCompletion([System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out ContextTelemetry? telemetry)
         {
             if (_open.Count == 0)
             {
-                row = null;
+                telemetry = null;
                 return false;
             }
 
-            row = _open[^1];
+            telemetry = _open[^1];
             _open.RemoveAt(_open.Count - 1);
-            row.IsOpen = false;
-            Completing = row;
+            telemetry.IsOpen = false;
+            Completing = telemetry;
             return true;
         }
 
         /// <summary>
-        /// The completion is over: a row kept by its policies stays, checked against the limit;
+        /// The completion is over: a telemetry kept by its policies stays, checked against the limit;
         /// any other leaves
         /// </summary>
-        /// <param name="row"></param>
-        internal void EndCompletion(ContextRow row)
+        /// <param name="telemetry"></param>
+        internal void EndCompletion(ContextTelemetry telemetry)
         {
             Completing = null;
 
-            if (row.Lifetime == Lifetime.Leave)
+            if (telemetry.Lifetime == Lifetime.Leave)
             {
                 return;
             }
 
-            if (_kept.Count >= _maxKeptRows)
+            if (_kept.Count >= _maxKeptTelemetries)
             {
-                Throwing.WhenContextLimitReached(_maxKeptRows, [.. _kept, row]);
+                Throwing.WhenContextLimitReached(_maxKeptTelemetries, [.. _kept, telemetry]);
             }
 
-            _kept.Add(row);
+            _kept.Add(telemetry);
         }
 
         /// <summary>
-        /// The enumeration ended: every row leaves
+        /// The enumeration ended: every telemetry leaves
         /// </summary>
         internal void Clear()
         {
@@ -254,16 +254,16 @@ namespace Forestry.Serialization.Reading
         }
 
         /// <summary>
-        /// Every row in the context that is not released: kept, being completed, open
+        /// Every telemetry in the context that is not released: kept, being completed, open
         /// </summary>
         /// <returns></returns>
-        private IEnumerable<ContextRow> InContext()
+        private IEnumerable<ContextTelemetry> InContext()
         {
-            foreach (ContextRow row in _kept)
+            foreach (ContextTelemetry telemetry in _kept)
             {
-                if (!row.IsReleased)
+                if (!telemetry.IsReleased)
                 {
-                    yield return row;
+                    yield return telemetry;
                 }
             }
 
@@ -272,41 +272,41 @@ namespace Forestry.Serialization.Reading
                 yield return completing;
             }
 
-            foreach (ContextRow row in _open)
+            foreach (ContextTelemetry telemetry in _open)
             {
-                yield return row;
+                yield return telemetry;
             }
         }
 
         /// <summary>
-        /// A snapshot of the rows in the context with this parent id, oldest first
+        /// A snapshot of the telemetries in the context with this parent id, oldest first
         /// </summary>
         /// <param name="parentId"></param>
         /// <param name="except"></param>
         /// <returns></returns>
-        private List<ContextRow> WithParent(long? parentId, ContextRow? except)
+        private List<ContextTelemetry> WithParent(long? parentId, ContextTelemetry? except)
         {
-            List<ContextRow> rows = [];
+            List<ContextTelemetry> telemetries = [];
 
-            foreach (ContextRow candidate in InContext())
+            foreach (ContextTelemetry candidate in InContext())
             {
                 if (candidate.Container.ParentId == parentId && !ReferenceEquals(candidate, except))
                 {
-                    rows.Add(candidate);
+                    telemetries.Add(candidate);
                 }
             }
 
-            rows.Sort(static (x, y) => x.Sequence.CompareTo(y.Sequence));
-            return rows;
+            telemetries.Sort(static (x, y) => x.Sequence.CompareTo(y.Sequence));
+            return telemetries;
         }
 
-        private static void AddRows<TRow>(List<ContextRow> source, List<ContextRow> rows) where TRow : Row
+        private static void AddTelemetries<TTelemetry>(List<ContextTelemetry> source, List<ContextTelemetry> telemetries) where TTelemetry : Telemetry
         {
-            foreach (ContextRow row in source)
+            foreach (ContextTelemetry telemetry in source)
             {
-                if (row.Row is TRow && !row.IsReleased)
+                if (telemetry.Telemetry is TTelemetry && !telemetry.IsReleased)
                 {
-                    rows.Add(row);
+                    telemetries.Add(telemetry);
                 }
             }
         }

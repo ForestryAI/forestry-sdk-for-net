@@ -5,26 +5,26 @@ using System.Reflection;
 namespace Forestry.Serialization.Reading
 {
     /// <summary>
-    /// Asynchronous row enumerator over a <see cref="PipeReader"/>. The core writes the moves; a format
-    /// derives from it and overrides <see cref="Read"/>, driving its own reader and the core's row builder
-    /// (research R2). One row per move
+    /// Asynchronous telemetry enumerator over a <see cref="PipeReader"/>. The core writes the moves; a format
+    /// derives from it and overrides <see cref="Read"/>, driving its own reader and the core's telemetry builder
+    /// (research R2). One telemetry per move
     /// </summary>
-    public abstract class FormatRowAsyncEnumerator : IAsyncEnumerator<Row>
+    public abstract class FormatTelemetryAsyncEnumerator : IAsyncEnumerator<Telemetry>
     {
         /// <summary>
-        /// Row enumerator over the bytes of a pipe
+        /// Telemetry enumerator over the bytes of a pipe
         /// </summary>
         /// <param name="pipe">UTF-8 bytes of the document</param>
         /// <param name="options"></param>
         /// <param name="cancellationToken">Cancels a move waiting for bytes</param>
-        protected FormatRowAsyncEnumerator(PipeReader pipe, DeserializeOptions options, CancellationToken cancellationToken)
+        protected FormatTelemetryAsyncEnumerator(PipeReader pipe, DeserializeOptions options, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(pipe);
             ArgumentNullException.ThrowIfNull(options);
 
             _buffering = new PipeReaderBuffering(pipe, options.SkipsByteOrderMark);
             _cancellationToken = cancellationToken;
-            Builder = new RowBuilder(options);
+            Builder = new TelemetryBuilder(options);
         }
 
         private PipeReaderBuffering _buffering;
@@ -34,33 +34,33 @@ namespace Forestry.Serialization.Reading
         private bool _isDone;
 
         /// <summary>
-        /// The core's row builder for this deserialization, for a format's shared reading class
+        /// The core's telemetry builder for this deserialization, for a format's shared reading class
         /// </summary>
-        protected RowBuilder Builder { get; }
+        protected TelemetryBuilder Builder { get; }
 
         /// <summary>
-        /// Current row
+        /// Current telemetry
         /// </summary>
-        public Row Current { get; private set; } = null!;
+        public Telemetry Current { get; private set; } = null!;
 
         /// <summary>
-        /// Read from the unconsumed bytes until the core completed a row, or nothing is left
+        /// Read from the unconsumed bytes until the core completed a telemetry, or nothing is left
         /// </summary>
         /// <param name="bytes">Unconsumed bytes</param>
         /// <param name="isFinalBlock">No more bytes follow</param>
-        /// <param name="row">The row completed during the call</param>
+        /// <param name="telemetry">The telemetry completed during the call</param>
         /// <param name="consumed">Bytes consumed, reported even when 0</param>
         /// <returns></returns>
-        protected abstract ReadStatus Read(ReadOnlySequence<byte> bytes, bool isFinalBlock, out Row? row, out long consumed);
+        protected abstract ReadStatus Read(ReadOnlySequence<byte> bytes, bool isFinalBlock, out Telemetry? telemetry, out long consumed);
 
         /// <summary>
-        /// A row of type <typeparamref name="T"/> starts
+        /// A telemetry of type <typeparamref name="T"/> starts
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        protected void Start<T>() where T : Row => Builder.Start<T>();
+        protected void Start<T>() where T : Telemetry => Builder.Start<T>();
 
         /// <summary>
-        /// A property of the top open row has this UTF-8 value
+        /// A property of the top open telemetry has this UTF-8 value
         /// </summary>
         /// <param name="property"></param>
         /// <param name="utf8"></param>
@@ -69,7 +69,7 @@ namespace Forestry.Serialization.Reading
             Builder.Set(property, utf8, in information);
 
         /// <summary>
-        /// A field of the top open row has this UTF-8 value
+        /// A field of the top open telemetry has this UTF-8 value
         /// </summary>
         /// <param name="field"></param>
         /// <param name="utf8"></param>
@@ -78,13 +78,13 @@ namespace Forestry.Serialization.Reading
             Builder.Set(field, utf8, in information);
 
         /// <summary>
-        /// The top open row is complete
+        /// The top open telemetry is complete
         /// </summary>
-        /// <returns>The row to hand out, or null</returns>
-        protected Row? Complete() => Builder.Complete();
+        /// <returns>The telemetry to hand out, or null</returns>
+        protected Telemetry? Complete() => Builder.Complete();
 
         /// <summary>
-        /// Move to the next row: refill, read, advance by the bytes consumed (even 0), refill again
+        /// Move to the next telemetry: refill, read, advance by the bytes consumed (even 0), refill again
         /// while the format needs more bytes
         /// </summary>
         /// <returns></returns>
@@ -101,11 +101,11 @@ namespace Forestry.Serialization.Reading
                 }
 
                 ReadStatus state;
-                Row? row;
+                Telemetry? telemetry;
 
                 try
                 {
-                    state = Read(_buffering.Bytes, _buffering.IsCompleted, out row, out long consumed);
+                    state = Read(_buffering.Bytes, _buffering.IsCompleted, out telemetry, out long consumed);
                     _buffering.Advance(consumed, isExamined: state == ReadStatus.Partial);
                 }
                 catch
@@ -116,11 +116,11 @@ namespace Forestry.Serialization.Reading
 
                 switch (state)
                 {
-                    case ReadStatus.Complete when row is not null:
-                        Current = row;
+                    case ReadStatus.Complete when telemetry is not null:
+                        Current = telemetry;
                         return true;
                     case ReadStatus.Complete:
-                        continue;  // a row only a constructor needs: not handed out
+                        continue;  // a telemetry only a constructor needs: not handed out
                     case ReadStatus.None:
                         _isDone = true;
                         Builder.Clear();  // the enumeration ended: its policies are cleared now
@@ -139,7 +139,7 @@ namespace Forestry.Serialization.Reading
         }
 
         /// <summary>
-        /// Release the state and the pipe's buffer; rows still open are never handed out
+        /// Release the state and the pipe's buffer; telemetries still open are never handed out
         /// </summary>
         /// <returns></returns>
         public virtual ValueTask DisposeAsync()

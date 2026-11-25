@@ -4,7 +4,7 @@ namespace Forestry.Serialization
     /// Kind of deserializer by the shape it reads, from the design before spec 001
     /// </summary>
     /// <remarks>
-    /// Not used in spec 001: it mirrors the document's hierarchy instead of flattening it into rows,
+    /// Not used in spec 001: it mirrors the document's hierarchy instead of flattening it into telemetries,
     /// and whether it stays is decided with the document's structure in a later spec (research R0, R10, R13).
     /// </remarks>
     public enum DeserializerKind: byte

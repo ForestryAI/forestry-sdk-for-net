@@ -11,12 +11,12 @@ namespace Forestry.StanForD.Tests
     /// <remarks>
     /// Test shells written before any code (C6), so they do not compile until the US7 implementation
     /// declares the members they assume (data-model.md, "Dimensions (US7)"). Every dimension is copied
-    /// onto each row it applies to, a stem's onto its logs too, so no query needs a join. The values are
+    /// onto each telemetry it applies to, a stem's onto its logs too, so no query needs a join. The values are
     /// the fragments' made-up ones (tasks.md T077).
     /// </remarks>
     public sealed class DimensionTests
     {
-        private static List<Row> Read() =>
+        private static List<Telemetry> Read() =>
             TelemetrySerializer.Deserialize(Fragment.Read(Fragment.MinimalHarvesting), new DeserializeXmlOptions().AddHarvesting()).ToList();
 
         /// <summary>
@@ -61,11 +61,11 @@ namespace Forestry.StanForD.Tests
         public void Log_ItShould_CarryItsStemsDimensions()
         {
             // Arrange
-            List<Row> rows = Read();
-            Dictionary<int, Stem> stems = rows.OfType<Stem>().ToDictionary(stem => stem.StemKey);
+            List<Telemetry> telemetries = Read();
+            Dictionary<int, Stem> stems = telemetries.OfType<Stem>().ToDictionary(stem => stem.StemKey);
 
             // Act
-            List<Log> logs = rows.OfType<Log>().ToList();
+            List<Log> logs = telemetries.OfType<Log>().ToList();
 
             // Assert
             Assert.Equal(3, logs.Count);
@@ -121,19 +121,19 @@ namespace Forestry.StanForD.Tests
         /// business id
         /// </summary>
         [Fact]
-        public void EveryRow_ItShould_CarryMachineUserIdAndLoggingContractor()
+        public void EveryTelemetry_ItShould_CarryMachineUserIdAndLoggingContractor()
         {
             // Arrange, Act
-            List<Row> rows = Read();
+            List<Telemetry> telemetries = Read();
 
             // Assert
-            Assert.Equal(5, rows.Count);
-            Assert.All(rows.OfType<Stem>(), stem =>
+            Assert.Equal(5, telemetries.Count);
+            Assert.All(telemetries.OfType<Stem>(), stem =>
             {
                 Assert.Equal("EX-H01", stem.MachineUserID);
                 Assert.Equal("99001", stem.LoggingContractorBusinessID);
             });
-            Assert.All(rows.OfType<Log>(), log =>
+            Assert.All(telemetries.OfType<Log>(), log =>
             {
                 Assert.Equal("EX-H01", log.MachineUserID);
                 Assert.Equal("99001", log.LoggingContractorBusinessID);

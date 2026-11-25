@@ -9,10 +9,10 @@ namespace Forestry.Serialization.Tests.Fixtures
     /// </summary>
     public sealed class TestingDeserializeOptions : DeserializeOptions
     {
-        protected internal override FormatRowEnumerator CreateRowEnumerator(ReadOnlyMemory<byte> utf8) =>
+        protected internal override FormatTelemetryEnumerator CreateTelemetryEnumerator(ReadOnlyMemory<byte> utf8) =>
             throw new NotSupportedException("Core tests read no document");
 
-        protected internal override FormatRowAsyncEnumerator CreateRowAsyncEnumerator(PipeReader utf8, CancellationToken cancellationToken) =>
+        protected internal override FormatTelemetryAsyncEnumerator CreateTelemetryAsyncEnumerator(PipeReader utf8, CancellationToken cancellationToken) =>
             throw new NotSupportedException("Core tests read no document");
     }
 }

@@ -2,8 +2,8 @@
 
 > **Superseded (2026-11-03)**: this predates both the rebuilt reader and spec-kit. The reader moved to
 > its own package, `sdk/xml/Forestry.Xml` (#64); how it reads is in `Forestry.Xml/READER.md`. The XML
-> media's association and row reading are specified in `Forestry.Serialization/specs/`. Do not infer
-> design from this file. Its words also predate spec 003 ("media" for format, `[Row]` and `[Field]`
+> media's association and telemetry reading are specified in `Forestry.Serialization/specs/`. Do not infer
+> design from this file. Its words also predate spec 003 ("media" for format, `[Telemetry]` and `[Field]`
 > for `[XmlElementName]`); they are kept as written.
 
 ## 1. Purpose

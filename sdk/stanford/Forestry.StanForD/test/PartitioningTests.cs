@@ -9,11 +9,11 @@ namespace Forestry.StanForD.Tests
     /// Spec 001, User Story 3: partitioning (tasks.md T045-T047, T070-T072; spec FR-006, FR-007, FR-009)
     /// </summary>
     /// <remarks>
-    /// Test shells written before any code (C6). They compile against the members the rows already have,
+    /// Test shells written before any code (C6). They compile against the members the telemetries already have,
     /// and fail until the US3 implementation sets them. For the review gate (T048), the assumed behaviour
     /// of <c>AddHarvesting()</c>:
     /// <list type="bullet">
-    /// <item><c>HarvestedProductionHeader</c> is a row type that never comes out, kept in the
+    /// <item><c>HarvestedProductionHeader</c> is a telemetry type that never comes out, kept in the
     /// deserialization context until the document ends; its <c>CreationDate</c> is read.</item>
     /// <item>When a stem or log completes, <c>HarvestingCreationTime</c> is set to the header's
     /// <c>CreationDate</c> converted to UTC (offset zero), and <c>ContractNumber</c> and <c>ObjectName</c>
@@ -35,14 +35,14 @@ namespace Forestry.StanForD.Tests
         /// </summary>
         private static readonly DateTimeOffset NextCreationTimeUtc = new(2026, 1, 14, 16, 14, 48, TimeSpan.Zero);
 
-        private static List<Row> Read(string xml) =>
+        private static List<Telemetry> Read(string xml) =>
             TelemetrySerializer.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting()).ToList();
 
         /// <summary>
         /// T045, US3-1, FR-007: every stem and log carries the header's creation date, in UTC
         /// </summary>
         [Fact]
-        public void HarvestingDocument_ItShould_GiveEveryRowTheCreationTimeInUtc()
+        public void HarvestingDocument_ItShould_GiveEveryTelemetryTheCreationTimeInUtc()
         {
             // Arrange
             string xml = Fragment.Read(Fragment.MinimalHarvesting);
@@ -64,22 +64,22 @@ namespace Forestry.StanForD.Tests
         /// its stem refers to
         /// </summary>
         [Fact]
-        public void HarvestingDocument_ItShould_GiveEveryRowTheContractNumberAndObjectName()
+        public void HarvestingDocument_ItShould_GiveEveryTelemetryTheContractNumberAndObjectName()
         {
             // Arrange
             string xml = Fragment.Read(Fragment.MinimalHarvesting);
 
             // Act
-            List<Row> rows = Read(xml);
+            List<Telemetry> telemetries = Read(xml);
 
             // Assert
-            Assert.Equal(5, rows.Count);
-            Assert.All(rows.OfType<Stem>(), stem =>
+            Assert.Equal(5, telemetries.Count);
+            Assert.All(telemetries.OfType<Stem>(), stem =>
             {
                 Assert.Equal("10000001", stem.ContractNumber);
                 Assert.Equal("Example object", stem.ObjectName);
             });
-            Assert.All(rows.OfType<Log>(), log =>
+            Assert.All(telemetries.OfType<Log>(), log =>
             {
                 Assert.Equal("10000001", log.ContractNumber);
                 Assert.Equal("Example object", log.ObjectName);
@@ -159,11 +159,11 @@ namespace Forestry.StanForD.Tests
             Assert.Contains(nameof(Stem.ObjectKey), exception.Message, StringComparison.Ordinal);
         }
 
-        private static DateTimeOffset HarvestingCreationTime(Row row) => row switch
+        private static DateTimeOffset HarvestingCreationTime(Telemetry telemetry) => telemetry switch
         {
             Stem stem => stem.HarvestingCreationTime,
             Log log => log.HarvestingCreationTime,
-            _ => throw new InvalidOperationException(row.GetType().Name)
+            _ => throw new InvalidOperationException(telemetry.GetType().Name)
         };
     }
 }

@@ -1,9 +1,9 @@
 namespace Forestry.Serialization.Xml.Tests.Fixtures
 {
     /// <summary>
-    /// A row class with public fields instead of properties (flow 2, compiled-expression setter)
+    /// A telemetry class with public fields instead of properties (flow 2, compiled-expression setter)
     /// </summary>
-    public sealed class LogWithFieldMember : Row
+    public sealed class LogWithFieldMember : Telemetry
     {
         public int LogKey;
 

@@ -5,7 +5,7 @@ using System.IO.Pipelines;
 namespace Forestry.Serialization.Reading
 {
     /// <summary>
-    /// Buffered bytes of a <see cref="PipeReader"/> for the async row enumerator (research R2): refill,
+    /// Buffered bytes of a <see cref="PipeReader"/> for the async telemetry enumerator (research R2): refill,
     /// then advance by the bytes consumed, even 0
     /// </summary>
     /// <remarks>
@@ -78,7 +78,7 @@ namespace Forestry.Serialization.Reading
         /// <param name="consumed">Bytes consumed from <see cref="Bytes"/></param>
         /// <param name="isExamined">
         /// Every byte was examined: the next refill waits for new bytes (after <c>Partial</c>). Otherwise
-        /// the unconsumed bytes come back at once (after a row)
+        /// the unconsumed bytes come back at once (after a telemetry)
         /// </param>
         public void Advance(long consumed, bool isExamined)
         {

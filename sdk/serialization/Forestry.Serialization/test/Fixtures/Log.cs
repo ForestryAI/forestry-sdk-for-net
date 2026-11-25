@@ -1,9 +1,9 @@
 namespace Forestry.Serialization.Tests.Fixtures
 {
     /// <summary>
-    /// The walking skeleton's flat row class (spec 001, US1), for core tests
+    /// The walking skeleton's flat telemetry class (spec 001, US1), for core tests
     /// </summary>
-    public sealed class Log : Row
+    public sealed class Log : Telemetry
     {
         public int LogKey { get; set; }
 

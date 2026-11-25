@@ -4,7 +4,7 @@ namespace Forestry.Serialization.Xml.Tests.Fixtures
     /// A reference with an attribute and its own text, often empty (spec 002 US3-4, tasks.md T047):
     /// <c>&lt;Reference type="external" /&gt;</c>
     /// </summary>
-    public sealed class Reference : Row
+    public sealed class Reference : Telemetry
     {
         [XmlAttributeName("type")]
         public string? Type { get; set; }

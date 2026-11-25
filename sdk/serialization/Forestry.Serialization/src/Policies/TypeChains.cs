@@ -4,30 +4,30 @@ using Forestry.Serialization.Reading;
 namespace Forestry.Serialization.Policies
 {
     /// <summary>
-    /// A row type's definition with its enumeration policies composed into one step per method, once when
-    /// the options lock (research R19): nothing is created per enumeration or allocated per row
+    /// A telemetry type's definition with its enumeration policies composed into one step per method, once when
+    /// the options lock (research R19): nothing is created per enumeration or allocated per telemetry
     /// </summary>
     internal sealed class TypeChains(
         TypeDefinition definition,
-        Func<DeserializeContext, Row> construct,
-        Action<ContextRow> complete,
+        Func<DeserializeContext, Telemetry> construct,
+        Action<ContextTelemetry> complete,
         Delegate[] setters,
         IReadOnlyList<EnumerationPolicy> applying)
     {
         public TypeDefinition Definition { get; } = definition;
 
         /// <summary>
-        /// Construct a row: the composed chain, or the built-in constructor
+        /// Construct a telemetry: the composed chain, or the built-in constructor
         /// </summary>
-        public Func<DeserializeContext, Row> Construct { get; } = construct;
+        public Func<DeserializeContext, Telemetry> Construct { get; } = construct;
 
         /// <summary>
         /// The completion: the composed chain, or the built-in step that does nothing
         /// </summary>
-        public Action<ContextRow> Complete { get; } = complete;
+        public Action<ContextTelemetry> Complete { get; } = complete;
 
         /// <summary>
-        /// One <c>Action&lt;ContextRow, T&gt;</c> per property definition, by its index: the composed
+        /// One <c>Action&lt;ContextTelemetry, T&gt;</c> per property definition, by its index: the composed
         /// chain, or the built-in setter
         /// </summary>
         public Delegate[] Setters { get; } = setters;

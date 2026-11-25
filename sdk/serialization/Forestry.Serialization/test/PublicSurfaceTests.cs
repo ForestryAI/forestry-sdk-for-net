@@ -9,12 +9,12 @@ namespace Forestry.Serialization.Tests
     /// </summary>
     /// <remarks>
     /// Test shell written before any code (C4). For the review gate (T034): after US2 it fails only for the
-    /// names containing <c>Media</c> (<c>MediaRowEnumerator</c>, <c>MediaRowAsyncEnumerator</c>,
+    /// names containing <c>Media</c> (<c>MediaTelemetryEnumerator</c>, <c>MediaTelemetryAsyncEnumerator</c>,
     /// <c>MediaConverters</c>), which US3 renames after "format" (T035, T036).
     /// </remarks>
     public sealed class PublicSurfaceTests
     {
-        private static readonly string[] s_removedTypeNames = ["Field", "RowAttribute", "FieldAttribute"];
+        private static readonly string[] s_removedTypeNames = ["Field", "TelemetryAttribute", "FieldAttribute"];
 
         private const BindingFlags Visible = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
@@ -24,7 +24,7 @@ namespace Forestry.Serialization.Tests
         /// </summary>
         private static IEnumerable<string> VisibleNames()
         {
-            foreach (Type type in typeof(Row).Assembly.GetExportedTypes())
+            foreach (Type type in typeof(Telemetry).Assembly.GetExportedTypes())
             {
                 yield return type.FullName!;
 
@@ -48,7 +48,7 @@ namespace Forestry.Serialization.Tests
             _ => false
         };
 
-        // T033 - SC-002 (quickstart 10): no type named Field, RowAttribute or FieldAttribute (removed in US2), and
+        // T033 - SC-002 (quickstart 10): no type named Field, TelemetryAttribute or FieldAttribute (removed in US2), and
         // no type or member whose name contains Media (renamed after "format" in US3)
         [Fact]
         public void PublicSurface_ForTheDeserializationPackage_ItShould_HaveNoRemovedOrMediaNames()
@@ -57,7 +57,7 @@ namespace Forestry.Serialization.Tests
             List<string> names = [.. VisibleNames()];
 
             // Act
-            List<string> removed = [.. typeof(Row).Assembly.GetExportedTypes().Where(type => s_removedTypeNames.Contains(type.Name)).Select(type => type.FullName!)];
+            List<string> removed = [.. typeof(Telemetry).Assembly.GetExportedTypes().Where(type => s_removedTypeNames.Contains(type.Name)).Select(type => type.FullName!)];
             List<string> media = [.. names.Where(name => name.Contains("Media", StringComparison.Ordinal))];
 
             // Assert

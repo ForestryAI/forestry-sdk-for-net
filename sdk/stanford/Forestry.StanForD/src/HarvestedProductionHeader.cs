@@ -5,7 +5,7 @@ namespace Forestry.StanForD {
     /// The header of a Harvesting document, from StanForD <c>HarvestedProductionHeader</c>; never comes
     /// out, but gives every stem and log its partition time
     /// </summary>
-    public sealed class HarvestedProductionHeader : Row
+    public sealed class HarvestedProductionHeader : Telemetry
     {
         /// <summary>
         /// When the harvesting machine created the document, with the machine's local offset, from

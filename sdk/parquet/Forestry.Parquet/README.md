@@ -2,30 +2,30 @@
 
 A forward-only writer for [Apache Parquet](https://parquet.apache.org/), the dominant flat columnar
 format read by big data resources. Nothing is built yet; this README states the goals. The SDK's
-[README](../../../README.md#big-data-clients) explains the whole path, from a device document to rows
+[README](../../../README.md#big-data-clients) explains the whole path, from a device document to telemetries
 that feed a client's pipeline and on to big data.
 
 ## Direction
 
-- **JSON Lines first.** For the POC, rows are written as [JSON Lines](https://jsonlines.org/), which
+- **JSON Lines first.** For the POC, telemetries are written as [JSON Lines](https://jsonlines.org/), which
   .NET writes forward and compresses as a stream with what it has built in. Parquet comes later.
 - **A writer of its own.** In the same spirit as [Forestry.Xml](../../xml/Forestry.Xml/README.md) on
   the reading side: UTF-8, forward only, writing straight to a `PipeWriter` or a stream that cannot
-  seek (for example an upload). It covers what flat rows need, so no nested columns, and has no
+  seek (for example an upload). It covers what flat telemetries need, so no nested columns, and has no
   dependency on Forestry.Serialization. No third-party Parquet library is planned.
 - **Writing is a pipeline directive.** A client's writing directive owns a format writer: JSON Lines
-  now, Parquet later. Appending a row is a cheap call, held to the same standard as deserialization
+  now, Parquet later. Appending a telemetry is a cheap call, held to the same standard as deserialization
   policies (no allocation per value); closing a row group or file, and handing it on to be sent, is
   the directive's work per chunk.
 
-## Rows in, row groups out
+## Telemetries in, row groups out
 
 Parquet is columnar: within a row group, all of one column's pages come before the next column's. So
-rows go in one at a time, but bytes come out per row group:
+telemetries go in one at a time, but bytes come out per row group:
 
-- **Per row**, each member's value is encoded into its own column's buffer. Values that repeat, such
-  as dimensions copied onto every row, cost a few bits each with dictionary encoding. What is held is
-  encoded, compressed pages, not rows.
+- **Per telemetry**, each member's value is encoded into its own column's buffer. Values that repeat, such
+  as dimensions copied onto every telemetry, cost a few bits each with dictionary encoding. What is held is
+  encoded, compressed pages, not telemetries.
 - **Per row group**, the columns are written one after another.
 - **Per chunk**, one or more row groups and then the footer make one file. A chunk ends on size, so
   files come out large enough for big data without compacting small ones afterwards.
@@ -48,7 +48,7 @@ the codec and where every page starts. A gzipped Parquet file is no longer reada
 
 - **Schema when the options lock.** Each member becomes a column with a physical type (`BOOLEAN`,
   `INT32`, `INT64`, `DOUBLE`, `BYTE_ARRAY`, `FIXED_LEN_BYTE_ARRAY`) and a logical type (`STRING`,
-  `DECIMAL`, `TIMESTAMP`, `DATE`, `UUID`). Flat rows keep this simple: no nesting means no repetition
+  `DECIMAL`, `TIMESTAMP`, `DATE`, `UUID`). Flat telemetries keep this simple: no nesting means no repetition
   levels, and a nullable member needs only a definition level of 0 or 1.
 - **Encodings**: plain, dictionary for values that repeat, and the run-length/bit-packing hybrid for
   definition levels.

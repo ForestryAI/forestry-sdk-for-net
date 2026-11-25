@@ -11,9 +11,9 @@ Workflow). Terms are defined under Definitions.
 - **Covers**: Architecture
 - **Rule**: The deserialization package MUST NOT reference any format reader package. It owns what
   is shared by every format: the entry points, the abstract options, the enumerators and buffering,
-  type, property and parameter definitions, policies, and `Row`. A format reader package references
+  type, property and parameter definitions, policies, and `Telemetry`. A format reader package references
   it, extends the options, and supplies its own reader and a synchronous, resumable step that turns
-  buffered bytes into rows, much as System.Text.Json's serializer owns buffering and runs its
+  buffered bytes into telemetries, much as System.Text.Json's serializer owns buffering and runs its
   converters over `Utf8JsonReader`. There is no format-neutral token or Value model between the two:
   each format's tokens stay inside its own package.
 - **Rationale**: One storage model whatever the format: storage designed for analytics and high
@@ -25,25 +25,25 @@ Workflow). Terms are defined under Definitions.
 ### C1. Partial deserialization
 
 - **Covers**: Architecture
-- **Rule**: Deserialization MUST NOT require the whole document. Rows are enumerated as the
+- **Rule**: Deserialization MUST NOT require the whole document. Telemetries are enumerated as the
   document is read, holding only what the type definitions and their policies still need (e.g. an
-  ancestor row until its end). Data held by user choice (e.g.
+  ancestor telemetry until its end). Data held by user choice (e.g.
   reference lookups) may grow.
 - **Rationale**: Multi-GB StanForD documents.
-- **Checked by**: A test reading a generated document with many rows and nothing held by choice
-  shows memory doesn't grow with the number of rows.
+- **Checked by**: A test reading a generated document with many telemetries and nothing held by choice
+  shows memory doesn't grow with the number of telemetries.
 
 ### C2. Single pass flattening
 
 - **Covers**: Architecture
 - **Rule**: Deserialization MUST read the document once, forward only. Type, property and
   parameter definitions, with their policies, are built once; each part of the document is then
-  ignored, starts a row, or sets a typed member of a row. Several type definitions (e.g. Stem and
-  Log rows) come from the same pass, never from re-reading. Deserialization only goes from format to
+  ignored, starts a telemetry, or sets a typed member of a telemetry. Several type definitions (e.g. Stem and
+  Log telemetries) come from the same pass, never from re-reading. Deserialization only goes from format to
   type definitions (no serialization back).
-- **Rationale**: Re-reading multi-GB documents is not an option; the target is flat rows, not a
+- **Rationale**: Re-reading multi-GB documents is not an option; the target is flat telemetries, not a
   mirror of the format.
-- **Checked by**: Tests enumerating several row types from one document read once.
+- **Checked by**: Tests enumerating several telemetry types from one document read once.
 
 ### C3. Tested through a real format reader, real data later
 
@@ -51,7 +51,7 @@ Workflow). Terms are defined under Definitions.
 - **Rule**: Deserialization behavior MUST be tested through a real format reader package (XML
   first, JSON later) over small hand-written documents, in that format package's tests. No fake
   format or fake token producer is built. The deserialization package's own tests cover only what
-  needs no document (e.g. definitions, policy precedence, `Row.AsType<T>()`). Confirmation against
+  needs no document (e.g. definitions, policy precedence, `Telemetry.AsType<T>()`). Confirmation against
   real StanForD samples happens where a format reader is combined with deserialization.
   StanForD-specific behavior is an edge case (hook), never the general rule.
 - **Rationale**: A fake format duplicates the effort of a real reader for every format (XML, then
@@ -63,10 +63,10 @@ Workflow). Terms are defined under Definitions.
 ### C4. Test-first
 
 - **Covers**: Code quality
-- **Rule**: Each assertion row MUST get a test shell before code is written. Shells are reviewed in
+- **Rule**: Each assertion telemetry MUST get a test shell before code is written. Shells are reviewed in
   a board task (test review); then the AI or the developer writes the code.
 - **Rationale**: Same as the XML reader's way of working.
-- **Checked by**: Every assertion row maps to a test; test review task closed before coding.
+- **Checked by**: Every assertion telemetry maps to a test; test review task closed before coding.
 
 ### C5. Design ownership
 
@@ -81,21 +81,21 @@ Workflow). Terms are defined under Definitions.
 ### C6. Working example first
 
 - **Covers**: Workflow
-- **Rule**: A working end-to-end example (StanForD file -> rows, in a project combining a format
+- **Rule**: A working end-to-end example (StanForD file -> telemetries, in a project combining a format
   reader and deserialization) MUST come before performance work. Performance is then measured, not
   assumed.
 - **Rationale**: Performance matters, but a working example matters more right now.
 - **Checked by**: Plan/task order; performance tasks only after the example works.
 
-### C7. Flat rows
+### C7. Flat telemetries
 
 - **Covers**: Architecture
 - **Rule**: A type definition MUST be flat: every member is a single value, a primitive C# type or
   a single-value struct that parses from and formats to a byte span or string (e.g. `Guid`,
   `DateTimeOffset`). Never composite structs, nested objects or collections. Dimensions are copied
-  onto the rows that need them, not nested or joined.
+  onto the telemetries that need them, not nested or joined.
 - **Rationale**: The target is big data: a single-value member can become one column in any
-  format, row-based or columnar (JSON Lines now, Parquet later). Without this rule, flat rows were
+  format, row-based or columnar (JSON Lines now, Parquet later). Without this rule, flat telemetries were
   only promised by Forestry.StanForD (its C0).
 - **Checked by**: Building a type definition with a member that isn't a single value throws; a test
   per rejected kind (nested object, collection, composite struct).
@@ -111,8 +111,8 @@ Workflow). Terms are defined under Definitions.
 ### S0. Developer-chosen types only
 
 - **Covers**: Security
-- **Rule**: Deserialization MUST only create rows of the types the developer added through the
-  options, and of the row types their constructors need; it never creates a type named or chosen
+- **Rule**: Deserialization MUST only create telemetries of the types the developer added through the
+  options, and of the telemetry types their constructors need; it never creates a type named or chosen
   by the input, and never scans assemblies.
 - **Rationale**: Classic deserialization vulnerability (input-chosen types); the package is public.
 - **Checked by**: Review; a test where input names an unknown type creates nothing.
@@ -122,7 +122,7 @@ Workflow). Terms are defined under Definitions.
 - **Covers**: Security
 - **Rule**: Deserialization MUST fail fast, with an exception, when input can't match the type
   definitions: an unexpected root; no type definition matched within a limit (depth or number of
-  bytes); a value larger than a limit (e.g. string length); a row needing ancestor data that
+  bytes); a value larger than a limit (e.g. string length); a telemetry needing ancestor data that
   has not been read yet. Limits are generic options with defaults, defined by the deserialization
   package; format reader packages honor them (e.g. maximum value length) so an oversized value
   fails in the reader before it is fully buffered. The limit values are a plan decision.
@@ -152,23 +152,25 @@ Workflow). Terms are defined under Definitions.
 - **Document**: The input: one file or stream in one format (e.g. an HPR file in XML).
 - **Format**: The encoding a document is written in (XML now, JSON later), read forward by a format
   reader package.
-- **Format reader package**: A package that reads one format forward and turns it into rows through
+- **Format reader package**: A package that reads one format forward and turns it into telemetries through
   the deserialization package's abstractions, using its own reader and tokens (e.g.
   Forestry.Serialization.Xml). Names of document parts (e.g. an XML element or attribute) are its own.
 - **Reading information**: Where a value is read in the document: its depth, name and path
   (`ReadingInformation`), reported by the format with each value. Generic, not specific to one
   format. Never a value, and never kept unless a policy or option asks for it.
-- **Type definition**: A developer's flat class extending `Row`, with its property definitions
+- **Type definition**: A developer's flat class extending `Telemetry`, with its property definitions
   (typed members, with converters and setters) and parameter definitions (constructor parameters,
-  e.g. an ancestor row), built once per options and cached.
-- **Row**: An instance of a developer's class extending the abstract `Row`, whose members hold the
-  values flattened for one occurrence in the document. Every member is a single value (C7). It
-  reports its C# type and casts to its concrete class (`AsType<T>()`). *Row* is the unit
-  enumerated, and has nothing to do with row-based vs columnar formats.
-- **Policy**: Behavior attached to a type, property or parameter definition at a row lifecycle
-  moment (construction, member set, child row start, end, hand-out, retention), by attribute or by
+  e.g. an ancestor telemetry), built once per options and cached.
+- **Telemetry**: Information a forestry device emits (*tele*, distant, and *metron*, measure:
+  measuring at a distance), with no structure imposed by the term. Here, an instance of a
+  developer's class extending the abstract `Telemetry`, whose members hold the values flattened for
+  one occurrence in the document. Every member is a single value (C7). It reports its C# type and
+  casts to its concrete class (`AsType<T>()`). One instance is *a telemetry*, many are
+  *telemetries*. A format's own units keep their names (e.g. a Parquet row group).
+- **Policy**: Behavior attached to a type, property or parameter definition at a telemetry lifecycle
+  moment (construction, member set, child telemetry start, end, hand-out, retention), by attribute or by
   options; options win over attributes.
-- **Flattening**: Taking parts of one document into one or more flat type definitions (rows of
+- **Flattening**: Taking parts of one document into one or more flat type definitions (telemetries of
   single-value members), rather than mirroring the document's hierarchy. Not Parquet's (Dremel's)
   shredding, which stores nested records with levels.
 
@@ -183,6 +185,18 @@ Workflow). Terms are defined under Definitions.
 - **G2** (Workflow): Until a working `1.0.0-beta` exists, the developer is the only contributor.
 
 ## Amendments
+
+- **3.1.1** (2026-11-25, agreed by the developer in #142, takes effect on merge to `main`). Reason:
+  the package is renamed Forestry.Serialization, and *Row* is renamed *Telemetry*: what forestry
+  devices emit, measured at a distance. Wording only (PATCH): no principle added, removed or
+  redefined.
+  - Title: "Forestry Deserialize Constitution" -> "Forestry Serialization Constitution"; package
+    names Forestry.Deserialize(.Xml) -> Forestry.Serialization(.Xml).
+  - "row" -> "telemetry" throughout, including C7's title ("Flat rows" -> "Flat telemetries").
+  - Definitions: Row renamed Telemetry and reworded (the term's meaning, its plural, and that a
+    format's own units keep their names); the line separating rows from row-based vs columnar
+    formats removed, since the new name no longer invites that confusion.
+  - Format reader package keeps its name until writing is added (#137, C2 amendment).
 
 - **3.1.0** (2026-11-18, agreed by the developer in #125, takes effect on merge to `main`). Reason:
   big data orientation (#125): "format" and "flatten" settled as terms, flat rows made explicit,
@@ -230,4 +244,4 @@ Workflow). Terms are defined under Definitions.
     value of a row" to metadata about a member; values live on the row's typed members (research
     R4).
 
-**Version**: 3.1.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-11-18
+**Version**: 3.1.1 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-11-25

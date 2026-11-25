@@ -1,10 +1,10 @@
 namespace Forestry.Serialization.Xml.Tests.Fixtures
 {
     /// <summary>
-    /// A row type with 70 members, more than one <c>ulong</c> of set-member bits holds (spec 002,
+    /// A telemetry type with 70 members, more than one <c>ulong</c> of set-member bits holds (spec 002,
     /// tasks.md T001, T008, research R22)
     /// </summary>
-    public sealed class WideRow : Row
+    public sealed class WideTelemetry : Telemetry
     {
         public int M00 { get; set; }
 

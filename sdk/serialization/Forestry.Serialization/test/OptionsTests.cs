@@ -9,25 +9,25 @@ namespace Forestry.Serialization.Tests
     /// </summary>
     /// <remarks>
     /// Test shells written before any code (C4). For the review gate (T029), the assumed surface:
-    /// <c>DeserializeOptions.MakeReadOnly()</c> locks the options and builds their row type lookup (what the
+    /// <c>DeserializeOptions.MakeReadOnly()</c> locks the options and builds their telemetry type lookup (what the
     /// first deserialization does, R6), and the internal
     /// <c>DeserializeOptions.TryGetTypeDefinition(Type, out TypeDefinition?)</c> reads that lookup (R5).
-    /// For the review gate T055 (T054), also <c>options.Policies.Add&lt;TRow&gt;(policy)</c> (research R19);
+    /// For the review gate T055 (T054), also <c>options.Policies.Add&lt;TTelemetry&gt;(policy)</c> (research R19);
     /// a change after the options are locked throws <see cref="InvalidOperationException"/> (FR-013).
     /// </remarks>
     public sealed class OptionsTests
     {
-        // T027 - flow 1: the row type lookup is per options, never global (S0, R5)
+        // T027 - flow 1: the telemetry type lookup is per options, never global (S0, R5)
         [Fact]
-        public void TryGetTypeDefinition_ForARowAddedToOtherOptions_ItShould_NotFindIt()
+        public void TryGetTypeDefinition_ForATelemetryAddedToOtherOptions_ItShould_NotFindIt()
         {
             // Arrange
             TestingDeserializeOptions optionsA = new();
-            optionsA.Rows.Add<Log>();
+            optionsA.Telemetries.Add<Log>();
             optionsA.MakeReadOnly();
 
             TestingDeserializeOptions optionsB = new();
-            optionsB.Rows.Add<Stem>();
+            optionsB.Telemetries.Add<Stem>();
             optionsB.MakeReadOnly();
 
             // Act + Assert
@@ -42,24 +42,24 @@ namespace Forestry.Serialization.Tests
         {
             // Arrange
             TestingDeserializeOptions options = new();
-            options.Rows.Add<Log>();
+            options.Telemetries.Add<Log>();
             options.MakeReadOnly();
 
             // Act + Assert
             Assert.Throws<InvalidOperationException>(() => options.Policies.Add<Log>(new SetMarkerPolicy()));
         }
 
-        // T054 - quickstart 11 / US4-4 / FR-013: adding a row type after first use throws
+        // T054 - quickstart 11 / US4-4 / FR-013: adding a telemetry type after first use throws
         [Fact]
-        public void RowsAdd_AfterTheOptionsAreLocked_ItShould_Throw()
+        public void TelemetriesAdd_AfterTheOptionsAreLocked_ItShould_Throw()
         {
             // Arrange
             TestingDeserializeOptions options = new();
-            options.Rows.Add<Log>();
+            options.Telemetries.Add<Log>();
             options.MakeReadOnly();
 
             // Act + Assert
-            Assert.Throws<InvalidOperationException>(() => options.Rows.Add<Stem>());
+            Assert.Throws<InvalidOperationException>(() => options.Telemetries.Add<Stem>());
         }
 
         // T054 - quickstart 11 / US4-4 / FR-013: adding a converter after first use throws
@@ -68,7 +68,7 @@ namespace Forestry.Serialization.Tests
         {
             // Arrange
             TestingDeserializeOptions options = new();
-            options.Rows.Add<Log>();
+            options.Telemetries.Add<Log>();
             options.MakeReadOnly();
 
             // Act + Assert

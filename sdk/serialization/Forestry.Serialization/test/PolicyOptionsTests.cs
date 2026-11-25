@@ -10,8 +10,8 @@ namespace Forestry.Serialization.Tests
     /// </summary>
     public sealed class PolicyOptionsTests
     {
-        // Rejected: ArgumentNullException from each of Add(policy), Add<TRow>(policy) and
-        // Add<TRow>(memberName, policy)
+        // Rejected: ArgumentNullException from each of Add(policy), Add<TTelemetry>(policy) and
+        // Add<TTelemetry>(memberName, policy)
         [Fact]
         public void Policies_Rejects_ANullPolicyOnEveryAdd()
         {
@@ -36,14 +36,14 @@ namespace Forestry.Serialization.Tests
             Assert.Throws<ArgumentException>(() => options.Policies.Add<Log>(string.Empty, new SetMarkerPolicy()));
         }
 
-        // Rejected: InvalidOperationException from Add(policy) and Add<TRow>(memberName, policy);
-        // Add<TRow>(policy) after locking is covered by OptionsTests
+        // Rejected: InvalidOperationException from Add(policy) and Add<TTelemetry>(memberName, policy);
+        // Add<TTelemetry>(policy) after locking is covered by OptionsTests
         [Fact]
         public void Policies_Rejects_TheOtherAddsAfterTheOptionsAreLocked()
         {
             // Arrange
             TestingDeserializeOptions options = new();
-            options.Rows.Add<Log>();
+            options.Telemetries.Add<Log>();
             options.MakeReadOnly();
 
             // Act + Assert

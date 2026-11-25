@@ -1,9 +1,9 @@
 namespace Forestry.Serialization.Xml.Tests.Fixtures
 {
     /// <summary>
-    /// A row class with two members read from the same element, <c>LogVolume</c> (R8)
+    /// A telemetry class with two members read from the same element, <c>LogVolume</c> (R8)
     /// </summary>
-    public sealed class LogWithDuplicateMember : Row
+    public sealed class LogWithDuplicateMember : Telemetry
     {
         public decimal LogVolume { get; set; }
 

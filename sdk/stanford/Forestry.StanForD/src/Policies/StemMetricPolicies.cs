@@ -4,16 +4,16 @@ using Forestry.Serialization.Reading;
 
 namespace Forestry.StanForD.Policies {
     /// <summary>
-    /// Sets the open <see cref="Stem"/>'s metric members from the wrapper rows below it (FR-024)
+    /// Sets the open <see cref="Stem"/>'s metric members from the wrapper telemetries below it (FR-024)
     /// </summary>
     internal static class StemMetrics
     {
         /// <summary>
-        /// The <see cref="Stem"/> open around a wrapper row
+        /// The <see cref="Stem"/> open around a wrapper telemetry
         /// </summary>
-        /// <exception cref="InvalidDataException">The row is not inside a stem</exception>
-        public static ContextRow Stem(ContextRow row, DeserializeContext context, string element) =>
-            Enclosing.Row<Stem>(row, context) ?? throw new InvalidDataException($"A {element} is not inside a Stem.");
+        /// <exception cref="InvalidDataException">The telemetry is not inside a stem</exception>
+        public static ContextTelemetry Stem(ContextTelemetry telemetry, DeserializeContext context, string element) =>
+            Enclosing.Telemetry<Stem>(telemetry, context) ?? throw new InvalidDataException($"A {element} is not inside a Stem.");
 
         /// <summary>
         /// Sets <paramref name="member"/> on the stem, or handles an unmatched category
@@ -25,9 +25,9 @@ namespace Forestry.StanForD.Policies {
         /// <param name="unmatched">What happens when <paramref name="member"/> is null</param>
         /// <exception cref="InvalidDataException">No match and <see cref="UnmatchedOccurrence.Fail"/>
         /// (FR-012), or the member is set already</exception>
-        public static void Set<TValue>(ContextRow stem, string? member, TValue value, string occurrence, UnmatchedOccurrence unmatched)
+        public static void Set<TValue>(ContextTelemetry stem, string? member, TValue value, string occurrence, UnmatchedOccurrence unmatched)
         {
-            string what = $"Stem {stem.Row.AsType<Stem>().StemKey}";
+            string what = $"Stem {stem.Telemetry.AsType<Stem>().StemKey}";
 
             if (member is null)
             {
@@ -54,24 +54,24 @@ namespace Forestry.StanForD.Policies {
     internal sealed class StemCoordinatesPolicy : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
+        public override void Complete(ContextTelemetry telemetry, DeserializeContext context, Action<ContextTelemetry> next)
         {
-            row.Enumerate(false);
+            telemetry.Enumerate(false);
 
-            ContextRow stem = StemMetrics.Stem(row, context, nameof(StemCoordinates));
-            StemCoordinates coordinates = row.Row.AsType<StemCoordinates>();
+            ContextTelemetry stem = StemMetrics.Stem(telemetry, context, nameof(StemCoordinates));
+            StemCoordinates coordinates = telemetry.Telemetry.AsType<StemCoordinates>();
 
-            if (row.IsSet(nameof(StemCoordinates.Altitude)))
+            if (telemetry.IsSet(nameof(StemCoordinates.Altitude)))
             {
                 stem.Set(nameof(StanForD.Stem.Altitude), coordinates.Altitude);
             }
 
-            if (row.IsSet(nameof(StemCoordinates.CoordinateReferenceSystem)))
+            if (telemetry.IsSet(nameof(StemCoordinates.CoordinateReferenceSystem)))
             {
                 stem.Set(nameof(StanForD.Stem.CoordinateReferenceSystem), coordinates.CoordinateReferenceSystem);
             }
 
-            next(row);
+            next(telemetry);
         }
     }
 
@@ -83,17 +83,17 @@ namespace Forestry.StanForD.Policies {
     internal sealed class LatitudePolicy(UnmatchedOccurrence unmatched) : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
+        public override void Complete(ContextTelemetry telemetry, DeserializeContext context, Action<ContextTelemetry> next)
         {
-            row.Enumerate(false);
+            telemetry.Enumerate(false);
 
-            if (Enclosing.Row<StemCoordinates>(row, context) is null)
+            if (Enclosing.Telemetry<StemCoordinates>(telemetry, context) is null)
             {
-                next(row);  // not a stem's coordinate, e.g. a species group's bark function (T088)
+                next(telemetry);  // not a stem's coordinate, e.g. a species group's bark function (T088)
                 return;
             }
 
-            Latitude latitude = row.Row.AsType<Latitude>();
+            Latitude latitude = telemetry.Telemetry.AsType<Latitude>();
             decimal? signed = latitude.LatitudeCategory switch
             {
                 "North" => latitude.Value,
@@ -102,13 +102,13 @@ namespace Forestry.StanForD.Policies {
             };
 
             StemMetrics.Set(
-                StemMetrics.Stem(row, context, nameof(Latitude)),
+                StemMetrics.Stem(telemetry, context, nameof(Latitude)),
                 signed is null ? null : nameof(StanForD.Stem.Latitude),
                 signed ?? 0m,
                 $"{nameof(Latitude)} (latitudeCategory \"{latitude.LatitudeCategory}\")",
                 unmatched);
 
-            next(row);
+            next(telemetry);
         }
     }
 
@@ -120,17 +120,17 @@ namespace Forestry.StanForD.Policies {
     internal sealed class LongitudePolicy(UnmatchedOccurrence unmatched) : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
+        public override void Complete(ContextTelemetry telemetry, DeserializeContext context, Action<ContextTelemetry> next)
         {
-            row.Enumerate(false);
+            telemetry.Enumerate(false);
 
-            if (Enclosing.Row<StemCoordinates>(row, context) is null)
+            if (Enclosing.Telemetry<StemCoordinates>(telemetry, context) is null)
             {
-                next(row);  // not a stem's coordinate, e.g. a species group's bark function (T088)
+                next(telemetry);  // not a stem's coordinate, e.g. a species group's bark function (T088)
                 return;
             }
 
-            Longitude longitude = row.Row.AsType<Longitude>();
+            Longitude longitude = telemetry.Telemetry.AsType<Longitude>();
             decimal? signed = longitude.LongitudeCategory switch
             {
                 "East" => longitude.Value,
@@ -139,13 +139,13 @@ namespace Forestry.StanForD.Policies {
             };
 
             StemMetrics.Set(
-                StemMetrics.Stem(row, context, nameof(Longitude)),
+                StemMetrics.Stem(telemetry, context, nameof(Longitude)),
                 signed is null ? null : nameof(StanForD.Stem.Longitude),
                 signed ?? 0m,
                 $"{nameof(Longitude)} (longitudeCategory \"{longitude.LongitudeCategory}\")",
                 unmatched);
 
-            next(row);
+            next(telemetry);
         }
     }
 
@@ -163,12 +163,12 @@ namespace Forestry.StanForD.Policies {
         };
 
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
+        public override void Complete(ContextTelemetry telemetry, DeserializeContext context, Action<ContextTelemetry> next)
         {
-            row.Enumerate(false);
+            telemetry.Enumerate(false);
 
-            BoomPositioning positioning = row.Row.AsType<BoomPositioning>();
-            ContextRow stem = StemMetrics.Stem(row, context, nameof(BoomPositioning));
+            BoomPositioning positioning = telemetry.Telemetry.AsType<BoomPositioning>();
+            ContextTelemetry stem = StemMetrics.Stem(telemetry, context, nameof(BoomPositioning));
             bool found = s_members.TryGetValue(positioning.BoomPositioningCategory, out (string Angle, string Extension) members);
             string occurrence = $"{nameof(BoomPositioning)} (boomPositioningCategory \"{positioning.BoomPositioningCategory}\")";
 
@@ -178,18 +178,18 @@ namespace Forestry.StanForD.Policies {
             }
             else
             {
-                if (row.IsSet(nameof(BoomPositioning.BoomAngle)))
+                if (telemetry.IsSet(nameof(BoomPositioning.BoomAngle)))
                 {
                     StemMetrics.Set(stem, members.Angle, positioning.BoomAngle, occurrence, unmatched);
                 }
 
-                if (row.IsSet(nameof(BoomPositioning.BoomExtension)))
+                if (telemetry.IsSet(nameof(BoomPositioning.BoomExtension)))
                 {
                     StemMetrics.Set(stem, members.Extension, positioning.BoomExtension, occurrence, unmatched);
                 }
             }
 
-            next(row);
+            next(telemetry);
         }
     }
 
@@ -199,17 +199,17 @@ namespace Forestry.StanForD.Policies {
     internal sealed class SingleTreeProcessedStemPolicy : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
+        public override void Complete(ContextTelemetry telemetry, DeserializeContext context, Action<ContextTelemetry> next)
         {
-            row.Enumerate(false);
+            telemetry.Enumerate(false);
 
-            if (row.IsSet(nameof(SingleTreeProcessedStem.DBH)))
+            if (telemetry.IsSet(nameof(SingleTreeProcessedStem.DBH)))
             {
-                StemMetrics.Stem(row, context, nameof(SingleTreeProcessedStem))
-                    .Set(nameof(StanForD.Stem.DBH), row.Row.AsType<SingleTreeProcessedStem>().DBH);
+                StemMetrics.Stem(telemetry, context, nameof(SingleTreeProcessedStem))
+                    .Set(nameof(StanForD.Stem.DBH), telemetry.Telemetry.AsType<SingleTreeProcessedStem>().DBH);
             }
 
-            next(row);
+            next(telemetry);
         }
     }
 }

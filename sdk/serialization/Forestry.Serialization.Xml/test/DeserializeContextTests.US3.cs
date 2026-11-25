@@ -13,26 +13,26 @@ namespace Forestry.Serialization.Xml.Tests
     /// review gate (T054), the assumed surface, in namespace <c>Forestry.Serialization.Xml</c> (names
     /// Deferred; named in spec 003, research R37: one family after the part of the document):
     /// <list type="bullet">
-    /// <item><c>[XmlAttributeName("name")]</c> (spec 002 <c>[XmlAttributeValue]</c>): a member set only from the row element's attribute of that
+    /// <item><c>[XmlAttributeName("name")]</c> (spec 002 <c>[XmlAttributeValue]</c>): a member set only from the telemetry element's attribute of that
     /// name; a child element never sets it; attributes no member matches are ignored.</item>
-    /// <item><c>[XmlElementText]</c> (spec 002 <c>[XmlTextValue]</c>): the member set only from the text directly inside the row element, the
-    /// last text winning; with no text by the row's end it is set empty (null where the member allows it,
+    /// <item><c>[XmlElementText]</c> (spec 002 <c>[XmlTextValue]</c>): the member set only from the text directly inside the telemetry element, the
+    /// last text winning; with no text by the telemetry's end it is set empty (null where the member allows it,
     /// else its default) and marked set. More than one per type fails when the options lock.</item>
-    /// <item><c>DeserializeXmlOptions.ElementText&lt;TRow&gt;(memberName)</c> (spec 002 <c>TextValue</c>): the same through the options,
+    /// <item><c>DeserializeXmlOptions.ElementText&lt;TTelemetry&gt;(memberName)</c> (spec 002 <c>TextValue</c>): the same through the options,
     /// winning over the attribute.</item>
     /// <item>A member with no marker (or <c>[XmlElementName]</c>, spec 002's core <c>[Field]</c>) is set only from a direct child element.</item>
     /// <item>Spec 003 (T021, FR-006a): a member has at most one source; two of <c>[XmlElementName]</c>,
-    /// <c>[XmlAttributeName]</c>, <c>[XmlElementText]</c>, or <c>ElementText&lt;TRow&gt;</c> with either of the
+    /// <c>[XmlAttributeName]</c>, <c>[XmlElementText]</c>, or <c>ElementText&lt;TTelemetry&gt;</c> with either of the
     /// first two, fail when the options lock, naming the member and both sources.</item>
     /// </list>
     /// Theories run both entry points.
     /// </remarks>
     public sealed class DeserializeContextTestsUS3
     {
-        private static DeserializeXmlOptions OptionsWith(params Type[] rowTypes)
+        private static DeserializeXmlOptions OptionsWith(params Type[] telemetryTypes)
         {
             DeserializeXmlOptions options = new();
-            options.Rows.Add(rowTypes);
+            options.Telemetries.Add(telemetryTypes);
             return options;
         }
 
@@ -56,14 +56,14 @@ namespace Forestry.Serialization.Xml.Tests
                 """;
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith(typeof(Line), typeof(Price)));
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, OptionsWith(typeof(Line), typeof(Price)));
 
             // Assert
-            Price[] prices = [.. rows.Where(row => row.Is<Price>()).Select(row => row.AsType<Price>())];
+            Price[] prices = [.. telemetries.Where(telemetry => telemetry.Is<Price>()).Select(telemetry => telemetry.AsType<Price>())];
             Assert.Equal(["EUR", "EUR", "SEK"], prices.Select(price => price.Currency));
             Assert.Equal(["net", "gross", "net"], prices.Select(price => price.Kind));
             Assert.Equal([0.59m, 0.74m, 6.50m], prices.Select(price => price.Amount));
-            Assert.True(rows[^1].Is<Line>());
+            Assert.True(telemetries[^1].Is<Line>());
         }
 
         // T049 - US3-3: an attribute no member matches, and a prefixed one, are ignored
@@ -80,10 +80,10 @@ namespace Forestry.Serialization.Xml.Tests
                 """;
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith(typeof(Price)));
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, OptionsWith(typeof(Price)));
 
             // Assert
-            Price price = Assert.Single(rows).AsType<Price>();
+            Price price = Assert.Single(telemetries).AsType<Price>();
             Assert.Equal("EUR", price.Currency);
             Assert.Equal("net", price.Kind);
             Assert.Equal(0.59m, price.Amount);
@@ -106,14 +106,14 @@ namespace Forestry.Serialization.Xml.Tests
             DeserializeXmlOptions options = OptionsWith(typeof(Reference));
             options.Policies.Add<Reference>(new ContextPolicy
             {
-                OnComplete = (row, context) => valueSet.Add(row.IsSet(nameof(Reference.Value)))
+                OnComplete = (telemetry, context) => valueSet.Add(telemetry.IsSet(nameof(Reference.Value)))
             });
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, options);
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, options);
 
             // Assert
-            Reference reference = Assert.Single(rows).AsType<Reference>();
+            Reference reference = Assert.Single(telemetries).AsType<Reference>();
             Assert.Equal("external", reference.Type);
             Assert.Null(reference.Value);
             Assert.Equal([true], valueSet);
@@ -134,10 +134,10 @@ namespace Forestry.Serialization.Xml.Tests
                 """;
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith(typeof(Reference)));
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, OptionsWith(typeof(Reference)));
 
             // Assert
-            Assert.Equal("second", Assert.Single(rows).AsType<Reference>().Value);
+            Assert.Equal("second", Assert.Single(telemetries).AsType<Reference>().Value);
         }
 
         // T051 - FR-018: two members read from the same name fail when the options lock, naming both
@@ -178,10 +178,10 @@ namespace Forestry.Serialization.Xml.Tests
                 """;
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith(typeof(Price)));
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, OptionsWith(typeof(Price)));
 
             // Assert
-            Assert.Equal("EUR", Assert.Single(rows).AsType<Price>().Currency);
+            Assert.Equal("EUR", Assert.Single(telemetries).AsType<Price>().Currency);
         }
 
         // T053 - FR-018 / R30: two members from the element's text fail when the options lock, naming the class
@@ -221,15 +221,15 @@ namespace Forestry.Serialization.Xml.Tests
             options.ElementText<PriceWithTextOption>(nameof(PriceWithTextOption.Other));
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, options);
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, options);
 
             // Assert
-            PriceWithTextOption price = Assert.Single(rows).AsType<PriceWithTextOption>();
+            PriceWithTextOption price = Assert.Single(telemetries).AsType<PriceWithTextOption>();
             Assert.Equal(0.59m, price.Other);
             Assert.Equal(0m, price.Amount);
         }
 
-        // Spec 003 T021 - US2-2b / FR-006a (quickstart 8): a member from a child element and from the row's
+        // Spec 003 T021 - US2-2b / FR-006a (quickstart 8): a member from a child element and from the telemetry's
         // own text fails when the options lock, naming the member and both sources
         [Theory]
         [InlineData(EntryPoint.Sync)]
@@ -281,7 +281,7 @@ namespace Forestry.Serialization.Xml.Tests
             Assert.Contains("XmlElementName", exception.Message);
         }
 
-        // Spec 003 T021 - US2-2b / FR-006a: a member from an attribute that the options also make the row's
+        // Spec 003 T021 - US2-2b / FR-006a: a member from an attribute that the options also make the telemetry's
         // own text fails when the options lock, naming the member, the attribute and the option
         [Theory]
         [InlineData(EntryPoint.Sync)]
@@ -310,7 +310,7 @@ namespace Forestry.Serialization.Xml.Tests
             Assert.Contains("ElementText", exception.Message);
         }
 
-        // T052 - R29 with attributes: a wrapper row type's attribute is set before its children arrive, and
+        // T052 - R29 with attributes: a wrapper telemetry type's attribute is set before its children arrive, and
         // its policy sets the right member on its parent
         [Theory]
         [InlineData(EntryPoint.Sync)]
@@ -332,32 +332,32 @@ namespace Forestry.Serialization.Xml.Tests
             DeserializeXmlOptions options = OptionsWith(typeof(Line), typeof(MeasurementByAttribute));
             options.Policies.Add<MeasurementByAttribute>(new ContextPolicy
             {
-                OnSet = (row, member, value, context) =>
+                OnSet = (telemetry, member, value, context) =>
                 {
                     if (member.Name == nameof(MeasurementByAttribute.Amount))
                     {
-                        unitSetBeforeAmount.Add(row.IsSet(nameof(MeasurementByAttribute.Unit)));
+                        unitSetBeforeAmount.Add(telemetry.IsSet(nameof(MeasurementByAttribute.Unit)));
                     }
                 },
-                OnComplete = (row, context) =>
+                OnComplete = (telemetry, context) =>
                 {
-                    MeasurementByAttribute measurement = row.Row.AsType<MeasurementByAttribute>();
+                    MeasurementByAttribute measurement = telemetry.Telemetry.AsType<MeasurementByAttribute>();
 
                     if (measurement.Unit == "kg")
                     {
-                        context.Parent(row)!.Set(nameof(Line.WeightAmount), measurement.Amount);
+                        context.Parent(telemetry)!.Set(nameof(Line.WeightAmount), measurement.Amount);
                     }
 
-                    row.Enumerate(false);
+                    telemetry.Enumerate(false);
                 }
             });
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, options);
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, options);
 
             // Assert
             Assert.Equal([true], unitSetBeforeAmount);
-            Assert.Equal(3m, Assert.Single(rows).AsType<Line>().WeightAmount);
+            Assert.Equal(3m, Assert.Single(telemetries).AsType<Line>().WeightAmount);
         }
     }
 }

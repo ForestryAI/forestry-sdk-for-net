@@ -5,16 +5,16 @@ using Xunit;
 namespace Forestry.Serialization.Xml.Tests
 {
     /// <summary>
-    /// Spec 001, SC-003 / C1: memory does not grow with the number of rows (tasks.md T070, quickstart 15)
+    /// Spec 001, SC-003 / C1: memory does not grow with the number of telemetries (tasks.md T070, quickstart 15)
     /// </summary>
     /// <remarks>
-    /// Test shell written before T072 (C4). What is measured is the live heap that grows while rows are
-    /// read and discarded, from the first row to the last, not the input: the memory entry point holds
+    /// Test shell written before T072 (C4). What is measured is the live heap that grows while telemetries are
+    /// read and discarded, from the first telemetry to the last, not the input: the memory entry point holds
     /// the whole document by design, so the document is generated before measuring. If the core kept a
-    /// reference to every handed-out <see cref="Log"/>, a million rows would hold tens of megabytes; a
+    /// reference to every handed-out <see cref="Log"/>, a million telemetries would hold tens of megabytes; a
     /// thousand would not.
     /// <para>
-    /// The documents are generated, not written one element per line (A4): a million rows cannot be.
+    /// The documents are generated, not written one element per line (A4): a million telemetries cannot be.
     /// Live heap is process-wide, so this class runs alone (<see cref="MemoryCollection"/>). The async
     /// case reads the same generated document as a stream (US3, T066).
     /// </para>
@@ -29,15 +29,15 @@ namespace Forestry.Serialization.Xml.Tests
     public sealed class MemoryTests
     {
         /// <summary>
-        /// Live heap growth, in bytes, allowed while reading; far below what a million kept rows hold
+        /// Live heap growth, in bytes, allowed while reading; far below what a million kept telemetries hold
         /// </summary>
         private const long AllowedGrowth = 1024 * 1024;
 
-        // T070 - quickstart 15 / SC-003 / C1: 1,000 vs 1,000,000 Log rows, rows discarded
+        // T070 - quickstart 15 / SC-003 / C1: 1,000 vs 1,000,000 Log telemetries, telemetries discarded
         [Theory]
         [InlineData(EntryPoint.Sync)]
         [InlineData(EntryPoint.Async)]
-        public void Deserialize_ForAMillionDiscardedRows_ItShould_HoldNoMoreMemoryThanForAThousand(EntryPoint entryPoint)
+        public void Deserialize_ForAMillionDiscardedTelemetries_ItShould_HoldNoMoreMemoryThanForAThousand(EntryPoint entryPoint)
         {
             // Arrange
             byte[] thousand = GenerateLogs(1_000);
@@ -75,7 +75,7 @@ namespace Forestry.Serialization.Xml.Tests
         }
 
         /// <summary>
-        /// Read every row with sites kept until the end and not enumerated, discarding each line, and
+        /// Read every telemetry with sites kept until the end and not enumerated, discarding each line, and
         /// return how much the live heap grew between the first line and the last
         /// </summary>
         /// <param name="entryPoint"></param>
@@ -85,23 +85,23 @@ namespace Forestry.Serialization.Xml.Tests
         private static long GrowthWhileReadingLines(EntryPoint entryPoint, byte[] document, int count)
         {
             DeserializeXmlOptions options = new();
-            options.Rows.Add<Site>().Add<Line>();
+            options.Telemetries.Add<Site>().Add<Line>();
             options.Policies.Add<Site>(new ContextPolicy
             {
-                OnComplete = (row, context) =>
+                OnComplete = (telemetry, context) =>
                 {
-                    row.Enumerate(false);
-                    row.Keep(Forestry.Serialization.Reading.Lifetime.UntilEnd);
+                    telemetry.Enumerate(false);
+                    telemetry.Keep(Forestry.Serialization.Reading.Lifetime.UntilEnd);
                 }
             });
 
-            using IEnumerator<Row> rows = Rows(entryPoint, document, options).GetEnumerator();
+            using IEnumerator<Telemetry> telemetries = Telemetries(entryPoint, document, options).GetEnumerator();
 
-            Assert.True(rows.MoveNext());
+            Assert.True(telemetries.MoveNext());
             long first = LiveBytes();
             int read = 1;
 
-            while (read < count && rows.MoveNext())
+            while (read < count && telemetries.MoveNext())
             {
                 read++;
             }
@@ -109,14 +109,14 @@ namespace Forestry.Serialization.Xml.Tests
             long last = LiveBytes();
 
             Assert.Equal(count, read);
-            Assert.False(rows.MoveNext());
+            Assert.False(telemetries.MoveNext());
 
             return last - first;
         }
 
         /// <summary>
-        /// A UTF-8 document with <paramref name="sites"/> <c>Site</c> rows, then <paramref name="lines"/>
-        /// <c>Line</c> rows, each with a distinct number
+        /// A UTF-8 document with <paramref name="sites"/> <c>Site</c> telemetries, then <paramref name="lines"/>
+        /// <c>Line</c> telemetries, each with a distinct number
         /// </summary>
         /// <param name="sites"></param>
         /// <param name="lines"></param>
@@ -143,25 +143,25 @@ namespace Forestry.Serialization.Xml.Tests
         }
 
         /// <summary>
-        /// Read every row, discarding each, and return how much the live heap grew between the first
-        /// row and the last, while the enumeration is still open
+        /// Read every telemetry, discarding each, and return how much the live heap grew between the first
+        /// telemetry and the last, while the enumeration is still open
         /// </summary>
         /// <param name="entryPoint"></param>
         /// <param name="document"></param>
-        /// <param name="count">Number of rows in the document</param>
+        /// <param name="count">Number of telemetries in the document</param>
         /// <returns></returns>
         private static long GrowthWhileReading(EntryPoint entryPoint, byte[] document, int count)
         {
             DeserializeXmlOptions options = new();
-            options.Rows.Add<Log>();
+            options.Telemetries.Add<Log>();
 
-            using IEnumerator<Row> rows = Rows(entryPoint, document, options).GetEnumerator();
+            using IEnumerator<Telemetry> telemetries = Telemetries(entryPoint, document, options).GetEnumerator();
 
-            Assert.True(rows.MoveNext());
+            Assert.True(telemetries.MoveNext());
             long first = LiveBytes();
             int read = 1;
 
-            while (read < count && rows.MoveNext())
+            while (read < count && telemetries.MoveNext())
             {
                 read++;
             }
@@ -169,12 +169,12 @@ namespace Forestry.Serialization.Xml.Tests
             long last = LiveBytes();
 
             Assert.Equal(count, read);
-            Assert.False(rows.MoveNext());
+            Assert.False(telemetries.MoveNext());
 
             return last - first;
         }
 
-        private static IEnumerable<Row> Rows(EntryPoint entryPoint, byte[] document, DeserializeOptions options) =>
+        private static IEnumerable<Telemetry> Telemetries(EntryPoint entryPoint, byte[] document, DeserializeOptions options) =>
             entryPoint switch
             {
                 EntryPoint.Sync => TelemetrySerializer.Deserialize(document, options),
@@ -192,7 +192,7 @@ namespace Forestry.Serialization.Xml.Tests
         }
 
         /// <summary>
-        /// A UTF-8 document with <paramref name="count"/> <c>Log</c> rows, each with a distinct key
+        /// A UTF-8 document with <paramref name="count"/> <c>Log</c> telemetries, each with a distinct key
         /// </summary>
         /// <param name="count"></param>
         /// <returns></returns>

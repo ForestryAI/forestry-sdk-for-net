@@ -1,9 +1,9 @@
 namespace Forestry.Serialization.Tests.Fixtures
 {
     /// <summary>
-    /// A row class with two public constructors and none marked: no constructor can be chosen (FR-008)
+    /// A telemetry class with two public constructors and none marked: no constructor can be chosen (FR-008)
     /// </summary>
-    public sealed class LogWithTwoPublicConstructors : Row
+    public sealed class LogWithTwoPublicConstructors : Telemetry
     {
         public LogWithTwoPublicConstructors()
         {

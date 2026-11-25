@@ -4,7 +4,7 @@ namespace Forestry.Serialization.Definitions
     /// Kind of type definition by its shape, from the design before spec 001
     /// </summary>
     /// <remarks>
-    /// Not used in spec 001, where every type definition is a flat row; decided with the document's
+    /// Not used in spec 001, where every type definition is a flat telemetry; decided with the document's
     /// structure in a later spec (research R0, R10, R13).
     /// </remarks>
     public enum TypeDefinitionKind

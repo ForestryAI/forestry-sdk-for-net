@@ -15,9 +15,9 @@ namespace Forestry.Serialization.Xml.Tests
     /// they assume. For the review gate (T064), the assumed surface:
     /// <list type="bullet">
     /// <item><c>TelemetrySerializer.DeserializeAsync(PipeReader, DeserializeOptions, CancellationToken = default)</c>
-    /// returning <see cref="IAsyncEnumerable{T}"/> of <see cref="Row"/> (FR-001, R3).</item>
-    /// <item>A row is handed out when its end tag is read, without waiting for more input (FR-009).</item>
-    /// <item>Input split anywhere, including inside a name or a value, gives the same rows (FR-010),
+    /// returning <see cref="IAsyncEnumerable{T}"/> of <see cref="Telemetry"/> (FR-001, R3).</item>
+    /// <item>A telemetry is handed out when its end tag is read, without waiting for more input (FR-009).</item>
+    /// <item>Input split anywhere, including inside a name or a value, gives the same telemetries (FR-010),
     /// whether the two parts come in one buffer of two segments or in two reads (T064 review).</item>
     /// <item><c>TelemetrySerializer.DeserializeAsync(Stream, DeserializeOptions, CancellationToken = default)</c>,
     /// the stream read through a <see cref="PipeReader"/> (R3).</item>
@@ -38,16 +38,16 @@ namespace Forestry.Serialization.Xml.Tests
         /// </summary>
         private const string ByteOrderMark = "﻿";
 
-        private static DeserializeXmlOptions OptionsWith<TRow>() where TRow : Row
+        private static DeserializeXmlOptions OptionsWith<TTelemetry>() where TTelemetry : Telemetry
         {
             DeserializeXmlOptions options = new();
-            options.Rows.Add<TRow>();
+            options.Telemetries.Add<TTelemetry>();
             return options;
         }
 
-        // T062 - quickstart 6 / US3-1 / FR-010: a pipe gives the same rows as synchronous input
+        // T062 - quickstart 6 / US3-1 / FR-010: a pipe gives the same telemetries as synchronous input
         [Fact]
-        public async Task DeserializeAsync_ForADocumentThroughAPipe_ItShould_YieldTheSameRowsAsSync()
+        public async Task DeserializeAsync_ForADocumentThroughAPipe_ItShould_YieldTheSameTelemetriesAsSync()
         {
             // Arrange
             const string document = """
@@ -62,20 +62,20 @@ namespace Forestry.Serialization.Xml.Tests
                   </Log>
                 </Root>
                 """;
-            List<Row> expected = TelemetrySerializer.Deserialize(document, OptionsWith<Log>()).ToList();
+            List<Telemetry> expected = TelemetrySerializer.Deserialize(document, OptionsWith<Log>()).ToList();
             Pipe pipe = new();
             await pipe.Writer.WriteAsync(Encoding.UTF8.GetBytes(document));
             await pipe.Writer.CompleteAsync();
 
             // Act
-            List<Row> rows = await ReadAllAsync(TelemetrySerializer.DeserializeAsync(pipe.Reader, OptionsWith<Log>()));
+            List<Telemetry> telemetries = await ReadAllAsync(TelemetrySerializer.DeserializeAsync(pipe.Reader, OptionsWith<Log>()));
 
             // Assert
-            Assert.True(SameLogs(expected, rows));
-            Assert.Equal(2, rows.Count);
+            Assert.True(SameLogs(expected, telemetries));
+            Assert.Equal(2, telemetries.Count);
         }
 
-        // T062 - quickstart 6 / US3-2 / FR-009: the first row is handed out at its end tag, before the
+        // T062 - quickstart 6 / US3-2 / FR-009: the first telemetry is handed out at its end tag, before the
         // second Log has even been written to the pipe
         [Fact]
         public async Task DeserializeAsync_ForAnEndedLog_ItShould_HandItOutBeforeTheNextLogIsWritten()
@@ -98,18 +98,18 @@ namespace Forestry.Serialization.Xml.Tests
                 """;
             Pipe pipe = new();
             await pipe.Writer.WriteAsync(Encoding.UTF8.GetBytes(firstLog));
-            await using IAsyncEnumerator<Row> rows = TelemetrySerializer.DeserializeAsync(pipe.Reader, OptionsWith<Log>()).GetAsyncEnumerator();
+            await using IAsyncEnumerator<Telemetry> telemetries = TelemetrySerializer.DeserializeAsync(pipe.Reader, OptionsWith<Log>()).GetAsyncEnumerator();
 
             // Act
-            bool hasFirst = await rows.MoveNextAsync().AsTask().WaitAsync(s_timeout);
-            Log first = rows.Current.AsType<Log>();
+            bool hasFirst = await telemetries.MoveNextAsync().AsTask().WaitAsync(s_timeout);
+            Log first = telemetries.Current.AsType<Log>();
 
             await pipe.Writer.WriteAsync(Encoding.UTF8.GetBytes(rest));
             await pipe.Writer.CompleteAsync();
 
-            bool hasSecond = await rows.MoveNextAsync().AsTask().WaitAsync(s_timeout);
-            Log second = rows.Current.AsType<Log>();
-            bool hasMore = await rows.MoveNextAsync().AsTask().WaitAsync(s_timeout);
+            bool hasSecond = await telemetries.MoveNextAsync().AsTask().WaitAsync(s_timeout);
+            Log second = telemetries.Current.AsType<Log>();
+            bool hasMore = await telemetries.MoveNextAsync().AsTask().WaitAsync(s_timeout);
 
             // Assert
             Assert.True(hasFirst);
@@ -133,11 +133,11 @@ namespace Forestry.Serialization.Xml.Tests
         }
 
         // T063 - quickstart 7 / US3-3 / FR-010: the document split in two at every byte position (inside
-        // names, values and tags), as one buffer of two segments or as two reads, gives the same rows
+        // names, values and tags), as one buffer of two segments or as two reads, gives the same telemetries
         [Theory]
         [InlineData(Splitting.TwoSegments)]
         [InlineData(Splitting.TwoReads)]
-        public async Task DeserializeAsync_ForADocumentSplitAtEveryBytePosition_ItShould_YieldTheSameRows(Splitting splitting)
+        public async Task DeserializeAsync_ForADocumentSplitAtEveryBytePosition_ItShould_YieldTheSameTelemetries(Splitting splitting)
         {
             // Arrange
             const string document = """
@@ -153,13 +153,13 @@ namespace Forestry.Serialization.Xml.Tests
                 </Root>
                 """;
             byte[] utf8 = Encoding.UTF8.GetBytes(document);
-            List<Row> expected = TelemetrySerializer.Deserialize(document, OptionsWith<Log>()).ToList();
+            List<Telemetry> expected = TelemetrySerializer.Deserialize(document, OptionsWith<Log>()).ToList();
             List<string> failedSplits = [];
 
             // Act
             for (int split = 1; split < utf8.Length; split++)
             {
-                IAsyncEnumerable<Row> rows = splitting switch
+                IAsyncEnumerable<Telemetry> telemetries = splitting switch
                 {
                     Splitting.TwoSegments => TelemetrySerializer.DeserializeAsync(PipeReader.Create(TwoSegments(utf8, split)), OptionsWith<Log>()),
                     Splitting.TwoReads => TelemetrySerializer.DeserializeAsync(new TwoReadsStream(utf8, split), OptionsWith<Log>()),
@@ -168,9 +168,9 @@ namespace Forestry.Serialization.Xml.Tests
 
                 try
                 {
-                    if (!SameLogs(expected, await ReadAllAsync(rows)))
+                    if (!SameLogs(expected, await ReadAllAsync(telemetries)))
                     {
-                        failedSplits.Add($"{split}: other rows");
+                        failedSplits.Add($"{split}: other telemetries");
                     }
                 }
                 catch (Exception exception)
@@ -183,12 +183,12 @@ namespace Forestry.Serialization.Xml.Tests
             Assert.Empty(failedSplits);
         }
 
-        // T083 (a) - R18: a byte order mark before a UTF-8 declaration is the reader's to read; the rows
+        // T083 (a) - R18: a byte order mark before a UTF-8 declaration is the reader's to read; the telemetries
         // are those of document 1
         [Theory]
         [InlineData(EntryPoint.Sync)]
         [InlineData(EntryPoint.Async)]
-        public void Deserialize_ForAByteOrderMarkAndAUtf8Declaration_ItShould_YieldTheRows(EntryPoint entryPoint)
+        public void Deserialize_ForAByteOrderMarkAndAUtf8Declaration_ItShould_YieldTheTelemetries(EntryPoint entryPoint)
         {
             // Arrange
             const string document = """
@@ -206,18 +206,18 @@ namespace Forestry.Serialization.Xml.Tests
                 """;
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, ByteOrderMark + document, OptionsWith<Log>());
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, ByteOrderMark + document, OptionsWith<Log>());
 
             // Assert
-            Assert.Equal([1, 2], rows.Select(row => row.AsType<Log>().LogKey));
-            Assert.Equal([0.59m, 0.50m], rows.Select(row => row.AsType<Log>().LogVolume));
+            Assert.Equal([1, 2], telemetries.Select(telemetry => telemetry.AsType<Log>().LogKey));
+            Assert.Equal([0.59m, 0.50m], telemetries.Select(telemetry => telemetry.AsType<Log>().LogVolume));
         }
 
-        // T083 (b) - R18: a byte order mark with no declaration gives the same rows
+        // T083 (b) - R18: a byte order mark with no declaration gives the same telemetries
         [Theory]
         [InlineData(EntryPoint.Sync)]
         [InlineData(EntryPoint.Async)]
-        public void Deserialize_ForAByteOrderMarkWithoutADeclaration_ItShould_YieldTheRows(EntryPoint entryPoint)
+        public void Deserialize_ForAByteOrderMarkWithoutADeclaration_ItShould_YieldTheTelemetries(EntryPoint entryPoint)
         {
             // Arrange
             const string document = """
@@ -234,11 +234,11 @@ namespace Forestry.Serialization.Xml.Tests
                 """;
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, ByteOrderMark + document, OptionsWith<Log>());
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, ByteOrderMark + document, OptionsWith<Log>());
 
             // Assert
-            Assert.Equal([1, 2], rows.Select(row => row.AsType<Log>().LogKey));
-            Assert.Equal([0.59m, 0.50m], rows.Select(row => row.AsType<Log>().LogVolume));
+            Assert.Equal([1, 2], telemetries.Select(telemetry => telemetry.AsType<Log>().LogKey));
+            Assert.Equal([0.59m, 0.50m], telemetries.Select(telemetry => telemetry.AsType<Log>().LogVolume));
         }
 
         // T083 (c) - R18: a byte order mark contradicting the declaration's encoding throws the reader's
@@ -269,12 +269,12 @@ namespace Forestry.Serialization.Xml.Tests
         }
 
         // T083 (d) - R18: a byte order mark split across the first reads of a stream (after its first or
-        // second byte, or right after it) gives the rows
+        // second byte, or right after it) gives the telemetries
         [Theory]
         [InlineData(1)]
         [InlineData(2)]
         [InlineData(3)]
-        public async Task DeserializeAsync_ForAByteOrderMarkSplitAcrossReads_ItShould_YieldTheRows(int split)
+        public async Task DeserializeAsync_ForAByteOrderMarkSplitAcrossReads_ItShould_YieldTheTelemetries(int split)
         {
             // Arrange
             const string document = """
@@ -292,28 +292,28 @@ namespace Forestry.Serialization.Xml.Tests
             byte[] utf8 = Encoding.UTF8.GetBytes(ByteOrderMark + document);
 
             // Act
-            List<Row> rows = await ReadAllAsync(TelemetrySerializer.DeserializeAsync(new TwoReadsStream(utf8, split), OptionsWith<Log>()));
+            List<Telemetry> telemetries = await ReadAllAsync(TelemetrySerializer.DeserializeAsync(new TwoReadsStream(utf8, split), OptionsWith<Log>()));
 
             // Assert
-            Assert.Equal([1, 2], rows.Select(row => row.AsType<Log>().LogKey));
-            Assert.Equal([0.59m, 0.50m], rows.Select(row => row.AsType<Log>().LogVolume));
+            Assert.Equal([1, 2], telemetries.Select(telemetry => telemetry.AsType<Log>().LogKey));
+            Assert.Equal([0.59m, 0.50m], telemetries.Select(telemetry => telemetry.AsType<Log>().LogVolume));
         }
 
         #region helpers
-        private static async Task<List<Row>> ReadAllAsync(IAsyncEnumerable<Row> rows)
+        private static async Task<List<Telemetry>> ReadAllAsync(IAsyncEnumerable<Telemetry> telemetries)
         {
-            List<Row> result = [];
+            List<Telemetry> result = [];
             using CancellationTokenSource timeout = new(s_timeout);
 
-            await foreach (Row row in rows.WithCancellation(timeout.Token))
+            await foreach (Telemetry telemetry in telemetries.WithCancellation(timeout.Token))
             {
-                result.Add(row);
+                result.Add(telemetry);
             }
 
             return result;
         }
 
-        private static bool SameLogs(List<Row> expected, List<Row> actual) =>
+        private static bool SameLogs(List<Telemetry> expected, List<Telemetry> actual) =>
             expected.Count == actual.Count &&
             expected.Zip(actual).All(pair =>
                 pair.First.AsType<Log>().LogKey == pair.Second.AsType<Log>().LogKey &&

@@ -7,7 +7,7 @@ whole path from a device document to big data, and where this package plugs in.
 
 ## Why a package of its own
 
-[Forestry.StanForD](../Forestry.StanForD/README.md) flattens StanForD documents into rows. What a
+[Forestry.StanForD](../Forestry.StanForD/README.md) flattens StanForD documents into telemetries. What a
 document measures depends on its message: a Harvesting document measures stems and logs, while a
 Forwarding document measures loads. The dimensions those metrics are copied with (object, species
 group, product, operator, machine) are shared by all of StanForD's production messages. So the shared
@@ -22,12 +22,12 @@ Not a complete list: an idea of what is particular to Harvesting.
 
 ### Moved from Forestry.StanForD
 
-- **Metrics**: the `Stem` and `Log` rows, the Harvesting header, and the policies that make each row
+- **Metrics**: the `Stem` and `Log` telemetries, the Harvesting header, and the policies that make each telemetry
   self-contained (identification, partitioning, conditional mapping of measurements, stem metrics,
   dimensions copied onto stems and logs).
 - **Options**: `AddHarvesting` and `HarvestingOptions`.
 
-### Deserialization policies, per row
+### Deserialization policies, per telemetry
 
 - **Validation** of what Harvesting requires. These halt deserialization with an exception naming the
   stem or log they concern:
@@ -39,31 +39,31 @@ Not a complete list: an idea of what is particular to Harvesting.
     agreements.
 
   Most of the others are data washing and checks that relationships exist, such as definitions being
-  present before the rows that refer to them.
+  present before the telemetries that refer to them.
 - **Operator measurements** (M2, beside the machine's M1), deliberately ignored today (#109).
 - **Units**: the document's own today; converting them to one unit per column is an option to come.
 
 ### Pipeline directives, per chunk or input
 
-- **Partition folders**, e.g. `/{year}/{month}/harvesting/{contract}/`. The keys come from each row,
+- **Partition folders**, e.g. `/{year}/{month}/harvesting/{contract}/`. The keys come from each telemetry,
   so one document can land in several partitions.
 - **File names per chunk**, e.g. by stem key range: `stem-{first stem key}-{last stem key}` and
   `log-{first stem key}-{last stem key}`.
 - **Document checks** before deserialization, such as the StanForD version a document declares.
 
-### Monitoring
+### Diagnostics
 
-Rather than an answer, a Harvesting ingestion is followed through monitoring: exceptions, metrics
+Rather than an answer, a Harvesting ingestion is followed through diagnostics: exceptions, metrics
 (documents, stems and logs read, chunks written) and events (an unmatched category, a document that
-failed). In time, a monitoring library (Forestry.Monitoring, or a part of Forestry.Core) will let
-the client decide where monitoring goes, likely through a pipeline directive. Until then, this
+failed). In time, a diagnostics library (Forestry.Diagnostics, or a part of Forestry.Core) will let
+the client decide where diagnostics go, likely through a pipeline directive. Until then, this
 package writes basic console output.
 
 ## Biometria builds on it
 
 Anything particular to Biometria goes in Forestry.Biometria, not here. That includes the `Extension`
 elements written by Sender, the program the Swedish forest industry uses to move documents from the
-machine to Biometria. Forestry.Biometria will have its own `AddHarvesting`: Stem and Log rows that
+machine to Biometria. Forestry.Biometria will have its own `AddHarvesting`: Stem and Log telemetries that
 extend these with Biometria's members, plus its own policies and directives, such as checking
 production planners.
 
@@ -80,5 +80,5 @@ production planners.
 
 ## Status
 
-Not started: no source and no `.csproj` yet. It comes after writing rows as JSON Lines and the first
+Not started: no source and no `.csproj` yet. It comes after writing telemetries as JSON Lines and the first
 local client; see [where the POC stands](../../../README.md#where-the-poc-stands).

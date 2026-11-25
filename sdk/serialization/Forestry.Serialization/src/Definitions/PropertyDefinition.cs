@@ -6,8 +6,8 @@ using Forestry.Serialization.Reading;
 namespace Forestry.Serialization.Definitions
 {
     /// <summary>
-    /// Definition of one property or field of a row type: converts a value handed over as UTF-8 text
-    /// into the member's type and sets it on a row (research R5, R14)
+    /// Definition of one property or field of a telemetry type: converts a value handed over as UTF-8 text
+    /// into the member's type and sets it on a telemetry (research R5, R14)
     /// </summary>
     public abstract class PropertyDefinition
     {
@@ -44,18 +44,18 @@ namespace Forestry.Serialization.Definitions
         internal int Index { get; set; }
 
         /// <summary>
-        /// Convert <paramref name="utf8"/> and set it on <paramref name="row"/> through
+        /// Convert <paramref name="utf8"/> and set it on <paramref name="telemetry"/> through
         /// <paramref name="set"/>, without boxing
         /// </summary>
-        /// <param name="row"></param>
+        /// <param name="telemetry"></param>
         /// <param name="utf8"></param>
         /// <param name="information"></param>
-        /// <param name="set">The composed set step, an <c>Action&lt;ContextRow, T&gt;</c> from <see cref="ComposeSet"/></param>
-        internal abstract void ReadAndSet(ContextRow row, ReadOnlySpan<byte> utf8, in ReadingInformation information, Delegate set);
+        /// <param name="set">The composed set step, an <c>Action&lt;ContextTelemetry, T&gt;</c> from <see cref="ComposeSet"/></param>
+        internal abstract void ReadAndSet(ContextTelemetry telemetry, ReadOnlySpan<byte> utf8, in ReadingInformation information, Delegate set);
 
         /// <summary>
         /// Compose the enumeration policies acting on this member's set into one
-        /// <c>Action&lt;ContextRow, T&gt;</c>, the first outermost; the built-in step sets the member and
+        /// <c>Action&lt;ContextTelemetry, T&gt;</c>, the first outermost; the built-in step sets the member and
         /// marks it set (research R19, spec 002 R22)
         /// </summary>
         /// <param name="chain"></param>

@@ -30,11 +30,11 @@ namespace Forestry.StanForD.Tests
         }
 
         /// <summary>
-        /// T057, quickstart 11, US7-4, FR-018: every real document gives one Stem row per stem and one Log row
-        /// per log, every row identified, with no failure
+        /// T057, quickstart 11, US7-4, FR-018: every real document gives one Stem telemetry per stem and one Log telemetry
+        /// per log, every telemetry identified, with no failure
         /// </summary>
         [RealDocumentFact]
-        public void RealDocuments_ItShould_GiveOneRowPerStemAndLog()
+        public void RealDocuments_ItShould_GiveOneTelemetryPerStemAndLog()
         {
             // Arrange
             List<(string Name, string Xml)> documents = RealDocuments.Read().ToList();
@@ -44,12 +44,12 @@ namespace Forestry.StanForD.Tests
 
             foreach ((string name, string xml) in documents)
             {
-                List<Row> rows = TelemetrySerializer.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting()).ToList();
-                List<Stem> stems = rows.OfType<Stem>().ToList();
-                List<Log> logs = rows.OfType<Log>().ToList();
+                List<Telemetry> telemetries = TelemetrySerializer.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting()).ToList();
+                List<Stem> stems = telemetries.OfType<Stem>().ToList();
+                List<Log> logs = telemetries.OfType<Log>().ToList();
 
-                Assert.True(Count(xml, "<Stem>") == stems.Count, $"{name}: {stems.Count} Stem rows for {Count(xml, "<Stem>")} stems");
-                Assert.True(Count(xml, "<Log>") == logs.Count, $"{name}: {logs.Count} Log rows for {Count(xml, "<Log>")} logs");
+                Assert.True(Count(xml, "<Stem>") == stems.Count, $"{name}: {stems.Count} Stem telemetries for {Count(xml, "<Stem>")} stems");
+                Assert.True(Count(xml, "<Log>") == logs.Count, $"{name}: {logs.Count} Log telemetries for {Count(xml, "<Log>")} logs");
                 Assert.All(stems, stem => Assert.False(string.IsNullOrEmpty(stem.Id), name));
                 Assert.All(logs, log => Assert.False(string.IsNullOrEmpty(log.Id), name));
             }

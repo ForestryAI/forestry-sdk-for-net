@@ -7,7 +7,7 @@ namespace Forestry.StanForD.Converters {
     /// "Other manual" to <see cref="CuttingReason.OtherManual"/>
     /// </summary>
     /// <remarks>
-    /// Forestry.Serialization has no enum converter yet; until it does, the StanForD enums the rows use
+    /// Forestry.Serialization has no enum converter yet; until it does, the StanForD enums the telemetries use
     /// are converted here.
     /// </remarks>
     /// <typeparam name="TEnum"></typeparam>

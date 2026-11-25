@@ -14,17 +14,17 @@ namespace Forestry.Serialization
     public abstract partial class DeserializeOptions
     {
         /// <summary>
-        /// Row type lookup, fixed once locked
+        /// Telemetry type lookup, fixed once locked
         /// </summary>
         private FrozenDictionary<Type, TypeDefinition>? _typeDefinitions;
 
         /// <summary>
-        /// Row types whose rows are enumerated: the explicitly added ones, fixed once locked (research R12)
+        /// Telemetry types whose telemetries are enumerated: the explicitly added ones, fixed once locked (research R12)
         /// </summary>
         private FrozenSet<Type>? _enumeratedTypes;
 
         /// <summary>
-        /// Each row type's definition with its enumeration policies composed, fixed once locked (research R19)
+        /// Each telemetry type's definition with its enumeration policies composed, fixed once locked (research R19)
         /// </summary>
         private FrozenDictionary<Type, TypeChains>? _typeChains;
 
@@ -62,7 +62,7 @@ namespace Forestry.Serialization
         ];
 
         /// <summary>
-        /// Type definition of an added row type once the options are read-only
+        /// Type definition of an added telemetry type once the options are read-only
         /// </summary>
         /// <param name="type"></param>
         /// <param name="typeDefinition"></param>
@@ -79,7 +79,7 @@ namespace Forestry.Serialization
         }
 
         /// <summary>
-        /// Type definition of an added row type; any other type throws (S0)
+        /// Type definition of an added telemetry type; any other type throws (S0)
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
@@ -87,14 +87,14 @@ namespace Forestry.Serialization
         {
             if (!TryGetTypeDefinition(type, out TypeDefinition? typeDefinition))
             {
-                Throwing.WhenRowTypeNotAdded(type);
+                Throwing.WhenTelemetryTypeNotAdded(type);
             }
 
             return typeDefinition;
         }
 
         /// <summary>
-        /// Rows of this type are enumerated: it was added explicitly, not only needed by a constructor.
+        /// Telemetries of this type are enumerated: it was added explicitly, not only needed by a constructor.
         /// Decided by the options, not the type definition (research R12)
         /// </summary>
         /// <param name="type"></param>
@@ -102,7 +102,7 @@ namespace Forestry.Serialization
         internal bool Enumerates(Type type) => _enumeratedTypes?.Contains(type) ?? false;
 
         /// <summary>
-        /// A row type's definition with its composed enumeration policies, once locked
+        /// A telemetry type's definition with its composed enumeration policies, once locked
         /// </summary>
         /// <param name="type"></param>
         /// <param name="chains"></param>
@@ -119,7 +119,7 @@ namespace Forestry.Serialization
         }
 
         /// <summary>
-        /// A row type's definition with its composed enumeration policies; any other type throws (S0)
+        /// A telemetry type's definition with its composed enumeration policies; any other type throws (S0)
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
@@ -127,7 +127,7 @@ namespace Forestry.Serialization
         {
             if (!TryGetTypeChains(type, out TypeChains? chains))
             {
-                Throwing.WhenRowTypeNotAdded(type);
+                Throwing.WhenTelemetryTypeNotAdded(type);
             }
 
             return chains;
@@ -163,7 +163,7 @@ namespace Forestry.Serialization
 
         /// <summary>
         /// An enumeration ended: clear every enumeration policy once, with the context still holding its
-        /// rows, then let the next one start
+        /// telemetries, then let the next one start
         /// </summary>
         /// <param name="context">The ending enumeration's deserialization context</param>
         internal void EndEnumeration(Reading.DeserializeContext context)
@@ -226,15 +226,15 @@ namespace Forestry.Serialization
         }
 
         /// <summary>
-        /// Build the type definitions of the added row types, and the set of enumerated ones, under the
+        /// Build the type definitions of the added telemetry types, and the set of enumerated ones, under the
         /// options' lock
         /// </summary>
         /// <returns></returns>
         private FrozenDictionary<Type, TypeDefinition> BuildTypeDefinitions(PolicyResolver resolver)
         {
-            if (Rows.Count == 0)
+            if (Telemetries.Count == 0)
             {
-                Throwing.WhenNoRowTypes();
+                Throwing.WhenNoTelemetryTypes();
             }
 
             // A failed build leaves the options unlocked: forget what it resolved (a converter may have been added since)
@@ -242,12 +242,12 @@ namespace Forestry.Serialization
 
             Dictionary<Type, TypeDefinition> typeDefinitions = [];
 
-            foreach (Type type in Rows)
+            foreach (Type type in Telemetries)
             {
                 typeDefinitions[type] = TypeDefinition.Create(type, this, resolver.IncludeMember(type));
             }
 
-            _enumeratedTypes = Rows.ToFrozenSet();
+            _enumeratedTypes = Telemetries.ToFrozenSet();
             _resolvedConverters = null;
             return typeDefinitions.ToFrozenDictionary();
         }

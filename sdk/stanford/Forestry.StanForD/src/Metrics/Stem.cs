@@ -5,7 +5,7 @@ namespace Forestry.StanForD {
     /// Trees (stems) have metrics about geography, processing (operation + tree handling),
     /// and the machine's boom.
     /// </summary>
-    public sealed class Stem : Row
+    public sealed class Stem : Telemetry
     {
         #region identification
         /// <summary>

@@ -7,7 +7,7 @@ namespace Forestry.Serialization.Xml.Tests.Fixtures
 {
     /// <summary>
     /// An enumeration policy overriding every method of this slice: it records each call, then calls the
-    /// built-in step, so rows stay as without it (tasks.md T049, research R19)
+    /// built-in step, so telemetries stay as without it (tasks.md T049, research R19)
     /// </summary>
     /// <remarks>
     /// Records, e.g. for <c>Log</c>: <c>construct Log</c>, <c>set LogKey=1</c>, <c>enumerate Log</c> (at its
@@ -28,22 +28,22 @@ namespace Forestry.Serialization.Xml.Tests.Fixtures
 
         private readonly string _prefix;
 
-        public override Row Construct(TypeDefinition type, DeserializeContext context, Func<DeserializeContext, Row> next)
+        public override Telemetry Construct(TypeDefinition type, DeserializeContext context, Func<DeserializeContext, Telemetry> next)
         {
             Recording.Record($"{_prefix}construct {type.Type.Name}");
             return next(context);
         }
 
-        public override void Set<T>(ContextRow row, PropertyDefinition<T> property, T value, DeserializeContext context, Action<ContextRow, T> next)
+        public override void Set<T>(ContextTelemetry telemetry, PropertyDefinition<T> property, T value, DeserializeContext context, Action<ContextTelemetry, T> next)
         {
             Recording.Record($"{_prefix}set {property.Name}={Convert.ToString(value, CultureInfo.InvariantCulture)}");
-            next(row, value);
+            next(telemetry, value);
         }
 
-        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
+        public override void Complete(ContextTelemetry telemetry, DeserializeContext context, Action<ContextTelemetry> next)
         {
-            Recording.Record($"{_prefix}enumerate {row.Definition.Type.Name}");
-            next(row);
+            Recording.Record($"{_prefix}enumerate {telemetry.Definition.Type.Name}");
+            next(telemetry);
         }
 
         public override void Clear(DeserializeContext context) => Recording.RecordCleared(this, $"{_prefix}clear");

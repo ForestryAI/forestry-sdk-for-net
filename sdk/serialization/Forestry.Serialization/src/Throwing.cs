@@ -36,15 +36,15 @@ namespace Forestry.Serialization
 
         #region Definitions (FR-008)
         [DoesNotReturn]
-        public static void WhenNoRowTypes()
+        public static void WhenNoTelemetryTypes()
         {
-            throw new InvalidOperationException(Formatting.NoRowTypes);
+            throw new InvalidOperationException(Formatting.NoTelemetryTypes);
         }
 
         [DoesNotReturn]
-        public static void WhenNotARowType(Type type)
+        public static void WhenNotATelemetryType(Type type)
         {
-            throw new ArgumentException(Formatting.Format(Formatting.NotARowType, type.FullName));
+            throw new ArgumentException(Formatting.Format(Formatting.NotATelemetryType, type.FullName));
         }
 
         [DoesNotReturn]
@@ -54,9 +54,9 @@ namespace Forestry.Serialization
         }
 
         [DoesNotReturn]
-        public static void WhenMoreThanOneRowConstructor(Type type)
+        public static void WhenMoreThanOneTelemetryConstructor(Type type)
         {
-            throw new InvalidOperationException(Formatting.Format(Formatting.MoreThanOneRowConstructor, type.FullName));
+            throw new InvalidOperationException(Formatting.Format(Formatting.MoreThanOneTelemetryConstructor, type.FullName));
         }
 
         [DoesNotReturn]
@@ -66,17 +66,17 @@ namespace Forestry.Serialization
         }
 
         /// <summary>
-        /// One exception for a row type naming every member that failed when its definition was built:
+        /// One exception for a telemetry type naming every member that failed when its definition was built:
         /// a nested structure, a struct formatting only to chars, or no converter (spec 003, research R33)
         /// </summary>
         /// <param name="type"></param>
         /// <param name="failures">One message per failing member, from <see cref="Formatting.MemberTypeIsNestedStructure"/>,
         /// <see cref="Formatting.MemberTypeNotUtf8Formattable"/> or <see cref="Formatting.MemberWithoutConverter"/></param>
         [DoesNotReturn]
-        public static void WhenRowTypeMembersInvalid(Type type, IReadOnlyList<string> failures)
+        public static void WhenTelemetryTypeMembersInvalid(Type type, IReadOnlyList<string> failures)
         {
             string list = string.Concat(failures.Select(failure => Environment.NewLine + "- " + failure));
-            throw new InvalidOperationException(Formatting.Format(Formatting.RowTypeMembersInvalid, type.FullName, list));
+            throw new InvalidOperationException(Formatting.Format(Formatting.TelemetryTypeMembersInvalid, type.FullName, list));
         }
 
         /// <summary>
@@ -111,27 +111,27 @@ namespace Forestry.Serialization
 
         #region Reading
         [DoesNotReturn]
-        public static void WhenRowTypeNotAdded(Type type)
+        public static void WhenTelemetryTypeNotAdded(Type type)
         {
-            throw new InvalidOperationException(Formatting.Format(Formatting.RowTypeNotAdded, type.FullName));
+            throw new InvalidOperationException(Formatting.Format(Formatting.TelemetryTypeNotAdded, type.FullName));
         }
 
         [DoesNotReturn]
-        public static void WhenMemberNotOfRow(MemberInfo member, Type rowType)
+        public static void WhenMemberNotOfTelemetry(MemberInfo member, Type telemetryType)
         {
-            throw new InvalidOperationException(Formatting.Format(Formatting.MemberNotOfRow, member.Name, rowType.FullName));
+            throw new InvalidOperationException(Formatting.Format(Formatting.MemberNotOfTelemetry, member.Name, telemetryType.FullName));
         }
 
         [DoesNotReturn]
-        public static void WhenNoOpenRow()
+        public static void WhenNoOpenTelemetry()
         {
-            throw new InvalidOperationException(Formatting.NoOpenRow);
+            throw new InvalidOperationException(Formatting.NoOpenTelemetry);
         }
 
         [DoesNotReturn]
-        public static void WhenUnconvertible(PropertyDefinition property, Type rowType, string path, Exception innerException)
+        public static void WhenUnconvertible(PropertyDefinition property, Type telemetryType, string path, Exception innerException)
         {
-            throw new FormatException(Formatting.Format(Formatting.Unconvertible, property.Name, path, rowType.FullName, property.MemberType.Name), innerException);
+            throw new FormatException(Formatting.Format(Formatting.Unconvertible, property.Name, path, telemetryType.FullName, property.MemberType.Name), innerException);
         }
 
         [DoesNotReturn]
@@ -186,53 +186,53 @@ namespace Forestry.Serialization
 
         #region Deserialization context (spec 002)
         [DoesNotReturn]
-        public static void WhenUnknownMember(Type rowType, string memberName)
+        public static void WhenUnknownMember(Type telemetryType, string memberName)
         {
-            throw new ArgumentException(Formatting.Format(Formatting.UnknownMember, rowType.FullName, memberName), nameof(memberName));
+            throw new ArgumentException(Formatting.Format(Formatting.UnknownMember, telemetryType.FullName, memberName), nameof(memberName));
         }
 
         [DoesNotReturn]
-        public static void WhenMemberValueOfOtherType(Type rowType, PropertyDefinition property, Type valueType)
+        public static void WhenMemberValueOfOtherType(Type telemetryType, PropertyDefinition property, Type valueType)
         {
-            throw new ArgumentException(Formatting.Format(Formatting.MemberValueOfOtherType, rowType.FullName, property.Name, property.MemberType.Name, valueType.Name));
+            throw new ArgumentException(Formatting.Format(Formatting.MemberValueOfOtherType, telemetryType.FullName, property.Name, property.MemberType.Name, valueType.Name));
         }
 
         [DoesNotReturn]
-        public static void WhenSetAfterEnumerated(Type rowType, string memberName)
+        public static void WhenSetAfterEnumerated(Type telemetryType, string memberName)
         {
-            throw new InvalidOperationException(Formatting.Format(Formatting.SetAfterEnumerated, rowType.FullName, memberName));
+            throw new InvalidOperationException(Formatting.Format(Formatting.SetAfterEnumerated, telemetryType.FullName, memberName));
         }
 
         [DoesNotReturn]
-        public static void WhenCompletionActionOutsideCompletion(Type rowType, string action)
+        public static void WhenCompletionActionOutsideCompletion(Type telemetryType, string action)
         {
-            throw new InvalidOperationException(Formatting.Format(Formatting.CompletionActionOutsideCompletion, rowType.FullName, action));
+            throw new InvalidOperationException(Formatting.Format(Formatting.CompletionActionOutsideCompletion, telemetryType.FullName, action));
         }
 
         [DoesNotReturn]
-        public static void WhenCompletionActionTwice(Type rowType, string action)
+        public static void WhenCompletionActionTwice(Type telemetryType, string action)
         {
-            throw new InvalidOperationException(Formatting.Format(Formatting.CompletionActionTwice, rowType.FullName, action));
+            throw new InvalidOperationException(Formatting.Format(Formatting.CompletionActionTwice, telemetryType.FullName, action));
         }
 
         [DoesNotReturn]
-        public static void WhenReleaseNotAllowed(Type rowType, bool isOpen, bool isReleased)
+        public static void WhenReleaseNotAllowed(Type telemetryType, bool isOpen, bool isReleased)
         {
             string reason = isOpen ? Formatting.ReleaseOpen : isReleased ? Formatting.ReleaseTwice : Formatting.ReleaseNotKept;
-            throw new InvalidOperationException(Formatting.Format(Formatting.ReleaseNotAllowed, rowType.FullName, reason));
+            throw new InvalidOperationException(Formatting.Format(Formatting.ReleaseNotAllowed, telemetryType.FullName, reason));
         }
 
         [DoesNotReturn]
-        public static void WhenReleaseUntilEnd(Type rowType)
+        public static void WhenReleaseUntilEnd(Type telemetryType)
         {
-            throw new InvalidOperationException(Formatting.Format(Formatting.ReleaseUntilEnd, rowType.FullName));
+            throw new InvalidOperationException(Formatting.Format(Formatting.ReleaseUntilEnd, telemetryType.FullName));
         }
 
         [DoesNotReturn]
-        public static void WhenContextLimitReached(int limit, IEnumerable<Reading.ContextRow> kept)
+        public static void WhenContextLimitReached(int limit, IEnumerable<Reading.ContextTelemetry> kept)
         {
             string perType = string.Join(", ", kept
-                .GroupBy(row => row.Definition.Type.Name)
+                .GroupBy(telemetry => telemetry.Definition.Type.Name)
                 .OrderByDescending(group => group.Count())
                 .ThenBy(group => group.Key, StringComparer.Ordinal)
                 .Select(group => $"{group.Key} ({group.Count()})"));
@@ -241,11 +241,11 @@ namespace Forestry.Serialization
         }
         #endregion
 
-        #region Rows (FR-006)
+        #region Telemetries (FR-006)
         [DoesNotReturn]
-        public static void WhenRowNotOfType(Type rowType, Type type)
+        public static void WhenTelemetryNotOfType(Type telemetryType, Type type)
         {
-            throw new InvalidCastException(Formatting.Format(Formatting.RowNotOfType, rowType.FullName, type.FullName));
+            throw new InvalidCastException(Formatting.Format(Formatting.TelemetryNotOfType, telemetryType.FullName, type.FullName));
         }
         #endregion
     }

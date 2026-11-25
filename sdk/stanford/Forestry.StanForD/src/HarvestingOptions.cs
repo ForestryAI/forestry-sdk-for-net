@@ -4,7 +4,7 @@ using Forestry.StanForD.Policies;
 
 namespace Forestry.StanForD {
     /// <summary>
-    /// What happens to a StanForD element whose categories match no row member (FR-012)
+    /// What happens to a StanForD element whose categories match no telemetry member (FR-012)
     /// </summary>
     public enum UnmatchedOccurrence
     {
@@ -38,9 +38,9 @@ namespace Forestry.StanForD {
     {
         /// <summary>
         /// Adds what shredding a Harvesting document needs: <see cref="Stem"/> and <see cref="Log"/>, the only
-        /// rows that come out; the header, the machine, the common definitions and the log measurements,
+        /// telemetries that come out; the header, the machine, the common definitions and the log measurements,
         /// which never come out but are read for the stems and logs; converters for the StanForD texts the
-        /// rows use; and the policies setting each row's identification, partition values and measurements
+        /// telemetries use; and the policies setting each telemetry's identification, partition values and measurements
         /// </summary>
         /// <param name="options">Options not used yet</param>
         /// <param name="configure">Changes the <see cref="HarvestingOptions"/> defaults, e.g. ignoring unmatched
@@ -53,7 +53,7 @@ namespace Forestry.StanForD {
             HarvestingOptions harvesting = new();
             configure?.Invoke(harvesting);
 
-            options.Rows
+            options.Telemetries
                 .Add<Stem>()
                 .Add<Log>()
                 .Add<HarvestedProductionHeader>()

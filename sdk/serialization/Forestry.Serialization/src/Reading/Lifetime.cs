@@ -1,8 +1,8 @@
 namespace Forestry.Serialization.Reading
 {
     /// <summary>
-    /// How long a row stays in the deserialization context after its completion (spec 002 FR-003,
-    /// research R23). A policy sets it at most once, during the row's own completion; a row no policy
+    /// How long a telemetry stays in the deserialization context after its completion (spec 002 FR-003,
+    /// research R23). A policy sets it at most once, during the telemetry's own completion; a telemetry no policy
     /// keeps leaves (<see cref="Leave"/>)
     /// </summary>
     public enum Lifetime : byte

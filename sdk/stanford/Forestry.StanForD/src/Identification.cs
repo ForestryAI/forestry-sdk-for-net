@@ -1,7 +1,7 @@
 namespace Forestry.StanForD {
     /// <summary>
-    /// The global identification shared by every StanForD row: the machine key, a GUID without
-    /// dashes (format "N"), then the row's keys, separated by dashes
+    /// The global identification shared by every StanForD telemetry: the machine key, a GUID without
+    /// dashes (format "N"), then the telemetry's keys, separated by dashes
     /// </summary>
     /// <remarks>
     /// The machine key is globally unique; stem keys are running numbers per machine, never reset;

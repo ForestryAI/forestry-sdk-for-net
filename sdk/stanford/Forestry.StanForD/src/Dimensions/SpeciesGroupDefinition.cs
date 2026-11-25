@@ -9,7 +9,7 @@ namespace Forestry.StanForD {
     /// The species group key comes last in the definition, after its grades, so the definition
     /// is only complete at its end
     /// </remarks>
-    public sealed class SpeciesGroupDefinition : Row
+    public sealed class SpeciesGroupDefinition : Telemetry
     {
         #region identification
         /// <summary>

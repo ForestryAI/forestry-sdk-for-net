@@ -8,30 +8,30 @@ namespace Forestry.StanForD.Policies {
     /// the deserialization context until the document ends, so stems and logs after it can find it,
     /// with its machine key and identification set
     /// </summary>
-    /// <typeparam name="TDefinition">The definition's row type</typeparam>
+    /// <typeparam name="TDefinition">The definition's telemetry type</typeparam>
     /// <param name="keyMember">The definition's key member, e.g. <c>nameof(ObjectDefinition.ObjectKey)</c></param>
     /// <param name="key">Reads the definition's key</param>
     internal sealed class CommonDefinitionPolicy<TDefinition>(string keyMember, Func<TDefinition, int> key) : EnumerationPolicy
-        where TDefinition : Row
+        where TDefinition : Telemetry
     {
         /// <inheritdoc/>
         /// <exception cref="InvalidDataException">The definition has no key, or no machine key is read
         /// before it</exception>
-        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
+        public override void Complete(ContextTelemetry telemetry, DeserializeContext context, Action<ContextTelemetry> next)
         {
-            Guid machineKey = Harvesting.MachineKey(row, context, typeof(TDefinition).Name);
+            Guid machineKey = Harvesting.MachineKey(telemetry, context, typeof(TDefinition).Name);
 
-            if (!row.IsSet(keyMember))
+            if (!telemetry.IsSet(keyMember))
             {
                 throw new InvalidDataException($"A {typeof(TDefinition).Name} has no {keyMember}.");
             }
 
-            row.Set(nameof(ObjectDefinition.MachineKey), machineKey);
-            row.Set(nameof(ObjectDefinition.Id), Identification.Format(machineKey, key(row.Row.AsType<TDefinition>())));
-            row.Enumerate(false);
-            row.Keep(Lifetime.UntilEnd);
+            telemetry.Set(nameof(ObjectDefinition.MachineKey), machineKey);
+            telemetry.Set(nameof(ObjectDefinition.Id), Identification.Format(machineKey, key(telemetry.Telemetry.AsType<TDefinition>())));
+            telemetry.Enumerate(false);
+            telemetry.Keep(Lifetime.UntilEnd);
 
-            next(row);
+            next(telemetry);
         }
     }
 }

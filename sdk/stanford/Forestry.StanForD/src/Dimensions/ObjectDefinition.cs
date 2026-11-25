@@ -5,7 +5,7 @@ namespace Forestry.StanForD {
     /// A harvesting object loaded into the machine, from StanForD <c>ObjectDefinition</c>; an
     /// object belongs to a contract, and stems reference it through their object key
     /// </summary>
-    public sealed class ObjectDefinition : Row
+    public sealed class ObjectDefinition : Telemetry
     {
         #region identification
         /// <summary>

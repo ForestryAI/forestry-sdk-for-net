@@ -6,7 +6,7 @@ using System.Reflection;
 namespace Forestry.Serialization.Definitions
 {
     /// <summary>
-    /// Definition of a row type, built once per options: it constructs rows of its concrete type and
+    /// Definition of a telemetry type, built once per options: it constructs telemetries of its concrete type and
     /// owns the property definitions that set their members; it sets no members itself (research R5)
     /// </summary>
     public sealed class TypeDefinition
@@ -16,7 +16,7 @@ namespace Forestry.Serialization.Definitions
         private TypeDefinition(
             Type type,
             DeserializeOptions options,
-            Func<Row> constructor,
+            Func<Telemetry> constructor,
             PropertyDefinition[] properties
         ) {
             Type = type;
@@ -28,7 +28,7 @@ namespace Forestry.Serialization.Definitions
         }
 
         /// <summary>
-        /// The row type, extending <see cref="Row"/>
+        /// The telemetry type, extending <see cref="Telemetry"/>
         /// </summary>
         public Type Type { get; }
 
@@ -43,17 +43,17 @@ namespace Forestry.Serialization.Definitions
         /// </summary>
         public IReadOnlyList<PropertyDefinition> Properties { get; }
 
-        private readonly Func<Row> _constructor;
+        private readonly Func<Telemetry> _constructor;
 
         private readonly FrozenDictionary<MemberKey, PropertyDefinition> _propertiesByMember;
 
         private readonly FrozenDictionary<string, int> _indexesByName;
 
         /// <summary>
-        /// Construct a row with the chosen constructor (no parameters in this slice)
+        /// Construct a telemetry with the chosen constructor (no parameters in this slice)
         /// </summary>
         /// <returns></returns>
-        internal Row Construct() => _constructor();
+        internal Telemetry Construct() => _constructor();
 
         /// <summary>
         /// Property definition of one of this type's members
@@ -75,7 +75,7 @@ namespace Forestry.Serialization.Definitions
             _indexesByName.TryGetValue(memberName, out index);
 
         /// <summary>
-        /// Build the definition of a row type, rejecting it before any byte is read (FR-008), with one
+        /// Build the definition of a telemetry type, rejecting it before any byte is read (FR-008), with one
         /// exception naming every member that cannot be mapped (spec 003, research R33)
         /// </summary>
         /// <param name="type"></param>
@@ -118,16 +118,16 @@ namespace Forestry.Serialization.Definitions
 
             if (failures is not null)
             {
-                Throwing.WhenRowTypeMembersInvalid(type, failures);
+                Throwing.WhenTelemetryTypeMembersInvalid(type, failures);
             }
 
-            Func<Row> construct = Expression.Lambda<Func<Row>>(Expression.Convert(Expression.New(constructor), typeof(Row))).Compile();
+            Func<Telemetry> construct = Expression.Lambda<Func<Telemetry>>(Expression.Convert(Expression.New(constructor), typeof(Telemetry))).Compile();
 
             return new TypeDefinition(type, options, construct, [.. properties]);
         }
 
         /// <summary>
-        /// Exactly one constructor marked <see cref="RowConstructorAttribute"/> is used, whatever its
+        /// Exactly one constructor marked <see cref="TelemetryConstructorAttribute"/> is used, whatever its
         /// accessibility; none marked and exactly one public constructor: that one; otherwise, or with
         /// more than one marked, fail fast (research R5)
         /// </summary>
@@ -136,11 +136,11 @@ namespace Forestry.Serialization.Definitions
         private static ConstructorInfo ChooseConstructor(Type type)
         {
             ConstructorInfo[] constructors = type.GetConstructors(ConstructorBindingFlags);
-            ConstructorInfo[] marked = Array.FindAll(constructors, constructor => constructor.IsDefined(typeof(RowConstructorAttribute), inherit: false));
+            ConstructorInfo[] marked = Array.FindAll(constructors, constructor => constructor.IsDefined(typeof(TelemetryConstructorAttribute), inherit: false));
 
             if (marked.Length > 1)
             {
-                Throwing.WhenMoreThanOneRowConstructor(type);
+                Throwing.WhenMoreThanOneTelemetryConstructor(type);
             }
 
             if (marked.Length == 1)

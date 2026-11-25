@@ -2,8 +2,8 @@
 
 The core for the Forestry SDK's clients, in the spirit of Azure.Core in the Azure SDK for .NET. It
 holds client options and the pipeline that every client rides on, and it is where other shared
-pieces, such as monitoring, are expected to land. The SDK's
-[README](../../../README.md#big-data-clients) explains the whole path, from a device document to rows
+pieces, such as diagnostics, are expected to land. The SDK's
+[README](../../../README.md#big-data-clients) explains the whole path, from a device document to telemetries
 that feed a client's pipeline and on to a big data resource.
 
 Formerly Forestry.Turn: "Turn" named one mechanism, the pipeline; "Core" names what the package is
@@ -15,11 +15,11 @@ The pipeline uses a turn-taking model borrowed from conversation analysis: an **
 goes through a chain of **directives**, and comes back paired with its **answer**. It is the .NET
 counterpart to the pipeline in the private Forestry AI SDK for Python.
 
-Unlike Azure.Core, a client here is not mainly an HTTP client. In a big data client, the rows from
+Unlike Azure.Core, a client here is not mainly an HTTP client. In a big data client, the telemetries from
 deserialization are gathered into chunks and carried through the pipeline to the resource: the
 **turning** is the call to the resource (writing a file, an upload), and the answer is the
 resource's response, which directives such as retry inspect. What an ingestion as a whole reports is
-**monitoring**, not an answer.
+**diagnostics**, not an answer (see [Telemetry, monitoring and observability](../../../README.md#telemetry-monitoring-and-observability)). Answers belong to observability: an intention in natural language, answered for a human.
 
 ## Concepts
 
@@ -74,12 +74,12 @@ without changing the shared pipe.
 Not a complete list: an idea of what the core will hold for clients.
 
 - **Client options shared by every client**: how a client takes in documents, and how it chunks,
-  flushes and sends rows. Each library (e.g. Forestry.StanForD.Harvesting) plugs in its own policies
+  flushes and sends telemetries. Each library (e.g. Forestry.StanForD.Harvesting) plugs in its own policies
   and directives with defaults the client can adjust.
 - **Writing as a directive** that owns a format writer: JSON Lines first, Parquet later
   ([Forestry.Parquet](../../parquet/Forestry.Parquet/README.md)).
-- **Monitoring**: exceptions, metrics and events, with the client deciding where they go, likely
-  through a directive. It may land here or in a Forestry.Monitoring package of its own.
+- **Diagnostics**: exceptions, metrics and events, with the client deciding where they go, likely
+  through a directive. It may land here or in a Forestry.Diagnostics package of its own.
 - **Turnings per resource**, in the clients that use the core, such as the first local client and
   later `Forestry.StanForD.Azure.BlobStorage`.
 

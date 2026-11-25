@@ -1,8 +1,8 @@
 namespace Forestry.Serialization.Tests.Fixtures
 {
     /// <summary>
-    /// An <b>invalid</b> row class: two constructors are marked <see cref="RowConstructorAttribute"/>,
-    /// but a row type uses exactly one constructor, so at most one may be marked (FR-008, research R5)
+    /// An <b>invalid</b> telemetry class: two constructors are marked <see cref="TelemetryConstructorAttribute"/>,
+    /// but a telemetry type uses exactly one constructor, so at most one may be marked (FR-008, research R5)
     /// </summary>
     /// <remarks>
     /// <c>AttributeUsage(AllowMultiple = false)</c> only stops the attribute appearing twice on the
@@ -11,14 +11,14 @@ namespace Forestry.Serialization.Tests.Fixtures
     /// parameter only because C# allows one parameterless constructor; the rejection must be for
     /// "more than one marked", not for the parameter.
     /// </remarks>
-    public sealed class LogWithTwoMarkedConstructors : Row
+    public sealed class LogWithTwoMarkedConstructors : Telemetry
     {
-        [RowConstructor]
+        [TelemetryConstructor]
         public LogWithTwoMarkedConstructors()
         {
         }
 
-        [RowConstructor]
+        [TelemetryConstructor]
         private LogWithTwoMarkedConstructors(int logKey)
         {
             LogKey = logKey;

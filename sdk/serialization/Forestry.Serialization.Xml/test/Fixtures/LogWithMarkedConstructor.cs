@@ -1,7 +1,7 @@
 namespace Forestry.Serialization.Xml.Tests.Fixtures
 {
     /// <summary>
-    /// A <b>valid</b> row class with one constructor marked <see cref="RowConstructorAttribute"/>:
+    /// A <b>valid</b> telemetry class with one constructor marked <see cref="TelemetryConstructorAttribute"/>:
     /// the marked one is used, whatever its accessibility (FR-008, research R5 rule 1)
     /// </summary>
     /// <remarks>
@@ -10,7 +10,7 @@ namespace Forestry.Serialization.Xml.Tests.Fixtures
     /// is told by a method, not a member, so the document cannot set it.
     /// </remarks>
     [XmlElementName("Log")]
-    public sealed class LogWithMarkedConstructor : Row
+    public sealed class LogWithMarkedConstructor : Telemetry
     {
         private readonly bool _constructedByMarked;
 
@@ -19,7 +19,7 @@ namespace Forestry.Serialization.Xml.Tests.Fixtures
             LogKey = logKey;
         }
 
-        [RowConstructor]
+        [TelemetryConstructor]
         private LogWithMarkedConstructor()
         {
             _constructedByMarked = true;

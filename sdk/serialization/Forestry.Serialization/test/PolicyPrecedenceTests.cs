@@ -14,8 +14,8 @@ namespace Forestry.Serialization.Tests
     /// <c>MakeReadOnly()</c> and the internal <c>TryGetTypeDefinition</c> (as in <see cref="OptionsTests"/>):
     /// <list type="bullet">
     /// <item><c>[Policy&lt;TPolicy&gt;]</c> on a class or member; through the options, instances:
-    /// <c>options.Policies.Add(policy)</c> (options-wide), <c>Add&lt;TRow&gt;(policy)</c> (type) and
-    /// <c>Add&lt;TRow&gt;(memberName, policy)</c> (member).</item>
+    /// <c>options.Policies.Add(policy)</c> (options-wide), <c>Add&lt;TTelemetry&gt;(policy)</c> (type) and
+    /// <c>Add&lt;TTelemetry&gt;(memberName, policy)</c> (member).</item>
     /// <item><c>options.Policies.Applying(TypeDefinition)</c> and <c>Applying(PropertyDefinition)</c>: the
     /// enumeration policies acting on that definition, in chain order, empty when only the built-in steps
     /// apply. The definitions themselves hold no enumeration policies.</item>
@@ -27,11 +27,11 @@ namespace Forestry.Serialization.Tests
     /// </remarks>
     public sealed class PolicyPrecedenceTests
     {
-        private static TypeDefinition Lock<TRow>(TestingDeserializeOptions options) where TRow : Row
+        private static TypeDefinition Lock<TTelemetry>(TestingDeserializeOptions options) where TTelemetry : Telemetry
         {
-            options.Rows.Add<TRow>();
+            options.Telemetries.Add<TTelemetry>();
             options.MakeReadOnly();
-            Assert.True(options.TryGetTypeDefinition(typeof(TRow), out TypeDefinition? definition));
+            Assert.True(options.TryGetTypeDefinition(typeof(TTelemetry), out TypeDefinition? definition));
             return definition!;
         }
 
@@ -141,7 +141,7 @@ namespace Forestry.Serialization.Tests
         {
             // Arrange
             TestingDeserializeOptions options = new();
-            options.Rows.Add<Log>();
+            options.Telemetries.Add<Log>();
             options.Policies.Add<Log>(nameof(Log.LogKey), new ConstructMarkerPolicy());
 
             // Act

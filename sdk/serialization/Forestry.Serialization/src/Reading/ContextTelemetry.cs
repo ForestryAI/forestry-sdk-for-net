@@ -3,31 +3,31 @@ using Forestry.Serialization.Definitions;
 namespace Forestry.Serialization.Reading
 {
     /// <summary>
-    /// One row in the deserialization context (spec 002, research R21-R23): the row, whether it is open,
+    /// One telemetry in the deserialization context (spec 002, research R21-R23): the telemetry, whether it is open,
     /// which of its members are set, and the completion actions policies took on it
     /// </summary>
     /// <remarks>
     /// <para>
-    /// A row is in the context from its construction until its completion (open), and afterwards while a
+    /// A telemetry is in the context from its construction until its completion (open), and afterwards while a
     /// policy keeps it (<see cref="Keep"/>). At its completion, policies decide, each decision at most
     /// once: whether it comes out (<see cref="Enumerate"/>) and how long it stays (<see cref="Keep"/>);
     /// undecided, it comes out when its type was added to the options and leaves.
     /// </para>
     /// <para>
     /// Set members are tracked when the document sets a member (empty nodes included) or a policy sets
-    /// one through <see cref="Set{TValue}(string, TValue)"/>; plain C# assignment to <see cref="Row"/> is
-    /// not tracked. A row that came out no longer changes: setting one of its members throws.
+    /// one through <see cref="Set{TValue}(string, TValue)"/>; plain C# assignment to <see cref="Telemetry"/> is
+    /// not tracked. A telemetry that came out no longer changes: setting one of its members throws.
     /// </para>
     /// </remarks>
-    public sealed class ContextRow
+    public sealed class ContextTelemetry
     {
-        internal ContextRow(DeserializeContext context, Policies.TypeChains chains, Row row, long sequence, long? parentId)
+        internal ContextTelemetry(DeserializeContext context, Policies.TypeChains chains, Telemetry telemetry, long sequence, long? parentId)
         {
             Container = new ContainerRelationship(sequence, parentId);
             Context = context;
             Chains = chains;
             Definition = chains.Definition;
-            Row = row;
+            Telemetry = telemetry;
             Sequence = sequence;
 
             int properties = Definition.Properties.Count;
@@ -57,17 +57,17 @@ namespace Forestry.Serialization.Reading
         private Lifetime _lifetime;
 
         /// <summary>
-        /// The row: the context's own instance
+        /// The telemetry: the context's own instance
         /// </summary>
-        public Row Row { get; }
+        public Telemetry Telemetry { get; }
 
         /// <summary>
-        /// The row type's definition
+        /// The telemetry type's definition
         /// </summary>
         public TypeDefinition Definition { get; }
 
         /// <summary>
-        /// Where the row sits in the document's containment: its id and its parent's (spec 002 US2). Other
+        /// Where the telemetry sits in the document's containment: its id and its parent's (spec 002 US2). Other
         /// relationship groups add their own relationships later (research R21)
         /// </summary>
         public ContainerRelationship Container { get; }
@@ -78,12 +78,12 @@ namespace Forestry.Serialization.Reading
         public bool IsOpen { get; internal set; } = true;
 
         /// <summary>
-        /// The row type's definition with its composed policies
+        /// The telemetry type's definition with its composed policies
         /// </summary>
         internal Policies.TypeChains Chains { get; }
 
         /// <summary>
-        /// The context the row is in
+        /// The context the telemetry is in
         /// </summary>
         internal DeserializeContext Context { get; }
 
@@ -114,17 +114,17 @@ namespace Forestry.Serialization.Reading
 
         /// <summary>
         /// Whether a member was set, by the document (an empty node included) or by a policy through
-        /// <see cref="Set{TValue}(string, TValue)"/>; plain C# assignment to <see cref="Row"/> is not tracked
+        /// <see cref="Set{TValue}(string, TValue)"/>; plain C# assignment to <see cref="Telemetry"/> is not tracked
         /// </summary>
         /// <param name="memberName">The member's C# name, e.g. <c>nameof(Site.SiteKey)</c></param>
         /// <returns></returns>
-        /// <exception cref="ArgumentException">The row type has no such member</exception>
+        /// <exception cref="ArgumentException">The telemetry type has no such member</exception>
         public bool IsSet(string memberName) => IsSet(ThrowingGetProperty(memberName));
 
         /// <summary>
         /// Whether a member was set
         /// </summary>
-        /// <param name="property">One of the row type's property definitions</param>
+        /// <param name="property">One of the telemetry type's property definitions</param>
         /// <returns></returns>
         public bool IsSet(PropertyDefinition property)
         {
@@ -137,15 +137,15 @@ namespace Forestry.Serialization.Reading
         }
 
         /// <summary>
-        /// Set a member through its setter and mark it set. A row that came out no longer changes:
+        /// Set a member through its setter and mark it set. A telemetry that came out no longer changes:
         /// setting one of its members throws
         /// </summary>
         /// <typeparam name="TValue">The member's type</typeparam>
         /// <param name="memberName">The member's C# name, e.g. <c>nameof(Order.SiteKey)</c></param>
         /// <param name="value"></param>
-        /// <exception cref="ArgumentException">The row type has no such member, or not of type
+        /// <exception cref="ArgumentException">The telemetry type has no such member, or not of type
         /// <typeparamref name="TValue"/></exception>
-        /// <exception cref="InvalidOperationException">The row came out already</exception>
+        /// <exception cref="InvalidOperationException">The telemetry came out already</exception>
         public void Set<TValue>(string memberName, TValue value)
         {
             PropertyDefinition property = ThrowingGetProperty(memberName);
@@ -161,16 +161,16 @@ namespace Forestry.Serialization.Reading
                 Throwing.WhenSetAfterEnumerated(Definition.Type, memberName);
             }
 
-            typed.SetValue(Row, value);
+            typed.SetValue(Telemetry, value);
             MarkSet(property.Index);
         }
 
         /// <summary>
-        /// Decide whether the row comes out. Only on the row being completed, during its own completion,
+        /// Decide whether the telemetry comes out. Only on the telemetry being completed, during its own completion,
         /// and at most once
         /// </summary>
         /// <param name="enumerated"></param>
-        /// <exception cref="InvalidOperationException">Not this row's completion, or decided already</exception>
+        /// <exception cref="InvalidOperationException">Not this telemetry's completion, or decided already</exception>
         public void Enumerate(bool enumerated)
         {
             TakeCompletionAction(Actions.Enumerated, nameof(Enumerate));
@@ -178,11 +178,11 @@ namespace Forestry.Serialization.Reading
         }
 
         /// <summary>
-        /// Decide how long the row stays in the context after its completion. Only on the row being
+        /// Decide how long the telemetry stays in the context after its completion. Only on the telemetry being
         /// completed, during its own completion, and at most once
         /// </summary>
         /// <param name="lifetime"></param>
-        /// <exception cref="InvalidOperationException">Not this row's completion, or decided already</exception>
+        /// <exception cref="InvalidOperationException">Not this telemetry's completion, or decided already</exception>
         public void Keep(Lifetime lifetime)
         {
             TakeCompletionAction(Actions.Lifetime, nameof(Keep));
@@ -208,7 +208,7 @@ namespace Forestry.Serialization.Reading
         /// <summary>
         /// The completion chain ran: decisions no policy took get the containment default (spec 002 Q3)
         /// </summary>
-        /// <param name="enumeratedByDefault">The options enumerate the row's type</param>
+        /// <param name="enumeratedByDefault">The options enumerate the telemetry's type</param>
         internal void EndCompletion(bool enumeratedByDefault)
         {
             if ((_actions & Actions.Enumerated) == 0)
@@ -220,7 +220,7 @@ namespace Forestry.Serialization.Reading
         }
 
         /// <summary>
-        /// A policy released the row: at most once, only a kept, closed row not kept until the end
+        /// A policy released the telemetry: at most once, only a kept, closed telemetry not kept until the end
         /// </summary>
         internal void Release()
         {

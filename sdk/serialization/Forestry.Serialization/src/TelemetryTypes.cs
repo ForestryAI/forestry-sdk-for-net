@@ -3,12 +3,12 @@ using System.Collections;
 namespace Forestry.Serialization
 {
     /// <summary>
-    /// Row types added explicitly to an options instance; locked with the options (research R12).
-    /// Only these types' rows are handed out; there is no assembly scan
+    /// Telemetry types added explicitly to an options instance; locked with the options (research R12).
+    /// Only these types' telemetries are handed out; there is no assembly scan
     /// </summary>
-    public sealed class RowTypes : IReadOnlyCollection<Type>
+    public sealed class TelemetryTypes : IReadOnlyCollection<Type>
     {
-        internal RowTypes(DeserializeOptions options)
+        internal TelemetryTypes(DeserializeOptions options)
         {
             _options = options;
         }
@@ -18,18 +18,18 @@ namespace Forestry.Serialization
         private readonly List<Type> _types = [];
 
         /// <summary>
-        /// Add a row type
+        /// Add a telemetry type
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns>This collection, for chaining</returns>
-        public RowTypes Add<T>() where T : Row => Add(typeof(T));
+        public TelemetryTypes Add<T>() where T : Telemetry => Add(typeof(T));
 
         /// <summary>
-        /// Add row types; a type not extending <see cref="Row"/> throws when added
+        /// Add telemetry types; a type not extending <see cref="Telemetry"/> throws when added
         /// </summary>
         /// <param name="types"></param>
         /// <returns>This collection, for chaining</returns>
-        public RowTypes Add(params Type[] types)
+        public TelemetryTypes Add(params Type[] types)
         {
             ArgumentNullException.ThrowIfNull(types);
             _options.ThrowingAssertNotReadOnly();
@@ -38,9 +38,9 @@ namespace Forestry.Serialization
             {
                 ArgumentNullException.ThrowIfNull(type, nameof(types));
 
-                if (!type.IsSubclassOf(typeof(Row)) || type.IsAbstract)
+                if (!type.IsSubclassOf(typeof(Telemetry)) || type.IsAbstract)
                 {
-                    Throwing.WhenNotARowType(type);
+                    Throwing.WhenNotATelemetryType(type);
                 }
 
                 if (!_types.Contains(type))
@@ -53,12 +53,12 @@ namespace Forestry.Serialization
         }
 
         /// <summary>
-        /// Number of row types added
+        /// Number of telemetry types added
         /// </summary>
         public int Count => _types.Count;
 
         /// <summary>
-        /// Row types in the order added
+        /// Telemetry types in the order added
         /// </summary>
         /// <returns></returns>
         public IEnumerator<Type> GetEnumerator() => _types.GetEnumerator();

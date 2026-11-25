@@ -6,7 +6,7 @@ namespace Forestry.StanForD {
     /// Where a stem was felled, from StanForD <c>Stem/StemCoordinates</c>; never comes out, its altitude
     /// and coordinate reference system are copied onto the <see cref="Stem"/>
     /// </summary>
-    public sealed class StemCoordinates : Row
+    public sealed class StemCoordinates : Telemetry
     {
         /// <summary>
         /// The coordinate reference system, e.g. "WGS84", from the <c>coordinateReferenceSystem</c> attribute
@@ -24,7 +24,7 @@ namespace Forestry.StanForD {
     /// A stem's latitude, from StanForD <c>StemCoordinates/Latitude</c>; never comes out, its value is
     /// copied onto the <see cref="Stem"/>, signed by its category
     /// </summary>
-    public sealed class Latitude : Row
+    public sealed class Latitude : Telemetry
     {
         /// <summary>
         /// "North" or "South", from the <c>latitudeCategory</c> attribute
@@ -43,7 +43,7 @@ namespace Forestry.StanForD {
     /// A stem's longitude, from StanForD <c>StemCoordinates/Longitude</c>; never comes out, its value is
     /// copied onto the <see cref="Stem"/>, signed by its category
     /// </summary>
-    public sealed class Longitude : Row
+    public sealed class Longitude : Telemetry
     {
         /// <summary>
         /// "East" or "West", from the <c>longitudeCategory</c> attribute
@@ -62,7 +62,7 @@ namespace Forestry.StanForD {
     /// How the boom stood, from StanForD <c>Stem/BoomPositioning</c>; never comes out, its angle and
     /// extension are copied onto the <see cref="Stem"/> members of its category
     /// </summary>
-    public sealed class BoomPositioning : Row
+    public sealed class BoomPositioning : Telemetry
     {
         /// <summary>
         /// "Felling" or "Last log cut", from the <c>boomPositioningCategory</c> attribute
@@ -85,7 +85,7 @@ namespace Forestry.StanForD {
     /// A single-tree processed stem's own measurements, from StanForD <c>Stem/SingleTreeProcessedStem</c>;
     /// never comes out, its DBH is copied onto the <see cref="Stem"/>
     /// </summary>
-    public sealed class SingleTreeProcessedStem : Row
+    public sealed class SingleTreeProcessedStem : Telemetry
     {
         /// <summary>
         /// Diameter at breast height, in the document's diameter unit, from StanForD

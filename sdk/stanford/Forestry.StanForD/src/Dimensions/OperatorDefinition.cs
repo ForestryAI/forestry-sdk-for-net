@@ -7,9 +7,9 @@ namespace Forestry.StanForD {
     /// </summary>
     /// <remarks>
     /// StanForD's operator contact information holds personal data (first and last name, e-mail).
-    /// Only the business name is read; personal details are never carried onto rows.
+    /// Only the business name is read; personal details are never carried onto telemetries.
     /// </remarks>
-    public sealed class OperatorDefinition : Row
+    public sealed class OperatorDefinition : Telemetry
     {
         #region identification
         /// <summary>
@@ -38,7 +38,7 @@ namespace Forestry.StanForD {
         /// </summary>
         /// <remarks>
         /// Not a direct child of <c>OperatorDefinition</c>, so a policy sets it from a
-        /// <c>ContactInformation</c> contextual row
+        /// <c>ContactInformation</c> contextual telemetry
         /// </remarks>
         public string OperatorBusinessName { get; set; } = string.Empty;
 

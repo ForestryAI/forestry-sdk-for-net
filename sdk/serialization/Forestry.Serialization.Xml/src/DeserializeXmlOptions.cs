@@ -6,8 +6,8 @@ using Forestry.Serialization.Reading;
 namespace Forestry.Serialization.Xml
 {
     /// <summary>
-    /// Options of the XML format: the row types to flatten, converters and settings. Associates elements
-    /// with row types and members by name, or by <see cref="XmlElementNameAttribute"/> names (research R6,
+    /// Options of the XML format: the telemetry types to flatten, converters and settings. Associates elements
+    /// with telemetry types and members by name, or by <see cref="XmlElementNameAttribute"/> names (research R6,
     /// R8; spec 003 R37)
     /// </summary>
     public sealed class DeserializeXmlOptions : DeserializeOptions
@@ -19,27 +19,27 @@ namespace Forestry.Serialization.Xml
         private Dictionary<Type, string>? _elementTexts;
 
         /// <summary>
-        /// Set <typeparamref name="TRow"/>'s member <paramref name="memberName"/> from the text of the row's
+        /// Set <typeparamref name="TTelemetry"/>'s member <paramref name="memberName"/> from the text of the telemetry's
         /// own element, as <see cref="XmlElementTextAttribute"/> does; it wins over the attribute (spec 002
         /// US3, research R30; named in spec 003, R37, spec 002 <c>TextValue</c>). A type not added, a member it
         /// does not have, or a member with another source (<see cref="XmlElementNameAttribute"/>,
         /// <see cref="XmlAttributeNameAttribute"/>) fails when the options lock
         /// </summary>
-        /// <typeparam name="TRow">An added row type</typeparam>
+        /// <typeparam name="TTelemetry">An added telemetry type</typeparam>
         /// <param name="memberName">The member's C# name, e.g. <c>nameof(Price.Amount)</c></param>
         /// <returns>These options, to chain</returns>
         /// <exception cref="InvalidOperationException">The options are read-only</exception>
-        public DeserializeXmlOptions ElementText<TRow>(string memberName) where TRow : Row
+        public DeserializeXmlOptions ElementText<TTelemetry>(string memberName) where TTelemetry : Telemetry
         {
             ArgumentException.ThrowIfNullOrEmpty(memberName);
             ThrowingAssertNotReadOnly();
 
-            (_elementTexts ??= [])[typeof(TRow)] = memberName;
+            (_elementTexts ??= [])[typeof(TTelemetry)] = memberName;
             return this;
         }
 
         /// <summary>
-        /// The member names set through <see cref="ElementText{TRow}(string)"/>, by row type
+        /// The member names set through <see cref="ElementText{TTelemetry}(string)"/>, by telemetry type
         /// </summary>
         internal IReadOnlyDictionary<Type, string> ElementTexts => _elementTexts ?? [];
 
@@ -49,7 +49,7 @@ namespace Forestry.Serialization.Xml
         protected override IEnumerable<Converter> FormatConverters => s_formatConverters;
 
         /// <summary>
-        /// Association of elements with row types and members, built once when the options are locked
+        /// Association of elements with telemetry types and members, built once when the options are locked
         /// </summary>
         internal XmlAssociation Association
         {
@@ -61,17 +61,17 @@ namespace Forestry.Serialization.Xml
         }
 
         /// <summary>
-        /// Associate the definitions, throwing for two row types or two members read from the same
+        /// Associate the definitions, throwing for two telemetry types or two members read from the same
         /// element (FR-008, R8)
         /// </summary>
         protected override void OnMakingReadOnly() => _association = XmlAssociation.Create(this);
 
         /// <summary>
-        /// The XML synchronous row enumerator
+        /// The XML synchronous telemetry enumerator
         /// </summary>
         /// <param name="utf8"></param>
         /// <returns></returns>
-        protected internal override FormatRowEnumerator CreateRowEnumerator(ReadOnlyMemory<byte> utf8) => new XmlRowEnumerator(utf8, this);
+        protected internal override FormatTelemetryEnumerator CreateTelemetryEnumerator(ReadOnlyMemory<byte> utf8) => new XmlTelemetryEnumerator(utf8, this);
 
         /// <summary>
         /// False: <c>Utf8XmlReader</c> reads a byte order mark itself and checks it against the declared
@@ -80,12 +80,12 @@ namespace Forestry.Serialization.Xml
         protected internal override bool SkipsByteOrderMark => false;
 
         /// <summary>
-        /// The XML asynchronous row enumerator
+        /// The XML asynchronous telemetry enumerator
         /// </summary>
         /// <param name="utf8"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        protected internal override FormatRowAsyncEnumerator CreateRowAsyncEnumerator(PipeReader utf8, CancellationToken cancellationToken) =>
-            new XmlRowAsyncEnumerator(utf8, this, cancellationToken);
+        protected internal override FormatTelemetryAsyncEnumerator CreateTelemetryAsyncEnumerator(PipeReader utf8, CancellationToken cancellationToken) =>
+            new XmlTelemetryAsyncEnumerator(utf8, this, cancellationToken);
     }
 }

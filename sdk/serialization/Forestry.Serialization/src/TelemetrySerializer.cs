@@ -4,27 +4,27 @@ using Forestry.Serialization.Reading;
 namespace Forestry.Serialization
 {
     /// <summary>
-    /// Entry points: deserialize a document into rows of the row types added to a format's options
+    /// Entry points: deserialize a document into telemetries of the telemetry types added to a format's options
     /// (research R3). The format is chosen by the options' type
     /// </summary>
     public static partial class TelemetrySerializer
     {
         /// <summary>
-        /// Rows from a document in memory, enumerated once: the format's row enumerator is created when
+        /// Telemetries from a document in memory, enumerated once: the format's telemetry enumerator is created when
         /// enumeration starts, a second enumeration throws (research R2)
         /// </summary>
-        private sealed class RowEnumerable(ReadOnlyMemory<byte> utf8, DeserializeOptions options) : IEnumerable<Row>
+        private sealed class TelemetryEnumerable(ReadOnlyMemory<byte> utf8, DeserializeOptions options) : IEnumerable<Telemetry>
         {
             private int _isEnumerated;
 
-            public IEnumerator<Row> GetEnumerator()
+            public IEnumerator<Telemetry> GetEnumerator()
             {
                 if (Interlocked.Exchange(ref _isEnumerated, 1) == 1)
                 {
                     Throwing.WhenEnumeratedTwice();
                 }
 
-                return options.CreateRowEnumerator(utf8);
+                return options.CreateTelemetryEnumerator(utf8);
             }
 
             IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

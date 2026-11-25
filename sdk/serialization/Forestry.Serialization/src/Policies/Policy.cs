@@ -2,7 +2,7 @@ namespace Forestry.Serialization.Policies
 {
     /// <summary>
     /// Base of every policy (research R19): a <see cref="DefinitionPolicy"/> shapes the definitions once,
-    /// when the options lock; an <see cref="EnumerationPolicy"/> acts while rows are built and enumerated
+    /// when the options lock; an <see cref="EnumerationPolicy"/> acts while telemetries are built and enumerated
     /// </summary>
     /// <remarks>
     /// A policy takes part in exactly the virtual methods it overrides. Each method gets the next step

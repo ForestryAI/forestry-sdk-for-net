@@ -10,7 +10,7 @@ namespace Forestry.Serialization.Tests.Fixtures
     /// </summary>
     public sealed class ConstructMarkerPolicy : EnumerationPolicy
     {
-        public override Row Construct(TypeDefinition type, DeserializeContext context, Func<DeserializeContext, Row> next) => next(context);
+        public override Telemetry Construct(TypeDefinition type, DeserializeContext context, Func<DeserializeContext, Telemetry> next) => next(context);
     }
 
     /// <summary>
@@ -18,7 +18,7 @@ namespace Forestry.Serialization.Tests.Fixtures
     /// </summary>
     public sealed class OtherConstructMarkerPolicy : EnumerationPolicy
     {
-        public override Row Construct(TypeDefinition type, DeserializeContext context, Func<DeserializeContext, Row> next) => next(context);
+        public override Telemetry Construct(TypeDefinition type, DeserializeContext context, Func<DeserializeContext, Telemetry> next) => next(context);
     }
 
     /// <summary>
@@ -26,7 +26,7 @@ namespace Forestry.Serialization.Tests.Fixtures
     /// </summary>
     public sealed class SetMarkerPolicy : EnumerationPolicy
     {
-        public override void Set<T>(ContextRow row, PropertyDefinition<T> property, T value, DeserializeContext context, Action<ContextRow, T> next) => next(row, value);
+        public override void Set<T>(ContextTelemetry telemetry, PropertyDefinition<T> property, T value, DeserializeContext context, Action<ContextTelemetry, T> next) => next(telemetry, value);
     }
 
     /// <summary>
@@ -34,7 +34,7 @@ namespace Forestry.Serialization.Tests.Fixtures
     /// </summary>
     public sealed class OtherSetMarkerPolicy : EnumerationPolicy
     {
-        public override void Set<T>(ContextRow row, PropertyDefinition<T> property, T value, DeserializeContext context, Action<ContextRow, T> next) => next(row, value);
+        public override void Set<T>(ContextTelemetry telemetry, PropertyDefinition<T> property, T value, DeserializeContext context, Action<ContextTelemetry, T> next) => next(telemetry, value);
     }
 
     /// <summary>

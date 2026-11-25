@@ -3,13 +3,13 @@ using Forestry.Serialization.Converters;
 
 namespace Forestry.Serialization.Tests.Fixtures
 {
-    // Row types with members that are not single values (spec 003 US1-2 to US1-5, SC-001, research
+    // Telemetry types with members that are not single values (spec 003 US1-2 to US1-5, SC-001, research
     // R32, R33). LogWithNestedProperty (a class member) is in its own file from spec 001.
 
     /// <summary>
-    /// A member of another row type (US1-2)
+    /// A member of another telemetry type (US1-2)
     /// </summary>
-    public sealed class LogWithRowMember : Row
+    public sealed class LogWithTelemetryMember : Telemetry
     {
         public int LogKey { get; set; }
 
@@ -20,7 +20,7 @@ namespace Forestry.Serialization.Tests.Fixtures
     /// An array member (US1-3), rejected as a collection even though a byte array could be one binary
     /// column (spec edge cases)
     /// </summary>
-    public sealed class LogWithArray : Row
+    public sealed class LogWithArray : Telemetry
     {
         public int LogKey { get; set; }
 
@@ -30,7 +30,7 @@ namespace Forestry.Serialization.Tests.Fixtures
     /// <summary>
     /// A list member (US1-3)
     /// </summary>
-    public sealed class LogWithList : Row
+    public sealed class LogWithList : Telemetry
     {
         public int LogKey { get; set; }
 
@@ -40,7 +40,7 @@ namespace Forestry.Serialization.Tests.Fixtures
     /// <summary>
     /// A dictionary member (US1-3)
     /// </summary>
-    public sealed class LogWithDictionary : Row
+    public sealed class LogWithDictionary : Telemetry
     {
         public int LogKey { get; set; }
 
@@ -50,7 +50,7 @@ namespace Forestry.Serialization.Tests.Fixtures
     /// <summary>
     /// A struct with two values and no text form (US1-4)
     /// </summary>
-    public sealed class LogWithCompositeStruct : Row
+    public sealed class LogWithCompositeStruct : Telemetry
     {
         public int LogKey { get; set; }
 
@@ -71,7 +71,7 @@ namespace Forestry.Serialization.Tests.Fixtures
     /// A composite member with a converter the test adds (US1-5, FR-003): the converter does not make
     /// it flat
     /// </summary>
-    public sealed class LogWithConvertedComposite : Row
+    public sealed class LogWithConvertedComposite : Telemetry
     {
         public int LogKey { get; set; }
 
@@ -90,7 +90,7 @@ namespace Forestry.Serialization.Tests.Fixtures
     /// <summary>
     /// A struct member that formats only to chars (research R32, R33): one value, but no UTF-8 formatting
     /// </summary>
-    public sealed class LogWithCharsOnlyStruct : Row
+    public sealed class LogWithCharsOnlyStruct : Telemetry
     {
         public int LogKey { get; set; }
 
@@ -126,10 +126,10 @@ namespace Forestry.Serialization.Tests.Fixtures
     }
 
     /// <summary>
-    /// Two failing members in one row type (research R33, one message per type): a nested structure
+    /// Two failing members in one telemetry type (research R33, one message per type): a nested structure
     /// and a single value without a converter
     /// </summary>
-    public sealed class LogWithTwoFailingMembers : Row
+    public sealed class LogWithTwoFailingMembers : Telemetry
     {
         public int LogKey { get; set; }
 
@@ -166,7 +166,7 @@ namespace Forestry.Serialization.Tests.Fixtures
     /// <summary>
     /// A list member that <see cref="ExcludingPolicy"/> leaves out (research R33, ignored members)
     /// </summary>
-    public sealed class LogWithExcludedList : Row
+    public sealed class LogWithExcludedList : Telemetry
     {
         public int LogKey { get; set; }
 

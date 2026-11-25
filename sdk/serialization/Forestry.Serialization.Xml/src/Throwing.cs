@@ -4,16 +4,16 @@ using System.Reflection;
 namespace Forestry.Serialization.Xml
 {
     /// <summary>
-    /// Throws for the XML format's association of elements with rows and members; the reader's own
+    /// Throws for the XML format's association of elements with telemetries and members; the reader's own
     /// exceptions are Forestry.Xml's
     /// </summary>
     internal static partial class Throwing
     {
         #region invalid operation
         [DoesNotReturn]
-        public static void WhenDuplicateRowName(Type first, Type second, string name)
+        public static void WhenDuplicateTelemetryName(Type first, Type second, string name)
         {
-            throw new InvalidOperationException(Serialization.Formatting.Format(Formatting.DuplicateRowName, first.FullName, second.FullName, name));
+            throw new InvalidOperationException(Serialization.Formatting.Format(Formatting.DuplicateTelemetryName, first.FullName, second.FullName, name));
         }
 
         [DoesNotReturn]

@@ -13,15 +13,15 @@ namespace Forestry.Serialization.Xml.Tests
     }
 
     /// <summary>
-    /// Runs a document through an entry point and collects the rows (tasks.md T008)
+    /// Runs a document through an entry point and collects the telemetries (tasks.md T008)
     /// </summary>
     /// <remarks>
     /// The async branch reads the document as a stream through <c>TelemetrySerializer.DeserializeAsync</c>
-    /// (US3, T066), blocking until every row is read so a theory stays synchronous.
+    /// (US3, T066), blocking until every telemetry is read so a theory stays synchronous.
     /// </remarks>
     public static class EntryPoints
     {
-        public static List<Row> Read(EntryPoint entryPoint, string xml, DeserializeOptions options) =>
+        public static List<Telemetry> Read(EntryPoint entryPoint, string xml, DeserializeOptions options) =>
             entryPoint switch
             {
                 EntryPoint.Sync => TelemetrySerializer.Deserialize(xml, options).ToList(),

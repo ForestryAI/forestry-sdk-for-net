@@ -1,9 +1,9 @@
 namespace Forestry.Serialization.Reading
 {
     /// <summary>
-    /// Policies kept more rows in the deserialization context than
-    /// <see cref="DeserializeOptions.MaxContextRows"/> allows (spec 002 FR-011a, S1). The message gives the
-    /// limit, the kept rows per row type, and how to raise the limit
+    /// Policies kept more telemetries in the deserialization context than
+    /// <see cref="DeserializeOptions.MaxContextTelemetries"/> allows (spec 002 FR-011a, S1). The message gives the
+    /// limit, the kept telemetries per telemetry type, and how to raise the limit
     /// </summary>
     public sealed class DeserializeContextLimitException : InvalidOperationException
     {

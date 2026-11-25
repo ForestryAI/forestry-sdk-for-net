@@ -6,18 +6,18 @@ using Forestry.Xml.Reading;
 namespace Forestry.Serialization.Xml
 {
     /// <summary>
-    /// The XML format's reading, shared by its sync and async row enumerators (research R2): rebuilds
+    /// The XML format's reading, shared by its sync and async telemetry enumerators (research R2): rebuilds
     /// the reader from its saved state each call, turns elements, attributes and text into the core's
-    /// row builder calls, and returns as soon as a row is completed
+    /// telemetry builder calls, and returns as soon as a telemetry is completed
     /// </summary>
     /// <remarks>
-    /// Association is by name (research R13 A, spec 002 R29, R30): an element named like a row type starts
-    /// a row (wherever it is); a direct child element named like one of its child-element members sets that
-    /// member; an attribute of the row's own element sets the member marked with that attribute name; text
-    /// directly inside the row's element sets its text member (the last text wins; none by the row's end
-    /// sets it empty); the end tag completes the row. Everything else is skipped, rows inside it still found.
+    /// Association is by name (research R13 A, spec 002 R29, R30): an element named like a telemetry type starts
+    /// a telemetry (wherever it is); a direct child element named like one of its child-element members sets that
+    /// member; an attribute of the telemetry's own element sets the member marked with that attribute name; text
+    /// directly inside the telemetry's element sets its text member (the last text wins; none by the telemetry's end
+    /// sets it empty); the end tag completes the telemetry. Everything else is skipped, telemetries inside it still found.
     /// </remarks>
-    internal sealed class XmlRowReading(XmlAssociation association)
+    internal sealed class XmlTelemetryReading(XmlAssociation association)
     {
         private const byte PathSeparator = (byte)'/';
 
@@ -27,9 +27,9 @@ namespace Forestry.Serialization.Xml
         private ReaderState _readerState = new();
 
         /// <summary>
-        /// Open rows with the depth of their element
+        /// Open telemetries with the depth of their element
         /// </summary>
-        private readonly Stack<OpenRowElement> _openRows = new();
+        private readonly Stack<OpenTelemetryElement> _openTelemetries = new();
 
         /// <summary>
         /// Member whose element is open, with its depth and whether it had a value
@@ -41,9 +41,9 @@ namespace Forestry.Serialization.Xml
         private bool _memberHasValue;
 
         /// <summary>
-        /// The row whose start tag is being read: its attributes set its members
+        /// The telemetry whose start tag is being read: its attributes set its members
         /// </summary>
-        private OpenRowElement? _attributeTarget;
+        private OpenTelemetryElement? _attributeTarget;
 
         /// <summary>
         /// The next Value token is an attribute's value, not text
@@ -71,9 +71,9 @@ namespace Forestry.Serialization.Xml
 
         private readonly Stack<int> _pathMarks = new();
 
-        public ReadStatus Read(RowBuilder builder, ReadOnlySequence<byte> bytes, bool isFinalBlock, out Row? row, out long consumed)
+        public ReadStatus Read(TelemetryBuilder builder, ReadOnlySequence<byte> bytes, bool isFinalBlock, out Telemetry? telemetry, out long consumed)
         {
-            row = null;
+            telemetry = null;
             Utf8XmlReader reader = new(bytes, isFinalBlock, _readerState);
 
             while (reader.Read())
@@ -91,8 +91,8 @@ namespace Forestry.Serialization.Xml
                         break;
                     case TokenType.ElementEnd:
                         _attributeTarget = null;
-                        row = EndElement(builder, ref reader, out bool completed);
-                        if (completed && row is not null)
+                        telemetry = EndElement(builder, ref reader, out bool completed);
+                        if (completed && telemetry is not null)
                         {
                             _readerState = reader.ReaderState;
                             consumed = reader.Position;
@@ -111,11 +111,11 @@ namespace Forestry.Serialization.Xml
             }
 
             // A document cut off inside an element throws from the reader itself on the final block,
-            // so open rows are never handed out
+            // so open telemetries are never handed out
             return ReadStatus.None;
         }
 
-        private void StartElement(RowBuilder builder, ref Utf8XmlReader reader)
+        private void StartElement(TelemetryBuilder builder, ref Utf8XmlReader reader)
         {
             ReadOnlySpan<byte> name = PushPath(ref reader);
             int depth = reader.Depth;
@@ -123,12 +123,12 @@ namespace Forestry.Serialization.Xml
 
             if (_member is not null)
             {
-                return;  // inside a member's element: not a row or member of this slice
+                return;  // inside a member's element: not a telemetry or member of this slice
             }
 
-            if (_openRows.TryPeek(out OpenRowElement? open) &&
+            if (_openTelemetries.TryPeek(out OpenTelemetryElement? open) &&
                 depth == open.Depth + 1 &&
-                open.Row.TryGetMember(name, out XmlAssociation.MemberAssociation? member))
+                open.Telemetry.TryGetMember(name, out XmlAssociation.MemberAssociation? member))
             {
                 _member = member;
                 _memberDepth = depth;
@@ -136,11 +136,11 @@ namespace Forestry.Serialization.Xml
                 return;
             }
 
-            if (association.TryGetRow(name, out XmlAssociation.RowAssociation? row))
+            if (association.TryGetTelemetry(name, out XmlAssociation.TelemetryAssociation? telemetry))
             {
-                row.Start(builder);
-                OpenRowElement started = new(depth, row);
-                _openRows.Push(started);
+                telemetry.Start(builder);
+                OpenTelemetryElement started = new(depth, telemetry);
+                _openTelemetries.Push(started);
                 _attributeTarget = started;
             }
         }
@@ -157,7 +157,7 @@ namespace Forestry.Serialization.Xml
 
             ReadOnlySpan<byte> name = Value(ref reader);
 
-            if (_attributeTarget.Row.TryGetAttribute(name, out XmlAssociation.MemberAssociation? member))
+            if (_attributeTarget.Telemetry.TryGetAttribute(name, out XmlAssociation.MemberAssociation? member))
             {
                 if (name.Length > _attributeName.Length)
                 {
@@ -170,7 +170,7 @@ namespace Forestry.Serialization.Xml
             }
         }
 
-        private void ReadValue(RowBuilder builder, ref Utf8XmlReader reader)
+        private void ReadValue(TelemetryBuilder builder, ref Utf8XmlReader reader)
         {
             if (_expectingAttributeValue)
             {
@@ -198,18 +198,18 @@ namespace Forestry.Serialization.Xml
                 return;
             }
 
-            if (_openRows.TryPeek(out OpenRowElement? open) && reader.Depth == open.Depth && open.Row.Text is { } text)
+            if (_openTelemetries.TryPeek(out OpenTelemetryElement? open) && reader.Depth == open.Depth && open.Telemetry.Text is { } text)
             {
                 SetMember(builder, text, reader.Depth, ElementName(), Value(ref reader));  // the last text wins
                 open.HasText = true;
             }
         }
 
-        private Row? EndElement(RowBuilder builder, ref Utf8XmlReader reader, out bool completed)
+        private Telemetry? EndElement(TelemetryBuilder builder, ref Utf8XmlReader reader, out bool completed)
         {
             completed = false;
             int depth = reader.Depth;  // after the end tag
-            Row? row = null;
+            Telemetry? telemetry = null;
 
             if (_member is not null && depth == _memberDepth - 1)
             {
@@ -220,23 +220,23 @@ namespace Forestry.Serialization.Xml
 
                 _member = null;
             }
-            else if (_openRows.TryPeek(out OpenRowElement? open) && depth == open.Depth - 1)
+            else if (_openTelemetries.TryPeek(out OpenTelemetryElement? open) && depth == open.Depth - 1)
             {
-                if (open.Row.Text is { } text && !open.HasText)
+                if (open.Telemetry.Text is { } text && !open.HasText)
                 {
                     SetMember(builder, text, open.Depth, ElementName(), []);  // no text: empty, and set
                 }
 
-                _openRows.Pop();
-                row = builder.Complete();
+                _openTelemetries.Pop();
+                telemetry = builder.Complete();
                 completed = true;
             }
 
             PopPath();
-            return row;
+            return telemetry;
         }
 
-        private void SetMember(RowBuilder builder, XmlAssociation.MemberAssociation member, int depth, ReadOnlySpan<byte> name, ReadOnlySpan<byte> utf8)
+        private void SetMember(TelemetryBuilder builder, XmlAssociation.MemberAssociation member, int depth, ReadOnlySpan<byte> name, ReadOnlySpan<byte> utf8)
         {
             ReadingInformation information = new(depth, name, _path.AsSpan(0, _pathLength));
             member.Set(builder, utf8, in information);
@@ -257,7 +257,7 @@ namespace Forestry.Serialization.Xml
         /// </summary>
         /// <remarks>
         /// As <c>Utf8JsonReader</c>'s callers do (research R2, T068): it allocates only when a value
-        /// straddles a buffer boundary, never per row. A value whose bytes are not all buffered yet is
+        /// straddles a buffer boundary, never per telemetry. A value whose bytes are not all buffered yet is
         /// never a token: the reader halts before it and the read returns <see cref="ReadStatus.Partial"/>
         /// without consuming it. A scratch buffer instead of the copy is a later optimisation.
         /// </remarks>
@@ -296,15 +296,15 @@ namespace Forestry.Serialization.Xml
         }
 
         /// <summary>
-        /// An open row's element: its depth, its association, and whether its text arrived
+        /// An open telemetry's element: its depth, its association, and whether its text arrived
         /// </summary>
         /// <param name="depth"></param>
-        /// <param name="row"></param>
-        private sealed class OpenRowElement(int depth, XmlAssociation.RowAssociation row)
+        /// <param name="telemetry"></param>
+        private sealed class OpenTelemetryElement(int depth, XmlAssociation.TelemetryAssociation telemetry)
         {
             public int Depth { get; } = depth;
 
-            public XmlAssociation.RowAssociation Row { get; } = row;
+            public XmlAssociation.TelemetryAssociation Telemetry { get; } = telemetry;
 
             public bool HasText { get; set; }
         }

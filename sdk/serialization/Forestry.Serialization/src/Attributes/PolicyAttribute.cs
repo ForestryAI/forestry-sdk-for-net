@@ -3,7 +3,7 @@ using Forestry.Serialization.Policies;
 namespace Forestry.Serialization
 {
     /// <summary>
-    /// Attaches a policy to a row type or a member (research R7, R19). On a class: an enumeration or a
+    /// Attaches a policy to a telemetry type or a member (research R7, R19). On a class: an enumeration or a
     /// definition policy for the type; on a property or field: an enumeration policy for that member,
     /// overriding only <c>Set</c>. The options create the policy once, when they lock
     /// </summary>

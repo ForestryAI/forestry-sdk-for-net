@@ -24,7 +24,7 @@ namespace Forestry.Serialization.Tests
             // Arrange
             TestingDeserializeOptions options = new();
             options.Converters.Add(new MarkingInt32Converter());
-            options.Rows.Add<Log>();
+            options.Telemetries.Add<Log>();
             options.MakeReadOnly();
 
             // Act
@@ -42,7 +42,7 @@ namespace Forestry.Serialization.Tests
             // Arrange
             TestingDeserializeOptions options = new();
             options.Converters.Add(new MarkingInt32Converter());
-            options.Rows.Add<LogWithNullableKey>();
+            options.Telemetries.Add<LogWithNullableKey>();
             options.MakeReadOnly();
 
             // Act

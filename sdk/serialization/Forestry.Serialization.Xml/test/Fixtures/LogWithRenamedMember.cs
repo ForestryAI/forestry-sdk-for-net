@@ -1,10 +1,10 @@
 namespace Forestry.Serialization.Xml.Tests.Fixtures
 {
     /// <summary>
-    /// A row class whose <c>LogVolume</c> is named <c>Volume</c> in the document (flow 2, R8)
+    /// A telemetry class whose <c>LogVolume</c> is named <c>Volume</c> in the document (flow 2, R8)
     /// </summary>
     [XmlElementName("Log")]
-    public sealed class LogWithRenamedMember : Row
+    public sealed class LogWithRenamedMember : Telemetry
     {
         public int LogKey { get; set; }
 

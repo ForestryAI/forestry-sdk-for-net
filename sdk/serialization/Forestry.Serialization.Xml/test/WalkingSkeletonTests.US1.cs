@@ -6,28 +6,28 @@ using Xunit;
 namespace Forestry.Serialization.Xml.Tests
 {
     /// <summary>
-    /// Spec 001, User Story 1: flatten a document into rows of a flat class (tasks.md T010-T020)
+    /// Spec 001, User Story 1: flatten a document into telemetries of a flat class (tasks.md T010-T020)
     /// </summary>
     /// <remarks>
     /// Test shells written before any code (C4), so they do not compile until US1's implementation
     /// (T030-T042) declares the surface they assume. For the review gate (T029), the assumed surface:
     /// <list type="bullet">
-    /// <item><c>Row</c> in <c>Forestry.Serialization</c>; names in the document declared with <c>XmlElementNameAttribute</c> in <c>Forestry.Serialization.Xml</c> (spec 003 US2, research R37; spec 001 had <c>RowAttribute</c> and <c>FieldAttribute</c> in the core).</item>
-    /// <item><c>DeserializeXmlOptions.Rows.Add&lt;T&gt;()</c> (R12).</item>
+    /// <item><c>Telemetry</c> in <c>Forestry.Serialization</c>; names in the document declared with <c>XmlElementNameAttribute</c> in <c>Forestry.Serialization.Xml</c> (spec 003 US2, research R37; spec 001 had <c>TelemetryAttribute</c> and <c>FieldAttribute</c> in the core).</item>
+    /// <item><c>DeserializeXmlOptions.Telemetries.Add&lt;T&gt;()</c> (R12).</item>
     /// <item><c>TelemetrySerializer.Deserialize(string, DeserializeOptions)</c>, reached through <see cref="EntryPoints"/>.</item>
     /// <item>An unconvertible value throws <see cref="FormatException"/> naming the member, its place (path) and the class (FR-007).</item>
-    /// <item>A document cut off inside a row throws the reader's <c>XmlException</c> (spec edge case, R7).</item>
+    /// <item>A document cut off inside a telemetry throws the reader's <c>XmlException</c> (spec edge case, R7).</item>
     /// </list>
-    /// Rows are read with a plain cast; <c>AsType&lt;T&gt;()</c> is US2's.
+    /// Telemetries are read with a plain cast; <c>AsType&lt;T&gt;()</c> is US2's.
     /// Every shell needs the XML reader's element and text reading (BLOCKING.md phase 2) to pass.
     /// Each test has its own document, one element per line, so what it reads is next to what it asserts.
     /// </remarks>
     public sealed class WalkingSkeletonTestsUS1
     {
-        private static DeserializeXmlOptions OptionsWith<TRow>() where TRow : Row
+        private static DeserializeXmlOptions OptionsWith<TTelemetry>() where TTelemetry : Telemetry
         {
             DeserializeXmlOptions options = new();
-            options.Rows.Add<TRow>();
+            options.Telemetries.Add<TTelemetry>();
             return options;
         }
 
@@ -35,7 +35,7 @@ namespace Forestry.Serialization.Xml.Tests
         [Theory]
         [InlineData(EntryPoint.Sync)]
         [InlineData(EntryPoint.Async)]
-        public void Deserialize_ForTwoLogOccurrences_ItShould_YieldTwoRowsInDocumentOrder(EntryPoint entryPoint)
+        public void Deserialize_ForTwoLogOccurrences_ItShould_YieldTwoTelemetriesInDocumentOrder(EntryPoint entryPoint)
         {
             // Arrange
             const string document = """
@@ -52,12 +52,12 @@ namespace Forestry.Serialization.Xml.Tests
                 """;
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith<Log>());
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, OptionsWith<Log>());
 
             // Assert
-            Assert.Equal(2, rows.Count);
-            Log first = (Log)rows[0];
-            Log second = (Log)rows[1];
+            Assert.Equal(2, telemetries.Count);
+            Log first = (Log)telemetries[0];
+            Log second = (Log)telemetries[1];
             Assert.Equal(1, first.LogKey);
             Assert.Equal(0.59m, first.LogVolume);
             Assert.Equal(2, second.LogKey);
@@ -90,27 +90,27 @@ namespace Forestry.Serialization.Xml.Tests
                 """;
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith<Log>());
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, OptionsWith<Log>());
 
             // Assert
-            Assert.Equal(2, rows.Count);
-            Assert.Equal(1, ((Log)rows[0]).LogKey);
-            Assert.Equal(0.59m, ((Log)rows[0]).LogVolume);
-            Assert.Equal(2, ((Log)rows[1]).LogKey);
-            Assert.Equal(0.50m, ((Log)rows[1]).LogVolume);
+            Assert.Equal(2, telemetries.Count);
+            Assert.Equal(1, ((Log)telemetries[0]).LogKey);
+            Assert.Equal(0.59m, ((Log)telemetries[0]).LogVolume);
+            Assert.Equal(2, ((Log)telemetries[1]).LogKey);
+            Assert.Equal(0.50m, ((Log)telemetries[1]).LogVolume);
         }
 
         // T012 - quickstart 3 / US1-3
         [Theory]
         [InlineData(EntryPoint.Sync)]
         [InlineData(EntryPoint.Async)]
-        public void Deserialize_ForARootWithoutLogs_ItShould_YieldNoRowsAndNoError(EntryPoint entryPoint)
+        public void Deserialize_ForARootWithoutLogs_ItShould_YieldNoTelemetriesAndNoError(EntryPoint entryPoint)
         {
             // Arrange + Act
-            List<Row> rows = EntryPoints.Read(entryPoint, "<Root />", OptionsWith<Log>());
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, "<Root />", OptionsWith<Log>());
 
             // Assert
-            Assert.Empty(rows);
+            Assert.Empty(telemetries);
         }
 
         // T013 - spec edge case: an empty element for a member
@@ -138,8 +138,8 @@ namespace Forestry.Serialization.Xml.Tests
                 """;
 
             // Act
-            List<Row> notNullable = EntryPoints.Read(entryPoint, notNullableDocument, OptionsWith<Log>());
-            List<Row> nullable = EntryPoints.Read(entryPoint, nullableDocument, OptionsWith<LogWithNullableVolume>());
+            List<Telemetry> notNullable = EntryPoints.Read(entryPoint, notNullableDocument, OptionsWith<Log>());
+            List<Telemetry> nullable = EntryPoints.Read(entryPoint, nullableDocument, OptionsWith<LogWithNullableVolume>());
 
             // Assert
             Assert.Equal(0m, ((Log)Assert.Single(notNullable)).LogVolume);
@@ -171,11 +171,11 @@ namespace Forestry.Serialization.Xml.Tests
             Assert.Contains(nameof(Log), exception.Message);
         }
 
-        // T015 - quickstart 14 / spec edge case: a document cut off inside an open row
+        // T015 - quickstart 14 / spec edge case: a document cut off inside an open telemetry
         [Theory]
         [InlineData(EntryPoint.Sync)]
         [InlineData(EntryPoint.Async)]
-        public void Deserialize_ForADocumentCutOffInsideALog_ItShould_ThrowAndNeverHandOutTheOpenRow(EntryPoint entryPoint)
+        public void Deserialize_ForADocumentCutOffInsideALog_ItShould_ThrowAndNeverHandOutTheOpenTelemetry(EntryPoint entryPoint)
         {
             // Arrange
             const string document = """
@@ -187,19 +187,19 @@ namespace Forestry.Serialization.Xml.Tests
                   <Log>
                     <LogKey>2</LogKey>
                 """;
-            List<Row> handedOut = new();
+            List<Telemetry> handedOut = new();
 
             // Act
             Assert.Throws<XmlException>(() =>
             {
-                foreach (Row row in EntryPoints.Read(entryPoint, document, OptionsWith<Log>()))
+                foreach (Telemetry telemetry in EntryPoints.Read(entryPoint, document, OptionsWith<Log>()))
                 {
-                    handedOut.Add(row);
+                    handedOut.Add(telemetry);
                 }
             });
 
             // Assert
-            Assert.DoesNotContain(handedOut, row => ((Log)row).LogKey == 2);
+            Assert.DoesNotContain(handedOut, telemetry => ((Log)telemetry).LogKey == 2);
         }
 
         // T016 - flow 2: a public field member is set like a property
@@ -223,13 +223,13 @@ namespace Forestry.Serialization.Xml.Tests
                 """;
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith<LogWithFieldMember>());
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, OptionsWith<LogWithFieldMember>());
 
             // Assert
-            Assert.Equal(2, rows.Count);
-            Assert.Equal(1, ((LogWithFieldMember)rows[0]).LogKey);
-            Assert.Equal(0.59m, ((LogWithFieldMember)rows[0]).LogVolume);
-            Assert.Equal(0.50m, ((LogWithFieldMember)rows[1]).LogVolume);
+            Assert.Equal(2, telemetries.Count);
+            Assert.Equal(1, ((LogWithFieldMember)telemetries[0]).LogKey);
+            Assert.Equal(0.59m, ((LogWithFieldMember)telemetries[0]).LogVolume);
+            Assert.Equal(0.50m, ((LogWithFieldMember)telemetries[1]).LogVolume);
         }
 
         // T017 - flow 2: [XmlElementName("Volume")] on a member renames it (spec 001 [Field("Volume")]; spec 003 T018)
@@ -253,19 +253,19 @@ namespace Forestry.Serialization.Xml.Tests
                 """;
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith<LogWithRenamedMember>());
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, OptionsWith<LogWithRenamedMember>());
 
             // Assert
-            Assert.Equal(2, rows.Count);
-            Assert.Equal(0.59m, ((LogWithRenamedMember)rows[0]).LogVolume);
-            Assert.Equal(0m, ((LogWithRenamedMember)rows[1]).LogVolume);
+            Assert.Equal(2, telemetries.Count);
+            Assert.Equal(0.59m, ((LogWithRenamedMember)telemetries[0]).LogVolume);
+            Assert.Equal(0m, ((LogWithRenamedMember)telemetries[1]).LogVolume);
         }
 
-        // T018 - flows 1 and 2: [XmlElementName("Tree")] on a class renames a row (spec 001 [Row("Tree")]; spec 003 T018)
+        // T018 - flows 1 and 2: [XmlElementName("Tree")] on a class renames a telemetry (spec 001 [Telemetry("Tree")]; spec 003 T018)
         [Theory]
         [InlineData(EntryPoint.Sync)]
         [InlineData(EntryPoint.Async)]
-        public void Deserialize_ForARenamedRow_ItShould_ReadTheElementNameOnly(EntryPoint entryPoint)
+        public void Deserialize_ForARenamedTelemetry_ItShould_ReadTheElementNameOnly(EntryPoint entryPoint)
         {
             // Arrange
             const string document = """
@@ -280,10 +280,10 @@ namespace Forestry.Serialization.Xml.Tests
                 """;
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith<TreeLog>());
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, OptionsWith<TreeLog>());
 
             // Assert
-            Assert.Equal(1, ((TreeLog)Assert.Single(rows)).LogKey);
+            Assert.Equal(1, ((TreeLog)Assert.Single(telemetries)).LogKey);
         }
 
         // T019 - flow 3: the XML default converter for bool accepts 1 and 0 (XML Schema)
@@ -307,12 +307,12 @@ namespace Forestry.Serialization.Xml.Tests
                 """;
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith<LogWithFlag>());
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, OptionsWith<LogWithFlag>());
 
             // Assert
-            Assert.Equal(2, rows.Count);
-            Assert.True(((LogWithFlag)rows[0]).TopSawing);
-            Assert.False(((LogWithFlag)rows[1]).TopSawing);
+            Assert.Equal(2, telemetries.Count);
+            Assert.True(((LogWithFlag)telemetries[0]).TopSawing);
+            Assert.False(((LogWithFlag)telemetries[1]).TopSawing);
         }
 
         // T080 - flow 3: a converter added to the options wins over the XML default (options, format defaults, primitives)
@@ -334,17 +334,17 @@ namespace Forestry.Serialization.Xml.Tests
             options.Converters.Add(new MarkingBooleanConverter());
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, options);
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, options);
 
             // Assert
-            Assert.False(((LogWithFlag)Assert.Single(rows)).TopSawing);
+            Assert.False(((LogWithFlag)Assert.Single(telemetries)).TopSawing);
         }
 
-        // T020 - FR-008 / R5 rule 1: exactly one constructor marked [RowConstructor] is used, whatever its accessibility
+        // T020 - FR-008 / R5 rule 1: exactly one constructor marked [TelemetryConstructor] is used, whatever its accessibility
         [Theory]
         [InlineData(EntryPoint.Sync)]
         [InlineData(EntryPoint.Async)]
-        public void Deserialize_ForOneMarkedPrivateConstructor_ItShould_ConstructRowsWithIt(EntryPoint entryPoint)
+        public void Deserialize_ForOneMarkedPrivateConstructor_ItShould_ConstructTelemetriesWithIt(EntryPoint entryPoint)
         {
             // Arrange
             const string document = """
@@ -359,23 +359,23 @@ namespace Forestry.Serialization.Xml.Tests
                 """;
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith<LogWithMarkedConstructor>());
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, OptionsWith<LogWithMarkedConstructor>());
 
             // Assert
-            Assert.Equal(2, rows.Count);
-            Assert.All(rows, row => Assert.True(((LogWithMarkedConstructor)row).WasConstructedByMarked()));
-            Assert.Equal(1, ((LogWithMarkedConstructor)rows[0]).LogKey);
-            Assert.Equal(2, ((LogWithMarkedConstructor)rows[1]).LogKey);
+            Assert.Equal(2, telemetries.Count);
+            Assert.All(telemetries, telemetry => Assert.True(((LogWithMarkedConstructor)telemetry).WasConstructedByMarked()));
+            Assert.Equal(1, ((LogWithMarkedConstructor)telemetries[0]).LogKey);
+            Assert.Equal(2, ((LogWithMarkedConstructor)telemetries[1]).LogKey);
         }
 
-        // T076 - FR-008 / R8: two row types read from the same element throw at the call, naming both and the element.
+        // T076 - FR-008 / R8: two telemetry types read from the same element throw at the call, naming both and the element.
         // The options are rejected before any byte is read, so the document is never read.
         [Fact]
-        public void Deserialize_ForTwoRowTypesWithTheSameElementName_ItShould_ThrowAtTheCall()
+        public void Deserialize_ForTwoTelemetryTypesWithTheSameElementName_ItShould_ThrowAtTheCall()
         {
             // Arrange
             DeserializeXmlOptions options = new();
-            options.Rows.Add<Log>().Add<LogWithRenamedMember>();
+            options.Telemetries.Add<Log>().Add<LogWithRenamedMember>();
 
             // Act
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(

@@ -5,7 +5,7 @@ namespace Forestry.StanForD {
     /// A part of an object's area, from StanForD <c>ObjectDefinition/SubObject</c>; never comes out, kept
     /// until the document ends so stems and logs can copy its dimensions
     /// </summary>
-    public sealed class SubObject : Row
+    public sealed class SubObject : Telemetry
     {
         /// <summary>
         /// The object the sub-object belongs to; set by a policy from the enclosing
@@ -33,7 +33,7 @@ namespace Forestry.StanForD {
     /// Contact information, from StanForD <c>ContactInformation</c>; never comes out. Only the business
     /// name is read, never personal details (names, e-mail), and only an operator's is used
     /// </summary>
-    public sealed class ContactInformation : Row
+    public sealed class ContactInformation : Telemetry
     {
         /// <summary>
         /// The business, from StanForD <c>ContactInformation/BusinessName</c>
@@ -45,7 +45,7 @@ namespace Forestry.StanForD {
     /// A product's commercial identity, from StanForD <c>ProductDefinition/ClassifiedProductDefinition</c>;
     /// never comes out, its values are copied onto the enclosing <see cref="ProductDefinition"/>
     /// </summary>
-    public sealed class ClassifiedProductDefinition : Row
+    public sealed class ClassifiedProductDefinition : Telemetry
     {
         /// <summary>
         /// Descriptive product name, from StanForD <c>ClassifiedProductDefinition/ProductName</c>
@@ -72,7 +72,7 @@ namespace Forestry.StanForD {
     /// Where a product is delivered, from StanForD <c>ClassifiedProductDefinition/ProductDestination</c>;
     /// never comes out, its values are copied onto the enclosing <see cref="ProductDefinition"/>
     /// </summary>
-    public sealed class ProductDestination : Row
+    public sealed class ProductDestination : Telemetry
     {
         /// <summary>
         /// The receiving business, e.g. a sawmill, from StanForD <c>ProductDestination/BusinessName</c>
@@ -89,7 +89,7 @@ namespace Forestry.StanForD {
     /// The logging contractor running the machine, from StanForD <c>Machine/LoggingContractor</c>; never
     /// comes out, its identity is copied onto the <see cref="Machine"/>
     /// </summary>
-    public sealed class LoggingContractor : Row
+    public sealed class LoggingContractor : Telemetry
     {
         /// <summary>
         /// The contractor's business identity, from StanForD <c>LoggingContractor/BusinessID</c>

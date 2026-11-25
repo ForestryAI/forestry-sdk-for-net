@@ -9,7 +9,7 @@ namespace Forestry.Serialization.Xml.Tests.Fixtures
     /// relies on (spec 002, tasks.md T001, research R23, R26)
     /// </summary>
     /// <remarks>
-    /// Each hook runs before the built-in step (<c>next</c>), which always runs, so rows are built as
+    /// Each hook runs before the built-in step (<c>next</c>), which always runs, so telemetries are built as
     /// without the policy unless a hook takes an action (<c>Enumerate</c>, <c>Keep</c>, <c>Release</c>)
     /// or sets a member. A hook left null does nothing.
     /// <para>
@@ -22,30 +22,30 @@ namespace Forestry.Serialization.Xml.Tests.Fixtures
     public sealed class ContextPolicy : EnumerationPolicy
     {
         /// <summary>
-        /// At a member's set, before it is set: the row being built, the member, the converted value
+        /// At a member's set, before it is set: the telemetry being built, the member, the converted value
         /// </summary>
-        public Action<ContextRow, PropertyDefinition, object?, DeserializeContext>? OnSet { get; init; }
+        public Action<ContextTelemetry, PropertyDefinition, object?, DeserializeContext>? OnSet { get; init; }
 
         /// <summary>
-        /// At the row's completion: take actions on it, read or update the context
+        /// At the telemetry's completion: take actions on it, read or update the context
         /// </summary>
-        public Action<ContextRow, DeserializeContext>? OnComplete { get; init; }
+        public Action<ContextTelemetry, DeserializeContext>? OnComplete { get; init; }
 
         /// <summary>
         /// When the enumeration ends, before the context is emptied
         /// </summary>
         public Action<DeserializeContext>? OnClear { get; init; }
 
-        public override void Set<T>(ContextRow row, PropertyDefinition<T> property, T value, DeserializeContext context, Action<ContextRow, T> next)
+        public override void Set<T>(ContextTelemetry telemetry, PropertyDefinition<T> property, T value, DeserializeContext context, Action<ContextTelemetry, T> next)
         {
-            OnSet?.Invoke(row, property, value, context);
-            next(row, value);
+            OnSet?.Invoke(telemetry, property, value, context);
+            next(telemetry, value);
         }
 
-        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
+        public override void Complete(ContextTelemetry telemetry, DeserializeContext context, Action<ContextTelemetry> next)
         {
-            OnComplete?.Invoke(row, context);
-            next(row);
+            OnComplete?.Invoke(telemetry, context);
+            next(telemetry);
         }
 
         public override void Clear(DeserializeContext context) => OnClear?.Invoke(context);

@@ -7,42 +7,42 @@ using Forestry.Serialization.Reading;
 namespace Forestry.Serialization.Xml
 {
     /// <summary>
-    /// Which element means which row type and which member, built once per options when they are
+    /// Which element means which telemetry type and which member, built once per options when they are
     /// locked; reflection only then (research R6, R8, R13 A: by name, anywhere). Lookups take the
     /// element name as UTF-8 bytes, without allocating
     /// </summary>
     internal sealed class XmlAssociation
     {
-        private XmlAssociation(Dictionary<byte[], RowAssociation> rows)
+        private XmlAssociation(Dictionary<byte[], TelemetryAssociation> telemetries)
         {
-            _rows = rows.GetAlternateLookup<ReadOnlySpan<byte>>();
+            _telemetries = telemetries.GetAlternateLookup<ReadOnlySpan<byte>>();
         }
 
-        private readonly Dictionary<byte[], RowAssociation>.AlternateLookup<ReadOnlySpan<byte>> _rows;
+        private readonly Dictionary<byte[], TelemetryAssociation>.AlternateLookup<ReadOnlySpan<byte>> _telemetries;
 
         /// <summary>
-        /// Row type whose occurrences have this element name
+        /// Telemetry type whose occurrences have this element name
         /// </summary>
         /// <param name="name"></param>
-        /// <param name="row"></param>
+        /// <param name="telemetry"></param>
         /// <returns></returns>
-        public bool TryGetRow(ReadOnlySpan<byte> name, [NotNullWhen(true)] out RowAssociation? row) => _rows.TryGetValue(name, out row);
+        public bool TryGetTelemetry(ReadOnlySpan<byte> name, [NotNullWhen(true)] out TelemetryAssociation? telemetry) => _telemetries.TryGetValue(name, out telemetry);
 
         /// <summary>
-        /// Associate the row types added to <paramref name="options"/>, which must be read-only
+        /// Associate the telemetry types added to <paramref name="options"/>, which must be read-only
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Each member has one source (spec 002 R30, FR-018; spec 003 FR-006a): an attribute of the row's
+        /// Each member has one source (spec 002 R30, FR-018; spec 003 FR-006a): an attribute of the telemetry's
         /// element (<see cref="XmlAttributeNameAttribute"/>), the element's own text
-        /// (<see cref="XmlElementTextAttribute"/> or <see cref="DeserializeXmlOptions.ElementText{TRow}(string)"/>,
+        /// (<see cref="XmlElementTextAttribute"/> or <see cref="DeserializeXmlOptions.ElementText{TTelemetry}(string)"/>,
         /// the options winning), or a direct child element (<see cref="XmlElementNameAttribute"/>, or by
         /// default the member name). A member declaring two sources fails. Each source has its own name
         /// lookup and duplicate check.
         /// </para>
         /// <para>
-        /// Row and child-element names are resolved here from <see cref="XmlElementNameAttribute"/>, or the
-        /// class and member names (spec 003 research R37; spec 001 read the core's <c>[Row]</c> and
+        /// Telemetry and child-element names are resolved here from <see cref="XmlElementNameAttribute"/>, or the
+        /// class and member names (spec 003 research R37; spec 001 read the core's <c>[Telemetry]</c> and
         /// <c>[Field]</c>).
         /// </para>
         /// </remarks>
@@ -50,18 +50,18 @@ namespace Forestry.Serialization.Xml
         /// <returns></returns>
         public static XmlAssociation Create(DeserializeXmlOptions options)
         {
-            MethodInfo start = typeof(RowBuilder).GetMethod(nameof(RowBuilder.Start), genericParameterCount: 1, Type.EmptyTypes)!;
-            Dictionary<byte[], RowAssociation> rows = new(Utf8NameComparer.Instance);
+            MethodInfo start = typeof(TelemetryBuilder).GetMethod(nameof(TelemetryBuilder.Start), genericParameterCount: 1, Type.EmptyTypes)!;
+            Dictionary<byte[], TelemetryAssociation> telemetries = new(Utf8NameComparer.Instance);
 
             foreach (Type type in options.ElementTexts.Keys)
             {
-                if (!options.Rows.Contains(type))
+                if (!options.Telemetries.Contains(type))
                 {
                     Throwing.WhenElementTextTypeNotAdded(type);
                 }
             }
 
-            foreach (Type type in options.Rows)
+            foreach (Type type in options.Telemetries)
             {
                 TypeDefinition typeDefinition = options.ThrowingGetTypeDefinition(type);
                 Dictionary<byte[], MemberAssociation> members = new(Utf8NameComparer.Instance);
@@ -120,26 +120,26 @@ namespace Forestry.Serialization.Xml
                     members.Add(utf8MemberName, new MemberAssociation(property.Member));
                 }
 
-                string rowName = type.GetCustomAttribute<XmlElementNameAttribute>(inherit: false)?.Name ?? type.Name;
-                byte[] utf8RowName = Encoding.UTF8.GetBytes(rowName);
+                string telemetryName = type.GetCustomAttribute<XmlElementNameAttribute>(inherit: false)?.Name ?? type.Name;
+                byte[] utf8TelemetryName = Encoding.UTF8.GetBytes(telemetryName);
 
-                if (rows.TryGetValue(utf8RowName, out RowAssociation? otherRow))
+                if (telemetries.TryGetValue(utf8TelemetryName, out TelemetryAssociation? otherTelemetry))
                 {
-                    Throwing.WhenDuplicateRowName(otherRow.Type, type, rowName);
+                    Throwing.WhenDuplicateTelemetryName(otherTelemetry.Type, type, telemetryName);
                 }
 
-                Action<RowBuilder> startRow = start.MakeGenericMethod(type).CreateDelegate<Action<RowBuilder>>();
+                Action<TelemetryBuilder> startTelemetry = start.MakeGenericMethod(type).CreateDelegate<Action<TelemetryBuilder>>();
 
-                rows.Add(utf8RowName, new RowAssociation(type, startRow, members, attributes, text));
+                telemetries.Add(utf8TelemetryName, new TelemetryAssociation(type, startTelemetry, members, attributes, text));
             }
 
-            return new XmlAssociation(rows);
+            return new XmlAssociation(telemetries);
         }
 
         /// <summary>
         /// A member is read from one place (spec 003 FR-006a, research R37): two or more of
         /// <see cref="XmlElementNameAttribute"/>, <see cref="XmlAttributeNameAttribute"/> and
-        /// <see cref="XmlElementTextAttribute"/>, or <see cref="DeserializeXmlOptions.ElementText{TRow}(string)"/>
+        /// <see cref="XmlElementTextAttribute"/>, or <see cref="DeserializeXmlOptions.ElementText{TTelemetry}(string)"/>
         /// with either of the first two, fail. The option with the text attribute names the same source
         /// </summary>
         /// <param name="type"></param>
@@ -174,7 +174,7 @@ namespace Forestry.Serialization.Xml
             }
             else if (textByOption)
             {
-                sources.Add("ElementText<TRow> in the options");
+                sources.Add("ElementText<TTelemetry> in the options");
             }
 
             if (sources.Count > 1)
@@ -184,14 +184,14 @@ namespace Forestry.Serialization.Xml
         }
 
         /// <summary>
-        /// A row type's element: start a row of it, find its members by child element name, by attribute
+        /// A telemetry type's element: start a telemetry of it, find its members by child element name, by attribute
         /// name, and its text member
         /// </summary>
-        internal sealed class RowAssociation
+        internal sealed class TelemetryAssociation
         {
-            public RowAssociation(
+            public TelemetryAssociation(
                 Type type,
-                Action<RowBuilder> start,
+                Action<TelemetryBuilder> start,
                 Dictionary<byte[], MemberAssociation> members,
                 Dictionary<byte[], MemberAssociation> attributes,
                 MemberAssociation? text)
@@ -211,7 +211,7 @@ namespace Forestry.Serialization.Xml
             public MemberAssociation? Text { get; }
 
             /// <summary>
-            /// Member whose value has this attribute name on the row's element
+            /// Member whose value has this attribute name on the telemetry's element
             /// </summary>
             /// <param name="name"></param>
             /// <param name="member"></param>
@@ -219,14 +219,14 @@ namespace Forestry.Serialization.Xml
             public bool TryGetAttribute(ReadOnlySpan<byte> name, [NotNullWhen(true)] out MemberAssociation? member) => _attributes.TryGetValue(name, out member);
 
             /// <summary>
-            /// The row type
+            /// The telemetry type
             /// </summary>
             public Type Type { get; }
 
             /// <summary>
-            /// Calls <c>Start&lt;T&gt;()</c> for the row type, bound once
+            /// Calls <c>Start&lt;T&gt;()</c> for the telemetry type, bound once
             /// </summary>
-            public Action<RowBuilder> Start { get; }
+            public Action<TelemetryBuilder> Start { get; }
 
             private readonly Dictionary<byte[], MemberAssociation>.AlternateLookup<ReadOnlySpan<byte>> _members;
 
@@ -240,7 +240,7 @@ namespace Forestry.Serialization.Xml
         }
 
         /// <summary>
-        /// A member's element: hands its value to the row builder
+        /// A member's element: hands its value to the telemetry builder
         /// </summary>
         /// <param name="member"></param>
         internal sealed class MemberAssociation(MemberInfo member)
@@ -254,7 +254,7 @@ namespace Forestry.Serialization.Xml
 
             private readonly FieldInfo? _field = member as FieldInfo;
 
-            public void Set(RowBuilder builder, ReadOnlySpan<byte> utf8, in ReadingInformation information)
+            public void Set(TelemetryBuilder builder, ReadOnlySpan<byte> utf8, in ReadingInformation information)
             {
                 if (_property is not null)
                 {

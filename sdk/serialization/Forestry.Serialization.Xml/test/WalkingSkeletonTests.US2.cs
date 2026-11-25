@@ -4,20 +4,20 @@ using Xunit;
 namespace Forestry.Serialization.Xml.Tests
 {
     /// <summary>
-    /// Spec 001, User Story 2: work with rows without knowing their class (tasks.md T045, quickstart 5)
+    /// Spec 001, User Story 2: work with telemetries without knowing their class (tasks.md T045, quickstart 5)
     /// </summary>
     /// <remarks>
     /// Test shells written before any code (C4), so they do not compile until T047 declares
-    /// <c>Row.AsType&lt;T&gt;()</c>, which these tests read rows with (US1's tests use a plain cast).
+    /// <c>Telemetry.AsType&lt;T&gt;()</c>, which these tests read telemetries with (US1's tests use a plain cast).
     /// For the review gate (T046), the assumed surface is US1's plus <c>AsType&lt;T&gt;()</c> (research R4).
     ///
     /// </remarks>
     public sealed class WalkingSkeletonTestsUS2
     {
-        private static DeserializeXmlOptions OptionsWith<TRow>() where TRow : Row
+        private static DeserializeXmlOptions OptionsWith<TTelemetry>() where TTelemetry : Telemetry
         {
             DeserializeXmlOptions options = new();
-            options.Rows.Add<TRow>();
+            options.Telemetries.Add<TTelemetry>();
             return options;
         }
 
@@ -37,10 +37,10 @@ namespace Forestry.Serialization.Xml.Tests
                 """;
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith<Log>());
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, OptionsWith<Log>());
 
             // Assert
-            Log log = Assert.Single(rows).AsType<Log>();
+            Log log = Assert.Single(telemetries).AsType<Log>();
             Assert.Equal(1, log.LogKey);
             Assert.Equal(0m, log.LogVolume);
         }
@@ -61,10 +61,10 @@ namespace Forestry.Serialization.Xml.Tests
                 """;
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith<LogWithNullableVolume>());
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, OptionsWith<LogWithNullableVolume>());
 
             // Assert
-            LogWithNullableVolume log = Assert.Single(rows).AsType<LogWithNullableVolume>();
+            LogWithNullableVolume log = Assert.Single(telemetries).AsType<LogWithNullableVolume>();
             Assert.Equal(1, log.LogKey);
             Assert.Null(log.LogVolume);
         }

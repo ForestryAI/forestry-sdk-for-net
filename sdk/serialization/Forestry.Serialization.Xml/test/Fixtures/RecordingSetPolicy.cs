@@ -11,10 +11,10 @@ namespace Forestry.Serialization.Xml.Tests.Fixtures
     /// </summary>
     public sealed class RecordingSetPolicy : EnumerationPolicy
     {
-        public override void Set<T>(ContextRow row, PropertyDefinition<T> property, T value, DeserializeContext context, Action<ContextRow, T> next)
+        public override void Set<T>(ContextTelemetry telemetry, PropertyDefinition<T> property, T value, DeserializeContext context, Action<ContextTelemetry, T> next)
         {
             Recording.Record($"set {property.Name}={Convert.ToString(value, CultureInfo.InvariantCulture)}");
-            next(row, value);
+            next(telemetry, value);
         }
     }
 }

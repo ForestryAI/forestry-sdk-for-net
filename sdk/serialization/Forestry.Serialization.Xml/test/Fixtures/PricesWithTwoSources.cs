@@ -4,10 +4,10 @@ namespace Forestry.Serialization.Xml.Tests.Fixtures
     // US2-2b, FR-006a, tasks.md T020, T021, research R37)
 
     /// <summary>
-    /// A member from a child element and from the row's own text
+    /// A member from a child element and from the telemetry's own text
     /// </summary>
     [XmlElementName("Price")]
-    public sealed class PriceWithElementAndText : Row
+    public sealed class PriceWithElementAndText : Telemetry
     {
         [XmlElementName("Value")]
         [XmlElementText]
@@ -18,7 +18,7 @@ namespace Forestry.Serialization.Xml.Tests.Fixtures
     /// A member from an attribute and from a child element
     /// </summary>
     [XmlElementName("Price")]
-    public sealed class PriceWithAttributeAndElement : Row
+    public sealed class PriceWithAttributeAndElement : Telemetry
     {
         [XmlAttributeName("currency")]
         [XmlElementName("Currency")]
@@ -28,11 +28,11 @@ namespace Forestry.Serialization.Xml.Tests.Fixtures
     }
 
     /// <summary>
-    /// A member from an attribute that the test also makes the row's own text through the options
-    /// (<c>ElementText&lt;TRow&gt;</c>)
+    /// A member from an attribute that the test also makes the telemetry's own text through the options
+    /// (<c>ElementText&lt;TTelemetry&gt;</c>)
     /// </summary>
     [XmlElementName("Price")]
-    public sealed class PriceWithAttributeAndTextOption : Row
+    public sealed class PriceWithAttributeAndTextOption : Telemetry
     {
         [XmlAttributeName("currency")]
         public string? Currency { get; set; }

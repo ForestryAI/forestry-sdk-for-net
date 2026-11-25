@@ -5,7 +5,7 @@ namespace Forestry.Serialization.Xml.Tests.Fixtures
     /// T047, T053, research R30)
     /// </summary>
     [XmlElementName("Price")]
-    public sealed class PriceWithTextOption : Row
+    public sealed class PriceWithTextOption : Telemetry
     {
         [XmlElementText]
         public decimal Amount { get; set; }

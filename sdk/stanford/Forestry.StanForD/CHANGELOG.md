@@ -2,6 +2,9 @@
 
 ## 1.0.0-beta.1 (Unreleased)
 
+### Breaking Changes
+- Stem, Log and the definition types now extend `Forestry.Serialization.Telemetry` (was `Forestry.Deserialize.Row`): the package it builds on is renamed Forestry.Serialization and *row* is renamed *telemetry* (#142). Entries below keep the names they were written with.
+
 ### Features Added
 - `HarvestingOptionsExtensions.AddHarvesting()` sets up `DeserializeXmlOptions` to shred StanForD
   Harvesting (`hpr`) documents into `Stem` and `Log` rows, the only rows that come out (spec 001, #90).

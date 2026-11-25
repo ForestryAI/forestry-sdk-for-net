@@ -17,9 +17,9 @@ namespace Forestry.Serialization.Xml.Tests
     /// <c>Construct</c>, <c>Set&lt;T&gt;</c>, <c>Enumerate</c> and <c>Clear</c>; a policy takes part only in
     /// the methods it overrides. Since spec 002 (tasks.md T029) every method takes the deserialization
     /// context and <c>Enumerate</c> is <c>Complete</c>; the fixtures follow, the records keep their words.</item>
-    /// <item><c>[Policy&lt;TPolicy&gt;]</c> on a row class attaches an enumeration policy to the type; the
+    /// <item><c>[Policy&lt;TPolicy&gt;]</c> on a telemetry class attaches an enumeration policy to the type; the
     /// options create it once, when they lock.</item>
-    /// <item><c>options.Policies.Add&lt;TRow&gt;(policy)</c> attaches an instance through the options;
+    /// <item><c>options.Policies.Add&lt;TTelemetry&gt;(policy)</c> attaches an instance through the options;
     /// several for the same method and target chain in the order added, the first outermost.</item>
     /// <item>Policies live as long as the options: each enumeration clears every enumeration policy once
     /// when its enumerator is disposed, and an enumeration starting while another is still running on
@@ -30,19 +30,19 @@ namespace Forestry.Serialization.Xml.Tests
     /// </remarks>
     public sealed class WalkingSkeletonTestsUS4
     {
-        private static DeserializeXmlOptions OptionsWith<TRow>() where TRow : Row
+        private static DeserializeXmlOptions OptionsWith<TTelemetry>() where TTelemetry : Telemetry
         {
             DeserializeXmlOptions options = new();
-            options.Rows.Add<TRow>();
+            options.Telemetries.Add<TTelemetry>();
             return options;
         }
 
-        // T050 - quickstart 8 / US4-1 / FR-011: without policies the built-in defaults give US1's rows,
+        // T050 - quickstart 8 / US4-1 / FR-011: without policies the built-in defaults give US1's telemetries,
         // and no policy is called
         [Theory]
         [InlineData(EntryPoint.Sync)]
         [InlineData(EntryPoint.Async)]
-        public void Deserialize_WithoutPolicies_ItShould_GiveTheBuiltInDefaultsRows(EntryPoint entryPoint)
+        public void Deserialize_WithoutPolicies_ItShould_GiveTheBuiltInDefaultsTelemetries(EntryPoint entryPoint)
         {
             // Arrange
             const string document = """
@@ -60,20 +60,20 @@ namespace Forestry.Serialization.Xml.Tests
             using Recording recording = Recording.Start();
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith<Log>());
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, OptionsWith<Log>());
 
             // Assert
-            Assert.Equal([1, 2], rows.Select(row => row.AsType<Log>().LogKey));
-            Assert.Equal([0.59m, 0.50m], rows.Select(row => row.AsType<Log>().LogVolume));
+            Assert.Equal([1, 2], telemetries.Select(telemetry => telemetry.AsType<Log>().LogKey));
+            Assert.Equal([0.59m, 0.50m], telemetries.Select(telemetry => telemetry.AsType<Log>().LogVolume));
             Assert.Empty(recording.Records);
         }
 
-        // T051 - quickstart 9 / US4-2 / FR-012: a policy attached by attribute acts once per row, in
+        // T051 - quickstart 9 / US4-2 / FR-012: a policy attached by attribute acts once per telemetry, in
         // document order
         [Theory]
         [InlineData(EntryPoint.Sync)]
         [InlineData(EntryPoint.Async)]
-        public void Deserialize_ForAPolicyAttachedByAttribute_ItShould_ActOncePerRowInDocumentOrder(EntryPoint entryPoint)
+        public void Deserialize_ForAPolicyAttachedByAttribute_ItShould_ActOncePerTelemetryInDocumentOrder(EntryPoint entryPoint)
         {
             // Arrange
             const string document = """
@@ -91,16 +91,16 @@ namespace Forestry.Serialization.Xml.Tests
             using Recording recording = Recording.Start();
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, OptionsWith<RecordedLog>());
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, OptionsWith<RecordedLog>());
 
             // Assert
-            Assert.Equal([1, 2], rows.Select(row => row.AsType<RecordedLog>().LogKey));
+            Assert.Equal([1, 2], telemetries.Select(telemetry => telemetry.AsType<RecordedLog>().LogKey));
             Assert.Equal(
                 ["construct RecordedLog", "enumerate RecordedLog", "construct RecordedLog", "enumerate RecordedLog"],
                 recording.Records.Where(record => record.StartsWith("construct") || record.StartsWith("enumerate")));
         }
 
-        // T052 - flow 7: across moments, per row: construct, set each member in document order, enumerate;
+        // T052 - flow 7: across moments, per telemetry: construct, set each member in document order, enumerate;
         // the policy is cleared once at the end (R7 minimal order, R19)
         [Theory]
         [InlineData(EntryPoint.Sync)]
@@ -136,7 +136,7 @@ namespace Forestry.Serialization.Xml.Tests
         }
 
         // T087 - R19 (chains): two policy instances through the options for Log act in the order added,
-        // the first outermost, and the built-in step still gives the rows
+        // the first outermost, and the built-in step still gives the telemetries
         [Theory]
         [InlineData(EntryPoint.Sync)]
         [InlineData(EntryPoint.Async)]
@@ -157,10 +157,10 @@ namespace Forestry.Serialization.Xml.Tests
             using Recording recording = Recording.Start();
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, options);
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, options);
 
             // Assert
-            Log log = Assert.Single(rows).AsType<Log>();
+            Log log = Assert.Single(telemetries).AsType<Log>();
             Assert.Equal(1, log.LogKey);
             Assert.Equal(0.59m, log.LogVolume);
             Assert.Equal(
@@ -199,10 +199,10 @@ namespace Forestry.Serialization.Xml.Tests
             using Recording recording = Recording.Start();
 
             // Act
-            List<Row> rows = EntryPoints.Read(entryPoint, document, options);
+            List<Telemetry> telemetries = EntryPoints.Read(entryPoint, document, options);
 
             // Assert
-            Assert.Equal([1, 2], rows.Select(row => row.AsType<Log>().LogKey));
+            Assert.Equal([1, 2], telemetries.Select(telemetry => telemetry.AsType<Log>().LogKey));
             Assert.Equal(
                 ["set LogKey=1", "set LogVolume=0.59", "set LogKey=2", "set LogVolume=0.50"],
                 recording.Records);
@@ -232,11 +232,11 @@ namespace Forestry.Serialization.Xml.Tests
             Assert.Single(recording.ClearedPolicies);
         }
 
-        // T091 - R19 (lifetime): cleared exactly once on an early stop, and the next row is never read
+        // T091 - R19 (lifetime): cleared exactly once on an early stop, and the next telemetry is never read
         [Theory]
         [InlineData(EntryPoint.Sync)]
         [InlineData(EntryPoint.Async)]
-        public async Task Deserialize_StoppedAfterTheFirstRow_ItShould_ClearThePolicyOnce(EntryPoint entryPoint)
+        public async Task Deserialize_StoppedAfterTheFirstTelemetry_ItShould_ClearThePolicyOnce(EntryPoint entryPoint)
         {
             // Arrange
             const string document = """
@@ -254,14 +254,14 @@ namespace Forestry.Serialization.Xml.Tests
             using Recording recording = Recording.Start();
 
             // Act
-            await ReadFirstRowThenStopAsync(entryPoint, document, OptionsWith<RecordedLog>());
+            await ReadFirstTelemetryThenStopAsync(entryPoint, document, OptionsWith<RecordedLog>());
 
             // Assert
             Assert.Single(recording.ClearedPolicies);
             Assert.DoesNotContain("set LogKey=2", recording.Records);
         }
 
-        // T091 - R19 (lifetime): cleared exactly once after a throw (a document cut off inside a row)
+        // T091 - R19 (lifetime): cleared exactly once after a throw (a document cut off inside a telemetry)
         [Theory]
         [InlineData(EntryPoint.Sync)]
         [InlineData(EntryPoint.Async)]
@@ -331,7 +331,7 @@ namespace Forestry.Serialization.Xml.Tests
             // Act + Assert
             if (entryPoint == EntryPoint.Sync)
             {
-                using (IEnumerator<Row> running = TelemetrySerializer.Deserialize(document, options).GetEnumerator())
+                using (IEnumerator<Telemetry> running = TelemetrySerializer.Deserialize(document, options).GetEnumerator())
                 {
                     Assert.True(running.MoveNext());
                     Assert.Throws<InvalidOperationException>(() => TelemetrySerializer.Deserialize(document, options).GetEnumerator());
@@ -339,7 +339,7 @@ namespace Forestry.Serialization.Xml.Tests
             }
             else
             {
-                await using (IAsyncEnumerator<Row> running = TelemetrySerializer
+                await using (IAsyncEnumerator<Telemetry> running = TelemetrySerializer
                     .DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(document)), options)
                     .GetAsyncEnumerator())
                 {
@@ -355,21 +355,21 @@ namespace Forestry.Serialization.Xml.Tests
 
         #region helpers
         /// <summary>
-        /// Read one row through the entry point, then stop by disposing the enumerator
+        /// Read one telemetry through the entry point, then stop by disposing the enumerator
         /// </summary>
-        private static async Task ReadFirstRowThenStopAsync(EntryPoint entryPoint, string xml, DeserializeOptions options)
+        private static async Task ReadFirstTelemetryThenStopAsync(EntryPoint entryPoint, string xml, DeserializeOptions options)
         {
             if (entryPoint == EntryPoint.Sync)
             {
-                using IEnumerator<Row> rows = TelemetrySerializer.Deserialize(xml, options).GetEnumerator();
-                Assert.True(rows.MoveNext());
+                using IEnumerator<Telemetry> telemetries = TelemetrySerializer.Deserialize(xml, options).GetEnumerator();
+                Assert.True(telemetries.MoveNext());
                 return;
             }
 
-            await using IAsyncEnumerator<Row> asyncRows = TelemetrySerializer
+            await using IAsyncEnumerator<Telemetry> asyncTelemetries = TelemetrySerializer
                 .DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(xml)), options)
                 .GetAsyncEnumerator();
-            Assert.True(await asyncRows.MoveNextAsync());
+            Assert.True(await asyncTelemetries.MoveNextAsync());
         }
         #endregion
     }

@@ -4,15 +4,15 @@ using Forestry.Serialization.Reading;
 
 namespace Forestry.StanForD.Policies {
     /// <summary>
-    /// Finds the rows open around a row
+    /// Finds the telemetries open around a telemetry
     /// </summary>
     internal static class Enclosing
     {
         /// <summary>
-        /// The row open around <paramref name="row"/> of type <typeparamref name="TRow"/>, innermost, if any
+        /// The telemetry open around <paramref name="telemetry"/> of type <typeparamref name="TTelemetry"/>, innermost, if any
         /// </summary>
-        public static ContextRow? Row<TRow>(ContextRow row, DeserializeContext context) where TRow : Row =>
-            context.Ancestors(row).FirstOrDefault(ancestor => ancestor.Row is TRow);
+        public static ContextTelemetry? Telemetry<TTelemetry>(ContextTelemetry telemetry, DeserializeContext context) where TTelemetry : Telemetry =>
+            context.Ancestors(telemetry).FirstOrDefault(ancestor => ancestor.Telemetry is TTelemetry);
     }
 
     /// <summary>
@@ -22,20 +22,20 @@ namespace Forestry.StanForD.Policies {
     {
         /// <inheritdoc/>
         /// <exception cref="InvalidDataException">The sub-object is not inside an object with a key</exception>
-        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
+        public override void Complete(ContextTelemetry telemetry, DeserializeContext context, Action<ContextTelemetry> next)
         {
-            ContextRow? definition = Enclosing.Row<ObjectDefinition>(row, context);
+            ContextTelemetry? definition = Enclosing.Telemetry<ObjectDefinition>(telemetry, context);
 
             if (definition is null || !definition.IsSet(nameof(ObjectDefinition.ObjectKey)))
             {
-                throw new InvalidDataException($"SubObject {row.Row.AsType<SubObject>().SubObjectKey} is not inside an {nameof(ObjectDefinition)} with an {nameof(ObjectDefinition.ObjectKey)} before it.");
+                throw new InvalidDataException($"SubObject {telemetry.Telemetry.AsType<SubObject>().SubObjectKey} is not inside an {nameof(ObjectDefinition)} with an {nameof(ObjectDefinition.ObjectKey)} before it.");
             }
 
-            row.Set(nameof(SubObject.ObjectKey), definition.Row.AsType<ObjectDefinition>().ObjectKey);
-            row.Enumerate(false);
-            row.Keep(Lifetime.UntilEnd);
+            telemetry.Set(nameof(SubObject.ObjectKey), definition.Telemetry.AsType<ObjectDefinition>().ObjectKey);
+            telemetry.Enumerate(false);
+            telemetry.Keep(Lifetime.UntilEnd);
 
-            next(row);
+            next(telemetry);
         }
     }
 
@@ -46,16 +46,16 @@ namespace Forestry.StanForD.Policies {
     internal sealed class ContactInformationPolicy : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
+        public override void Complete(ContextTelemetry telemetry, DeserializeContext context, Action<ContextTelemetry> next)
         {
-            row.Enumerate(false);
+            telemetry.Enumerate(false);
 
-            if (context.Parent(row) is { Row: OperatorDefinition } definition)
+            if (context.Parent(telemetry) is { Telemetry: OperatorDefinition } definition)
             {
-                definition.Set(nameof(OperatorDefinition.OperatorBusinessName), row.Row.AsType<ContactInformation>().BusinessName);
+                definition.Set(nameof(OperatorDefinition.OperatorBusinessName), telemetry.Telemetry.AsType<ContactInformation>().BusinessName);
             }
 
-            next(row);
+            next(telemetry);
         }
     }
 
@@ -66,13 +66,13 @@ namespace Forestry.StanForD.Policies {
     internal sealed class ClassifiedProductDefinitionPolicy : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
+        public override void Complete(ContextTelemetry telemetry, DeserializeContext context, Action<ContextTelemetry> next)
         {
-            row.Enumerate(false);
+            telemetry.Enumerate(false);
 
-            if (Enclosing.Row<ProductDefinition>(row, context) is { } definition)
+            if (Enclosing.Telemetry<ProductDefinition>(telemetry, context) is { } definition)
             {
-                ClassifiedProductDefinition classified = row.Row.AsType<ClassifiedProductDefinition>();
+                ClassifiedProductDefinition classified = telemetry.Telemetry.AsType<ClassifiedProductDefinition>();
 
                 definition.Set(nameof(ProductDefinition.ProductName), classified.ProductName);
                 definition.Set(nameof(ProductDefinition.ProductInfo), classified.ProductInfo);
@@ -80,7 +80,7 @@ namespace Forestry.StanForD.Policies {
                 definition.Set(nameof(ProductDefinition.ProductUserID), classified.ProductUserID);
             }
 
-            next(row);
+            next(telemetry);
         }
     }
 
@@ -92,24 +92,24 @@ namespace Forestry.StanForD.Policies {
         /// <inheritdoc/>
         /// <exception cref="InvalidDataException">A product with a second destination (S0: a value is never
         /// silently replaced)</exception>
-        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
+        public override void Complete(ContextTelemetry telemetry, DeserializeContext context, Action<ContextTelemetry> next)
         {
-            row.Enumerate(false);
+            telemetry.Enumerate(false);
 
-            if (Enclosing.Row<ProductDefinition>(row, context) is { } definition)
+            if (Enclosing.Telemetry<ProductDefinition>(telemetry, context) is { } definition)
             {
                 if (definition.IsSet(nameof(ProductDefinition.ProductDestinationBusinessName)))
                 {
-                    throw new InvalidDataException($"{nameof(ProductDefinition)} {definition.Row.AsType<ProductDefinition>().ProductKey} has more than one {nameof(ProductDestination)}.");
+                    throw new InvalidDataException($"{nameof(ProductDefinition)} {definition.Telemetry.AsType<ProductDefinition>().ProductKey} has more than one {nameof(ProductDestination)}.");
                 }
 
-                ProductDestination destination = row.Row.AsType<ProductDestination>();
+                ProductDestination destination = telemetry.Telemetry.AsType<ProductDestination>();
 
                 definition.Set(nameof(ProductDefinition.ProductDestinationBusinessName), destination.BusinessName);
                 definition.Set(nameof(ProductDefinition.ProductDestinationBusinessID), destination.BusinessID);
             }
 
-            next(row);
+            next(telemetry);
         }
     }
 
@@ -119,16 +119,16 @@ namespace Forestry.StanForD.Policies {
     internal sealed class LoggingContractorPolicy : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
+        public override void Complete(ContextTelemetry telemetry, DeserializeContext context, Action<ContextTelemetry> next)
         {
-            row.Enumerate(false);
+            telemetry.Enumerate(false);
 
-            if (Enclosing.Row<Machine>(row, context) is { } machine)
+            if (Enclosing.Telemetry<Machine>(telemetry, context) is { } machine)
             {
-                machine.Set(nameof(Machine.LoggingContractorBusinessID), row.Row.AsType<LoggingContractor>().BusinessID);
+                machine.Set(nameof(Machine.LoggingContractorBusinessID), telemetry.Telemetry.AsType<LoggingContractor>().BusinessID);
             }
 
-            next(row);
+            next(telemetry);
         }
     }
 }

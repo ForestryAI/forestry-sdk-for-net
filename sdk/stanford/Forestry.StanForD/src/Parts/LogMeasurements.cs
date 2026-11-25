@@ -6,7 +6,7 @@ namespace Forestry.StanForD {
     /// One of a log's volumes, from StanForD <c>Log/LogVolume</c>; never comes out, its value lands in
     /// the <see cref="Log"/> member its categories match
     /// </summary>
-    public sealed class LogVolume : Row
+    public sealed class LogVolume : Telemetry
     {
         /// <summary>
         /// Volume category, e.g. "m3sob", "m3sub" or "m3 (price)", from the <c>logVolumeCategory</c>
@@ -32,7 +32,7 @@ namespace Forestry.StanForD {
     /// A log's measurement, from StanForD <c>Log/LogMeasurement</c>; never comes out, its category
     /// tells which <see cref="Log"/> members its diameters and length fill
     /// </summary>
-    public sealed class LogMeasurement : Row
+    public sealed class LogMeasurement : Telemetry
     {
         /// <summary>
         /// Who measured, e.g. "Machine", from the <c>logMeasurementCategory</c> attribute
@@ -50,7 +50,7 @@ namespace Forestry.StanForD {
     /// One of a log's diameters, from StanForD <c>LogMeasurement/LogDiameter</c>; never comes out, its
     /// value lands in the <see cref="Log"/> member its category (and its measurement's) match
     /// </summary>
-    public sealed class LogDiameter : Row
+    public sealed class LogDiameter : Telemetry
     {
         /// <summary>
         /// Diameter category, e.g. "Butt ob" or "Mid HKS ub", from the <c>logDiameterCategory</c> attribute

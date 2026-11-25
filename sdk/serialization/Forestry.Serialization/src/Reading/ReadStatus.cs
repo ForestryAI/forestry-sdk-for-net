@@ -6,17 +6,17 @@ namespace Forestry.Serialization.Reading
     public enum ReadStatus : byte
     {
         /// <summary>
-        /// No row and nothing more to read: the move returns false
+        /// No telemetry and nothing more to read: the move returns false
         /// </summary>
         None = 0,
 
         /// <summary>
-        /// No row yet: more bytes are needed
+        /// No telemetry yet: more bytes are needed
         /// </summary>
         Partial = 1,
 
         /// <summary>
-        /// A row was completed during the call; it becomes the enumerator's current row
+        /// A telemetry was completed during the call; it becomes the enumerator's current telemetry
         /// </summary>
         Complete = 2
     }
