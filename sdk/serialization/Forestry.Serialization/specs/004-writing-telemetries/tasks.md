@@ -12,7 +12,7 @@ R44-R57, data-model.md, contracts/public-api.md, quickstart.md) and `.specify/me
 **Prerequisites**: research items R44-R57 confirmed by the developer (C5). Open in research: the
 collection writer names (R51) and whether `SizeIsCompressed` is needed now (R53).
 
-**Board**: feature #137; story issues to be created for US1, US2 and US3, each with its review gate.
+**Board**: feature #137; story issues #144 (US1), #145 (US2), #146 (US3), each with its review gate.
 
 **Tests**: Required (constitution C4), as in specs 001-003. In every story phase: test shells
 first, one per acceptance scenario, quickstart row or edge case; then a **test review gate** (the
@@ -52,7 +52,7 @@ phase: the projects exist. The stories run in order: US2 needs US1's `Write`, US
 
 ---
 
-## Phase 1: User Story 1 - Converters read and write (Priority: P1) 🎯 MVP
+## Phase 1: User Story 1 - Converters read and write (Priority: P1) 🎯 MVP (#144)
 
 **Goal**: `Convert` is renamed `Read` in all three packages, and every built-in converter has a
 `Write` that writes the text it reads (R45, R56).
@@ -81,7 +81,7 @@ back; a custom converter added to the options is the one that writes (quickstart
 
 ---
 
-## Phase 2: User Story 2 - Serialize telemetries to a Stream or a PipeWriter (Priority: P1)
+## Phase 2: User Story 2 - Serialize telemetries to a Stream or a PipeWriter (Priority: P1) (#145)
 
 **Goal**: `TelemetrySerializer.Serialize`/`SerializeAsync` write one telemetry or a sequence to a
 caller's `Stream` (sync and async) or `PipeWriter` (async), through a format's object converter,
@@ -121,7 +121,7 @@ read back as two lines; same bytes over an async `Stream` and a `PipeWriter`; a 
 
 ---
 
-## Phase 3: User Story 3 - Collect telemetries with a collection writer (Priority: P2)
+## Phase 3: User Story 3 - Collect telemetries with a collection writer (Priority: P2) (#146)
 
 **Goal**: `MonitoringCollectionStream` and `MonitoringCollectionPipeWriter`, sharing
 `ICollectionWriter` and `MonitoringCollectionOptions`, count telemetries and bytes, report full
