@@ -117,8 +117,8 @@ Whatever the resource, every StanForD client does the same work:
 
 - **Input.** The client takes in what to ingest: usually a single document, but possibly several, as
   its configuration decides.
-- **Deserialization, per row.** The client hands each document to `Forestry.Deserialize`, which reads
-  it through a format package (`Forestry.Deserialize.Xml`, built on `Forestry.Xml`) while policies
+- **Deserialization, per row.** The client hands each document to `Forestry.Serialization`, which reads
+  it through a format package (`Forestry.Serialization.Xml`, built on `Forestry.Xml`) while policies
   flatten it into self-contained rows: identification, partitioning, conditional mapping, dimensions.
   Deserialization is mandatory: its rows are what feed the pipeline.
 - **Pipeline, per chunk.** A chain of directives that the rows pass through on their way to the
@@ -153,9 +153,9 @@ Querying the files happens outside this SDK.
 ## Where the POC stands
 
 - **Done**: the forward-only UTF-8 XML reader (`Forestry.Xml`, 1.0.0-beta.1); reading with a
-  deserialization context (`Forestry.Deserialize` spec 002); StanForD Harvesting documents as flat Stem
+  deserialization context (`Forestry.Serialization` spec 002); StanForD Harvesting documents as flat Stem
   and Log rows (`Forestry.StanForD` spec 001).
-- **Next**: writing rows in `Forestry.Deserialize`, JSON Lines first; the single local client that turns
+- **Next**: writing rows in `Forestry.Serialization`, JSON Lines first; the single local client that turns
   StanForD documents into JSON Lines files in partition folders.
 - **Later**: `Forestry.StanForD.Harvesting` split out;
   `Forestry.Biometria` with Extensions from Sender; clients for remote resources such as `Forestry.StanForD.Azure.BlobStorage`; a
@@ -168,8 +168,8 @@ In the order of the path from a StanForD document to big data files:
 | Package | Path | Purpose | Status |
 |---|---|---|---|
 | [Forestry.Xml](sdk/xml/Forestry.Xml/README.md) | `sdk/xml` | Forward-only UTF-8 XML reader over byte sequences, with no allocation per value. | 1.0.0-beta.1 on GitHub releases |
-| [Forestry.Deserialize](sdk/deserialize/Forestry.Deserialize/README.md) | `sdk/deserialize` | Flattens large documents into rows through type definitions and policies, without loading them fully into memory. | In development |
-| [Forestry.Deserialize.Xml](sdk/deserialize/Forestry.Deserialize.Xml/README.md) | `sdk/deserialize` | XML format for Forestry.Deserialize, built on Forestry.Xml. | In development |
+| [Forestry.Serialization](sdk/serialization/Forestry.Serialization/README.md) | `sdk/serialization` | Flattens large documents into rows through type definitions and policies, without loading them fully into memory. | In development |
+| [Forestry.Serialization.Xml](sdk/serialization/Forestry.Serialization.Xml/README.md) | `sdk/serialization` | XML format for Forestry.Serialization, built on Forestry.Xml. | In development |
 | [Forestry.StanForD](sdk/stanford/Forestry.StanForD/README.md) | `sdk/stanford` | [StanForD](https://www.skogforsk.se/) Harvesting documents as Stem and Log rows. | In development, spec 001 done |
 | [Forestry.StanForD.Harvesting](sdk/stanford/Forestry.StanForD.Harvesting/README.md) | `sdk/stanford` | Harvesting-specific logic: deserialization policies and pipeline directives. | Planned |
 | [Forestry.Biometria](sdk/biometria/README.md) | `sdk/biometria` | [Biometria](https://www.biometria.se/)'s Harvesting on top: Stem and Log rows extended with Sender's Extension, the production planner above all. | Planned |

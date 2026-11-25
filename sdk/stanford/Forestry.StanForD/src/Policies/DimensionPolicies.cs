@@ -1,6 +1,6 @@
-using Forestry.Deserialize;
-using Forestry.Deserialize.Policies;
-using Forestry.Deserialize.Reading;
+using Forestry.Serialization;
+using Forestry.Serialization.Policies;
+using Forestry.Serialization.Reading;
 
 namespace Forestry.StanForD.Policies {
     /// <summary>
@@ -14,7 +14,7 @@ namespace Forestry.StanForD.Policies {
         /// as its key
         /// </summary>
         /// <exception cref="InvalidDataException">No such definition is kept (FR-003)</exception>
-        public static TDefinition Definition<TDefinition>(DeserializationContext context, Func<TDefinition, bool> matches, string what, string keyMember, int value)
+        public static TDefinition Definition<TDefinition>(DeserializeContext context, Func<TDefinition, bool> matches, string what, string keyMember, int value)
             where TDefinition : Row =>
             context.Rows<TDefinition>()
                 .Where(row => !row.IsOpen)
@@ -29,7 +29,7 @@ namespace Forestry.StanForD.Policies {
         /// <param name="target">The row to set: the stem or a log inside it</param>
         /// <param name="context"></param>
         /// <param name="what">The target, as named in an error, e.g. "Log 1 of Stem 619254"</param>
-        public static void FromStem(ContextRow stemRow, ContextRow target, DeserializationContext context, string what)
+        public static void FromStem(ContextRow stemRow, ContextRow target, DeserializeContext context, string what)
         {
             Stem stem = stemRow.Row.AsType<Stem>();
             bool isLog = !ReferenceEquals(stemRow, target);
@@ -95,7 +95,7 @@ namespace Forestry.StanForD.Policies {
     internal sealed class StemDimensionPolicy : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             Dimensions.FromStem(row, row, context, $"Stem {row.Row.AsType<Stem>().StemKey}");
             next(row);
@@ -109,7 +109,7 @@ namespace Forestry.StanForD.Policies {
     internal sealed class LogDimensionPolicy : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             Log log = row.Row.AsType<Log>();
             ContextRow stem = Harvesting.StemRow(row, context);

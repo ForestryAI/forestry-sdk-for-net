@@ -4,7 +4,7 @@ A quick refresher before writing a new task. Two parts: the **read pipeline** (w
 what order, and what each step guarantees to the next) and the **settled rules** (decisions
 that later tasks must not break, each with the issue that decided it).
 
-`Forestry.Deserialize.Xml/ARCHITECTURE.md`, where the reader lived before it moved to `Forestry.Xml`
+`Forestry.Serialization.Xml/ARCHITECTURE.md`, where the reader lived before it moved to `Forestry.Xml`
 (2026-11-03), predates the rebuilt reader (it still describes `ReadDocument`, `ReadMarkup` and
 `TokenIndex` rollback) and is superseded. Where they disagree, this page and the issues win. This page
 and `READ-TABLE.md` are research input for the reader's spec-kit silo (#64).

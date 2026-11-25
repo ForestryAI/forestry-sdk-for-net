@@ -1,0 +1,24 @@
+using System.Buffers;
+using System.IO.Pipelines;
+using Forestry.Serialization.Reading;
+
+namespace Forestry.Serialization.Xml
+{
+    /// <summary>
+    /// The XML format's asynchronous row enumerator: the core writes the moves over the pipe, this
+    /// override reads with the same reading as the synchronous one (research R2)
+    /// </summary>
+    internal sealed class XmlRowAsyncEnumerator : FormatRowAsyncEnumerator
+    {
+        public XmlRowAsyncEnumerator(PipeReader utf8, DeserializeXmlOptions options, CancellationToken cancellationToken)
+            : base(utf8, options, cancellationToken)
+        {
+            _reading = new XmlRowReading(options.Association);
+        }
+
+        private readonly XmlRowReading _reading;
+
+        protected override ReadStatus Read(ReadOnlySequence<byte> bytes, bool isFinalBlock, out Row? row, out long consumed) =>
+            _reading.Read(Builder, bytes, isFinalBlock, out row, out consumed);
+    }
+}

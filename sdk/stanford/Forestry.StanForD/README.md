@@ -10,27 +10,27 @@ a contract. So instead of mirroring StanForD's deep XML hierarchy as C# objects,
 flattens each document into self-contained rows, which feed a client's pipeline on the way to a big
 data resource. The SDK's [README](../../../README.md#big-data-clients) explains the whole path.
 
-It is built on [Forestry.Deserialize](../../deserialize/Forestry.Deserialize/README.md) and its XML
+It is built on [Forestry.Serialization](../../serialization/Forestry.Serialization/README.md) and its XML
 format package, and is also an example of how to flatten a standard with them: everything
 StanForD-specific lives in this package's row types and policies, nothing in the deserialization core.
 For how it is put together, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Flattening a document
 
-One call sets up the options; then deserialize as with any Forestry.Deserialize format. `Stem` and
+One call sets up the options; then deserialize as with any Forestry.Serialization format. `Stem` and
 `Log` are the only metrics, and the only rows that come out, in completion order (a stem's logs before
 the stem):
 
 ```csharp
-using Forestry.Deserialize;
-using Forestry.Deserialize.Xml;
+using Forestry.Serialization;
+using Forestry.Serialization.Xml;
 using Forestry.StanForD;
 
 DeserializeXmlOptions options = new DeserializeXmlOptions().AddHarvesting();
 
 await using FileStream file = File.OpenRead("harvest.hpr");
 
-await foreach (Row row in Deserialization.DeserializeAsync(file, options, cancellationToken))
+await foreach (Row row in TelemetrySerializer.DeserializeAsync(file, options, cancellationToken))
 {
     if (row.Is<Stem>())
     {
@@ -43,8 +43,8 @@ await foreach (Row row in Deserialization.DeserializeAsync(file, options, cancel
 }
 ```
 
-`Deserialization.Deserialize(xml, options)` reads a `string` or UTF-8 bytes synchronously. Use one
-options instance per concurrent deserialization (Forestry.Deserialize's policies serve one enumeration
+`TelemetrySerializer.Deserialize(xml, options)` reads a `string` or UTF-8 bytes synchronously. Use one
+options instance per concurrent deserialization (Forestry.Serialization's policies serve one enumeration
 at a time).
 
 ## What a row gives you

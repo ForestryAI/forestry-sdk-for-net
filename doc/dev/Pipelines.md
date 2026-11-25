@@ -109,8 +109,8 @@ The preview feed is this repository's GitHub releases. To release:
 Locally, `dotnet pack <src project> -c Release -p:Release=true` applies the same changelog check.
 
 It refuses: any branch but `main`; a version without a dated heading (FSDK00002, FSDK00003); a version
-already released; a dependency without a release, so `Forestry.Xml` and `Forestry.Deserialize` are
-released before `Forestry.Deserialize.Xml`.
+already released; a dependency without a release, so `Forestry.Xml` and `Forestry.Serialization` are
+released before `Forestry.Serialization.Xml`.
 
 A release is never redone: a fix gets a new version.
 

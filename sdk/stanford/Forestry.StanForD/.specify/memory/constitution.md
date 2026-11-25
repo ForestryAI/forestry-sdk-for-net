@@ -54,7 +54,7 @@ StanForD document families; StanForD's non-XML format; writing rows to storage; 
 
 - **Covers**: Architecture
 - **Rule**: StanForD interpretation (identification, timestamps, conditional mapping) MUST be
-  policies on `Forestry.Deserialize`. The package never reads XML itself. Generic XML attributes
+  policies on `Forestry.Serialization`. The package never reads XML itself. Generic XML attributes
   creating such policies may replace them later.
 - **Rationale**: One reader and one deserializer for every media; StanForD knowledge stays in its
   package.
@@ -106,7 +106,7 @@ StanForD document families; StanForD's non-XML format; writing rows to storage; 
 
 - **A0** (Code quality): Targets the SDK's supported target frameworks, as defined in the engineering
   constitution (`eng/.specify/memory/constitution.md`, Definitions).
-- **A1** (Architecture): References only `Forestry.Deserialize` and `Forestry.Deserialize.Xml` among
+- **A1** (Architecture): References only `Forestry.Serialization` and `Forestry.Serialization.Xml` among
   SDK packages; no third-party NuGet dependencies.
 - **A2** (Architecture): Rows and policies follow Skogforsk's published schemas in `schemas/`; a type
   built against an older schema version is checked, not assumed valid.
@@ -120,7 +120,7 @@ StanForD document families; StanForD's non-XML format; writing rows to storage; 
 ## Definitions
 
 - **Harvesting document**: A StanForD 2010 Harvesting (`hpr`) XML document.
-- **Row type**: A class extending `Forestry.Deserialize.Row`, flat like a record, enumerated by
+- **Row type**: A class extending `Forestry.Serialization.Row`, flat like a record, enumerated by
   deserialization.
 - **Common definition**: An external entity loaded into the machine (contract/object, species group,
   product, operator, ...).

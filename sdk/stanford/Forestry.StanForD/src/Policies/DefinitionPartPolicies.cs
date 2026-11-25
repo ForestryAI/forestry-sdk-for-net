@@ -1,6 +1,6 @@
-using Forestry.Deserialize;
-using Forestry.Deserialize.Policies;
-using Forestry.Deserialize.Reading;
+using Forestry.Serialization;
+using Forestry.Serialization.Policies;
+using Forestry.Serialization.Reading;
 
 namespace Forestry.StanForD.Policies {
     /// <summary>
@@ -11,7 +11,7 @@ namespace Forestry.StanForD.Policies {
         /// <summary>
         /// The row open around <paramref name="row"/> of type <typeparamref name="TRow"/>, innermost, if any
         /// </summary>
-        public static ContextRow? Row<TRow>(ContextRow row, DeserializationContext context) where TRow : Row =>
+        public static ContextRow? Row<TRow>(ContextRow row, DeserializeContext context) where TRow : Row =>
             context.Ancestors(row).FirstOrDefault(ancestor => ancestor.Row is TRow);
     }
 
@@ -22,7 +22,7 @@ namespace Forestry.StanForD.Policies {
     {
         /// <inheritdoc/>
         /// <exception cref="InvalidDataException">The sub-object is not inside an object with a key</exception>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             ContextRow? definition = Enclosing.Row<ObjectDefinition>(row, context);
 
@@ -46,7 +46,7 @@ namespace Forestry.StanForD.Policies {
     internal sealed class ContactInformationPolicy : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             row.Enumerate(false);
 
@@ -66,7 +66,7 @@ namespace Forestry.StanForD.Policies {
     internal sealed class ClassifiedProductDefinitionPolicy : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             row.Enumerate(false);
 
@@ -92,7 +92,7 @@ namespace Forestry.StanForD.Policies {
         /// <inheritdoc/>
         /// <exception cref="InvalidDataException">A product with a second destination (S0: a value is never
         /// silently replaced)</exception>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             row.Enumerate(false);
 
@@ -119,7 +119,7 @@ namespace Forestry.StanForD.Policies {
     internal sealed class LoggingContractorPolicy : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             row.Enumerate(false);
 

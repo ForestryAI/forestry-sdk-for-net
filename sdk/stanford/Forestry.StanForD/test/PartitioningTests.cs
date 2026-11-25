@@ -1,5 +1,5 @@
-using Forestry.Deserialize;
-using Forestry.Deserialize.Xml;
+using Forestry.Serialization;
+using Forestry.Serialization.Xml;
 using Forestry.StanForD.Tests.Fragments;
 using Xunit;
 
@@ -36,7 +36,7 @@ namespace Forestry.StanForD.Tests
         private static readonly DateTimeOffset NextCreationTimeUtc = new(2026, 1, 14, 16, 14, 48, TimeSpan.Zero);
 
         private static List<Row> Read(string xml) =>
-            Deserialization.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting()).ToList();
+            TelemetrySerializer.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting()).ToList();
 
         /// <summary>
         /// T045, US3-1, FR-007: every stem and log carries the header's creation date, in UTC

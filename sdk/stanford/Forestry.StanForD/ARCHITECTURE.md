@@ -17,7 +17,7 @@ format: rows can just as well be written as JSON, CSV or another format, or used
 application rather than for ADX analysis. The guiding principles below are those of this POC, which
 targets ADX.
 
-The package is also an example of shredding a standard with Forestry.Deserialize: everything
+The package is also an example of shredding a standard with Forestry.Serialization: everything
 StanForD-specific is a row type or a policy here, nothing in the deserialization core.
 
 ## 2. Guiding Principles
@@ -79,10 +79,10 @@ definitions, never stems or logs (measuring it is a later specification).
 
 - **`Forestry.StanForD`**: this package. Harvesting row types, the rows read for them, converters for
   StanForD texts, and the policies interpreting StanForD; set up with `AddHarvesting()`.
-- **`Forestry.Deserialize` / `Forestry.Deserialize.Xml`**: the deserialization package and its XML
+- **`Forestry.Serialization` / `Forestry.Serialization.Xml`**: the deserialization package and its XML
   media package (spec 002, the deserialization context). They read the document, build rows, keep rows
   in the deserialization context and call the policies (`Construct`, `Set`, `Complete`, `Clear`).
-  Forestry.StanForD references `Forestry.Deserialize.Xml`.
+  Forestry.StanForD references `Forestry.Serialization.Xml`.
 - **Later**: a Forestry.StanForD.Harvesting package with Harvesting-specific validation and
   documentation, leaving here what StanForD document types share.
 
@@ -143,7 +143,7 @@ often 65535, the schema's default value; a `Latitude` also appears in species gr
   on it for `Latitude` and `Longitude`), and row types match their element name anywhere in the
   document (handled for coordinates by ignoring those outside `StemCoordinates`).
 - **#109**: operator (M2) measurements are ignored.
-- Enum conversion lives here until Forestry.Deserialize converts enums.
+- Enum conversion lives here until Forestry.Serialization converts enums.
 - The schema version window and its check wait until after the POC.
 - Performance on large documents is not measured yet (a later specification).
 
@@ -165,5 +165,5 @@ often 65535, the schema's default value; a `Latitude` also appears in species gr
   - #97 US6 Collect and group queries
   - #98 US7 Log and Stem dimensions
   - #108 US8 Stem metrics
-- Feature #99: Forestry.Deserialize spec 002, the deserialization context this package builds on
+- Feature #99: Forestry.Serialization spec 002, the deserialization context this package builds on
 - Backlog: #109 operator (M2) measurements, #110 element names shared by a row type and a member

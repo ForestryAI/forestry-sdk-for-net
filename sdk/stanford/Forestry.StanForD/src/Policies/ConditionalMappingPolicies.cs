@@ -1,6 +1,6 @@
-using Forestry.Deserialize;
-using Forestry.Deserialize.Policies;
-using Forestry.Deserialize.Reading;
+using Forestry.Serialization;
+using Forestry.Serialization.Policies;
+using Forestry.Serialization.Reading;
 
 namespace Forestry.StanForD.Policies {
     /// <summary>
@@ -31,14 +31,14 @@ namespace Forestry.StanForD.Policies {
         /// The <see cref="Log"/> open around a measurement row
         /// </summary>
         /// <exception cref="InvalidDataException">The row is not inside a log</exception>
-        public static ContextRow Log(ContextRow row, DeserializationContext context, string element) =>
+        public static ContextRow Log(ContextRow row, DeserializeContext context, string element) =>
             context.Ancestors(row).FirstOrDefault(ancestor => ancestor.Row is Log)
                 ?? throw new InvalidDataException($"A {element} is not inside a Log.");
 
         /// <summary>
         /// The log, as named in an error, e.g. "Log 1 of Stem 619254"
         /// </summary>
-        public static string Describe(ContextRow log, DeserializationContext context) =>
+        public static string Describe(ContextRow log, DeserializeContext context) =>
             $"Log {log.Row.AsType<Log>().LogKey} of Stem {Harvesting.Stem(log, context).StemKey}";
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace Forestry.StanForD.Policies {
         /// or the member is set already (FR-013)</exception>
         public static void Set<TValue>(
             ContextRow log,
-            DeserializationContext context,
+            DeserializeContext context,
             string? member,
             TValue value,
             string occurrence,
@@ -94,7 +94,7 @@ namespace Forestry.StanForD.Policies {
         };
 
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             row.Enumerate(false);
 
@@ -124,7 +124,7 @@ namespace Forestry.StanForD.Policies {
     internal sealed class LogMeasurementPolicy(UnmatchedOccurrence unmatched) : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             row.Enumerate(false);
 
@@ -163,7 +163,7 @@ namespace Forestry.StanForD.Policies {
         };
 
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             row.Enumerate(false);
 

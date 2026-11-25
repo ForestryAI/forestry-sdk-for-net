@@ -1,6 +1,6 @@
-using Forestry.Deserialize;
-using Forestry.Deserialize.Policies;
-using Forestry.Deserialize.Reading;
+using Forestry.Serialization;
+using Forestry.Serialization.Policies;
+using Forestry.Serialization.Reading;
 
 namespace Forestry.StanForD.Policies {
     /// <summary>
@@ -10,7 +10,7 @@ namespace Forestry.StanForD.Policies {
     internal sealed class MachinePolicy : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             row.Enumerate(false);
             next(row);
@@ -27,7 +27,7 @@ namespace Forestry.StanForD.Policies {
         /// <inheritdoc/>
         /// <exception cref="InvalidDataException">No machine key, or a reference to an undefined
         /// definition</exception>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             Stem stem = row.Row.AsType<Stem>();
             string what = $"Stem {stem.StemKey}";
@@ -54,7 +54,7 @@ namespace Forestry.StanForD.Policies {
         /// <inheritdoc/>
         /// <exception cref="InvalidDataException">No machine key, no enclosing stem, or a reference to an
         /// undefined definition</exception>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             Log log = row.Row.AsType<Log>();
             Stem stem = Harvesting.Stem(row, context);

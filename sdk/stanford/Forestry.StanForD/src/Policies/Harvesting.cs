@@ -1,5 +1,5 @@
-using Forestry.Deserialize;
-using Forestry.Deserialize.Reading;
+using Forestry.Serialization;
+using Forestry.Serialization.Reading;
 
 namespace Forestry.StanForD.Policies {
     /// <summary>
@@ -14,7 +14,7 @@ namespace Forestry.StanForD.Policies {
         /// <param name="context"></param>
         /// <param name="what">The row, as named in an error, e.g. "Stem 619254"</param>
         /// <exception cref="InvalidDataException">No machine key is read before the row (FR-005)</exception>
-        public static Guid MachineKey(ContextRow row, DeserializationContext context, string what)
+        public static Guid MachineKey(ContextRow row, DeserializeContext context, string what)
         {
             ContextRow? machine = context.Ancestors(row).FirstOrDefault(ancestor => ancestor.Row is Machine);
 
@@ -30,14 +30,14 @@ namespace Forestry.StanForD.Policies {
         /// The <see cref="Stem"/> open around a log
         /// </summary>
         /// <exception cref="InvalidDataException">The log is not inside a stem with a stem key</exception>
-        public static Stem Stem(ContextRow log, DeserializationContext context) =>
+        public static Stem Stem(ContextRow log, DeserializeContext context) =>
             StemRow(log, context).Row.AsType<Stem>();
 
         /// <summary>
         /// The <see cref="Stem"/> open around a log, as a context row (to ask what the document set)
         /// </summary>
         /// <exception cref="InvalidDataException">The log is not inside a stem with a stem key</exception>
-        public static ContextRow StemRow(ContextRow log, DeserializationContext context)
+        public static ContextRow StemRow(ContextRow log, DeserializeContext context)
         {
             ContextRow? stem = context.Ancestors(log).FirstOrDefault(ancestor => ancestor.Row is Stem);
 
@@ -55,7 +55,7 @@ namespace Forestry.StanForD.Policies {
         /// <param name="context"></param>
         /// <param name="what">The row, as named in an error, e.g. "Stem 619254"</param>
         /// <exception cref="InvalidDataException">No header creation date is read before the row (FR-006)</exception>
-        public static DateTimeOffset HarvestingCreationTime(DeserializationContext context, string what)
+        public static DateTimeOffset HarvestingCreationTime(DeserializeContext context, string what)
         {
             ContextRow? header = context.Rows<HarvestedProductionHeader>().FirstOrDefault();
 
@@ -74,7 +74,7 @@ namespace Forestry.StanForD.Policies {
         /// <param name="context"></param>
         /// <param name="what">The row, as named in an error, e.g. "Log 1 of Stem 619254"</param>
         /// <exception cref="InvalidDataException">The stem has no object key, or no such object is kept</exception>
-        public static ObjectDefinition Object(ContextRow stem, DeserializationContext context, string what)
+        public static ObjectDefinition Object(ContextRow stem, DeserializeContext context, string what)
         {
             if (!stem.IsSet(nameof(StanForD.Stem.ObjectKey)))
             {
@@ -107,7 +107,7 @@ namespace Forestry.StanForD.Policies {
         /// <exception cref="InvalidDataException">No such definition is kept</exception>
         public static void RequireDefinition<TDefinition>(
             ContextRow row,
-            DeserializationContext context,
+            DeserializeContext context,
             string what,
             string keyMember,
             int value,

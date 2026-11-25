@@ -1,6 +1,6 @@
-using Forestry.Deserialize;
-using Forestry.Deserialize.Policies;
-using Forestry.Deserialize.Reading;
+using Forestry.Serialization;
+using Forestry.Serialization.Policies;
+using Forestry.Serialization.Reading;
 
 namespace Forestry.StanForD.Policies {
     /// <summary>
@@ -10,7 +10,7 @@ namespace Forestry.StanForD.Policies {
     internal sealed class HeaderPolicy : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             row.Enumerate(false);
             row.Keep(Lifetime.UntilEnd);
@@ -27,7 +27,7 @@ namespace Forestry.StanForD.Policies {
         /// <inheritdoc/>
         /// <exception cref="InvalidDataException">No header creation date, no object key, or no such
         /// object</exception>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             string what = $"Stem {row.Row.AsType<Stem>().StemKey}";
             DateTimeOffset creationTime = Harvesting.HarvestingCreationTime(context, what);
@@ -49,7 +49,7 @@ namespace Forestry.StanForD.Policies {
         /// <inheritdoc/>
         /// <exception cref="InvalidDataException">No enclosing stem, no header creation date, no object key
         /// on the stem, or no such object</exception>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             ContextRow stem = Harvesting.StemRow(row, context);
             string what = $"Log {row.Row.AsType<Log>().LogKey} of Stem {stem.Row.AsType<Stem>().StemKey}";

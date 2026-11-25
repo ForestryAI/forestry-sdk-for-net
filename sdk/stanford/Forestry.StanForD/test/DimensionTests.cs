@@ -1,5 +1,5 @@
-using Forestry.Deserialize;
-using Forestry.Deserialize.Xml;
+using Forestry.Serialization;
+using Forestry.Serialization.Xml;
 using Forestry.StanForD.Tests.Fragments;
 using Xunit;
 
@@ -17,7 +17,7 @@ namespace Forestry.StanForD.Tests
     public sealed class DimensionTests
     {
         private static List<Row> Read() =>
-            Deserialization.Deserialize(Fragment.Read(Fragment.MinimalHarvesting), new DeserializeXmlOptions().AddHarvesting()).ToList();
+            TelemetrySerializer.Deserialize(Fragment.Read(Fragment.MinimalHarvesting), new DeserializeXmlOptions().AddHarvesting()).ToList();
 
         /// <summary>
         /// T078, US7-1, FR-021, FR-022: every stem carries its stem number and its object, sub-object,

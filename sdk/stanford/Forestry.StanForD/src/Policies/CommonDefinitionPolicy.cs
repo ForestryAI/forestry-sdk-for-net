@@ -1,6 +1,6 @@
-using Forestry.Deserialize;
-using Forestry.Deserialize.Policies;
-using Forestry.Deserialize.Reading;
+using Forestry.Serialization;
+using Forestry.Serialization.Policies;
+using Forestry.Serialization.Reading;
 
 namespace Forestry.StanForD.Policies {
     /// <summary>
@@ -17,7 +17,7 @@ namespace Forestry.StanForD.Policies {
         /// <inheritdoc/>
         /// <exception cref="InvalidDataException">The definition has no key, or no machine key is read
         /// before it</exception>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             Guid machineKey = Harvesting.MachineKey(row, context, typeof(TDefinition).Name);
 

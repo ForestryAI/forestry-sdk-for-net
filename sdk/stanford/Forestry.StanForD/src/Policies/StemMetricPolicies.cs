@@ -1,6 +1,6 @@
-using Forestry.Deserialize;
-using Forestry.Deserialize.Policies;
-using Forestry.Deserialize.Reading;
+using Forestry.Serialization;
+using Forestry.Serialization.Policies;
+using Forestry.Serialization.Reading;
 
 namespace Forestry.StanForD.Policies {
     /// <summary>
@@ -12,7 +12,7 @@ namespace Forestry.StanForD.Policies {
         /// The <see cref="Stem"/> open around a wrapper row
         /// </summary>
         /// <exception cref="InvalidDataException">The row is not inside a stem</exception>
-        public static ContextRow Stem(ContextRow row, DeserializationContext context, string element) =>
+        public static ContextRow Stem(ContextRow row, DeserializeContext context, string element) =>
             Enclosing.Row<Stem>(row, context) ?? throw new InvalidDataException($"A {element} is not inside a Stem.");
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace Forestry.StanForD.Policies {
     internal sealed class StemCoordinatesPolicy : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             row.Enumerate(false);
 
@@ -83,7 +83,7 @@ namespace Forestry.StanForD.Policies {
     internal sealed class LatitudePolicy(UnmatchedOccurrence unmatched) : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             row.Enumerate(false);
 
@@ -120,7 +120,7 @@ namespace Forestry.StanForD.Policies {
     internal sealed class LongitudePolicy(UnmatchedOccurrence unmatched) : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             row.Enumerate(false);
 
@@ -163,7 +163,7 @@ namespace Forestry.StanForD.Policies {
         };
 
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             row.Enumerate(false);
 
@@ -199,7 +199,7 @@ namespace Forestry.StanForD.Policies {
     internal sealed class SingleTreeProcessedStemPolicy : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextRow row, DeserializeContext context, Action<ContextRow> next)
         {
             row.Enumerate(false);
 

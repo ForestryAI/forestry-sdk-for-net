@@ -1,4 +1,4 @@
-using Forestry.Deserialize;
+using Forestry.Serialization;
 
 namespace Forestry.StanForD {
     /// <summary>

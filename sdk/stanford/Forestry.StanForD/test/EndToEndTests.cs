@@ -1,5 +1,5 @@
-using Forestry.Deserialize;
-using Forestry.Deserialize.Xml;
+using Forestry.Serialization;
+using Forestry.Serialization.Xml;
 using Xunit;
 
 namespace Forestry.StanForD.Tests
@@ -44,7 +44,7 @@ namespace Forestry.StanForD.Tests
 
             foreach ((string name, string xml) in documents)
             {
-                List<Row> rows = Deserialization.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting()).ToList();
+                List<Row> rows = TelemetrySerializer.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting()).ToList();
                 List<Stem> stems = rows.OfType<Stem>().ToList();
                 List<Log> logs = rows.OfType<Log>().ToList();
 

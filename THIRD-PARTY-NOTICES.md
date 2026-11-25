@@ -2,7 +2,7 @@
 
 This repository's own code is MIT licensed (see [LICENSE](LICENSE)). Some packages adapt design
 patterns and, in places, specific logic from Microsoft's open-source .NET runtime — most notably
-`Forestry.Deserialize`/`Forestry.Deserialize.Xml`, whose reader/buffering shape deliberately
+`Forestry.Serialization`/`Forestry.Serialization.Xml`, whose reader/buffering shape deliberately
 mirrors `System.Text.Json.Utf8JsonReader`/`JsonReaderState` (see those packages' own
 ARCHITECTURE.md for why: no other primitive in the BCL offers a buffer-in/token-out contract that
 works across an async refill boundary). Where a specific method or algorithm is adapted from a

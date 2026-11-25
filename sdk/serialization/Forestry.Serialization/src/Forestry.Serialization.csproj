@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Forestry Serialization</Description>
+    <TargetFrameworks>$(RequiredTargetFrameworks)</TargetFrameworks>
+    <Version>1.0.0-beta.1</Version>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageTags>Forestry Serialization</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Forestry.Serialization.Xml</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Forestry.Serialization.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+</Project>

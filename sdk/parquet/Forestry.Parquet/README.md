@@ -12,7 +12,7 @@ that feed a client's pipeline and on to big data.
 - **A writer of its own.** In the same spirit as [Forestry.Xml](../../xml/Forestry.Xml/README.md) on
   the reading side: UTF-8, forward only, writing straight to a `PipeWriter` or a stream that cannot
   seek (for example an upload). It covers what flat rows need, so no nested columns, and has no
-  dependency on Forestry.Deserialize. No third-party Parquet library is planned.
+  dependency on Forestry.Serialization. No third-party Parquet library is planned.
 - **Writing is a pipeline directive.** A client's writing directive owns a format writer: JSON Lines
   now, Parquet later. Appending a row is a cheap call, held to the same standard as deserialization
   policies (no allocation per value); closing a row group or file, and handing it on to be sent, is
