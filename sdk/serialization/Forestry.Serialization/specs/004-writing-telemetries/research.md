@@ -98,8 +98,11 @@ confirms it (C5).
 - **Decision** (revised 2026-11-26, after the developer pointed at System.Text.Json's
   `ObjectDefaultConverter`): an abstract `ObjectConverter` in the core, created per type
   definition by the format through `SerializeOptions.CreateObjectConverter(TypeDefinition)`
-  (abstract on `SerializeOptions`, as `CreateTelemetryEnumerator` is abstract on
-  `DeserializeOptions`). A format overrides only:
+  (`protected abstract` on `SerializeOptions`, called by the core through an internal wrapper.
+  Unlike `CreateTelemetryEnumerator`, it is not `protected internal`: a format package without
+  access to the core's internals, such as JSON Lines or a test format linked into the XML tests,
+  could not override a `protected internal` member; found writing the US2 shells, 2026-11-26). A
+  format overrides only:
   - `WriteStart(IBufferWriter<byte> writer)` and `WriteEnd(IBufferWriter<byte> writer)`: what
     frames a whole telemetry (JSON Lines: `{` and `}\n`; the string test format: nothing and `\n`).
   - `CreateMemberSections(PropertyDefinition property)`: called once per property definition when

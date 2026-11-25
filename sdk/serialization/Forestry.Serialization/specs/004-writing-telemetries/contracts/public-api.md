@@ -43,7 +43,7 @@ namespace Forestry.Serialization
     public abstract class SerializeOptions : TelemetrySerializerOptions
     {
         public MonitoringCollectionOptions DefaultCollectionOptions { get; set; }   // settable until locked
-        protected internal abstract ObjectConverter CreateObjectConverter(TypeDefinition definition);
+        protected abstract ObjectConverter CreateObjectConverter(TypeDefinition definition);   // protected: formats need no access to internals; the core calls it through an internal wrapper
     }
 
     public static partial class TelemetrySerializer

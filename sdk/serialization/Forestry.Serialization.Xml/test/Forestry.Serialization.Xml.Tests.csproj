@@ -32,4 +32,9 @@
   <ItemGroup>
     <ProjectReference Include="..\src\Forestry.Serialization.Xml.csproj" />
   </ItemGroup>
+
+  <!-- The core tests' string test format, for writing in the memory test (spec 004 T020, research R55) -->
+  <ItemGroup>
+    <Compile Include="..\..\Forestry.Serialization\test\Fixtures\TestingSerializeOptions.cs" Link="Fixtures\TestingSerializeOptions.cs" />
+  </ItemGroup>
 </Project>
