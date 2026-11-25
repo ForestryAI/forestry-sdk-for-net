@@ -4,7 +4,7 @@
   stem 619254's first log carries every measurement a real log has (tasks.md T073); every
   dimension US7 reads is present (tasks.md T077), and every stem metric US8 reads (tasks.md T087).
   Shaped like the real documents (StanForD 2010, version 3.5): header, machine, the common
-  definitions the rows copy from, then two stems. Values are made up; no real machine, contract
+  definitions the telemetries copy from, then two stems. Values are made up; no real machine, contract
   or person.
 -->
 <HarvestedProduction xmlns="urn:skogforsk:stanford2010" messageType="hpr" diameterUnit="mm" lengthUnit="cm" volumeUnit="m3" version="3.5">

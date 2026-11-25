@@ -1,40 +1,41 @@
 # Forestry StanForD
 
-This library flattens [StanForD](https://www.skogforsk.se/) documents into rows for big data analysis.
+This library flattens [StanForD](https://www.skogforsk.se/) documents into telemetries for big data analysis
+([what a telemetry is](../../../README.md#telemetry-monitoring-and-observability)).
 StanForD is the XML standard published by Skogforsk for exchanging forest machine data; the SDK's
 [README](../../../README.md#scandinavian-stanford) explains why it is where the SDK starts.
 
 Production StanForD is big data: machines produce documents every day, and some are very large. The
 analysis is grouped, usually by an actor (an operator or production planner), a device (a machine) and
 a contract. So instead of mirroring StanForD's deep XML hierarchy as C# objects, this package
-flattens each document into self-contained rows, which feed a client's pipeline on the way to a big
+flattens each document into self-contained telemetries, which feed a client's pipeline on the way to a big
 data resource. The SDK's [README](../../../README.md#big-data-clients) explains the whole path.
 
-It is built on [Forestry.Deserialize](../../deserialize/Forestry.Deserialize/README.md) and its XML
+It is built on [Forestry.Serialization](../../serialization/Forestry.Serialization/README.md) and its XML
 format package, and is also an example of how to flatten a standard with them: everything
-StanForD-specific lives in this package's row types and policies, nothing in the deserialization core.
+StanForD-specific lives in this package's telemetry types and policies, nothing in the deserialization core.
 For how it is put together, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Flattening a document
 
-One call sets up the options; then deserialize as with any Forestry.Deserialize format. `Stem` and
-`Log` are the only metrics, and the only rows that come out, in completion order (a stem's logs before
+One call sets up the options; then deserialize as with any Forestry.Serialization format. `Stem` and
+`Log` are the only metrics, and the only telemetries that come out, in completion order (a stem's logs before
 the stem):
 
 ```csharp
-using Forestry.Deserialize;
-using Forestry.Deserialize.Xml;
+using Forestry.Serialization;
+using Forestry.Serialization.Xml;
 using Forestry.StanForD;
 
 DeserializeXmlOptions options = new DeserializeXmlOptions().AddHarvesting();
 
 await using FileStream file = File.OpenRead("harvest.hpr");
 
-await foreach (Row row in Deserialization.DeserializeAsync(file, options, cancellationToken))
+await foreach (Telemetry telemetry in TelemetrySerializer.DeserializeAsync(file, options, cancellationToken))
 {
-    if (row.Is<Stem>())
+    if (telemetry.Is<Stem>())
     {
-        Stem stem = row.AsType<Stem>();
+        Stem stem = telemetry.AsType<Stem>();
         // identification: stem.Id
         // partitioning:   stem.HarvestingCreationTime, stem.ContractNumber
         // metrics:        stem.DBH, stem.Latitude
@@ -43,14 +44,14 @@ await foreach (Row row in Deserialization.DeserializeAsync(file, options, cancel
 }
 ```
 
-`Deserialization.Deserialize(xml, options)` reads a `string` or UTF-8 bytes synchronously. Use one
-options instance per concurrent deserialization (Forestry.Deserialize's policies serve one enumeration
+`TelemetrySerializer.Deserialize(xml, options)` reads a `string` or UTF-8 bytes synchronously. Use one
+options instance per concurrent deserialization (Forestry.Serialization's policies serve one enumeration
 at a time).
 
-## What a row gives you
+## What a telemetry gives you
 
-Stem and Log show what a machine's metrics expose. So that each row is self-contained, every Stem and
-Log row has four kinds of members:
+Stem and Log show what a machine's metrics expose. So that each telemetry is self-contained, every Stem and
+Log telemetry has four kinds of members:
 
 - **Identification**: `Id` is globally unique, `{machine key}-{stem key}` on a stem and
   `{machine key}-{stem key}-{log key}` on a log, with the machine key as a GUID without dashes. The keys
@@ -62,7 +63,7 @@ Log row has four kinds of members:
   log does not have stays 0, "not measured". Units are the document's (`DiameterUnit`, `LengthUnit`,
   `VolumeUnit`), not converted.
 - **Dimensions**: the object, sub-object, species group, operator, machine and (on a log) product and
-  destination, with their names and StanForD identifiers. They are copied onto every row, a stem's onto
+  destination, with their names and StanForD identifiers. They are copied onto every telemetry, a stem's onto
   its logs too, so no query needs a join.
 
 Every member is a single value.
@@ -72,12 +73,12 @@ Every member is a single value.
 The source is grouped by the same terms, in folders under `src/`; the namespace is `Forestry.StanForD`
 throughout:
 
-- **`Metrics`**: `Stem` and `Log`, the rows that come out.
+- **`Metrics`**: `Stem` and `Log`, the telemetries that come out.
 - **`Dimensions`**: the object, species group, product and operator definitions and the machine, read
-  so their names and identifiers can be copied onto every metric row. They never come out themselves.
-- **`Parts`**: rows that only carry values one level down, such as a log's volumes and diameters or a
+  so their names and identifiers can be copied onto every metric telemetry. They never come out themselves.
+- **`Parts`**: telemetries that only carry values one level down, such as a log's volumes and diameters or a
   stem's coordinates, whose policies copy them onto their parent.
-- **`Policies`**: identification, partitioning, conditional mapping and dimensions, per row type.
+- **`Policies`**: identification, partitioning, conditional mapping and dimensions, per telemetry type.
 
 The split also shows what stays shared once Harvesting moves to
 [Forestry.StanForD.Harvesting](../Forestry.StanForD.Harvesting/README.md). Metrics depend on the
@@ -129,9 +130,9 @@ different creation times, so they land in two time partitions; remove duplicates
 ## Status
 
 Spec 001 ([#90](https://github.com/ForestryAI/forestry-sdk-for-net/issues/90)) is implemented: Stem
-and Log rows with identification, partitioning, conditional mapping of measurements, dimensions and
+and Log telemetries with identification, partitioning, conditional mapping of measurements, dimensions and
 stem metrics, tested against handwritten fragments and real Harvesting documents. It is a working
-example, fragile in places: see #110 (element names shared by a row type and a member, and rows matched
+example, fragile in places: see #110 (element names shared by a telemetry type and a member, and telemetries matched
 anywhere in the document) and #109 (operator measurements). Performance is a later specification.
 
 `schemas/` holds Skogforsk's StanForD 2010 schemas at V4p1: every message (Harvesting's

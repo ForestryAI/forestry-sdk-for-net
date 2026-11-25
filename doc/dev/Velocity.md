@@ -4,7 +4,7 @@ How task time is measured across this SDK, and why. Twofold purpose: reduce chur
 architecture and code, and keep AI use from quietly eroding the developer's own understanding of
 what got built. Not anti-AI - the goal is that decisions stay part human, part AI, with enough
 visibility into each to tell whether that split is working. Applies to any task authored with a
-written architecture step (the model case is `Forestry.Deserialize.Xml`'s Feature #12 issues), not
+written architecture step (the model case is `Forestry.Serialization.Xml`'s Feature #12 issues), not
 just this package.
 
 ## Phases

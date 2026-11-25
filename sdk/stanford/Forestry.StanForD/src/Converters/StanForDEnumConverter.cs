@@ -1,5 +1,5 @@
 using System.Text;
-using Forestry.Deserialize.Converters;
+using Forestry.Serialization.Converters;
 
 namespace Forestry.StanForD.Converters {
     /// <summary>
@@ -7,7 +7,7 @@ namespace Forestry.StanForD.Converters {
     /// "Other manual" to <see cref="CuttingReason.OtherManual"/>
     /// </summary>
     /// <remarks>
-    /// Forestry.Deserialize has no enum converter yet; until it does, the StanForD enums the rows use
+    /// Forestry.Serialization has no enum converter yet; until it does, the StanForD enums the telemetries use
     /// are converted here.
     /// </remarks>
     /// <typeparam name="TEnum"></typeparam>

@@ -1,5 +1,5 @@
-using Forestry.Deserialize;
-using Forestry.Deserialize.Xml;
+using Forestry.Serialization;
+using Forestry.Serialization.Xml;
 using Forestry.StanForD.Tests.Fragments;
 using Xunit;
 
@@ -18,7 +18,7 @@ namespace Forestry.StanForD.Tests
     /// <c>Ignore</c>.</item>
     /// <item><c>LogVolume</c> (its <c>logVolumeCategory</c> and <c>logMeasurementCategory</c> attributes and
     /// its value), <c>LogMeasurement</c> (its <c>logMeasurementCategory</c> attribute and <c>LogLength</c>) and
-    /// <c>LogDiameter</c> (its <c>logDiameterCategory</c> attribute and its value) are row types that never come
+    /// <c>LogDiameter</c> (its <c>logDiameterCategory</c> attribute and its value) are telemetry types that never come
     /// out. When one completes, its policy matches its categories (a diameter's measurement category is its
     /// enclosing <c>LogMeasurement</c>'s) and sets the matching member of the open <see cref="Log"/>.</item>
     /// <item>The conditions, all with measurement category "Machine": volumes "m3sob", "m3sub", "m3 (price)";
@@ -31,14 +31,14 @@ namespace Forestry.StanForD.Tests
     /// </remarks>
     public sealed class ConditionalMappingTests
     {
-        private static List<Row> Read(string xml, Action<HarvestingOptions>? configure = null) =>
-            Deserialization.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting(configure)).ToList();
+        private static List<Telemetry> Read(string xml, Action<HarvestingOptions>? configure = null) =>
+            TelemetrySerializer.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting(configure)).ToList();
 
         /// <summary>
         /// The first log of stem 619254, which carries every measurement
         /// </summary>
-        private static Log FirstLog(List<Row> rows) =>
-            rows.OfType<Log>().First(log => log.StemKey == 619254 && log.LogKey == 1);
+        private static Log FirstLog(List<Telemetry> telemetries) =>
+            telemetries.OfType<Log>().First(log => log.StemKey == 619254 && log.LogKey == 1);
 
         /// <summary>
         /// T032, quickstart 6, US4-1: three volumes told apart by their categories fill their own members
@@ -249,17 +249,17 @@ namespace Forestry.StanForD.Tests
         /// T038, R2: volumes, measurements and diameters never come out; only stems and logs do
         /// </summary>
         [Fact]
-        public void HarvestingDocument_ItShould_GiveNoMeasurementRows()
+        public void HarvestingDocument_ItShould_GiveNoMeasurementTelemetries()
         {
             // Arrange
             string xml = Fragment.Read(Fragment.MinimalHarvesting);
 
             // Act
-            List<Row> rows = Read(xml);
+            List<Telemetry> telemetries = Read(xml);
 
             // Assert
-            Assert.Equal(5, rows.Count);
-            Assert.All(rows, row => Assert.True(row is Stem or Log, row.GetType().Name));
+            Assert.Equal(5, telemetries.Count);
+            Assert.All(telemetries, telemetry => Assert.True(telemetry is Stem or Log, telemetry.GetType().Name));
         }
     }
 }

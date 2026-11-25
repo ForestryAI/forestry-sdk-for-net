@@ -8,7 +8,7 @@ Terms are defined under Definitions. Agreed by the developer in #71 (2026-11-07)
 published with: `eng/`, the root `Directory.Build.props` and `Directory.Build.targets`,
 `global.json`, `NuGet.Config`, `.github/` (workflows, Dependabot) and `doc/dev/`. A package's own
 code and tests are governed by that package's silo (`sdk/xml/Forestry.Xml/`,
-`sdk/deserialize/Forestry.Deserialize/`), whose rule A3 points here.
+`sdk/serialization/Forestry.Serialization/`), whose rule A3 points here.
 
 ## Core Principles
 

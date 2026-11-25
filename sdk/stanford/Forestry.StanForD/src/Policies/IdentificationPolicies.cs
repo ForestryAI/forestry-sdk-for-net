@@ -1,6 +1,6 @@
-using Forestry.Deserialize;
-using Forestry.Deserialize.Policies;
-using Forestry.Deserialize.Reading;
+using Forestry.Serialization;
+using Forestry.Serialization.Policies;
+using Forestry.Serialization.Reading;
 
 namespace Forestry.StanForD.Policies {
     /// <summary>
@@ -10,10 +10,10 @@ namespace Forestry.StanForD.Policies {
     internal sealed class MachinePolicy : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextTelemetry telemetry, DeserializeContext context, Action<ContextTelemetry> next)
         {
-            row.Enumerate(false);
-            next(row);
+            telemetry.Enumerate(false);
+            next(telemetry);
         }
     }
 
@@ -27,20 +27,20 @@ namespace Forestry.StanForD.Policies {
         /// <inheritdoc/>
         /// <exception cref="InvalidDataException">No machine key, or a reference to an undefined
         /// definition</exception>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextTelemetry telemetry, DeserializeContext context, Action<ContextTelemetry> next)
         {
-            Stem stem = row.Row.AsType<Stem>();
+            Stem stem = telemetry.Telemetry.AsType<Stem>();
             string what = $"Stem {stem.StemKey}";
-            Guid machineKey = Harvesting.MachineKey(row, context, what);
+            Guid machineKey = Harvesting.MachineKey(telemetry, context, what);
 
-            Harvesting.RequireDefinition<ObjectDefinition>(row, context, what, nameof(Stem.ObjectKey), stem.ObjectKey, definition => definition.ObjectKey);
-            Harvesting.RequireDefinition<SpeciesGroupDefinition>(row, context, what, nameof(Stem.SpeciesGroupKey), stem.SpeciesGroupKey, definition => definition.SpeciesGroupKey);
-            Harvesting.RequireDefinition<OperatorDefinition>(row, context, what, nameof(Stem.OperatorKey), stem.OperatorKey, definition => definition.OperatorKey);
+            Harvesting.RequireDefinition<ObjectDefinition>(telemetry, context, what, nameof(Stem.ObjectKey), stem.ObjectKey, definition => definition.ObjectKey);
+            Harvesting.RequireDefinition<SpeciesGroupDefinition>(telemetry, context, what, nameof(Stem.SpeciesGroupKey), stem.SpeciesGroupKey, definition => definition.SpeciesGroupKey);
+            Harvesting.RequireDefinition<OperatorDefinition>(telemetry, context, what, nameof(Stem.OperatorKey), stem.OperatorKey, definition => definition.OperatorKey);
 
-            row.Set(nameof(Stem.MachineKey), machineKey);
-            row.Set(nameof(Stem.Id), Identification.Format(machineKey, stem.StemKey));
+            telemetry.Set(nameof(Stem.MachineKey), machineKey);
+            telemetry.Set(nameof(Stem.Id), Identification.Format(machineKey, stem.StemKey));
 
-            next(row);
+            next(telemetry);
         }
     }
 
@@ -54,20 +54,20 @@ namespace Forestry.StanForD.Policies {
         /// <inheritdoc/>
         /// <exception cref="InvalidDataException">No machine key, no enclosing stem, or a reference to an
         /// undefined definition</exception>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextTelemetry telemetry, DeserializeContext context, Action<ContextTelemetry> next)
         {
-            Log log = row.Row.AsType<Log>();
-            Stem stem = Harvesting.Stem(row, context);
+            Log log = telemetry.Telemetry.AsType<Log>();
+            Stem stem = Harvesting.Stem(telemetry, context);
             string what = $"Log {log.LogKey} of Stem {stem.StemKey}";
-            Guid machineKey = Harvesting.MachineKey(row, context, what);
+            Guid machineKey = Harvesting.MachineKey(telemetry, context, what);
 
-            Harvesting.RequireDefinition<ProductDefinition>(row, context, what, nameof(Log.ProductKey), log.ProductKey, definition => definition.ProductKey);
+            Harvesting.RequireDefinition<ProductDefinition>(telemetry, context, what, nameof(Log.ProductKey), log.ProductKey, definition => definition.ProductKey);
 
-            row.Set(nameof(Log.MachineKey), machineKey);
-            row.Set(nameof(Log.StemKey), stem.StemKey);
-            row.Set(nameof(Log.Id), Identification.Format(machineKey, stem.StemKey, log.LogKey));
+            telemetry.Set(nameof(Log.MachineKey), machineKey);
+            telemetry.Set(nameof(Log.StemKey), stem.StemKey);
+            telemetry.Set(nameof(Log.Id), Identification.Format(machineKey, stem.StemKey, log.LogKey));
 
-            next(row);
+            next(telemetry);
         }
     }
 }

@@ -13,8 +13,8 @@ on:
         type: choice
         options:
           - Forestry.Xml
-          - Forestry.Deserialize
-          - Forestry.Deserialize.Xml
+          - Forestry.Serialization
+          - Forestry.Serialization.Xml
       dry-run:
         description: Check and pack only, publish nothing
         required: true
@@ -55,8 +55,8 @@ jobs:
           fi
           case "$PACKAGE" in
             Forestry.Xml) folder=sdk/xml/Forestry.Xml ;;
-            Forestry.Deserialize) folder=sdk/deserialize/Forestry.Deserialize ;;
-            Forestry.Deserialize.Xml) folder=sdk/deserialize/Forestry.Deserialize.Xml ;;
+            Forestry.Serialization) folder=sdk/serialization/Forestry.Serialization ;;
+            Forestry.Serialization.Xml) folder=sdk/serialization/Forestry.Serialization.Xml ;;
             *) echo "::error::Unknown package $PACKAGE"; exit 1 ;;
           esac
           {

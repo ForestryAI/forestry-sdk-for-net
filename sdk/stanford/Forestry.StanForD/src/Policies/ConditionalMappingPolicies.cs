@@ -1,10 +1,10 @@
-using Forestry.Deserialize;
-using Forestry.Deserialize.Policies;
-using Forestry.Deserialize.Reading;
+using Forestry.Serialization;
+using Forestry.Serialization.Policies;
+using Forestry.Serialization.Reading;
 
 namespace Forestry.StanForD.Policies {
     /// <summary>
-    /// Sets a member of the open <see cref="Log"/> from a measurement row whose categories matched (FR-010 to
+    /// Sets a member of the open <see cref="Log"/> from a measurement telemetry whose categories matched (FR-010 to
     /// FR-013)
     /// </summary>
     internal static class ConditionalMapping
@@ -28,18 +28,18 @@ namespace Forestry.StanForD.Policies {
         public static bool IsIgnored(string measurementCategory) => s_ignored.Contains(measurementCategory);
 
         /// <summary>
-        /// The <see cref="Log"/> open around a measurement row
+        /// The <see cref="Log"/> open around a measurement telemetry
         /// </summary>
-        /// <exception cref="InvalidDataException">The row is not inside a log</exception>
-        public static ContextRow Log(ContextRow row, DeserializationContext context, string element) =>
-            context.Ancestors(row).FirstOrDefault(ancestor => ancestor.Row is Log)
+        /// <exception cref="InvalidDataException">The telemetry is not inside a log</exception>
+        public static ContextTelemetry Log(ContextTelemetry telemetry, DeserializeContext context, string element) =>
+            context.Ancestors(telemetry).FirstOrDefault(ancestor => ancestor.Telemetry is Log)
                 ?? throw new InvalidDataException($"A {element} is not inside a Log.");
 
         /// <summary>
         /// The log, as named in an error, e.g. "Log 1 of Stem 619254"
         /// </summary>
-        public static string Describe(ContextRow log, DeserializationContext context) =>
-            $"Log {log.Row.AsType<Log>().LogKey} of Stem {Harvesting.Stem(log, context).StemKey}";
+        public static string Describe(ContextTelemetry log, DeserializeContext context) =>
+            $"Log {log.Telemetry.AsType<Log>().LogKey} of Stem {Harvesting.Stem(log, context).StemKey}";
 
         /// <summary>
         /// Sets <paramref name="member"/> on the log, or handles an unmatched occurrence
@@ -53,8 +53,8 @@ namespace Forestry.StanForD.Policies {
         /// <exception cref="InvalidDataException">No match and <see cref="UnmatchedOccurrence.Fail"/> (FR-012),
         /// or the member is set already (FR-013)</exception>
         public static void Set<TValue>(
-            ContextRow log,
-            DeserializationContext context,
+            ContextTelemetry log,
+            DeserializeContext context,
             string? member,
             TValue value,
             string occurrence,
@@ -94,26 +94,26 @@ namespace Forestry.StanForD.Policies {
         };
 
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextTelemetry telemetry, DeserializeContext context, Action<ContextTelemetry> next)
         {
-            row.Enumerate(false);
+            telemetry.Enumerate(false);
 
-            LogVolume volume = row.Row.AsType<LogVolume>();
+            LogVolume volume = telemetry.Telemetry.AsType<LogVolume>();
 
             if (ConditionalMapping.IsIgnored(volume.LogMeasurementCategory))
             {
-                next(row);
+                next(telemetry);
                 return;
             }
 
-            ContextRow log = ConditionalMapping.Log(row, context, nameof(LogVolume));
+            ContextTelemetry log = ConditionalMapping.Log(telemetry, context, nameof(LogVolume));
             string? member = volume.LogMeasurementCategory == ConditionalMapping.Machine
                 && s_members.TryGetValue(volume.LogVolumeCategory, out string? found) ? found : null;
             string occurrence = $"{nameof(LogVolume)} (logVolumeCategory \"{volume.LogVolumeCategory}\", logMeasurementCategory \"{volume.LogMeasurementCategory}\")";
 
             ConditionalMapping.Set(log, context, member, volume.Value, occurrence, unmatched);
 
-            next(row);
+            next(telemetry);
         }
     }
 
@@ -124,22 +124,22 @@ namespace Forestry.StanForD.Policies {
     internal sealed class LogMeasurementPolicy(UnmatchedOccurrence unmatched) : EnumerationPolicy
     {
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextTelemetry telemetry, DeserializeContext context, Action<ContextTelemetry> next)
         {
-            row.Enumerate(false);
+            telemetry.Enumerate(false);
 
-            if (row.IsSet(nameof(LogMeasurement.LogLength))
-                && !ConditionalMapping.IsIgnored(row.Row.AsType<LogMeasurement>().LogMeasurementCategory))
+            if (telemetry.IsSet(nameof(LogMeasurement.LogLength))
+                && !ConditionalMapping.IsIgnored(telemetry.Telemetry.AsType<LogMeasurement>().LogMeasurementCategory))
             {
-                LogMeasurement measurement = row.Row.AsType<LogMeasurement>();
-                ContextRow log = ConditionalMapping.Log(row, context, nameof(LogMeasurement));
+                LogMeasurement measurement = telemetry.Telemetry.AsType<LogMeasurement>();
+                ContextTelemetry log = ConditionalMapping.Log(telemetry, context, nameof(LogMeasurement));
                 string? member = measurement.LogMeasurementCategory == ConditionalMapping.Machine ? nameof(Log.MachineLength) : null;
                 string occurrence = $"{nameof(LogMeasurement)}/{nameof(LogMeasurement.LogLength)} (logMeasurementCategory \"{measurement.LogMeasurementCategory}\")";
 
                 ConditionalMapping.Set(log, context, member, measurement.LogLength, occurrence, unmatched);
             }
 
-            next(row);
+            next(telemetry);
         }
     }
 
@@ -163,18 +163,18 @@ namespace Forestry.StanForD.Policies {
         };
 
         /// <inheritdoc/>
-        public override void Complete(ContextRow row, DeserializationContext context, Action<ContextRow> next)
+        public override void Complete(ContextTelemetry telemetry, DeserializeContext context, Action<ContextTelemetry> next)
         {
-            row.Enumerate(false);
+            telemetry.Enumerate(false);
 
-            LogDiameter diameter = row.Row.AsType<LogDiameter>();
-            ContextRow log = ConditionalMapping.Log(row, context, nameof(LogDiameter));
-            string measurementCategory = context.Ancestors(row)
-                .FirstOrDefault(ancestor => ancestor.Row is LogMeasurement)?.Row.AsType<LogMeasurement>().LogMeasurementCategory ?? string.Empty;
+            LogDiameter diameter = telemetry.Telemetry.AsType<LogDiameter>();
+            ContextTelemetry log = ConditionalMapping.Log(telemetry, context, nameof(LogDiameter));
+            string measurementCategory = context.Ancestors(telemetry)
+                .FirstOrDefault(ancestor => ancestor.Telemetry is LogMeasurement)?.Telemetry.AsType<LogMeasurement>().LogMeasurementCategory ?? string.Empty;
 
             if (ConditionalMapping.IsIgnored(measurementCategory))
             {
-                next(row);
+                next(telemetry);
                 return;
             }
 
@@ -184,7 +184,7 @@ namespace Forestry.StanForD.Policies {
 
             ConditionalMapping.Set(log, context, member, diameter.Value, occurrence, unmatched);
 
-            next(row);
+            next(telemetry);
         }
     }
 }

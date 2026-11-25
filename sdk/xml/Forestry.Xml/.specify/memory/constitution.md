@@ -9,7 +9,7 @@ reading is in `Forestry.Xml.Reading` (`src/Reading/`: `Utf8XmlReader`, `ReaderSt
 `ElementStack`, `CandidateNonTerminal`, `Utf8Reader` and the reader's throwing); what reading and a
 later writer share is in `Forestry.Xml` (`EBNF`, `TokenType`, `XmlException`, formatting) (developer,
 2026-11-03). A writer is not needed for the POC; it would go in `Forestry.Xml.Writing`. The XML media's
-association and row reading (`Forestry.Deserialize.Xml`) are governed by the deserialization
+association and row reading (`Forestry.Serialization.Xml`) are governed by the deserialization
 constitution, not this one.
 
 ## Core Principles
@@ -76,7 +76,7 @@ constitution, not this one.
 
 - **Covers**: Architecture
 - **Rule**: The reader MUST be usable without the deserialization package: `Forestry.Xml` references
-  nothing in `Forestry.Deserialize`, and `Forestry.Deserialize.Xml` references `Forestry.Xml`.
+  nothing in `Forestry.Serialization`, and `Forestry.Serialization.Xml` references `Forestry.Xml`.
 - **Rationale**: The reader is useful on its own (developer, 2026-11-03).
 - **Checked by**: `Forestry.Xml`'s project references.
 

@@ -2,45 +2,45 @@
 
 ## 1. Purpose
 
-**Forestry.StanForD** turns StanForD Harvesting documents (`hpr`) into flat rows ready for big data
+**Forestry.StanForD** turns StanForD Harvesting documents (`hpr`) into flat telemetries ready for big data
 analysis. StanForD is the XML standard published by [Skogforsk](https://www.skogforsk.se/) for
 exchanging forest machine data.
 
 Production StanForD is big data: every working machine produces documents every day, and documents
 from live machines can be very large. The analysis it feeds is grouped, usually by an actor (an
 operator, a machine, a contract and the parties behind it), over time. So the package does not mirror
-StanForD's hierarchy as C# objects; it shreds each document into flat rows whose members could become
+StanForD's hierarchy as C# objects; it shreds each document into flat telemetries whose members could become
 columns in a column-based format.
 
-The final format is up to the user. Defining Log and Stem row types does not make Parquet the end
-format: rows can just as well be written as JSON, CSV or another format, or used directly by an
+The final format is up to the user. Defining Log and Stem telemetry types does not make Parquet the end
+format: telemetries can just as well be written as JSON, CSV or another format, or used directly by an
 application rather than for ADX analysis. The guiding principles below are those of this POC, which
 targets ADX.
 
-The package is also an example of shredding a standard with Forestry.Deserialize: everything
-StanForD-specific is a row type or a policy here, nothing in the deserialization core.
+The package is also an example of shredding a standard with Forestry.Serialization: everything
+StanForD-specific is a telemetry type or a policy here, nothing in the deserialization core.
 
 ## 2. Guiding Principles
 
 **Deserialization from XML to a big data format.** The target is not an object model of the document
-but rows that suit a column-based format. In this POC that is [Parquet](https://www.databricks.com/blog/what-is-parquet),
+but telemetries that suit a column-based format. In this POC that is [Parquet](https://www.databricks.com/blog/what-is-parquet),
 read by Azure Data Explorer (ADX) through
 [external tables over Azure Blob Storage](https://learn.microsoft.com/en-us/azure/data-explorer/external-azure-storage-tables-query).
-Kusto queries are fastest against cached ADX data, next fastest against partitioned Parquet. A row
+Kusto queries are fastest against cached ADX data, next fastest against partitioned Parquet. A telemetry
 type is therefore flat, like a record, with members that are single values: primitives, enums or
 single-value structs (e.g. `Guid`, `DateTimeOffset`).
 
 **Only Stem and Log come out.** Everything standard in the common definitions becomes Stem and Log
-dimensions, copied onto every row (a stem's onto its logs too) rather than joined: Kusto avoids joins,
+dimensions, copied onto every telemetry (a stem's onto its logs too) rather than joined: Kusto avoids joins,
 and Parquet stores a document's repeated values as ranges.
 
 **Analytics by group, usually an actor.** Questions are asked per contract, then a time period, then a
-few predefined perspectives (coordinator, receiver, contractor). Which members a row carries follows
-from those queries, collected and grouped in `specs/001-harvesting-rows/queries.md` (#97), not from
+few predefined perspectives (coordinator, receiver, contractor). Which members a telemetry carries follows
+from those queries, collected and grouped in `specs/001-harvesting-telemetries/queries.md` (#97), not from
 what the schema happens to offer. Only what the Harvesting document holds is in scope; the commercial
 chain is Biometria's, work time and fuel are StanForD's operational monitoring (MOM).
 
-**Every row is identified.** Identification is global:
+**Every telemetry is identified.** Identification is global:
 - A machine has a globally unique key (GUID).
 - Stem keys are running numbers created by the machine and never reset; log keys restart for every
   stem.
@@ -49,7 +49,7 @@ chain is Biometria's, work time and fuel are StanForD's operational monitoring (
   the machine.
 - So `Id` is `{machine key "N"}-{stem key}` on a stem and `{machine key}-{stem key}-{log key}` on a log.
 
-**Every row is partitioned by time, then contract.** Stems and logs have no timestamp of their own, and
+**Every telemetry is partitioned by time, then contract.** Stems and logs have no timestamp of their own, and
 an object's start date is set once (findings-us5.md). Documents are incremental, so the header's
 creation date, in UTC, is as close to the cut time as the document allows: `HarvestingCreationTime`,
 then `ContractNumber`. A document repeats the previous document's last stem; both copies share an `Id`
@@ -58,31 +58,31 @@ and are removed downstream.
 **Conditional mapping.** StanForD repeats elements by name and tells them apart by attributes:
 `LogVolume` three times by `logVolumeCategory` and `logMeasurementCategory`, `LogDiameter` eight times by
 `logDiameterCategory` under a `LogMeasurement`, `BoomPositioning` twice by `boomPositioningCategory`.
-Each such element is read as a row of its own, and its policy sets the matching member of the row it
+Each such element is read as a telemetry of its own, and its policy sets the matching member of the telemetry it
 belongs to. Only machine measurements (M1) are read; operator measurements (M2) are ignored for now
 (#109).
 
 **Document size affects only time.** Deserializing a large document must not change CPU or memory use
-per row, only how long the enumeration takes. What is held is the open rows and the kept common
+per telemetry, only how long the enumeration takes. What is held is the open telemetries and the kept common
 definitions, never stems or logs (measuring it is a later specification).
 
 ## 3. Scope
 
-- **In**: StanForD 2010 Harvesting documents (`hpr`) in XML, read with row types following the latest
+- **In**: StanForD 2010 Harvesting documents (`hpr`) in XML, read with telemetry types following the latest
   schema version, V4p1; the document's version is not checked (the real documents tested are 3.5).
 - **Out**: the other StanForD document families (Forwarding, Quality, Production Instructions);
-  StanForD's older, non-XML format; writing rows to storage (the Azure Blob sink is later work);
+  StanForD's older, non-XML format; writing telemetries to storage (the Azure Blob sink is later work);
   extension elements, which belong to the sending program (an add-on such as a Forestry.Biometria
   package may read them).
 
 ## 4. Module Boundaries
 
-- **`Forestry.StanForD`**: this package. Harvesting row types, the rows read for them, converters for
+- **`Forestry.StanForD`**: this package. Harvesting telemetry types, the telemetries read for them, converters for
   StanForD texts, and the policies interpreting StanForD; set up with `AddHarvesting()`.
-- **`Forestry.Deserialize` / `Forestry.Deserialize.Xml`**: the deserialization package and its XML
-  media package (spec 002, the deserialization context). They read the document, build rows, keep rows
+- **`Forestry.Serialization` / `Forestry.Serialization.Xml`**: the deserialization package and its XML
+  media package (spec 002, the deserialization context). They read the document, build telemetries, keep telemetries
   in the deserialization context and call the policies (`Construct`, `Set`, `Complete`, `Clear`).
-  Forestry.StanForD references `Forestry.Deserialize.Xml`.
+  Forestry.StanForD references `Forestry.Serialization.Xml`.
 - **Later**: a Forestry.StanForD.Harvesting package with Harvesting-specific validation and
   documentation, leaving here what StanForD document types share.
 
@@ -90,9 +90,9 @@ definitions, never stems or logs (measuring it is a later specification).
 
 ## 5. Core Contracts
 
-### 5.1 Rows
+### 5.1 Telemetries
 
-| Kind | Rows | Comes out |
+| Kind | Telemetries | Comes out |
 |---|---|---|
 | Enumerated | `Stem`, `Log` | yes |
 | Header and machine | `HarvestedProductionHeader` (kept until the end), `Machine` (open around every stem) | no |
@@ -101,11 +101,11 @@ definitions, never stems or logs (measuring it is a later specification).
 | Log measurements | `LogVolume`, `LogMeasurement`, `LogDiameter` (copied onto the open log) | no |
 | Stem metrics | `StemCoordinates`, `Latitude`, `Longitude`, `BoomPositioning`, `SingleTreeProcessedStem` (copied onto the open stem) | no |
 
-Members and their StanForD sources: `specs/001-harvesting-rows/data-model.md`.
+Members and their StanForD sources: `specs/001-harvesting-telemetries/data-model.md`.
 
 ### 5.2 Policies
 
-All act when a row completes (`Complete`), in `src/Policies/`:
+All act when a telemetry completes (`Complete`), in `src/Policies/`:
 
 | Policies | Story | What they do |
 |---|---|---|
@@ -117,7 +117,7 @@ All act when a row completes (`Complete`), in `src/Policies/`:
 
 ### 5.3 Options
 
-`AddHarvesting(Action<HarvestingOptions>? configure)` adds every row type, the StanForD enum converter
+`AddHarvesting(Action<HarvestingOptions>? configure)` adds every telemetry type, the StanForD enum converter
 (`StanForDEnumConverter<TEnum>`, for texts such as "Other manual") and the policies.
 `HarvestingOptions.Unmatched` decides what happens to a category matching no member: `Fail` (default)
 or `Ignore`.
@@ -139,11 +139,11 @@ often 65535, the schema's default value; a `Latitude` also appears in species gr
 ## 7. Status / POC Debt
 
 - Spec 001 (#90) is implemented and passes against real Harvesting documents.
-- **#110**: a row type and a member sharing an element name are not rejected (Forestry StanForD relies
-  on it for `Latitude` and `Longitude`), and row types match their element name anywhere in the
+- **#110**: a telemetry type and a member sharing an element name are not rejected (Forestry StanForD relies
+  on it for `Latitude` and `Longitude`), and telemetry types match their element name anywhere in the
   document (handled for coordinates by ignoring those outside `StemCoordinates`).
 - **#109**: operator (M2) measurements are ignored.
-- Enum conversion lives here until Forestry.Deserialize converts enums.
+- Enum conversion lives here until Forestry.Serialization converts enums.
 - The schema version window and its check wait until after the POC.
 - Performance on large documents is not measured yet (a later specification).
 
@@ -151,7 +151,7 @@ often 65535, the schema's default value; a `Latitude` also appears in species gr
 
 - Not an object model of StanForD: no hierarchical C# types mirroring the XML.
 - Not a general XSD-to-C# compiler.
-- Not a storage writer: rows are handed to whoever enumerates them.
+- Not a storage writer: telemetries are handed to whoever enumerates them.
 - Does not read StanForD's older, non-XML format.
 
 ## 9. Related Work Items
@@ -165,5 +165,5 @@ often 65535, the schema's default value; a `Latitude` also appears in species gr
   - #97 US6 Collect and group queries
   - #98 US7 Log and Stem dimensions
   - #108 US8 Stem metrics
-- Feature #99: Forestry.Deserialize spec 002, the deserialization context this package builds on
-- Backlog: #109 operator (M2) measurements, #110 element names shared by a row type and a member
+- Feature #99: Forestry.Serialization spec 002, the deserialization context this package builds on
+- Backlog: #109 operator (M2) measurements, #110 element names shared by a telemetry type and a member

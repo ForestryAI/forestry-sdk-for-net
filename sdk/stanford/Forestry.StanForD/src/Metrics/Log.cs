@@ -1,4 +1,4 @@
-using Forestry.Deserialize;
+using Forestry.Serialization;
 
 namespace Forestry.StanForD {
     /// <summary>
@@ -14,7 +14,7 @@ namespace Forestry.StanForD {
     /// Members are set by policies from StanForD Harvesting (hpr) elements; each member names
     /// its source.  Measurements keep the units of the document (see the unit members).
     /// </remarks>
-    public sealed class Log : Row
+    public sealed class Log : Telemetry
     {
         #region identification
         /// <summary>

@@ -1,11 +1,11 @@
-using Forestry.Deserialize;
+using Forestry.Serialization;
 
 namespace Forestry.StanForD {
     /// <summary>
     /// The harvesting machine producing the document, from StanForD <c>Machine</c>.  Its key makes
     /// stem, log and definition keys globally unique.
     /// </summary>
-    public sealed class Machine : Row
+    public sealed class Machine : Telemetry
     {
         /// <summary>
         /// Machine identifier, from StanForD <c>Machine/MachineKey</c> (a GUID); not the

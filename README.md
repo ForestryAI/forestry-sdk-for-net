@@ -2,13 +2,39 @@
 
 [![ci](https://github.com/ForestryAI/forestry-sdk-for-net/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ForestryAI/forestry-sdk-for-net/actions/workflows/ci.yml)
 
-Forestry SDK for .NET turns forestry machine data, starting with StanForD Harvesting documents, into
-flat rows that big data resources can query.
+Forestry SDK for .NET turns telemetries from forestry devices, starting with StanForD Harvesting
+documents, into big data ready collections. The end game is observability that opens up insights
+into forestry operations.
 
-**Phase:** POC · **Status:** Partial — StanForD Harvesting documents become flat Stem and Log rows;
-writing those rows as JSON Lines files through a local client is next.
+**Phase:** POC · **Status:** Partial — StanForD Harvesting documents become flat Stem and Log telemetries;
+writing those telemetries as JSON Lines files through a local client is next.
 
 ## Purpose
+
+### Telemetry, monitoring and observability
+
+Forestry devices (harvesters, forwarders, scales at terminals and mills, ...) are the only sources
+this SDK targets. Three terms describe what happens to what they send:
+
+- **Telemetry** is the information a system emits. The word means measuring at a distance (Greek
+  *tele*, distant, and *metron*, measure) and comes from the space industry, where measurements such
+  as temperature and position were sent back to the ground. It imposes no structure or
+  representation: each device emits its telemetries in its own format, such as StanForD Harvesting
+  as one large XML document. In this SDK, one flat record is *a telemetry*; many are
+  *telemetries*.
+- **Monitoring** is the practice of collecting and analyzing that information. Part of it is this
+  SDK's pipeline: it flattens telemetries from a device's format into big data ready collections and
+  transmits them to a big data resource.
+- **Observability** is the ability to understand a system through that information. Here it is the
+  AI step: a natural language intention is translated into a query against the big data resource,
+  and the answer comes back in a form a human understands.
+
+The end game is observability that opens up insights. During the POC, telemetries are not split into
+kinds (as some monitoring products split events, metrics, traces and exceptions); that may come
+later. The SDK's own signals, such as exceptions and metrics from the pipeline, are called
+**diagnostics**, so *telemetry* and *monitoring* always mean the forestry devices.
+
+### Big data
 
 The purpose of the Forestry SDK for .NET is to transform StanForD information and other metrics (e.g.
 grading at terminals and mills), with their relationships to other industry entities (e.g. contract
@@ -29,10 +55,10 @@ Big data provides:
 These advantages require that dimensions and relationships are flattened together with the metrics,
 without nested structures.
 
-Device information can be complex, like StanForD in XML. Ingestion into big data resources is the
-first part: translating complex data into flat data. Natural language (NL) intentions as queries
-against big data resources is the second part: making reporting as simple as a personal chat. This
-SDK covers the first part.
+Device telemetries can be complex, like StanForD in XML. Ingestion into big data resources is the
+first part, monitoring: flattening complex telemetries into big data ready collections. Natural
+language (NL) intentions as queries against big data resources is the second part, observability:
+making reporting as simple as a personal chat. This SDK covers the first part.
 
 ## Scandinavian StanForD
 
@@ -42,7 +68,7 @@ e.g. machine manufacturer. StanForD metrics are big data ready, if transformed c
 
 - **Granularity**: every stem and every log is measured at the stump
 - **Volume**: documents come daily from every machine
-- **Identity**: the machine key plus running stem and log keys make each row unique
+- **Identity**: the machine key plus running stem and log keys make each telemetry unique
 - **Relationships**: each stem refers to its contract, product and species, which are the dimensions
   described under [Purpose](#purpose)
 
@@ -83,17 +109,17 @@ dominant format is [Apache Parquet](https://parquet.apache.org/), supported by t
 
 The list is not exhaustive, but shows a good number of resources that support Parquet.
 
-Rows written by this SDK follow these conventions:
+Telemetries written by this SDK follow these conventions:
 
 - **Values**: primitives and simple structs (`Guid`, `DateTimeOffset`) only
 - **Dimensions copied, not joined**: contract, species and product are copied onto every Stem and Log
-  row, so queries never join. Columnar compression keeps the repetition cheap
-- **Partitions**: rows are partitioned by month and contract, e.g. `/{year}/{month}/harvesting/{contract}/`,
-  which enables partition pruning. The keys come from each row, not from the document, so one document
+  telemetry, so queries never join. Columnar compression keeps the repetition cheap
+- **Partitions**: telemetries are partitioned by month and contract, e.g. `/{year}/{month}/harvesting/{contract}/`,
+  which enables partition pruning. The keys come from each telemetry, not from the document, so one document
   can land in several partitions, and partition paths and file names must allow their composite keys
   (date, contract, etc.) to vary
-- **One row type per file**: Stem and Log rows go to separate files, not mixed
-- **Chunks, not documents**: files are written from chunks of rows, as described under
+- **One telemetry type per file**: Stem and Log telemetries go to separate files, not mixed
+- **Chunks, not documents**: files are written from chunks of telemetries, as described under
   [Big data clients](#big-data-clients)
 
 StanForD metrics as Parquet is the long-term goal. During the POC, [JSON Lines](https://jsonlines.org/)
@@ -117,16 +143,16 @@ Whatever the resource, every StanForD client does the same work:
 
 - **Input.** The client takes in what to ingest: usually a single document, but possibly several, as
   its configuration decides.
-- **Deserialization, per row.** The client hands each document to `Forestry.Deserialize`, which reads
-  it through a format package (`Forestry.Deserialize.Xml`, built on `Forestry.Xml`) while policies
-  flatten it into self-contained rows: identification, partitioning, conditional mapping, dimensions.
-  Deserialization is mandatory: its rows are what feed the pipeline.
-- **Pipeline, per chunk.** A chain of directives that the rows pass through on their way to the
-  resource. Rows are gathered into chunks, one row type and one partition per chunk, and written in
+- **Deserialization, per telemetry.** The client hands each document to `Forestry.Serialization`, which reads
+  it through a format package (`Forestry.Serialization.Xml`, built on `Forestry.Xml`) while policies
+  flatten it into self-contained telemetries: identification, partitioning, conditional mapping, dimensions.
+  Deserialization is mandatory: its telemetries are what feed the pipeline.
+- **Pipeline, per chunk.** A chain of directives that the telemetries pass through on their way to the
+  resource. Telemetries are gathered into chunks, one telemetry type and one partition per chunk, and written in
   the client's format (JSON Lines, later Parquet). Directives handle what concerns a chunk or the whole
-  input: validation, Biometria extras, partition folders and file names, sending, retries, monitoring.
+  input: validation, Biometria extras, partition folders and file names, sending, retries, diagnostics.
 
-There is no one-to-one mapping from a document to a file. Stem and Log rows go to separate chunks,
+There is no one-to-one mapping from a document to a file. Stem and Log telemetries go to separate chunks,
 and a document is not limited to one contract, so one document can produce chunks in several
 partitions. A chunk ends on size, where compaction matters for the format, as with Parquet. Whether
 the end of the input flushes a final chunk, and when chunks are sent, is the client's configuration,
@@ -141,21 +167,21 @@ Directives and policies are registered through the client's options. Each librar
 defaults that can be adjusted:
 
 - `Forestry.StanForD.Harvesting` adds Harvesting policies and directives.
-- `Forestry.Biometria` builds on it with its own Harvesting: Stem and Log rows extended with
+- `Forestry.Biometria` builds on it with its own Harvesting: Stem and Log telemetries extended with
   Biometria's members, and its own policies and directives, such as Extensions from Sender.
 
 So every StanForD client shares common options (deserialization policies, format, common directives)
 and adds its resource's options, including how it takes in documents and how it chunks, flushes and
-sends rows.
+sends telemetries.
 
 Querying the files happens outside this SDK.
 
 ## Where the POC stands
 
 - **Done**: the forward-only UTF-8 XML reader (`Forestry.Xml`, 1.0.0-beta.1); reading with a
-  deserialization context (`Forestry.Deserialize` spec 002); StanForD Harvesting documents as flat Stem
-  and Log rows (`Forestry.StanForD` spec 001).
-- **Next**: writing rows in `Forestry.Deserialize`, JSON Lines first; the single local client that turns
+  deserialization context (`Forestry.Serialization` spec 002); StanForD Harvesting documents as flat Stem
+  and Log telemetries (`Forestry.StanForD` spec 001).
+- **Next**: writing telemetries in `Forestry.Serialization`, JSON Lines first; the single local client that turns
   StanForD documents into JSON Lines files in partition folders.
 - **Later**: `Forestry.StanForD.Harvesting` split out;
   `Forestry.Biometria` with Extensions from Sender; clients for remote resources such as `Forestry.StanForD.Azure.BlobStorage`; a
@@ -168,13 +194,13 @@ In the order of the path from a StanForD document to big data files:
 | Package | Path | Purpose | Status |
 |---|---|---|---|
 | [Forestry.Xml](sdk/xml/Forestry.Xml/README.md) | `sdk/xml` | Forward-only UTF-8 XML reader over byte sequences, with no allocation per value. | 1.0.0-beta.1 on GitHub releases |
-| [Forestry.Deserialize](sdk/deserialize/Forestry.Deserialize/README.md) | `sdk/deserialize` | Flattens large documents into rows through type definitions and policies, without loading them fully into memory. | In development |
-| [Forestry.Deserialize.Xml](sdk/deserialize/Forestry.Deserialize.Xml/README.md) | `sdk/deserialize` | XML format for Forestry.Deserialize, built on Forestry.Xml. | In development |
-| [Forestry.StanForD](sdk/stanford/Forestry.StanForD/README.md) | `sdk/stanford` | [StanForD](https://www.skogforsk.se/) Harvesting documents as Stem and Log rows. | In development, spec 001 done |
+| [Forestry.Serialization](sdk/serialization/Forestry.Serialization/README.md) | `sdk/serialization` | Flattens large documents into telemetries through type definitions and policies, without loading them fully into memory. | In development |
+| [Forestry.Serialization.Xml](sdk/serialization/Forestry.Serialization.Xml/README.md) | `sdk/serialization` | XML format for Forestry.Serialization, built on Forestry.Xml. | In development |
+| [Forestry.StanForD](sdk/stanford/Forestry.StanForD/README.md) | `sdk/stanford` | [StanForD](https://www.skogforsk.se/) Harvesting documents as Stem and Log telemetries. | In development, spec 001 done |
 | [Forestry.StanForD.Harvesting](sdk/stanford/Forestry.StanForD.Harvesting/README.md) | `sdk/stanford` | Harvesting-specific logic: deserialization policies and pipeline directives. | Planned |
-| [Forestry.Biometria](sdk/biometria/README.md) | `sdk/biometria` | [Biometria](https://www.biometria.se/)'s Harvesting on top: Stem and Log rows extended with Sender's Extension, the production planner above all. | Planned |
+| [Forestry.Biometria](sdk/biometria/README.md) | `sdk/biometria` | [Biometria](https://www.biometria.se/)'s Harvesting on top: Stem and Log telemetries extended with Sender's Extension, the production planner above all. | Planned |
 | [Forestry.Core](sdk/core/Forestry.Core/README.md) | `sdk/core` | The core for clients: client options and the pipeline that carries an intention through directives to an answer. Formerly Forestry.Turn. | In development |
-| [Forestry.Parquet](sdk/parquet/Forestry.Parquet/README.md) | `sdk/parquet` | Forward-only UTF-8 Parquet writer for flat rows. | Planned, later |
+| [Forestry.Parquet](sdk/parquet/Forestry.Parquet/README.md) | `sdk/parquet` | Forward-only UTF-8 Parquet writer for flat telemetries. | Planned, later |
 
 Outside that path:
 

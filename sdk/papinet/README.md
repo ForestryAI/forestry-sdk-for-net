@@ -8,5 +8,5 @@ YAML HTTP guidelines, so this package provides the missing typed .NET model.
 
 Not started beyond an initial `Contract` scaffold (`ContractType`, `ContractHeader`) — no
 serialization, validation, or PapiNet document mapping yet. Likely to build on
-[Forestry.Deserialize](../deserialize/Forestry.Deserialize/README.md) once that package's
+[Forestry.Serialization](../serialization/Forestry.Serialization/README.md) once that package's
 XML reading is stable, rather than duplicating streaming/parsing logic here.

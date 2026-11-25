@@ -1,7 +1,7 @@
 # StanForD 2010 schemas
 
 Skogforsk's published StanForD 2010 XML schemas, kept at the **latest version, V4p1**, for the POC
-(developer, 2026-11-13). Row types and policies follow them (constitution A2). Each schema is also
+(developer, 2026-11-13). Telemetry types and policies follow them (constitution A2). Each schema is also
 here as `*_no_documentation.xsd`, the same schema without its annotations.
 
 Older versions are not kept. The real Harvesting documents found so far declare version 3.5, so a

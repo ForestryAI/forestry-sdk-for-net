@@ -1,5 +1,5 @@
-using Forestry.Deserialize;
-using Forestry.Deserialize.Xml;
+using Forestry.Serialization;
+using Forestry.Serialization.Xml;
 using Forestry.StanForD.Tests.Fragments;
 using Xunit;
 
@@ -11,7 +11,7 @@ namespace Forestry.StanForD.Tests
     /// <remarks>
     /// Test shells written before any code (C6), so they do not compile until the US8 implementation
     /// declares <c>Stem.DBH</c>. For the review gate (T083), the assumed behaviour: <c>StemCoordinates</c>,
-    /// <c>Latitude</c>, <c>Longitude</c>, <c>BoomPositioning</c> and <c>SingleTreeProcessedStem</c> are row
+    /// <c>Latitude</c>, <c>Longitude</c>, <c>BoomPositioning</c> and <c>SingleTreeProcessedStem</c> are telemetry
     /// types that never come out; when one completes, its policy sets the open <see cref="Stem"/>'s members.
     /// Coordinates are signed by their category (north and east positive, south and west negative). A boom
     /// positioning or coordinate category matching no member fails by default, as unmatched log measurements
@@ -20,7 +20,7 @@ namespace Forestry.StanForD.Tests
     public sealed class StemMetricTests
     {
         private static List<Stem> Read(string xml, Action<HarvestingOptions>? configure = null) =>
-            Deserialization.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting(configure)).OfType<Stem>().ToList();
+            TelemetrySerializer.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting(configure)).OfType<Stem>().ToList();
 
         private static Stem FirstStem(List<Stem> stems) => stems.Single(stem => stem.StemKey == 619254);
 
@@ -186,17 +186,17 @@ namespace Forestry.StanForD.Tests
         /// T082, R2: the wrapper elements never come out; only stems and logs do
         /// </summary>
         [Fact]
-        public void HarvestingDocument_ItShould_GiveNoMetricRows()
+        public void HarvestingDocument_ItShould_GiveNoMetricTelemetries()
         {
             // Arrange
             string xml = Fragment.Read(Fragment.MinimalHarvesting);
 
             // Act
-            List<Row> rows = Deserialization.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting()).ToList();
+            List<Telemetry> telemetries = TelemetrySerializer.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting()).ToList();
 
             // Assert
-            Assert.Equal(5, rows.Count);
-            Assert.All(rows, row => Assert.True(row is Stem or Log, row.GetType().Name));
+            Assert.Equal(5, telemetries.Count);
+            Assert.All(telemetries, telemetry => Assert.True(telemetry is Stem or Log, telemetry.GetType().Name));
         }
     }
 }

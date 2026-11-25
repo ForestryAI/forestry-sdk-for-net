@@ -29,10 +29,10 @@ jobs:
         include:
           - package: Forestry.Xml
             slnx: sdk/xml/Forestry.Xml/Forestry.Xml.slnx
-          - package: Forestry.Deserialize
-            slnx: sdk/deserialize/Forestry.Deserialize/Forestry.Deserialize.slnx
-          - package: Forestry.Deserialize.Xml
-            slnx: sdk/deserialize/Forestry.Deserialize.Xml/Forestry.Deserialize.Xml.slnx
+          - package: Forestry.Serialization
+            slnx: sdk/serialization/Forestry.Serialization/Forestry.Serialization.slnx
+          - package: Forestry.Serialization.Xml
+            slnx: sdk/serialization/Forestry.Serialization.Xml/Forestry.Serialization.Xml.slnx
           - package: Forestry.StanForD
             slnx: sdk/stanford/Forestry.StanForD/Forestry.StanForD.slnx
           # Checked but not released in spec 001: they share the central package versions (FR-015)
@@ -54,10 +54,10 @@ jobs:
         include:
           - package: Forestry.Xml
             slnx: sdk/xml/Forestry.Xml/Forestry.Xml.slnx
-          - package: Forestry.Deserialize
-            slnx: sdk/deserialize/Forestry.Deserialize/Forestry.Deserialize.slnx
-          - package: Forestry.Deserialize.Xml
-            slnx: sdk/deserialize/Forestry.Deserialize.Xml/Forestry.Deserialize.Xml.slnx
+          - package: Forestry.Serialization
+            slnx: sdk/serialization/Forestry.Serialization/Forestry.Serialization.slnx
+          - package: Forestry.Serialization.Xml
+            slnx: sdk/serialization/Forestry.Serialization.Xml/Forestry.Serialization.Xml.slnx
     uses: ./.github/workflows/pack.yml
     with:
       package: ${{ matrix.package }}
@@ -72,12 +72,12 @@ jobs:
           - package: Forestry.Xml
             test-folder: sdk/xml/Forestry.Xml/test
             test-project: sdk/xml/Forestry.Xml/test/Forestry.Xml.Tests.csproj
-          - package: Forestry.Deserialize
-            test-folder: sdk/deserialize/Forestry.Deserialize/test
-            test-project: sdk/deserialize/Forestry.Deserialize/test/Forestry.Deserialize.Tests.csproj
-          - package: Forestry.Deserialize.Xml
-            test-folder: sdk/deserialize/Forestry.Deserialize.Xml/test
-            test-project: sdk/deserialize/Forestry.Deserialize.Xml/test/Forestry.Deserialize.Xml.Tests.csproj
+          - package: Forestry.Serialization
+            test-folder: sdk/serialization/Forestry.Serialization/test
+            test-project: sdk/serialization/Forestry.Serialization/test/Forestry.Serialization.Tests.csproj
+          - package: Forestry.Serialization.Xml
+            test-folder: sdk/serialization/Forestry.Serialization.Xml/test
+            test-project: sdk/serialization/Forestry.Serialization.Xml/test/Forestry.Serialization.Xml.Tests.csproj
     uses: ./.github/workflows/performance.yml
     with:
       package: ${{ matrix.package }}

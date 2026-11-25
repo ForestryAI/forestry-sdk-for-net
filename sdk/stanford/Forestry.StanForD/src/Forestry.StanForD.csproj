@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\..\..\deserialize\Forestry.Deserialize.Xml\src\Forestry.Deserialize.Xml.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)\..\..\..\serialization\Forestry.Serialization.Xml\src\Forestry.Serialization.Xml.csproj" />
   </ItemGroup>
 
   <ItemGroup>
