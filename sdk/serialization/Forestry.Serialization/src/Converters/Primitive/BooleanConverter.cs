@@ -1,4 +1,4 @@
-using System.Buffers;
+using Forestry.Serialization.Writing;
 
 namespace Forestry.Serialization.Converters.Primitive
 {
@@ -23,11 +23,6 @@ namespace Forestry.Serialization.Converters.Primitive
             throw new FormatException(Formatting.Format(Formatting.NotParsable, nameof(Boolean)));
         }
 
-        public override void Write(bool value, IBufferWriter<byte> writer)
-        {
-            ReadOnlySpan<byte> text = value ? "true"u8 : "false"u8;
-            text.CopyTo(writer.GetSpan(text.Length));
-            writer.Advance(text.Length);
-        }
+        public override void Write(bool value, TelemetryWriter writer) => writer.WriteBoolean(value);
     }
 }

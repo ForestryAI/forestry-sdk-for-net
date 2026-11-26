@@ -1,5 +1,5 @@
-using System.Buffers;
 using Forestry.Serialization.Converters;
+using Forestry.Serialization.Writing;
 
 namespace Forestry.Serialization.Tests.Fixtures
 {
@@ -11,11 +11,6 @@ namespace Forestry.Serialization.Tests.Fixtures
     {
         public override int Read(ReadOnlySpan<byte> utf8) => -1;
 
-        public override void Write(int value, IBufferWriter<byte> writer)
-        {
-            Span<byte> span = writer.GetSpan(1);
-            span[0] = (byte)'x';
-            writer.Advance(1);
-        }
+        public override void Write(int value, TelemetryWriter writer) => writer.WriteRaw("x"u8);
     }
 }

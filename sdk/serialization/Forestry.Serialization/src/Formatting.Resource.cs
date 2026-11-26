@@ -51,6 +51,8 @@ namespace Forestry.Serialization
 
         internal static string ConverterCannotWrite => GetResourceString(nameof(ConverterCannotWrite), @"Converter '{0}' only reads values of type '{1}': override Write to write them.");
 
+        internal static string WriterHasNoOutput => GetResourceString(nameof(WriterHasNoOutput), @"The telemetry writer has no output: it writes only while a serializer call is writing through it.");
+
         internal static string TelemetryTypeNotAdded => GetResourceString(nameof(TelemetryTypeNotAdded), @"Type '{0}' was not added to the options as a telemetry type.");
 
         internal static string MemberNotOfTelemetry => GetResourceString(nameof(MemberNotOfTelemetry), @"Member '{0}' is not a member of the open telemetry type '{1}'.");

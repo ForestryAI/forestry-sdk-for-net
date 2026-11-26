@@ -14,7 +14,7 @@ namespace Forestry.Serialization.Tests
     /// declares the surface they assume. For the review gate (T006), the assumed surface:
     /// <list type="bullet">
     /// <item><c>Converter&lt;T&gt;.Read(ReadOnlySpan&lt;byte&gt;)</c>, renamed from <c>Convert</c> (R56).</item>
-    /// <item><c>Converter&lt;T&gt;.Write(T, IBufferWriter&lt;byte&gt;)</c>, virtual; its default throws
+    /// <item><c>Converter&lt;T&gt;.Write(T, TelemetryWriter)</c>, virtual (research R49 revised: converters delegate to the format's writer); its default throws
     /// <see cref="NotSupportedException"/> naming the converter (R45).</item>
     /// <item>The internal <c>ResolveConverter(Type)</c> of the options, through
     /// <see cref="ConverterRoundTrip.BuiltIn{T}"/>, to reach a built-in converter as a property definition
@@ -94,7 +94,7 @@ namespace Forestry.Serialization.Tests
             SmallOfferBufferWriter utf8 = new();
 
             // Act
-            converter.Write(value, utf8);
+            converter.Write(value, PlainTelemetryWriter.Over(utf8));
 
             // Assert
             Assert.Equal(value, Encoding.UTF8.GetString(utf8.WrittenSpan));

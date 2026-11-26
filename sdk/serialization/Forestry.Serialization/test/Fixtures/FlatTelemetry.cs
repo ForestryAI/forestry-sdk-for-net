@@ -93,15 +93,6 @@ namespace Forestry.Serialization.Tests.Fixtures
         public override Measure Read(ReadOnlySpan<byte> utf8) =>
             new(decimal.Parse(System.Text.Encoding.UTF8.GetString(utf8), CultureInfo.InvariantCulture));
 
-        public override void Write(Measure value, System.Buffers.IBufferWriter<byte> writer)
-        {
-            Span<byte> span = writer.GetSpan(64);
-            if (!value.TryFormat(span, out int written, default, CultureInfo.InvariantCulture))
-            {
-                throw new InvalidOperationException("A Measure fits in 64 bytes.");
-            }
-
-            writer.Advance(written);
-        }
+        public override void Write(Measure value, Writing.TelemetryWriter writer) => writer.WriteFormattable(value);
     }
 }

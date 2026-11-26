@@ -1,6 +1,6 @@
-using System.Buffers;
 using System.Globalization;
 using System.Text;
+using Forestry.Serialization.Writing;
 
 namespace Forestry.Serialization.Converters.Primitive
 {
@@ -21,7 +21,7 @@ namespace Forestry.Serialization.Converters.Primitive
             throw new FormatException(Formatting.Format(Formatting.NotParsable, nameof(DateTime)));
         }
 
-        public override void Write(DateTime value, IBufferWriter<byte> writer) => Utf8Writing.Write(value, "O", writer);
+        public override void Write(DateTime value, TelemetryWriter writer) => writer.WriteFormattable(value, "O");
     }
 
     /// <summary>
@@ -40,6 +40,6 @@ namespace Forestry.Serialization.Converters.Primitive
             throw new FormatException(Formatting.Format(Formatting.NotParsable, nameof(DateTimeOffset)));
         }
 
-        public override void Write(DateTimeOffset value, IBufferWriter<byte> writer) => Utf8Writing.Write(value, "O", writer);
+        public override void Write(DateTimeOffset value, TelemetryWriter writer) => writer.WriteFormattable(value, "O");
     }
 }

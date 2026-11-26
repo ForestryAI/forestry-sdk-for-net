@@ -1,5 +1,5 @@
-using System.Buffers;
 using System.Globalization;
+using Forestry.Serialization.Writing;
 
 namespace Forestry.Serialization.Converters.Primitive
 {
@@ -20,7 +20,7 @@ namespace Forestry.Serialization.Converters.Primitive
             throw new FormatException(Formatting.Format(Formatting.NotParsable, typeof(T).Name));
         }
 
-        public override void Write(T value, IBufferWriter<byte> writer) => Utf8Writing.Write(value, default, writer);
+        public override void Write(T value, TelemetryWriter writer) => writer.WriteFormattable(value);
     }
 
     /// <summary>

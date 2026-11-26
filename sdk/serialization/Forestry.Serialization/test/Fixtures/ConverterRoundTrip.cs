@@ -1,5 +1,6 @@
 using System.Buffers;
 using Forestry.Serialization.Converters;
+using Forestry.Serialization.Writing;
 using Xunit;
 
 namespace Forestry.Serialization.Tests.Fixtures
@@ -27,9 +28,9 @@ namespace Forestry.Serialization.Tests.Fixtures
         /// <returns></returns>
         public static byte[] Write<T>(Converter<T> converter, T value)
         {
-            ArrayBufferWriter<byte> utf8 = new();
-            converter.Write(value, utf8);
-            return utf8.WrittenSpan.ToArray();
+            ArrayBufferWriter<byte> output = new();
+            converter.Write(value, PlainTelemetryWriter.Over(output));
+            return output.WrittenSpan.ToArray();
         }
 
         /// <summary>
@@ -40,6 +41,24 @@ namespace Forestry.Serialization.Tests.Fixtures
         /// <param name="value"></param>
         /// <returns></returns>
         public static T RoundTrip<T>(Converter<T> converter, T value) => converter.Read(Write(converter, value));
+    }
+
+    /// <summary>
+    /// A telemetry writer with every default: plain UTF-8, no framing (spec 004 research R49)
+    /// </summary>
+    internal sealed class PlainTelemetryWriter : TelemetryWriter
+    {
+        /// <summary>
+        /// A writer writing to <paramref name="output"/>, as the serializer sets one up for a call
+        /// </summary>
+        /// <param name="output"></param>
+        /// <returns></returns>
+        public static PlainTelemetryWriter Over(IBufferWriter<byte> output)
+        {
+            PlainTelemetryWriter writer = new();
+            writer.Reset(output);
+            return writer;
+        }
     }
 
     /// <summary>

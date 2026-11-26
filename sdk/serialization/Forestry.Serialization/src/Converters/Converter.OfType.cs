@@ -1,4 +1,4 @@
-using System.Buffers;
+using Forestry.Serialization.Writing;
 
 namespace Forestry.Serialization.Converters
 {
@@ -37,11 +37,12 @@ namespace Forestry.Serialization.Converters
         public abstract T Read(ReadOnlySpan<byte> utf8);
 
         /// <summary>
-        /// Write <paramref name="value"/> as UTF-8 into <paramref name="writer"/>: ask for room with
-        /// <see cref="IBufferWriter{T}.GetSpan(int)"/>, format into it and call
-        /// <see cref="IBufferWriter{T}.Advance(int)"/>; when the room offered is too small, ask again with a
-        /// larger size hint instead of failing (spec 004 research R45). Called when serializing, through
-        /// serialize options
+        /// Write <paramref name="value"/> through <paramref name="writer"/>, delegating to the method for its
+        /// kind (<see cref="TelemetryWriter.WriteString"/>, <see cref="TelemetryWriter.WriteBoolean"/>,
+        /// <see cref="TelemetryWriter.WriteFormattable{T}"/>, ...) so the format, or a developer's writer,
+        /// decides how it looks; or as raw UTF-8 through the writer's <see cref="System.Buffers.IBufferWriter{T}"/>
+        /// members, asking for more room instead of failing (spec 004 research R45). Called when serializing,
+        /// through serialize options
         /// </summary>
         /// <remarks>
         /// Never called with null: the format writes a missing value itself (research R50). The default
@@ -50,9 +51,9 @@ namespace Forestry.Serialization.Converters
         /// writing telemetries.
         /// </remarks>
         /// <param name="value">A value that is there, never null</param>
-        /// <param name="writer">Where the UTF-8 text goes</param>
+        /// <param name="writer">The format's writer</param>
         /// <exception cref="NotSupportedException">The converter only reads</exception>
-        public virtual void Write(T value, IBufferWriter<byte> writer)
+        public virtual void Write(T value, TelemetryWriter writer)
         {
             Throwing.WhenConverterCannotWrite(GetType(), typeof(T));
         }

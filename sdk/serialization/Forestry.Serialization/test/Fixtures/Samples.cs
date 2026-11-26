@@ -1,7 +1,7 @@
-using System.Buffers;
 using System.Globalization;
 using System.Text;
 using Forestry.Serialization.Converters;
+using Forestry.Serialization.Writing;
 
 namespace Forestry.Serialization.Tests.Fixtures
 {
@@ -82,15 +82,14 @@ namespace Forestry.Serialization.Tests.Fixtures
     {
         public override string Read(ReadOnlySpan<byte> utf8) => Encoding.UTF8.GetString(utf8);
 
-        public override void Write(string value, IBufferWriter<byte> writer)
+        public override void Write(string value, TelemetryWriter writer)
         {
             if (value is null)
             {
                 throw new InvalidOperationException("A converter is never asked to write null (R50).");
             }
 
-            int written = Encoding.UTF8.GetBytes(value, writer.GetSpan(Encoding.UTF8.GetMaxByteCount(value.Length)));
-            writer.Advance(written);
+            writer.WriteString(value);
         }
     }
 }

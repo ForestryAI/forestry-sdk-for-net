@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -106,6 +107,12 @@ namespace Forestry.Serialization
         public static void WhenNoConverter(Type type)
         {
             throw new InvalidOperationException(Formatting.Format(Formatting.NoConverter, type.FullName));
+        }
+
+        [DoesNotReturn]
+        public static IBufferWriter<byte> WhenWriterHasNoOutput()
+        {
+            throw new InvalidOperationException(Formatting.WriterHasNoOutput);
         }
 
         [DoesNotReturn]

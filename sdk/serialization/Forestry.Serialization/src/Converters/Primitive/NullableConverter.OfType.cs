@@ -1,4 +1,4 @@
-using System.Buffers;
+using Forestry.Serialization.Writing;
 
 namespace Forestry.Serialization.Converters.Primitive
 {
@@ -11,7 +11,7 @@ namespace Forestry.Serialization.Converters.Primitive
     {
         public override T? Read(ReadOnlySpan<byte> utf8) => converter.Read(utf8);
 
-        public override void Write(T? value, IBufferWriter<byte> writer) => converter.Write(value!.Value, writer);
+        public override void Write(T? value, TelemetryWriter writer) => converter.Write(value!.Value, writer);
     }
 
     /// <summary>
