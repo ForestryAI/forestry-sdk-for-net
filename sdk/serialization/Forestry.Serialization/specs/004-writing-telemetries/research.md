@@ -22,8 +22,46 @@ confirms it (C5).
 - **Policies**: stay on `DeserializeOptions`. Definition policies choose members while reading;
   writing writes every member the type definition maps. Member choice for writing is not needed
   for the milestone and is left out (a later spec can add it to the base).
-- **Alternatives considered**: two independent options built by shared internal helpers (rejected
-  in clarification); one options type for both directions (rejected in #142).
+- **What moves to the base** (developer review, 2026-11-26), from `DeserializeOptions.cs` and
+  `DeserializeOptions.Caching.cs`:
+  - `Telemetries`, `Converters` (with `OptionsObservableList`, the read-only guard, as a
+    `private protected` nested type: formats only need the `IList<Converter>` it returns, so it does
+    not become public API), `FormatConverters`, `IsReadOnly`/`MakeReadOnly`/`OnMakingReadOnly`;
+  - the frozen type definitions (`TryGetTypeDefinition`, `ThrowingGetTypeDefinition`);
+  - converter resolution (`ResolveConverter`, `FindConverter`, the primitive converters, the
+    resolved-converter cache);
+  - building the definitions through `TypeDefinition.Create(type, options, includeMember)`.
+  The base calls two `private protected virtual` hooks while locking: `IncludeMember(Type)`
+  (default: every mapped member; `DeserializeOptions` applies its definition policies) and
+  `OnDefinitionsBuilt(definitions)` (`DeserializeOptions` resolves its enumeration policies:
+  enumerated types, type chains, members applying; `SerializeOptions` checks every converter
+  overrides `Write` and creates the object converters and their member sections). The base's
+  constructor is `private protected`: only `DeserializeOptions` and `SerializeOptions` derive from
+  it; format packages derive from those two.
+- **Stays on `DeserializeOptions`**: `Policies`, `MaxContextTelemetries`, enumeration
+  (`Enumerates`, type chains, members applying, `BeginEnumeration`/`EndEnumeration`), the
+  enumerator factories, `SkipsByteOrderMark`.
+- **Public ripples (breaking, in the changelog)**: `ConverterFactory.CreateConverter(Type,
+  TelemetrySerializerOptions)` (was `DeserializeOptions`), `TypeDefinition.Options` typed as the
+  base.
+- **Constructor rules**: `TypeDefinition.Create` keeps validating constructors for both directions
+  (one public constructor, or a marked one), although writing never constructs: the same rules
+  both ways (clarification), and telemetry types are usually both read and written.
+- **One `Converters` list, the direction comes from the options** (developer review, 2026-11-26):
+  `Converters` (the developer's), `FormatConverters` (the format package's) and the primitives are
+  about who supplies a converter, not about reading or writing, and every converter has both
+  `Read` and `Write`. It must be clear to users and developers that **`DeserializeOptions` reads,
+  calling a converter's `Read`, and `SerializeOptions` writes, calling its `Write`**. That is said
+  in: the XML docs of `Converters` and `FormatConverters` on the base ("in `DeserializeOptions` a
+  converter is used to read (`Read`); in `SerializeOptions` to write (`Write`)"), of
+  `DeserializeOptions` and `SerializeOptions` themselves, and of `Converter<T>.Read` ("called when
+  deserializing, through `DeserializeOptions`") and `Write` ("called when serializing, through
+  `SerializeOptions`"); the message when a serialize options' converter does not override `Write`
+  (T024) names `SerializeOptions` and writing; and the package README's serializing section
+  (T047), with `readOptions.Converters` and `writeOptions.Converters` in its example. Separate
+  names per direction ("formatting converters") were considered and rejected: a converter is one
+  object with both methods, often added to both options, and System.Text.Json uses one
+  `Converters` for both directions.
 
 ## R45 - The converter write signature
 
