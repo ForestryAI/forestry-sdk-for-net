@@ -7,16 +7,23 @@ namespace Forestry.Serialization.Writing
 {
     /// <summary>
     /// Writes telemetries in a format: the one class a format, or a developer, overrides to decide how a
-    /// telemetry is framed and how each kind of value is written (spec 004 research R49, constitution C0)
+    /// telemetry is framed and how each value is represented (spec 004 research R49, constitution C0)
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Converters delegate to it: a <c>string</c> converter calls <see cref="WriteString"/>, a
-    /// <c>bool</c> converter <see cref="WriteBoolean"/>, numbers, <see cref="Guid"/> and dates
-    /// <see cref="WriteFormattable{T}"/>. A custom converter calls whichever fits, <see cref="WriteRaw"/>,
-    /// or the <see cref="IBufferWriter{T}"/> members for raw bytes. Every value method has a default that
-    /// writes plain UTF-8 text; a format overrides what it writes differently (e.g. JSON quotes and
-    /// escapes strings).
+    /// Converters delegate to it by the type of the value, not by how one format represents it: a
+    /// <see cref="Guid"/> goes to <see cref="WriteValue(Guid)"/> whether JSON quotes it, a test format writes
+    /// it bare, or Parquet stores it as sixteen bytes. The typed overloads cover <see cref="string"/> (as
+    /// characters), <see cref="bool"/>, <see cref="int"/>, <see cref="long"/>, <see cref="double"/>,
+    /// <see cref="decimal"/>, <see cref="Guid"/>, <see cref="DateTime"/> and <see cref="DateTimeOffset"/>;
+    /// every other value that formats to UTF-8 (e.g. a developer's struct) goes to
+    /// <see cref="WriteValue{T}(T)"/>. A custom converter can also call <see cref="WriteRaw"/> or the
+    /// <see cref="IBufferWriter{T}"/> members. Every method has a default that writes plain UTF-8 text with
+    /// the invariant culture; a format overrides what it represents differently.
+    /// </para>
+    /// <para>
+    /// Overriding <see cref="WriteValue{T}(T)"/> does not change the typed overloads, nor the other way
+    /// round: to customize, say, every number, override each typed overload for the numbers you write.
     /// </para>
     /// <para>
     /// The serializer frames each telemetry: <see cref="WriteStartTelemetry"/>, then for each member
@@ -25,11 +32,6 @@ namespace Forestry.Serialization.Writing
     /// as in <c>Utf8JsonWriter</c>. The serializer hands the writer its output for each call
     /// (<see cref="Output"/>): a pooled buffer for a <see cref="Stream"/>, or the caller's
     /// <c>PipeWriter</c>.
-    /// </para>
-    /// <para>
-    /// Typed overloads per kind of number (as <c>Utf8JsonWriter.WriteNumberValue</c> has for
-    /// <see cref="int"/>, <see cref="decimal"/>, ...) may be added later; today every UTF-8 formattable
-    /// value goes through <see cref="WriteFormattable{T}"/>.
     /// </para>
     /// </remarks>
     public abstract class TelemetryWriter : IBufferWriter<byte>
@@ -81,6 +83,8 @@ namespace Forestry.Serialization.Writing
         /// <inheritdoc/>
         public void Advance(int count) => Output.Advance(count);
 
+        #region Framing (called by the serializer)
+
         /// <summary>
         /// Before the first member of a telemetry (e.g. <c>{</c> in JSON). The default writes nothing
         /// </summary>
@@ -114,31 +118,95 @@ namespace Forestry.Serialization.Writing
         /// <param name="property"></param>
         public virtual void WriteNull(PropertyDefinition property) => WriteName(property);
 
+        #endregion
+
+        #region Values (called by converters)
+
         /// <summary>
-        /// A text value. The default writes it as UTF-8, unescaped
+        /// Text. The default writes it as UTF-8, unescaped
         /// </summary>
         /// <param name="value"></param>
-        public virtual void WriteString(ReadOnlySpan<char> value)
+        public virtual void WriteValue(ReadOnlySpan<char> value)
         {
             int written = Encoding.UTF8.GetBytes(value, GetSpan(Encoding.UTF8.GetMaxByteCount(value.Length)));
             Advance(written);
         }
 
         /// <summary>
-        /// A boolean value. The default writes <c>true</c> or <c>false</c>
+        /// A boolean. The default writes <c>true</c> or <c>false</c>
         /// </summary>
         /// <param name="value"></param>
-        public virtual void WriteBoolean(bool value) => WriteRaw(value ? "true"u8 : "false"u8);
+        public virtual void WriteValue(bool value) => WriteRaw(value ? "true"u8 : "false"u8);
 
         /// <summary>
-        /// A value that formats itself to UTF-8: numbers, <see cref="Guid"/>, dates, a developer's struct.
-        /// The default formats with <paramref name="format"/> and the invariant culture, asking for more
-        /// room until it fits
+        /// A 32-bit integer. The default writes its invariant text
+        /// </summary>
+        /// <param name="value"></param>
+        public virtual void WriteValue(int value) => WriteFormatted(value, default);
+
+        /// <summary>
+        /// A 64-bit integer. The default writes its invariant text
+        /// </summary>
+        /// <param name="value"></param>
+        public virtual void WriteValue(long value) => WriteFormatted(value, default);
+
+        /// <summary>
+        /// A double. The default writes its shortest invariant text that reads back the same
+        /// </summary>
+        /// <param name="value"></param>
+        public virtual void WriteValue(double value) => WriteFormatted(value, default);
+
+        /// <summary>
+        /// A decimal. The default writes its invariant text
+        /// </summary>
+        /// <param name="value"></param>
+        public virtual void WriteValue(decimal value) => WriteFormatted(value, default);
+
+        /// <summary>
+        /// A <see cref="Guid"/>. The default writes it as <c>D</c> (32 digits with hyphens)
+        /// </summary>
+        /// <param name="value"></param>
+        public virtual void WriteValue(Guid value) => WriteFormatted(value, default);
+
+        /// <summary>
+        /// A <see cref="DateTime"/>. The default writes the round-trip format (<c>O</c>)
+        /// </summary>
+        /// <param name="value"></param>
+        public virtual void WriteValue(DateTime value) => WriteFormatted(value, "O");
+
+        /// <summary>
+        /// A <see cref="DateTimeOffset"/>. The default writes the round-trip format (<c>O</c>)
+        /// </summary>
+        /// <param name="value"></param>
+        public virtual void WriteValue(DateTimeOffset value) => WriteFormatted(value, "O");
+
+        /// <summary>
+        /// Any other value that formats itself to UTF-8 (e.g. a developer's struct). The default writes its
+        /// invariant text
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="value"></param>
+        public virtual void WriteValue<T>(T value) where T : IUtf8SpanFormattable => WriteFormatted(value, default);
+
+        /// <summary>
+        /// UTF-8 bytes written as they are. The default copies them
+        /// </summary>
+        /// <param name="utf8"></param>
+        public virtual void WriteRaw(ReadOnlySpan<byte> utf8)
+        {
+            utf8.CopyTo(GetSpan(utf8.Length));
+            Advance(utf8.Length);
+        }
+
+        /// <summary>
+        /// Format <paramref name="value"/> with <paramref name="format"/> and the invariant culture into the
+        /// output, doubling the size hint while the room offered is too small: no "did not fit" result
+        /// reaches the caller (research R45)
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="value"></param>
         /// <param name="format">A standard or custom format, e.g. <c>O</c> for round-trip dates</param>
-        public virtual void WriteFormattable<T>(T value, ReadOnlySpan<char> format = default) where T : IUtf8SpanFormattable
+        protected void WriteFormatted<T>(T value, ReadOnlySpan<char> format) where T : IUtf8SpanFormattable
         {
             int hint = FirstHint;
 
@@ -156,14 +224,6 @@ namespace Forestry.Serialization.Writing
             }
         }
 
-        /// <summary>
-        /// UTF-8 bytes written as they are. The default copies them
-        /// </summary>
-        /// <param name="utf8"></param>
-        public virtual void WriteRaw(ReadOnlySpan<byte> utf8)
-        {
-            utf8.CopyTo(GetSpan(utf8.Length));
-            Advance(utf8.Length);
-        }
+        #endregion
     }
 }

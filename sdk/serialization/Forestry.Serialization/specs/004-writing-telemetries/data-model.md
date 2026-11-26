@@ -32,7 +32,7 @@ instances). `SerializeOptions.DefaultCollectionOptions` → one `MonitoringColle
 
 | Type | Kind | Fields / members | Notes |
 |---|---|---|---|
-| `TelemetryWriter` | abstract, `IBufferWriter<byte>` (R49) | `Output`, `OnReset`; framing `WriteStartTelemetry`, `WriteName`, `WriteNull`, `WriteEndTelemetry`; values `WriteString`, `WriteBoolean`, `WriteFormattable<T>`, `WriteRaw` | One per serialize call, from `SerializeOptions.CreateWriter`; a format or developer overrides it |
+| `TelemetryWriter` | abstract, `IBufferWriter<byte>` (R49) | `Output`, `OnReset`; framing `WriteStartTelemetry`, `WriteName`, `WriteNull`, `WriteEndTelemetry`; values `WriteValue` per type (text, `bool`, `int`, `long`, `double`, `decimal`, `Guid`, `DateTime`, `DateTimeOffset`) and `WriteValue<T>` for the rest, `WriteRaw` | One per serialize call, from `SerializeOptions.CreateWriter`; a format or developer overrides it |
 | `PooledBufferWriter` | internal | rented segments, `WrittenSpan`, `Reset` | Lives for one call (R48) |
 | `ICollectionWriter` | interface (R51) | `Options`, `Sequence`, `BytesWritten`, `IsFull` | Recognized by `TelemetrySerializer` |
 | `MonitoringCollectionStream` | `Stream`, public, not sealed | inner `Stream`, options, counters, completion state | Counts in `Write`/`WriteAsync` |

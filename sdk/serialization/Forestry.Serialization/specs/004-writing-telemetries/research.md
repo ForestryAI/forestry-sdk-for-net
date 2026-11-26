@@ -144,11 +144,23 @@ confirms it (C5).
     so a writer can also leave the member out; default: the name and no value),
     `WriteEndTelemetry()`. Separators between members are the writer's own state, as in
     `Utf8JsonWriter`; `OnReset()` clears that state for each call.
-  - **Values by kind** (called by converters): `WriteString(ReadOnlySpan<char>)`,
-    `WriteBoolean(bool)`, `WriteFormattable<T>(T, ReadOnlySpan<char> format = default) where T :
-    IUtf8SpanFormattable` (numbers, `Guid`, dates, a developer's struct), `WriteRaw(ReadOnlySpan<byte>)`.
-    Each has a default that writes plain UTF-8 (unescaped strings, `true`/`false`, invariant
-    culture, bytes as they are).
+  - **Values by type** (called by converters; developer, 2026-11-26: named for what the value is,
+    not how one format represents it, since JSON quotes a `Guid` while Parquet stores dates as
+    integers): `WriteValue` overloads for `ReadOnlySpan<char>` (text), `bool`, `int`, `long`,
+    `double`, `decimal`, `Guid`, `DateTime` and `DateTimeOffset`; `WriteValue<T>(T) where T :
+    IUtf8SpanFormattable` for every other value (e.g. a developer's struct); `WriteRaw(ReadOnlySpan<byte>)`.
+    Each has a default that writes plain UTF-8 with the invariant culture (unescaped text,
+    `true`/`false`, round-trip `O` for dates); a protected `WriteFormatted<T>` helper is shared by the
+    defaults and available to subclasses. Overriding the generic overload does not change the typed
+    ones, nor the other way round. More overloads (`char`, `float`, `DateOnly`, `TimeOnly`,
+    `TimeSpan`, enums) can come with their converters (R57).
+  - **Dispatch in the generic built-in converter** (option A, developer, 2026-11-26):
+    `Utf8SpanParsableConverter<T>` serves `int`, `long`, `double`, `decimal`, `Guid` and more from one
+    class, and `writer.WriteValue(value)` with an unknown `T` would always pick the generic overload.
+    It checks `typeof(T)` and calls the typed overload through `Unsafe.As<T, …>(ref value)`; the JIT
+    compiles the method per `T` and keeps only the matching branch, with no boxing. The alternative,
+    a dedicated converter per type as System.Text.Json has, was not chosen: more classes, and reading
+    does not need them.
   - **Raw bytes**: the `IBufferWriter<byte>` members forward to `Output`, the current call's output
     (set by the serializer through an internal `Reset`), for custom converters writing bytes
     themselves.
@@ -163,9 +175,9 @@ confirms it (C5).
   and custom values in one class instead of three mechanisms (object converter, member sections,
   format converters). Constitution 4.0.0's C0 was revised before merge to allow it: the core owns
   the abstract writer, formats subclass it, the core never interprets written bytes.
-- **Later** (developer): whether `WriteFormattable` gets typed overloads per kind of number
-  (`Utf8JsonWriter.WriteNumberValue` has `int`, `long`, `decimal`, ...) or other `Write*Value`
-  methods for specific types.
+- **Typed overloads** (developer, 2026-11-26): settled as above; the earlier "later" question
+  (typed overloads per kind of number, as `Utf8JsonWriter.WriteNumberValue`) is answered by
+  `WriteValue` per type.
 - **Columnar formats** (Parquet) subclass the writer too: `WriteName` selects the column the next
   value goes to, and values are appended to column buffers rather than written as text.
 - **Alternatives considered**: converters write plain bytes into `IBufferWriter<byte>`, with an

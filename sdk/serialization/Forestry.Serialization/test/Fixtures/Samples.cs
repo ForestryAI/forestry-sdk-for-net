@@ -89,7 +89,7 @@ namespace Forestry.Serialization.Tests.Fixtures
                 throw new InvalidOperationException("A converter is never asked to write null (R50).");
             }
 
-            writer.WriteString(value);
+            writer.WriteValue(value.AsSpan());
         }
     }
 }

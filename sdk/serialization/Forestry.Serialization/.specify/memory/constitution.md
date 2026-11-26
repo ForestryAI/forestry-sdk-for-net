@@ -19,7 +19,8 @@ Workflow). Terms are defined under Definitions.
   System.Text.Json's serializer owns buffering and runs its converters over `Utf8JsonReader` and
   `Utf8JsonWriter`. Reading has no format-neutral token or Value model: each format's tokens stay
   inside its own package. Writing goes through the `TelemetryWriter`: converters delegate each value
-  to its overridable methods by kind (string, boolean, formattable, raw) and the serializer frames
+  to its overridable `WriteValue` overloads by the value's type (text, booleans, numbers, `Guid`, dates,
+  any other UTF-8 formattable value, raw bytes), not by how a format represents it, and the serializer frames
   each telemetry through it (start, names, nulls, end); a format package, or a developer, subclasses
   it to decide escaping, nulls, names and framing. The core never interprets written bytes.
 - **Rationale**: One storage model whatever the format: storage designed for analytics and high
@@ -220,8 +221,10 @@ Workflow). Terms are defined under Definitions.
   the `TelemetryWriter`). Resolved once per property definition from the options. A format package
   may register its own converters, e.g. for a different encoding.
 - **Telemetry writer**: The abstract `TelemetryWriter`, an `IBufferWriter<byte>` with overridable
-  methods to frame a telemetry (start, member names, nulls, end) and to write each kind of value
-  (string, boolean, formattable, raw). A format package (or a developer) subclasses it, e.g. JSON
+  methods to frame a telemetry (start, member names, nulls, end) and to write each value by its type
+  (`WriteValue` overloads for text, booleans, numbers, `Guid`, dates and any other UTF-8 formattable
+  value, and `WriteRaw`); the writer decides the representation (e.g. JSON quotes a `Guid`, Parquet
+  stores dates as integers). A format package (or a developer) subclasses it, e.g. JSON
   Lines quoting and escaping strings.
 - **Reading information**: Where a value is read in the document: its depth, name and path
   (`ReadingInformation`), reported by the format with each value. Generic, not specific to one

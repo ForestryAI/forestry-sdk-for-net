@@ -37,10 +37,11 @@ namespace Forestry.Serialization.Converters
         public abstract T Read(ReadOnlySpan<byte> utf8);
 
         /// <summary>
-        /// Write <paramref name="value"/> through <paramref name="writer"/>, delegating to the method for its
-        /// kind (<see cref="TelemetryWriter.WriteString"/>, <see cref="TelemetryWriter.WriteBoolean"/>,
-        /// <see cref="TelemetryWriter.WriteFormattable{T}"/>, ...) so the format, or a developer's writer,
-        /// decides how it looks; or as raw UTF-8 through the writer's <see cref="System.Buffers.IBufferWriter{T}"/>
+        /// Write <paramref name="value"/> through <paramref name="writer"/>, delegating to its overload for the
+        /// value's type (<see cref="TelemetryWriter.WriteValue(ReadOnlySpan{char})"/>,
+        /// <see cref="TelemetryWriter.WriteValue(bool)"/>, <see cref="TelemetryWriter.WriteValue(Guid)"/>, ...,
+        /// or <see cref="TelemetryWriter.WriteValue{T}(T)"/>) so the format, or a developer's writer, decides how
+        /// it is represented; or as raw UTF-8 through the writer's <see cref="System.Buffers.IBufferWriter{T}"/>
         /// members, asking for more room instead of failing (spec 004 research R45). Called when serializing,
         /// through serialize options
         /// </summary>

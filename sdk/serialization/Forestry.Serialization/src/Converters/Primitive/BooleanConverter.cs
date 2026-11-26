@@ -23,6 +23,6 @@ namespace Forestry.Serialization.Converters.Primitive
             throw new FormatException(Formatting.Format(Formatting.NotParsable, nameof(Boolean)));
         }
 
-        public override void Write(bool value, TelemetryWriter writer) => writer.WriteBoolean(value);
+        public override void Write(bool value, TelemetryWriter writer) => writer.WriteValue(value);
     }
 }

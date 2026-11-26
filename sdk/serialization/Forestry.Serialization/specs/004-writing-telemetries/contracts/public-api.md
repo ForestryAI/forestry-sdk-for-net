@@ -78,10 +78,18 @@ namespace Forestry.Serialization.Writing
         public virtual void WriteName(PropertyDefinition property);          // default: nothing; separators are the writer's state
         public virtual void WriteNull(PropertyDefinition property);          // default: WriteName, no value
 
-        // Values by kind, called by converters (typed number overloads may come later)
-        public virtual void WriteString(ReadOnlySpan<char> value);           // default: UTF-8, unescaped
-        public virtual void WriteBoolean(bool value);                        // default: true / false
-        public virtual void WriteFormattable<T>(T value, ReadOnlySpan<char> format = default) where T : IUtf8SpanFormattable;  // default: invariant culture
+        // Values by type, called by converters (R49): named for what the value is, not how a format represents it
+        public virtual void WriteValue(ReadOnlySpan<char> value);            // text; default: UTF-8, unescaped
+        public virtual void WriteValue(bool value);                          // default: true / false
+        public virtual void WriteValue(int value);
+        public virtual void WriteValue(long value);
+        public virtual void WriteValue(double value);
+        public virtual void WriteValue(decimal value);
+        public virtual void WriteValue(Guid value);                          // default: D
+        public virtual void WriteValue(DateTime value);                      // default: round-trip O
+        public virtual void WriteValue(DateTimeOffset value);                // default: round-trip O
+        public virtual void WriteValue<T>(T value) where T : IUtf8SpanFormattable;   // every other value; overriding it does not change the typed overloads
+        protected void WriteFormatted<T>(T value, ReadOnlySpan<char> format) where T : IUtf8SpanFormattable;  // shared by the defaults
         public virtual void WriteRaw(ReadOnlySpan<byte> utf8);               // default: bytes as they are
     }
 

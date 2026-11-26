@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Text;
 using Forestry.Serialization.Converters;
 using Forestry.Serialization.Definitions;
@@ -132,6 +133,45 @@ namespace Forestry.Serialization.Tests
 
             // Assert
             Assert.Contains(nameof(MarkingInt32Converter), exception.Message);
+        }
+
+        // R49 option A (developer, 2026-11-26): the generic built-in converter calls the writer's overload for
+        // the value's type, so a writer overriding one typed overload is called for that type only
+        [Theory]
+        [InlineData("int", "int:7")]
+        [InlineData("long", "long:7")]
+        [InlineData("double", "double:7")]
+        [InlineData("decimal", "decimal:7")]
+        [InlineData("Guid", "Guid:3cdb35d7-6108-4b19-8d30-d6dfd2c44e9b")]
+        [InlineData("DateTime", "DateTime:2026")]
+        [InlineData("DateTimeOffset", "DateTimeOffset:2026")]
+        [InlineData("bool", "bool:True")]
+        [InlineData("string", "string:Gran")]
+        [InlineData("char", "generic:Char:x")]
+        public void Write_ForEachTypedOverload_ItShould_CallTheWritersOverloadForTheValuesType(string kind, string expected)
+        {
+            // Arrange
+            ArrayBufferWriter<byte> output = new();
+            TypedTelemetryWriter writer = TypedTelemetryWriter.Over(output);
+
+            // Act
+            switch (kind)
+            {
+                case "int": ConverterRoundTrip.BuiltIn<int>().Write(7, writer); break;
+                case "long": ConverterRoundTrip.BuiltIn<long>().Write(7L, writer); break;
+                case "double": ConverterRoundTrip.BuiltIn<double>().Write(7d, writer); break;
+                case "decimal": ConverterRoundTrip.BuiltIn<decimal>().Write(7m, writer); break;
+                case "Guid": ConverterRoundTrip.BuiltIn<Guid>().Write(new Guid("3cdb35d7-6108-4b19-8d30-d6dfd2c44e9b"), writer); break;
+                case "DateTime": ConverterRoundTrip.BuiltIn<DateTime>().Write(new DateTime(2026, 1, 14, 0, 0, 0, DateTimeKind.Utc), writer); break;
+                case "DateTimeOffset": ConverterRoundTrip.BuiltIn<DateTimeOffset>().Write(new DateTimeOffset(2026, 1, 14, 0, 0, 0, TimeSpan.Zero), writer); break;
+                case "bool": ConverterRoundTrip.BuiltIn<bool>().Write(true, writer); break;
+                case "string": ConverterRoundTrip.BuiltIn<string>().Write("Gran", writer); break;
+                case "char": ConverterRoundTrip.BuiltIn<char>().Write('x', writer); break;
+                default: Assert.Fail($"No case for kind '{kind}'"); break;
+            }
+
+            // Assert
+            Assert.Equal(expected, Encoding.UTF8.GetString(output.WrittenSpan));
         }
 
         private static void AssertRoundTrip<T>(Converter<T> converter, T value)

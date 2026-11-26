@@ -19,11 +19,14 @@ monitoring (#141) uses to collect telemetries into collections.
 ### Session 2026-11-26
 
 - Q: How does a format, or a developer, decide how values are written? → A: Through an abstract
-  `TelemetryWriter` (an `IBufferWriter<byte>`) that converters delegate to by kind (string,
-  boolean, formattable, raw) and that frames each telemetry (start, names, nulls, end); a format or
+  `TelemetryWriter` (an `IBufferWriter<byte>`) that converters delegate to by the value's type
+  (`WriteValue` overloads) and that frames each telemetry (start, names, nulls, end); a format or
   developer subclasses it, e.g. to customize strings, booleans or custom values (developer, after
   reviewing US1, replacing the object converter and member sections; constitution C0 revised before
-  merge). Typed overloads per kind of number may come later.
+  merge). The value methods are `WriteValue` overloads named for what the value is, not how a format
+  represents it (text, `bool`, `int`, `long`, `double`, `decimal`, `Guid`, `DateTime`,
+  `DateTimeOffset`, and a generic overload for the rest), since JSON quotes a `Guid` while Parquet
+  stores dates as integers (developer, same day).
 - Q: What do serialize options and deserialize options share? → A: One common abstract base that
   both derive from. Deserializing goes from one format to telemetries, and serializing from
   telemetries to another format; what they share is the type and property definitions, and the
@@ -199,8 +202,8 @@ the "ready" hook; repeat with an exception for "abandoned", and with a collectio
 - **FR-001**: A converter's reading method MUST be named `Read` (was `Convert`), with unchanged
   behavior.
 - **FR-002**: Every converter MUST have an overridable write method that writes a non-null value
-  through the telemetry writer it is handed, delegating to the writer's method for its kind
-  (string, boolean, formattable, raw) or writing raw UTF-8 through it, asking for more room as
+  through the telemetry writer it is handed, delegating to the writer's `WriteValue` overload for
+  the value's type or writing raw UTF-8 through it, asking for more room as
   needed, with no "did not fit" result.
 - **FR-003**: The built-in converters MUST write the text they read, so that writing then reading
   any value of a built-in kind gives the same value.

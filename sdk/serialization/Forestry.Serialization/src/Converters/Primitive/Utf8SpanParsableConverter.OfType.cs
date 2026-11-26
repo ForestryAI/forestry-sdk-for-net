@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using Forestry.Serialization.Writing;
 
 namespace Forestry.Serialization.Converters.Primitive
@@ -20,7 +21,41 @@ namespace Forestry.Serialization.Converters.Primitive
             throw new FormatException(Formatting.Format(Formatting.NotParsable, typeof(T).Name));
         }
 
-        public override void Write(T value, TelemetryWriter writer) => writer.WriteFormattable(value);
+        /// <summary>
+        /// Write through the writer's overload for the value's type, so a writer that overrides, say,
+        /// <see cref="TelemetryWriter.WriteValue(decimal)"/> is called for decimals (spec 004 research R49, option
+        /// A): the JIT compiles this method per <typeparamref name="T"/> and keeps only the matching branch,
+        /// with no boxing
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="writer"></param>
+        public override void Write(T value, TelemetryWriter writer)
+        {
+            if (typeof(T) == typeof(int))
+            {
+                writer.WriteValue(Unsafe.As<T, int>(ref value));
+            }
+            else if (typeof(T) == typeof(long))
+            {
+                writer.WriteValue(Unsafe.As<T, long>(ref value));
+            }
+            else if (typeof(T) == typeof(double))
+            {
+                writer.WriteValue(Unsafe.As<T, double>(ref value));
+            }
+            else if (typeof(T) == typeof(decimal))
+            {
+                writer.WriteValue(Unsafe.As<T, decimal>(ref value));
+            }
+            else if (typeof(T) == typeof(Guid))
+            {
+                writer.WriteValue(Unsafe.As<T, Guid>(ref value));
+            }
+            else
+            {
+                writer.WriteValue(value);
+            }
+        }
     }
 
     /// <summary>

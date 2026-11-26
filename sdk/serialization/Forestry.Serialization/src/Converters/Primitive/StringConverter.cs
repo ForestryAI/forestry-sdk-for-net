@@ -10,6 +10,6 @@ namespace Forestry.Serialization.Converters.Primitive
     {
         public override string Read(ReadOnlySpan<byte> utf8) => Encoding.UTF8.GetString(utf8);
 
-        public override void Write(string value, TelemetryWriter writer) => writer.WriteString(value);
+        public override void Write(string value, TelemetryWriter writer) => writer.WriteValue(value.AsSpan());
     }
 }
