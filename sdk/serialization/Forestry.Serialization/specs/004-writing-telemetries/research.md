@@ -95,6 +95,14 @@ confirms it (C5).
   to `T` to `Write` (FR-006). A null value (a nullable or a
   `string`) never reaches the converter (R50).
 - **Rationale**: Same mechanism as the setter, compiled once per definition, no boxing.
+- **Names and positions for writers** (developer, 2026-11-26): `WriteName` is the one per-member
+  hook (a name for JSON, a separator for the string test format or CSV, the column for Parquet). Its
+  call is cheap; what would cost is encoding `Name` to UTF-8 for every member of every telemetry. So
+  `PropertyDefinition` gets `Utf8Name` (`ReadOnlyMemory<byte>`, computed once when the definition is
+  built; member names are C# identifiers, so a JSON writer can check once whether escaping is
+  needed) and a public `Index` (its position in `TypeDefinition.Properties`, internal until now) for
+  columnar writers. No flag to skip `WriteName`: nearly every writer needs the per-member call;
+  a `virtual bool` on the writer can be added later if performance work shows a need (C6).
 - **Alternatives considered**: `PropertyInfo.GetValue` (boxes, slow); source generators (not yet
   used anywhere in the SDK).
 

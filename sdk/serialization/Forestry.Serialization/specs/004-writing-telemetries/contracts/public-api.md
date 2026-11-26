@@ -59,6 +59,15 @@ namespace Forestry.Serialization
     }
 }
 
+namespace Forestry.Serialization.Definitions
+{
+    public abstract class PropertyDefinition
+    {
+        public ReadOnlyMemory<byte> Utf8Name { get; }   // new (R46): the name in UTF-8, computed once, for writers
+        public int Index { get; }                       // now public (R46): position in TypeDefinition.Properties, for columnar writers
+    }
+}
+
 namespace Forestry.Serialization.Writing
 {
     public abstract class TelemetryWriter : IBufferWriter<byte>    // R49: one class a format or developer overrides
