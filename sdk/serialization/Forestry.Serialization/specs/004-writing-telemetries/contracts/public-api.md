@@ -14,6 +14,12 @@ namespace Forestry.Serialization.Converters
         public abstract T Read(ReadOnlySpan<byte> utf8);                   // was Convert (R56)
         public virtual void Write(T value, TelemetryWriter writer);         // new (R45); delegates to the writer; default throws NotSupportedException
     }
+
+    public abstract class ObjectConverter<T> : Converter<T> where T : Telemetry   // new (R49): the walk of a telemetry type
+    {
+        public sealed override T Read(ReadOnlySpan<byte> utf8);   // throws NotSupportedException: read side deferred
+        public abstract override void Write(T value, TelemetryWriter writer);
+    }
 }
 
 namespace Forestry.Serialization
@@ -61,6 +67,13 @@ namespace Forestry.Serialization
 
 namespace Forestry.Serialization.Definitions
 {
+    public abstract class TypeDefinition { /* Type, Options, Properties as before; was sealed */ }
+
+    public sealed class TypeDefinition<T> : TypeDefinition where T : Telemetry   // new (R49): System.Text.Json's JsonTypeInfo<T>
+    {
+        public ObjectConverter<T> Converter { get; }       // resolved when the definition is built
+    }
+
     public abstract class PropertyDefinition
     {
         public ReadOnlyMemory<byte> Utf8Name { get; }   // new (R46): the name in UTF-8, computed once, for writers

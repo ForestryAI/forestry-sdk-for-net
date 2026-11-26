@@ -198,6 +198,20 @@ confirms it (C5).
 - **Typed overloads** (developer, 2026-11-26): settled as above; the earlier "later" question
   (typed overloads per kind of number, as `Utf8JsonWriter.WriteNumberValue`) is answered by
   `WriteValue` per type.
+- **The object converter owns the walk** (developer, 2026-11-26, after System.Text.Json's
+  `JsonTypeInfo<T>` and `ObjectDefaultConverter<T>`): each telemetry type gets a `TypeDefinition<T>`
+  (`TypeDefinition` becomes its abstract base) with a resolved `ObjectConverter<T>`, a `Converter<T>` for a
+  telemetry type, resolved like any converter (the developer's `Converters`, the format's
+  `FormatConverters`, then the internal `ObjectDefaultConverter<T>`). Its `Write(T value, TelemetryWriter
+  writer)` calls the writer's `WriteStartTelemetry`, each property definition's `WriteMember` (getter
+  `Func<Telemetry, T>`, no boxing; `WriteNull`, or `WriteName` and the property's resolved converter), and
+  `WriteEndTelemetry`. `TelemetrySerialization` calls the type definition's converter instead of its own
+  walk. A converter registered for a telemetry type that is not an `ObjectConverter<T>` fails at lock.
+  The writer keeps framing and representing values; the object converter decides what is walked, so a
+  developer or format can replace it per telemetry type (e.g. Parquet routing members to columns). The
+  read side is deferred: `ObjectConverter<T>.Read` throws `NotSupportedException`, and reading keeps its
+  enumerators. Getters stay `Func<Telemetry, T>` (System.Text.Json types the owner as `object`; ours are
+  always telemetries); typing the owner too would only save a cast per member (C6: measure first).
 - **Columnar formats** (Parquet) subclass the writer too: `WriteName` selects the column the next
   value goes to, and values are appended to column buffers rather than written as text.
 - **Alternatives considered**: converters write plain bytes into `IBufferWriter<byte>`, with an

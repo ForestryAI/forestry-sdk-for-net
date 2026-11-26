@@ -18,7 +18,7 @@ instances). `SerializeOptions.DefaultCollectionOptions` → one `MonitoringColle
 
 | Type | Change | Validation |
 |---|---|---|
-| `TypeDefinition` | Built from `TelemetrySerializationOptions` | Flat rule (C7, R32) |
+| `TypeDefinition` | Abstract base, built from `TelemetrySerializationOptions`; `TypeDefinition<T>` with its resolved `ObjectConverter<T>` (R49) | Flat rule (C7, R32) |
 | `PropertyDefinition<T>` | Adds a compiled getter `Func<Telemetry, T>`, `Utf8Name` and a public `Index`, and internal `WriteMember`, the counterpart of `GetMemberAndWriteJson` (R46, R49) | Resolved converter must override `Write` when built for `SerializeOptions` (R45) |
 
 ## Converters

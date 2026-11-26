@@ -157,6 +157,36 @@ without an exception; the same through the collection `PipeWriter` (quickstart 5
 
 ---
 
+## Phase 3b: Object converter - a type definition of a type writes itself (US2 follow-on, Priority: P1) (#145)
+
+**Goal** (developer, 2026-11-26): as System.Text.Json's `JsonTypeInfo<T>` with `ObjectDefaultConverter<T>`,
+each telemetry type gets a `TypeDefinition<T>` whose resolved object converter writes a telemetry: the
+writer's start, each property's `WriteMember` (getter `Func<Telemetry, T>`, then `WriteNull` or
+`WriteName` and the property's resolved converter), the writer's end. `ObjectConverter<T>` derives from
+`Converter<T>` and is resolved like any converter (the developer's, the format's, then the default), for a
+telemetry type. The walk moves out of `TelemetrySerialization`. The read side of an object converter is
+deferred: its `Read` throws (R49).
+
+**Independent Test**: the existing serializing tests pass unchanged through the default object converter;
+an `ObjectConverter<Sample>` added to the options replaces the walk for `Sample`.
+
+### Test shells for the object converter ⚠️
+
+- [X] T052 [P] [US2] Fixtures in `Forestry.Serialization/test/Fixtures/ObjectConverters.cs`: `MarkingSampleConverter : ObjectConverter<Sample>` writing `sample:{Id}\n` through the writer; `PlainSampleConverter : Converter<Sample>`, a converter for a telemetry type that is not an object converter
+- [X] T053 [US2] Test shell, R49: every added telemetry type has a `TypeDefinition<T>` whose `Converter` is an `ObjectConverter<T>` (the default when none is registered), in `Forestry.Serialization/test/ObjectConverterTests.cs`
+- [X] T054 [US2] Test shell, R49 / FR-004: `MarkingSampleConverter` added to `TestingSerializeOptions.Converters` is the resolved object converter, and serializing a `Sample` writes `sample:1\n` instead of the default walk, in `ObjectConverterTests.cs`
+- [X] T055 [US2] Test shell, R49: an object converter's `Read` throws `NotSupportedException` (read side deferred); a `Converter<Sample>` that is not an object converter fails when the options lock, naming the type, in `ObjectConverterTests.cs`
+- [ ] T056 [US2] **Test review gate**: the developer reviews T052-T055 on the board and closes the review task before T057 (C4)
+
+### Implementation for the object converter
+
+- [ ] T057 [US2] `TypeDefinition` becomes an abstract base with `TypeDefinition<T> : TypeDefinition where T : Telemetry` (created by reflection, as `PropertyDefinition<T>` is), in `Forestry.Serialization/src/Definitions/`; `ObjectConverter<T> : Converter<T> where T : Telemetry` (public, `Read` sealed and throwing `NotSupportedException`) and the internal `ObjectDefaultConverter<T>` (the walk) in `Forestry.Serialization/src/Converters/`; `TypeDefinition<T>.Converter` resolved when the definition is built: the options' converter for `T` when it is an `ObjectConverter<T>` (otherwise a failure naming the type), else the default; `TelemetrySerialization.Write.cs` calls the type definition's converter instead of its own walk
+- [ ] T058 [US2] Run `dotnet test` on all three test projects: T053-T055 pass, every earlier test green; then the performance gate (depends on T057)
+
+**Checkpoint**: a telemetry type's definition writes itself through its object converter; a format or developer can replace it per type.
+
+---
+
 ## Phase 4: Polish & Cross-Cutting Concerns
 
 - [ ] T047 [P] README (FR-029, D0, SC-008): a "Serializing" section in `Forestry.Serialization/README.md`: targets (`Stream` sync/async, `PipeWriter` async), the caller owns the target, the `MemoryStream` example reading the string back, converters' `Read`/`Write`, with `DeserializeOptions` reading (a converter's `Read`) and `SerializeOptions` writing (its `Write`) and an example adding one converter to `readOptions.Converters` and `writeOptions.Converters` (R44), the `TelemetryWriter` for format authors and developers (customizing strings, booleans and custom values), and collection writers with `MonitoringCollectionOptions`
