@@ -15,7 +15,7 @@ namespace Forestry.Serialization.Tests
     /// Test shells written before any code (C4); they compile once US2's implementation (T022-T030)
     /// declares the surface they assume. For the review gate (T021), the assumed surface:
     /// <list type="bullet">
-    /// <item><c>SerializeOptions</c>, deriving from <c>TelemetrySerializerOptions</c> (R44), with
+    /// <item><c>SerializeOptions</c>, deriving from <c>TelemetrySerializationOptions</c> (R44), with
     /// <c>Telemetries</c> and <c>Converters</c>, and a <c>protected abstract CreateWriter()</c> returning the
     /// format's <c>TelemetryWriter</c>: protected, not protected internal, so a format package without
     /// access to the core's internals can override it (the XML package's tests link this format).</item>

@@ -8,7 +8,7 @@ constitution 4.0.0.
 ## Summary
 
 Add the writing side to Forestry.Serialization. Converters gain `Write` next to `Read` (renamed
-from `Convert`). A common options base, `TelemetrySerializerOptions`, holds the telemetry types,
+from `Convert`). A common options base, `TelemetrySerializationOptions`, holds the telemetry types,
 converters and definitions that `DeserializeOptions` and a new `SerializeOptions` share.
 `TelemetrySerializer.Serialize`/`SerializeAsync` write one telemetry or a sequence to a caller's
 `Stream` (sync and async, through a per-call pooled buffer) or `PipeWriter` (async, no copy),
@@ -101,7 +101,8 @@ specs/004-writing-telemetries/
 
 ```text
 Forestry.Serialization/src/
-├── TelemetrySerializerOptions.cs          # new: common base (R44)
+├── TelemetrySerializationOptions.cs       # new: common base, members and hooks (R44)
+├── TelemetrySerializationOptions.Caching.cs # new: frozen definitions, converter resolution (R44)
 ├── DeserializeOptions.cs                  # derives from the base; reading-only members stay
 ├── SerializeOptions.cs                    # new: writing options, DefaultCollectionOptions
 ├── TelemetrySerializer.Serialize.cs       # new: Serialize/SerializeAsync overloads (R47, R48)

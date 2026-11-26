@@ -9,10 +9,10 @@ namespace Forestry.Serialization
     /// Options of one format for writing (e.g. JSON Lines): serializing calls each converter's
     /// <see cref="Converter{T}.Write"/>, through the format's <see cref="TelemetryWriter"/>. Shares with
     /// <see cref="DeserializeOptions"/> what reading and writing have in common
-    /// (<see cref="TelemetrySerializerOptions"/>: telemetry types, converters, definitions). Once first used
+    /// (<see cref="TelemetrySerializationOptions"/>: telemetry types, converters, definitions). Once first used
     /// they are read-only (spec 004 research R44, R49)
     /// </summary>
-    public abstract class SerializeOptions : TelemetrySerializerOptions
+    public abstract class SerializeOptions : TelemetrySerializationOptions
     {
         /// <summary>
         /// Options of a format, for writing

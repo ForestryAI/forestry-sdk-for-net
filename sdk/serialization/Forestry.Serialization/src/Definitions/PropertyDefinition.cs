@@ -93,14 +93,14 @@ namespace Forestry.Serialization.Definitions
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        private protected abstract Converter? ResolveConverter(TelemetrySerializerOptions options);
+        private protected abstract Converter? ResolveConverter(TelemetrySerializationOptions options);
 
         /// <summary>
         /// Resolve and keep the converter (research R33, step 3)
         /// </summary>
         /// <param name="options"></param>
         /// <returns>Null when configured; otherwise why the member cannot be mapped</returns>
-        private string? Configure(TelemetrySerializerOptions options)
+        private string? Configure(TelemetrySerializationOptions options)
         {
             Converter? converter = ResolveConverter(options);
 
@@ -127,7 +127,7 @@ namespace Forestry.Serialization.Definitions
         internal static bool TryCreate(
             MemberInfo member,
             Type memberType,
-            TelemetrySerializerOptions options,
+            TelemetrySerializationOptions options,
             [NotNullWhen(true)] out PropertyDefinition? definition,
             [NotNullWhen(false)] out string? failure
         ) {

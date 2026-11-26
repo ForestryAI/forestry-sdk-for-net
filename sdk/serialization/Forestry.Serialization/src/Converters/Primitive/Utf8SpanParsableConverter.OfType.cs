@@ -72,7 +72,7 @@ namespace Forestry.Serialization.Converters.Primitive
                 contract.GetGenericTypeDefinition() == typeof(IUtf8SpanParsable<>) &&
                 contract.GenericTypeArguments[0] == type);
 
-        public override Converter CreateConverter(Type type, TelemetrySerializerOptions options) =>
+        public override Converter CreateConverter(Type type, TelemetrySerializationOptions options) =>
             (Converter)Activator.CreateInstance(typeof(Utf8SpanParsableConverter<>).MakeGenericType(type))!;
     }
 }

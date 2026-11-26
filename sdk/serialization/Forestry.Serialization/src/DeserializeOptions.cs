@@ -8,10 +8,10 @@ namespace Forestry.Serialization
     /// <summary>
     /// Options of one format for reading (e.g. <c>DeserializeXmlOptions</c>): deserializing calls each
     /// converter's <see cref="Converter{T}.Read"/>. Adds to what reading and writing share
-    /// (<see cref="TelemetrySerializerOptions"/>: telemetry types, converters, definitions) the policies and
+    /// (<see cref="TelemetrySerializationOptions"/>: telemetry types, converters, definitions) the policies and
     /// settings of a deserialization. Once first used they are read-only (research R6; spec 004 R44)
     /// </summary>
-    public abstract partial class DeserializeOptions : TelemetrySerializerOptions
+    public abstract partial class DeserializeOptions : TelemetrySerializationOptions
     {
         /// <summary>
         /// Options of a format, for reading

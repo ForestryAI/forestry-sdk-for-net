@@ -7,7 +7,7 @@ confirms it (C5).
 
 ## R44 - The common options base
 
-- **Decision**: An abstract `TelemetrySerializerOptions` holds what both directions share: the
+- **Decision**: An abstract `TelemetrySerializationOptions` holds what both directions share: the
   telemetry types (`Telemetries`), the converters (`Converters`, plus the format's
   `FormatConverters`), locking (`MakeReadOnly`, `IsReadOnly`) and the type and property
   definitions built when the options lock. `DeserializeOptions` derives from it and keeps what is
@@ -41,8 +41,14 @@ confirms it (C5).
 - **Stays on `DeserializeOptions`**: `Policies`, `MaxContextTelemetries`, enumeration
   (`Enumerates`, type chains, members applying, `BeginEnumeration`/`EndEnumeration`), the
   enumerator factories, `SkipsByteOrderMark`.
+- **Name and files** (developer, 2026-11-26): the base is `TelemetrySerializationOptions` (named for the
+  package and both directions; `TelemetrySerializerOptions`, after System.Text.Json's
+  `JsonSerializerOptions`, was the first name), split like `DeserializeOptions`: the members and
+  hooks in `TelemetrySerializationOptions.cs`, the frozen definitions and converter resolution in
+  `TelemetrySerializationOptions.Caching.cs`. `FormatConverters` stays on the base: reading uses it
+  (XML booleans), and a writing format can still convert a type as a whole.
 - **Public ripples (breaking, in the changelog)**: `ConverterFactory.CreateConverter(Type,
-  TelemetrySerializerOptions)` (was `DeserializeOptions`), `TypeDefinition.Options` typed as the
+  TelemetrySerializationOptions)` (was `DeserializeOptions`), `TypeDefinition.Options` typed as the
   base.
 - **Constructor rules**: `TypeDefinition.Create` keeps validating constructors for both directions
   (one public constructor, or a marked one), although writing never constructs: the same rules

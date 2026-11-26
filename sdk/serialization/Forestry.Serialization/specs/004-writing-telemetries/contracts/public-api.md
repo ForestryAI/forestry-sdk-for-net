@@ -18,7 +18,7 @@ namespace Forestry.Serialization.Converters
 
 namespace Forestry.Serialization
 {
-    public abstract partial class DeserializeOptions : TelemetrySerializerOptions   // was a root class (R44)
+    public abstract partial class DeserializeOptions : TelemetrySerializationOptions   // was a root class (R44)
     {
         // Telemetries, Converters, FormatConverters, IsReadOnly, MakeReadOnly move to the base.
         // Policies, MaxContextTelemetries, enumerator factories stay here.
@@ -31,7 +31,7 @@ namespace Forestry.Serialization
 ```csharp
 namespace Forestry.Serialization
 {
-    public abstract class TelemetrySerializerOptions
+    public abstract class TelemetrySerializationOptions
     {
         public TelemetryTypes Telemetries { get; }
         public IList<Converter> Converters { get; }
@@ -40,7 +40,7 @@ namespace Forestry.Serialization
         public void MakeReadOnly();
     }
 
-    public abstract class SerializeOptions : TelemetrySerializerOptions
+    public abstract class SerializeOptions : TelemetrySerializationOptions
     {
         public MonitoringCollectionOptions DefaultCollectionOptions { get; set; }   // settable until locked
         protected abstract TelemetryWriter CreateWriter();   // the format's writer, one per call; protected: formats need no access to internals

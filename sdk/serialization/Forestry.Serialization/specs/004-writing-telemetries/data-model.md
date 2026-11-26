@@ -6,7 +6,7 @@
 
 | Type | Kind | Holds | Lifecycle |
 |---|---|---|---|
-| `TelemetrySerializerOptions` | abstract base (R44) | `Telemetries`, `Converters`, `FormatConverters`, type and property definitions | Mutable until `MakeReadOnly` (first use); then definitions are built and frozen |
+| `TelemetrySerializationOptions` | abstract base (R44) | `Telemetries`, `Converters`, `FormatConverters`, type and property definitions | Mutable until `MakeReadOnly` (first use); then definitions are built and frozen |
 | `DeserializeOptions` | abstract, derives from the base | `Policies`, `MaxContextTelemetries`, enumerator factories, BOM handling | Unchanged |
 | `SerializeOptions` | abstract, derives from the base | `CreateWriter()` (protected abstract, the format's `TelemetryWriter`), `DefaultCollectionOptions` | Locks on first serialize; a member whose converter cannot write fails here (S1) |
 | `MonitoringCollectionOptions` | sealed, `init` only (R53) | `LeaveOpen`, `TargetSize`, `MaxTelemetries`, `SizeIsCompressed`, `MinimumBufferSize`, `Pool`, `Default` | Immutable from creation |
@@ -18,7 +18,7 @@ instances). `SerializeOptions.DefaultCollectionOptions` → one `MonitoringColle
 
 | Type | Change | Validation |
 |---|---|---|
-| `TypeDefinition` | Built from `TelemetrySerializerOptions` | Flat rule (C7, R32) |
+| `TypeDefinition` | Built from `TelemetrySerializationOptions` | Flat rule (C7, R32) |
 | `PropertyDefinition<T>` | Adds a compiled getter `Func<Telemetry, T>`, `Utf8Name` and a public `Index`, and internal `WriteMember`, the counterpart of `GetMemberAndWriteJson` (R46, R49) | Resolved converter must override `Write` when built for `SerializeOptions` (R45) |
 
 ## Converters

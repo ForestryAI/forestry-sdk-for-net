@@ -27,7 +27,7 @@ namespace Forestry.Serialization.Definitions
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        private protected override Converter? ResolveConverter(TelemetrySerializerOptions options)
+        private protected override Converter? ResolveConverter(TelemetrySerializationOptions options)
         {
             Converter<T>? converter = options.ResolveConverter(typeof(T)) as Converter<T>;
 

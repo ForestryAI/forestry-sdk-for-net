@@ -1,8 +1,6 @@
 using System.Collections.Frozen;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Forestry.Serialization.Converters;
-using Forestry.Serialization.Converters.Primitive;
 using Forestry.Serialization.Definitions;
 
 namespace Forestry.Serialization
@@ -18,9 +16,9 @@ namespace Forestry.Serialization
     /// package derives from those. Each options instance builds and locks its own definitions, never shared
     /// with another instance (research R5, S0).
     /// </remarks>
-    public abstract class TelemetrySerializerOptions
+    public abstract partial class TelemetrySerializationOptions
     {
-        private protected TelemetrySerializerOptions()
+        private protected TelemetrySerializationOptions()
         {
             Telemetries = new TelemetryTypes(this);
         }
@@ -50,102 +48,9 @@ namespace Forestry.Serialization
         /// </summary>
         protected virtual IEnumerable<Converter> FormatConverters => [];
 
-        /// <summary>
-        /// Converters resolved per type while definitions are built
-        /// </summary>
-        private Dictionary<Type, Converter?>? _resolvedConverters;
-
-        /// <summary>
-        /// Primitive converters, last in the precedence
-        /// </summary>
-        private static readonly Converter[] s_primitiveConverters =
-        [
-            new StringConverter(),
-            new BooleanConverter(),
-            new DateTimeConverter(),
-            new DateTimeOffsetConverter(),
-            new NullableConverterFactory(),
-            new Utf8SpanParsableConverterFactory()
-        ];
-
-        /// <summary>
-        /// Resolved converter of a type: the developer's converters, then the format's defaults, then
-        /// the primitives; null when none handles it (research R14)
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        internal Converter? ResolveConverter(Type type)
-        {
-            _resolvedConverters ??= [];
-
-            if (_resolvedConverters.TryGetValue(type, out Converter? resolved))
-            {
-                return resolved;
-            }
-
-            resolved = FindConverter(_converters, type) ?? FindConverter(FormatConverters, type) ?? FindConverter(s_primitiveConverters, type);
-            _resolvedConverters[type] = resolved;
-
-            return resolved;
-        }
-
-        private Converter? FindConverter(IEnumerable<Converter>? converters, Type type)
-        {
-            if (converters is null)
-            {
-                return null;
-            }
-
-            foreach (Converter converter in converters)
-            {
-                if (converter.CanConvert(type))
-                {
-                    return converter is ConverterFactory factory ? factory.CreateConverter(type, this) : converter;
-                }
-            }
-
-            return null;
-        }
         #endregion
 
         #region Definitions
-        /// <summary>
-        /// Telemetry type lookup, fixed once locked
-        /// </summary>
-        private FrozenDictionary<Type, TypeDefinition>? _typeDefinitions;
-
-        /// <summary>
-        /// Type definition of an added telemetry type once the options are read-only
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="typeDefinition"></param>
-        /// <returns></returns>
-        internal bool TryGetTypeDefinition(Type type, [NotNullWhen(true)] out TypeDefinition? typeDefinition)
-        {
-            if (_typeDefinitions is { } typeDefinitions)
-            {
-                return typeDefinitions.TryGetValue(type, out typeDefinition);
-            }
-
-            typeDefinition = null;
-            return false;
-        }
-
-        /// <summary>
-        /// Type definition of an added telemetry type; any other type throws (S0)
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        internal TypeDefinition ThrowingGetTypeDefinition(Type type)
-        {
-            if (!TryGetTypeDefinition(type, out TypeDefinition? typeDefinition))
-            {
-                Throwing.WhenTelemetryTypeNotAdded(type);
-            }
-
-            return typeDefinition;
-        }
-
         /// <summary>
         /// Before the definitions are built, under the options' lock (e.g. the deserialize options resolve
         /// their policies)
@@ -170,30 +75,6 @@ namespace Forestry.Serialization
         {
         }
 
-        /// <summary>
-        /// Build the type definitions of the added telemetry types under the options' lock
-        /// </summary>
-        /// <returns></returns>
-        private FrozenDictionary<Type, TypeDefinition> BuildTypeDefinitions()
-        {
-            if (Telemetries.Count == 0)
-            {
-                Throwing.WhenNoTelemetryTypes();
-            }
-
-            // A failed build leaves the options unlocked: forget what it resolved (a converter may have been added since)
-            _resolvedConverters = null;
-
-            Dictionary<Type, TypeDefinition> typeDefinitions = [];
-
-            foreach (Type type in Telemetries)
-            {
-                typeDefinitions[type] = TypeDefinition.Create(type, this, IncludeMember(type));
-            }
-
-            _resolvedConverters = null;
-            return typeDefinitions.ToFrozenDictionary();
-        }
         #endregion
 
         #region Read-only
@@ -254,7 +135,7 @@ namespace Forestry.Serialization
         /// List locked with the options; private protected, since formats only need the
         /// <see cref="IList{T}"/> it is exposed as (research R44)
         /// </summary>
-        private protected sealed class OptionsObservableList<T>(TelemetrySerializerOptions options) : ObservableList<T>
+        private protected sealed class OptionsObservableList<T>(TelemetrySerializationOptions options) : ObservableList<T>
         {
             public override bool IsReadOnly => options.IsReadOnly;
 

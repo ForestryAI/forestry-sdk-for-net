@@ -23,7 +23,7 @@ namespace Forestry.Serialization.Converters.Primitive
     {
         public override bool CanConvert(Type type) => Nullable.GetUnderlyingType(type) is not null;
 
-        public override Converter CreateConverter(Type type, TelemetrySerializerOptions options)
+        public override Converter CreateConverter(Type type, TelemetrySerializationOptions options)
         {
             Type underlying = Nullable.GetUnderlyingType(type)!;
             Converter? converter = options.ResolveConverter(underlying);
