@@ -18,23 +18,14 @@ namespace Forestry.Serialization
         private const int FlushThreshold = 16 * 1024;
 
         /// <summary>
-        /// The serializer's walk (spec 004 research R49): the writer frames the telemetry, each member writes
-        /// itself through its compiled getter and resolved converter
+        /// Write one telemetry through its type definition's object converter (spec 004 research R49): the default
+        /// one walks the properties between the writer's start and end; a registered one replaces the walk
         /// </summary>
         /// <param name="telemetry"></param>
         /// <param name="definition"></param>
         /// <param name="writer"></param>
-        internal static void WriteTelemetry(Telemetry telemetry, TypeDefinition definition, TelemetryWriter writer)
-        {
-            writer.WriteStartTelemetry(definition);
-
-            foreach (PropertyDefinition property in definition.Properties)
-            {
-                property.WriteMember(telemetry, writer);
-            }
-
-            writer.WriteEndTelemetry();
-        }
+        internal static void WriteTelemetry(Telemetry telemetry, TypeDefinition definition, TelemetryWriter writer) =>
+            definition.WriteTelemetry(telemetry, writer);
 
         /// <summary>
         /// A whole telemetry reached <paramref name="target"/>: a collection writer raises its sequence (R52)

@@ -59,6 +59,10 @@ namespace Forestry.Serialization
 
         internal static string CollectionCompleted => GetResourceString(nameof(CollectionCompleted), @"The collection is completed: it takes no more bytes.");
 
+        internal static string TelemetryTypeConverterNotObjectConverter => GetResourceString(nameof(TelemetryTypeConverterNotObjectConverter), @"its converter '{0}' is not an ObjectConverter; a telemetry type is written by an ObjectConverter<T>.");
+
+        internal static string ObjectConverterCannotRead => GetResourceString(nameof(ObjectConverterCannotRead), @"Object converter '{0}' cannot read: telemetries are read through the format's enumerators.");
+
         internal static string NoConverter => GetResourceString(nameof(NoConverter), @"No converter handles type '{0}'.");
 
         internal static string ConverterCannotWrite => GetResourceString(nameof(ConverterCannotWrite), @"Converter '{0}' only reads values of type '{1}': override Write to write them.");
