@@ -1,7 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Text;
 using Forestry.Serialization.Converters;
 using Forestry.Serialization.Reading;
+using Forestry.Serialization.Writing;
 
 namespace Forestry.Serialization.Definitions
 {
@@ -15,12 +17,19 @@ namespace Forestry.Serialization.Definitions
         {
             Member = member;
             MemberType = memberType;
+            Utf8Name = Encoding.UTF8.GetBytes(member.Name);
         }
 
         /// <summary>
         /// Member name in C#
         /// </summary>
         public string Name => Member.Name;
+
+        /// <summary>
+        /// <see cref="Name"/> in UTF-8, encoded once when the definition is built, so a writer never encodes
+        /// names per telemetry (spec 004 research R46)
+        /// </summary>
+        public ReadOnlyMemory<byte> Utf8Name { get; }
 
         /// <summary>
         /// The <see cref="PropertyInfo"/> or <see cref="FieldInfo"/>
@@ -39,9 +48,25 @@ namespace Forestry.Serialization.Definitions
         public Converter ResolvedConverter { get; private set; } = null!;
 
         /// <summary>
-        /// Position in its type definition's <see cref="TypeDefinition.Properties"/>
+        /// Position in its type definition's <see cref="TypeDefinition.Properties"/>, e.g. for a columnar writer to
+        /// pick the column in <see cref="TelemetryWriter.WriteName"/> (spec 004 research R46)
         /// </summary>
-        internal int Index { get; set; }
+        public int Index { get; internal set; }
+
+        /// <summary>
+        /// Whether the member can be read from a telemetry, to write it
+        /// </summary>
+        internal abstract bool CanGet { get; }
+
+        /// <summary>
+        /// Write this member of <paramref name="telemetry"/> through <paramref name="writer"/>: a missing value
+        /// through <see cref="TelemetryWriter.WriteNull"/>; otherwise <see cref="TelemetryWriter.WriteName"/>
+        /// then the resolved converter's <c>Write</c>, without boxing (spec 004 research R46, R49; System.Text.Json's
+        /// <c>GetMemberAndWriteJson</c>)
+        /// </summary>
+        /// <param name="telemetry"></param>
+        /// <param name="writer"></param>
+        internal abstract void WriteMember(Telemetry telemetry, TelemetryWriter writer);
 
         /// <summary>
         /// Convert <paramref name="utf8"/> and set it on <paramref name="telemetry"/> through
@@ -68,14 +93,14 @@ namespace Forestry.Serialization.Definitions
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        private protected abstract Converter? ResolveConverter(DeserializeOptions options);
+        private protected abstract Converter? ResolveConverter(TelemetrySerializerOptions options);
 
         /// <summary>
         /// Resolve and keep the converter (research R33, step 3)
         /// </summary>
         /// <param name="options"></param>
         /// <returns>Null when configured; otherwise why the member cannot be mapped</returns>
-        private string? Configure(DeserializeOptions options)
+        private string? Configure(TelemetrySerializerOptions options)
         {
             Converter? converter = ResolveConverter(options);
 
@@ -102,7 +127,7 @@ namespace Forestry.Serialization.Definitions
         internal static bool TryCreate(
             MemberInfo member,
             Type memberType,
-            DeserializeOptions options,
+            TelemetrySerializerOptions options,
             [NotNullWhen(true)] out PropertyDefinition? definition,
             [NotNullWhen(false)] out string? failure
         ) {

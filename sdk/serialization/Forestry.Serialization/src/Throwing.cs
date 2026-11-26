@@ -17,9 +17,9 @@ namespace Forestry.Serialization
         }
 
         [DoesNotReturn]
-        public static void WhenDeserializeOptionsIsReadOnly()
+        public static void WhenOptionsAreReadOnly()
         {
-            throw new InvalidOperationException(Formatting.DeserializeOptionsIsReadOnly);
+            throw new InvalidOperationException(Formatting.OptionsAreReadOnly);
         }
 
         [DoesNotReturn]
@@ -64,6 +64,18 @@ namespace Forestry.Serialization
         public static void WhenConstructorHasParameters(Type type)
         {
             throw new InvalidOperationException(Formatting.Format(Formatting.ConstructorHasParameters, type.FullName));
+        }
+
+        /// <summary>
+        /// One exception for a telemetry type naming every member serialize options cannot write (spec 004 FR-008)
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="failures"></param>
+        [DoesNotReturn]
+        public static void WhenTelemetryTypeCannotBeWritten(Type type, IReadOnlyList<string> failures)
+        {
+            string list = string.Concat(failures.Select(failure => Environment.NewLine + "- " + failure));
+            throw new InvalidOperationException(Formatting.Format(Formatting.TelemetryTypeCannotBeWritten, type.FullName, list));
         }
 
         /// <summary>

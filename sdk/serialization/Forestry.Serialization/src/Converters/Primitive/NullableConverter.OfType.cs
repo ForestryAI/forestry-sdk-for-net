@@ -12,6 +12,8 @@ namespace Forestry.Serialization.Converters.Primitive
         public override T? Read(ReadOnlySpan<byte> utf8) => converter.Read(utf8);
 
         public override void Write(T? value, TelemetryWriter writer) => converter.Write(value!.Value, writer);
+
+        internal override bool CanWrite => converter.CanWrite;
     }
 
     /// <summary>
@@ -21,7 +23,7 @@ namespace Forestry.Serialization.Converters.Primitive
     {
         public override bool CanConvert(Type type) => Nullable.GetUnderlyingType(type) is not null;
 
-        public override Converter CreateConverter(Type type, DeserializeOptions options)
+        public override Converter CreateConverter(Type type, TelemetrySerializerOptions options)
         {
             Type underlying = Nullable.GetUnderlyingType(type)!;
             Converter? converter = options.ResolveConverter(underlying);

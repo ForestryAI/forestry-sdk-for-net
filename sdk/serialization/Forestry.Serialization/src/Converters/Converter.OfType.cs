@@ -1,3 +1,4 @@
+using System.Reflection;
 using Forestry.Serialization.Writing;
 
 namespace Forestry.Serialization.Converters
@@ -27,6 +28,9 @@ namespace Forestry.Serialization.Converters
         /// <param name="type"></param>
         /// <returns></returns>
         public override bool CanConvert(Type type) => type == typeof(T);
+
+        internal override bool CanWrite =>
+            GetType().GetMethod(nameof(Write), BindingFlags.Public | BindingFlags.Instance, [typeof(T), typeof(TelemetryWriter)])!.DeclaringType != typeof(Converter<T>);
 
         /// <summary>
         /// Read a complete, non-empty value; throw <see cref="FormatException"/> when the text is not a

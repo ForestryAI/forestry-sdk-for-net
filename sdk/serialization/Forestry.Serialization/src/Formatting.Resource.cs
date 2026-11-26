@@ -11,7 +11,7 @@ namespace Forestry.Serialization
 
         private static System.Resources.ResourceManager s_resourceManager = null!;
 
-        internal static string DeserializeOptionsIsReadOnly => GetResourceString(nameof(DeserializeOptionsIsReadOnly), @"Deserialize options instance is read-only i.e. locked for changes.");
+        internal static string OptionsAreReadOnly => GetResourceString(nameof(OptionsAreReadOnly), @"The options are read-only, i.e. locked for changes once first used.");
 
         internal static string WhenNotSingularAttribute => GetResourceString(nameof(WhenNotSingularAttribute), @"Attribute [name: '{0}',target: '{1}'] is not singular");
 
@@ -46,6 +46,16 @@ namespace Forestry.Serialization
         internal static string MemberTypeNotUtf8Formattable => GetResourceString(nameof(MemberTypeNotUtf8Formattable), @"member '{0}' of type '{1}' formats only to chars: implement IUtf8SpanFormattable, so telemetries can be written without a string per value.");
 
         internal static string MemberWithoutConverter => GetResourceString(nameof(MemberWithoutConverter), @"member '{0}' of type '{1}' has no converter; add one to the options.");
+
+        internal static string TelemetryTypeCannotBeWritten => GetResourceString(nameof(TelemetryTypeCannotBeWritten), @"Type '{0}' cannot be written by serialize options:{1}");
+
+        internal static string MemberConverterCannotWrite => GetResourceString(nameof(MemberConverterCannotWrite), @"member '{0}' of type '{1}': its converter '{2}' only reads; serialize options write, so the converter must override Write.");
+
+        internal static string MemberNotReadable => GetResourceString(nameof(MemberNotReadable), @"member '{0}' has no getter; serialize options read each member to write it.");
+
+        internal static string NoTelemetryWriter => GetResourceString(nameof(NoTelemetryWriter), @"Serialize options '{0}' returned no telemetry writer from CreateWriter.");
+
+        internal static string StreamCannotWrite => GetResourceString(nameof(StreamCannotWrite), @"The stream cannot be written to.");
 
         internal static string NoConverter => GetResourceString(nameof(NoConverter), @"No converter handles type '{0}'.");
 

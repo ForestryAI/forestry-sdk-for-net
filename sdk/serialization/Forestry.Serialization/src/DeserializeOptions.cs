@@ -6,42 +6,19 @@ using Forestry.Serialization.Reading;
 namespace Forestry.Serialization
 {
     /// <summary>
-    /// Options of one format (e.g. <c>DeserializeXmlOptions</c>): the telemetry types, converters and settings
-    /// of a deserialization. The options own and build all definitions; once first used they are
-    /// read-only (research R6)
+    /// Options of one format for reading (e.g. <c>DeserializeXmlOptions</c>): deserializing calls each
+    /// converter's <see cref="Converter{T}.Read"/>. Adds to what reading and writing share
+    /// (<see cref="TelemetrySerializerOptions"/>: telemetry types, converters, definitions) the policies and
+    /// settings of a deserialization. Once first used they are read-only (research R6; spec 004 R44)
     /// </summary>
-    public abstract partial class DeserializeOptions
+    public abstract partial class DeserializeOptions : TelemetrySerializerOptions
     {
         /// <summary>
-        /// Options of a format
+        /// Options of a format, for reading
         /// </summary>
         protected DeserializeOptions()
         {
-            Telemetries = new TelemetryTypes(this);
         }
-
-        #region Telemetry types
-        /// <summary>
-        /// Telemetry types added explicitly: only their telemetries are handed out (research R12)
-        /// </summary>
-        public TelemetryTypes Telemetries { get; }
-        #endregion
-
-        #region Converters
-        /// <summary>
-        /// Converters added by the developer; they win over the format's defaults and the primitives
-        /// (research R14)
-        /// </summary>
-        public IList<Converter> Converters => _converters ??= new OptionsObservableList<Converter>(this);
-
-        private OptionsObservableList<Converter>? _converters;
-
-        /// <summary>
-        /// The format's default converters, e.g. XML Schema booleans; after the developer's converters,
-        /// before the primitives
-        /// </summary>
-        protected virtual IEnumerable<Converter> FormatConverters => [];
-        #endregion
 
         #region Policies
         /// <summary>
@@ -80,60 +57,6 @@ namespace Forestry.Serialization
         internal const int DefaultMaxContextTelemetries = 100;
         #endregion
 
-        #region Read-only
-        /// <summary>
-        /// Locked for changes: the definitions are built
-        /// </summary>
-        public bool IsReadOnly => _isReadOnly;
-
-        private volatile bool _isReadOnly;
-
-        private readonly object _gate = new();
-
-        /// <summary>
-        /// Lock the options and build their definitions, as the first deserialization does; throws when
-        /// an added telemetry type cannot be defined. Idempotent
-        /// </summary>
-        public void MakeReadOnly()
-        {
-            if (_isReadOnly)
-            {
-                return;
-            }
-
-            lock (_gate)
-            {
-                if (_isReadOnly)
-                {
-                    return;
-                }
-
-                PolicyResolver resolver = new(_policies);
-                _typeDefinitions = BuildTypeDefinitions(resolver);
-                ResolvePolicies(resolver, _typeDefinitions);
-                OnMakingReadOnly();
-                _isReadOnly = true;
-            }
-        }
-
-        /// <summary>
-        /// The format builds what it derives from the definitions, once, before the options are locked;
-        /// it throws to reject them, at the call like any definition error (FR-008)
-        /// </summary>
-        protected virtual void OnMakingReadOnly() { }
-
-        /// <summary>
-        /// Throws when read-only
-        /// </summary>
-        internal void ThrowingAssertNotReadOnly()
-        {
-            if (_isReadOnly)
-            {
-                Throwing.WhenDeserializeOptionsIsReadOnly();
-            }
-        }
-        #endregion
-
         #region Format
         /// <summary>
         /// The format's synchronous telemetry enumerator over UTF-8 bytes (research R2)
@@ -157,18 +80,5 @@ namespace Forestry.Serialization
         /// </summary>
         protected internal virtual bool SkipsByteOrderMark => true;
         #endregion
-
-        /// <summary>
-        /// List locked with the options
-        /// </summary>
-        private sealed class OptionsObservableList<T>(DeserializeOptions options) : ObservableList<T>
-        {
-            public override bool IsReadOnly => options.IsReadOnly;
-
-            protected override void Before()
-            {
-                options.ThrowingAssertNotReadOnly();
-            }
-        }
     }
 }

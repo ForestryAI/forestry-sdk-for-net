@@ -15,7 +15,7 @@ namespace Forestry.Serialization.Definitions
 
         private TypeDefinition(
             Type type,
-            DeserializeOptions options,
+            TelemetrySerializerOptions options,
             Func<Telemetry> constructor,
             PropertyDefinition[] properties
         ) {
@@ -35,7 +35,7 @@ namespace Forestry.Serialization.Definitions
         /// <summary>
         /// Options that built this definition
         /// </summary>
-        public DeserializeOptions Options { get; }
+        public TelemetrySerializerOptions Options { get; }
 
         /// <summary>
         /// One property definition per included property or field: each a single value with a resolved
@@ -83,7 +83,7 @@ namespace Forestry.Serialization.Definitions
         /// <param name="includeMember">Whether a candidate property or field is a member: the definition
         /// policies' chain (research R19)</param>
         /// <returns></returns>
-        internal static TypeDefinition Create(Type type, DeserializeOptions options, Func<MemberInfo, bool> includeMember)
+        internal static TypeDefinition Create(Type type, TelemetrySerializerOptions options, Func<MemberInfo, bool> includeMember)
         {
             ConstructorInfo constructor = ChooseConstructor(type);
 
