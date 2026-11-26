@@ -17,7 +17,7 @@ namespace Forestry.StanForD.Tests
     public sealed class DimensionTests
     {
         private static List<Telemetry> Read() =>
-            TelemetrySerializer.Deserialize(Fragment.Read(Fragment.MinimalHarvesting), new DeserializeXmlOptions().AddHarvesting()).ToList();
+            TelemetrySerialization.Deserialize(Fragment.Read(Fragment.MinimalHarvesting), new DeserializeXmlOptions().AddHarvesting()).ToList();
 
         /// <summary>
         /// T078, US7-1, FR-021, FR-022: every stem carries its stem number and its object, sub-object,

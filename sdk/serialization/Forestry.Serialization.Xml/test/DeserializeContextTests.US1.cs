@@ -49,8 +49,8 @@ namespace Forestry.Serialization.Xml.Tests
         {
             IEnumerable<Telemetry> telemetries = entryPoint switch
             {
-                EntryPoint.Sync => TelemetrySerializer.Deserialize(document, options),
-                EntryPoint.Async => TelemetrySerializer.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(document)), options).ToBlockingEnumerable(),
+                EntryPoint.Sync => TelemetrySerialization.Deserialize(document, options),
+                EntryPoint.Async => TelemetrySerialization.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(document)), options).ToBlockingEnumerable(),
                 _ => throw new ArgumentOutOfRangeException(nameof(entryPoint))
             };
 
@@ -72,12 +72,12 @@ namespace Forestry.Serialization.Xml.Tests
         {
             if (entryPoint == EntryPoint.Sync)
             {
-                using IEnumerator<Telemetry> telemetries = TelemetrySerializer.Deserialize(document, options).GetEnumerator();
+                using IEnumerator<Telemetry> telemetries = TelemetrySerialization.Deserialize(document, options).GetEnumerator();
                 Assert.True(telemetries.MoveNext());
             }
             else
             {
-                await using IAsyncEnumerator<Telemetry> telemetries = TelemetrySerializer.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(document)), options).GetAsyncEnumerator();
+                await using IAsyncEnumerator<Telemetry> telemetries = TelemetrySerialization.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(document)), options).GetAsyncEnumerator();
                 Assert.True(await telemetries.MoveNextAsync());
             }
         }

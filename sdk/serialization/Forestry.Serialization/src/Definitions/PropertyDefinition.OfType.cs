@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Forestry.Serialization.Converters;
 using Forestry.Serialization.Reading;
+using Forestry.Serialization.Writing;
 
 namespace Forestry.Serialization.Definitions
 {
@@ -15,6 +16,7 @@ namespace Forestry.Serialization.Definitions
         internal PropertyDefinition(MemberInfo member) : base(member, typeof(T))
         {
             _setter = CreateSetter(member);
+            _getter = CreateGetter(member);
         }
 
         private Converter<T> _converter = null!;
@@ -25,7 +27,7 @@ namespace Forestry.Serialization.Definitions
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        private protected override Converter? ResolveConverter(DeserializeOptions options)
+        private protected override Converter? ResolveConverter(TelemetrySerializationOptions options)
         {
             Converter<T>? converter = options.ResolveConverter(typeof(T)) as Converter<T>;
 
@@ -38,6 +40,27 @@ namespace Forestry.Serialization.Definitions
         }
 
         private readonly Action<Telemetry, T> _setter;
+
+        /// <summary>
+        /// Compiled once; null when the member cannot be read (a set-only property)
+        /// </summary>
+        private readonly Func<Telemetry, T>? _getter;
+
+        internal override bool CanGet => _getter is not null;
+
+        internal override void WriteMember(Telemetry telemetry, TelemetryWriter writer)
+        {
+            T value = _getter!(telemetry);
+
+            if (value is null)
+            {
+                writer.WriteNull(this);
+                return;
+            }
+
+            writer.WriteName(this);
+            _converter.Write(value, writer);
+        }
 
         /// <summary>
         /// Empty text sets null where the member allows it, else its type's default, without the
@@ -60,7 +83,7 @@ namespace Forestry.Serialization.Definitions
             {
                 try
                 {
-                    value = _converter.Convert(utf8);
+                    value = _converter.Read(utf8);
                 }
                 catch (Exception exception) when (exception is FormatException or OverflowException)
                 {
@@ -97,6 +120,29 @@ namespace Forestry.Serialization.Definitions
         /// <param name="telemetry"></param>
         /// <param name="value"></param>
         internal void SetValue(Telemetry telemetry, T value) => _setter(telemetry, value);
+
+        /// <summary>
+        /// Compiled once: read the member of the telemetry's concrete type, property or field alike; null when
+        /// a property has no getter (spec 004 research R46)
+        /// </summary>
+        /// <param name="member"></param>
+        /// <returns></returns>
+        private static Func<Telemetry, T>? CreateGetter(MemberInfo member)
+        {
+            if (member is PropertyInfo { CanRead: false })
+            {
+                return null;
+            }
+
+            ParameterExpression telemetry = Expression.Parameter(typeof(Telemetry), "telemetry");
+            Expression target = Expression.Convert(telemetry, member.DeclaringType!);
+
+            MemberExpression access = member is PropertyInfo property
+                ? Expression.Property(target, property)
+                : Expression.Field(target, (FieldInfo)member);
+
+            return Expression.Lambda<Func<Telemetry, T>>(access, telemetry).Compile();
+        }
 
         /// <summary>
         /// Compiled once: assign the member of the telemetry's concrete type, property or field alike

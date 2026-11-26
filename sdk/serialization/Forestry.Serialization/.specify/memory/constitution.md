@@ -1,26 +1,36 @@
 # Forestry Serialization Constitution
 
-Rules no design decision may override, for the deserialization silo (Forestry.Serialization) only.
+Rules no design decision may override, for the serialization silo (Forestry.Serialization) only.
 Each rule names the spec-kit area it covers (Architecture, Code quality, Security, Documentation,
 Workflow). Terms are defined under Definitions.
 
 ## Core Principles
 
-### C0. Format-agnostic deserialization
+### C0. Format-agnostic serialization
 
 - **Covers**: Architecture
-- **Rule**: The deserialization package MUST NOT reference any format reader package. It owns what
-  is shared by every format: the entry points, the abstract options, the enumerators and buffering,
-  type, property and parameter definitions, policies, and `Telemetry`. A format reader package references
-  it, extends the options, and supplies its own reader and a synchronous, resumable step that turns
-  buffered bytes into telemetries, much as System.Text.Json's serializer owns buffering and runs its
-  converters over `Utf8JsonReader`. There is no format-neutral token or Value model between the two:
-  each format's tokens stay inside its own package.
+- **Rule**: The serialization package MUST NOT reference any format package. It owns what is
+  shared by every format, in both directions: the entry points (`TelemetrySerialization`), the
+  abstract options (`DeserializeOptions`, `SerializeOptions`), the enumerators and buffering, type,
+  property and parameter definitions, converters (`Read` and `Write`), the abstract
+  `TelemetryWriter`, policies, and `Telemetry`. A format package references it, extends the
+  options, and supplies its own reader and a synchronous, resumable step that turns buffered bytes
+  into telemetries (reading), its own `TelemetryWriter` (writing), or both, much as
+  System.Text.Json's serializer owns buffering and runs its converters over `Utf8JsonReader` and
+  `Utf8JsonWriter`. Reading has no format-neutral token or Value model: each format's tokens stay
+  inside its own package. Writing goes through the `TelemetryWriter`: converters delegate each value
+  to its overridable `WriteValue` overloads by the value's type (text, booleans, numbers, `Guid`, dates,
+  any other UTF-8 formattable value, raw bytes), not by how a format represents it, and the serializer frames
+  each telemetry through it (start, names, nulls, end); a format package, or a developer, subclasses
+  it to decide escaping, nulls, names and framing. The core never interprets written bytes.
 - **Rationale**: One storage model whatever the format: storage designed for analytics and high
   write throughput. Format grammars differ too much to share tokens (e.g. XML's end element, JSON's
-  separate property names); what is shared is the flattening.
-- **Checked by**: Project references of src and test (the reference goes format -> deserialization,
-  never back).
+  separate property names); what is shared is the flattening. For writing, the same split as
+  System.Text.Json (`JsonConverter<T>.Write` against a `Utf8JsonWriter`), with the writer abstract,
+  so one class lets a format or developer customize strings, booleans and custom values (developer,
+  2026-11-26).
+- **Checked by**: Project references of src and test (the reference goes format -> serialization,
+  never back); no type from a format package in the serialization package's public API.
 
 ### C1. Partial deserialization
 
@@ -39,34 +49,43 @@ Workflow). Terms are defined under Definitions.
 - **Rule**: Deserialization MUST read the document once, forward only. Type, property and
   parameter definitions, with their policies, are built once; each part of the document is then
   ignored, starts a telemetry, or sets a typed member of a telemetry. Several type definitions (e.g. Stem and
-  Log telemetries) come from the same pass, never from re-reading. Deserialization only goes from format to
-  type definitions (no serialization back).
-- **Rationale**: Re-reading multi-GB documents is not an option; the target is flat telemetries, not a
-  mirror of the format.
+  Log telemetries) come from the same pass, never from re-reading. Writing telemetries back out is
+  governed by C8; it never re-reads the document.
+- **Rationale**: Re-reading multi-GB documents is not an option; the target is flat telemetries,
+  not a mirror of the format. Writing is in scope (#137); the single pass for reading stays.
 - **Checked by**: Tests enumerating several telemetry types from one document read once.
 
-### C3. Tested through a real format reader, real data later
+### C3. Tested through a real format package, real data later
 
 - **Covers**: Code quality
-- **Rule**: Deserialization behavior MUST be tested through a real format reader package (XML
-  first, JSON later) over small hand-written documents, in that format package's tests. No fake
-  format or fake token producer is built. The deserialization package's own tests cover only what
-  needs no document (e.g. definitions, policy precedence, `Telemetry.AsType<T>()`). Confirmation against
-  real StanForD samples happens where a format reader is combined with deserialization.
-  StanForD-specific behavior is an edge case (hook), never the general rule.
-- **Rationale**: A fake format duplicates the effort of a real reader for every format (XML, then
-  JSON) and can hide the reader's real behavior; assumptions about StanForD have been wrong before.
-- **Checked by**: Test project references (deserialization tests reference no format package);
-  flattening tests live in the format package's tests; StanForD confirmation in the combining
-  project.
+- **Rule**: Reading: deserialization behavior MUST be tested through a real format package that
+  reads (XML first, JSON later) over small hand-written documents, in that format package's tests.
+  No fake format reader or fake token producer is built. The serialization package's own tests
+  cover only reading that needs no document (e.g. definitions, policy precedence,
+  `Telemetry.AsType<T>()`). Confirmation against real StanForD samples happens where a format
+  package is combined with deserialization. StanForD-specific behavior is an edge case (hook),
+  never the general rule. Writing: the serialization package's own tests MUST prove serializing
+  through a simple test format, a string format written to a `Stream`, developing the overrides
+  (write, flush, close, dispose) the writing side relies on. Each real format package that writes
+  (JSON Lines first) tests its own writer in its own tests.
+- **Rationale**: A fake format reader duplicates the effort of a real reader for every format
+  (XML, then JSON) and can hide the reader's real behavior; assumptions about StanForD have been
+  wrong before. Writing has no grammar to parse: a string over a `Stream` exercises the real
+  contract (converters, getters, object converter, the output's write, flush and dispose) without
+  imitating a reader, and the serialization package must stand on its own for writing before any
+  format package exists.
+- **Checked by**: Test project references (the serialization package's tests reference no format
+  package); flattening tests live in the format package's tests; writing tests in the serialization
+  package's test project, and each format package's tests cover its own writer; StanForD
+  confirmation in the combining project.
 
 ### C4. Test-first
 
 - **Covers**: Code quality
-- **Rule**: Each assertion telemetry MUST get a test shell before code is written. Shells are reviewed in
+- **Rule**: Each assertion row MUST get a test shell before code is written. Shells are reviewed in
   a board task (test review); then the AI or the developer writes the code.
 - **Rationale**: Same as the XML reader's way of working.
-- **Checked by**: Every assertion telemetry maps to a test; test review task closed before coding.
+- **Checked by**: Every assertion row maps to a test; test review task closed before coding.
 
 ### C5. Design ownership
 
@@ -81,10 +100,13 @@ Workflow). Terms are defined under Definitions.
 ### C6. Working example first
 
 - **Covers**: Workflow
-- **Rule**: A working end-to-end example (StanForD file -> telemetries, in a project combining a format
-  reader and deserialization) MUST come before performance work. Performance is then measured, not
-  assumed.
-- **Rationale**: Performance matters, but a working example matters more right now.
+- **Rule**: A working end-to-end example MUST come before performance work. For reading:
+  StanForD file -> telemetries, in a project combining a format package and deserialization. For
+  writing: a round trip, StanForD file -> telemetries -> JSON Lines, in a project combining the XML
+  and JSON Lines format packages, before performance work on writing. Performance is then measured,
+  not assumed.
+- **Rationale**: Performance matters, but a working example matters more right now. The round trip
+  is the milestone of #137 and #138.
 - **Checked by**: Plan/task order; performance tasks only after the example works.
 
 ### C7. Flat telemetries
@@ -99,6 +121,26 @@ Workflow). Terms are defined under Definitions.
   only promised by Forestry.StanForD (its C0).
 - **Checked by**: Building a type definition with a member that isn't a single value throws; a test
   per rejected kind (nested object, collection, composite struct).
+
+### C8. Streaming writes
+
+- **Covers**: Architecture
+- **Rule**: Serializing MUST write telemetries forward, one at a time, to an output it is handed. A
+  value goes from a telemetry to its converter's `Write` without boxing (a composed getter per
+  property definition). Serializing holds no state of its own: per-call state (a pooled buffer)
+  lives and dies inside the call, and state across calls (sequence count, bytes, collection limits)
+  lives in an opt-in collection writer owned by whoever collects. It writes to a plain `Stream` or
+  `PipeWriter` and flushes it, but never disposes or completes one it is handed; completing a
+  collection writer finishes the output properly (e.g. a footer). It works without a pipeline.
+  Memory MUST NOT grow with the number of telemetries written, beyond what the format holds on
+  purpose (e.g. an open Parquet row group).
+- **Rationale**: Writing is the second half of the path to big data. Like C1 for reading, it must
+  stream: inputs are multi-GB. Collecting is the caller's (#141), so serializing stays simple and
+  testable.
+- **Checked by**: A test that loops over deserialized telemetries (`foreach` over `Deserialize`,
+  `Serialize` each into one stream, no pipeline) shows memory does not grow with their number and
+  the sequence count matches; a test that completing a collection writer finishes it, and that a
+  plain `Stream` or `PipeWriter` is left open.
 
 ### D0. Public documentation
 
@@ -123,38 +165,67 @@ Workflow). Terms are defined under Definitions.
 - **Rule**: Deserialization MUST fail fast, with an exception, when input can't match the type
   definitions: an unexpected root; no type definition matched within a limit (depth or number of
   bytes); a value larger than a limit (e.g. string length); a telemetry needing ancestor data that
-  has not been read yet. Limits are generic options with defaults, defined by the deserialization
-  package; format reader packages honor them (e.g. maximum value length) so an oversized value
-  fails in the reader before it is fully buffered. The limit values are a plan decision.
+  has not been read yet. Limits are generic options with defaults, defined by the serialization
+  package; format packages honor them (e.g. maximum value length) so an oversized value fails in
+  the reader before it is fully buffered. The limit values are a plan decision. Serializing MUST
+  fail when the definitions are built, never part-way through an output, for a member it cannot
+  write (no converter, or a type that only formats to chars).
 - **Rationale**: Wrong or corrupt input, unintentional or intentional, must not keep consuming CPU
-  and memory.
+  and memory. Half-written outputs are worse than none.
 - **Checked by**: Tests at and just beyond each limit; a test with a wrong root fails on the first
-  element.
+  element; a test per member kind that cannot be written.
 
 ## Additional Constraints
 
 - **A0** (Code quality): Targets the SDK's supported target frameworks, as defined in the engineering
   constitution (`eng/.specify/memory/constitution.md`, Definitions).
-- **A1** (Architecture): No third-party NuGet dependencies in the deserialization package.
+- **A1** (Architecture): No third-party NuGet dependencies in the serialization package.
 - **A3** (Workflow): Builds follow the SDK's shared engineering (`Directory.Build.props`, `eng/`,
   `doc/dev/`), referenced, not copied, including CI/CD.
 - **A4** (Code quality): Every test separates its steps with the comments `// Arrange`, `// Act` and
   `// Assert`, with one blank line between steps; steps done in one statement are labelled together
   (`// Arrange + Act`, `// Act + Assert`). A format test reads its own document, a local constant
   written one element per line, never one shared between tests.
-- **A5** (Architecture): The deserialization package has no attribute or option naming a part of a
-  document (e.g. an element or attribute name); those belong to the format reader package (e.g.
-  Forestry.Serialization.Xml). Attributes in the deserialization package are about definitions and
-  policies only.
+- **A5** (Architecture): The serialization package has no attribute or option naming a part of a
+  document or an output (e.g. an XML element, a JSON property name); those belong to the format
+  package (e.g. Forestry.Serialization.Xml). Attributes in the serialization package are about
+  definitions, converters and policies only.
 
 ## Definitions
 
+- **Deserialize**: Read a document in a format into telemetries (flattening).
+- **Serialize**: Write telemetries out in a format.
+- **Serialization**: Both directions together: the package, this constitution and
+  `TelemetrySerialization`.
 - **Document**: The input: one file or stream in one format (e.g. an HPR file in XML).
-- **Format**: The encoding a document is written in (XML now, JSON later), read forward by a format
-  reader package.
-- **Format reader package**: A package that reads one format forward and turns it into telemetries through
-  the deserialization package's abstractions, using its own reader and tokens (e.g.
-  Forestry.Serialization.Xml). Names of document parts (e.g. an XML element or attribute) are its own.
+- **Format**: The encoding a document is read from or telemetries are written to (XML and JSON
+  Lines now, Parquet later), handled by a format package.
+- **Format package**: A package for one format that reads it into telemetries, writes telemetries
+  into it, or both, through the serialization package's abstractions, using its own reader, writer
+  and tokens (e.g. Forestry.Serialization.Xml reads, Forestry.Serialization.JsonLines writes). Names
+  of document or output parts (e.g. an XML element, a JSON property) are its own.
+- **Output**: What serializing writes to: a `Stream`, or (async) a `PipeWriter`, handed in by the
+  caller; never disposed or completed by serializing. One telemetry type per output. Collections,
+  partitions and storage are decided outside the package (#141).
+- **Collection**: Telemetries of one telemetry type and one partition, serialized together into one
+  output, then sealed and transmitted (#141). Monitoring is two-fold: *collecting*, then later
+  *analysing*; a collection is what is collected. Not a C# collection type: C7's "never
+  collections" is about member types.
+- **Collection writer**: An opt-in target, defined in this package, that knows about one
+  collection: a collection stream (a `Stream` subclass) or a collection `PipeWriter` (decorating
+  an inner `PipeWriter`), sharing one contract: its options, `Sequence` (bumped by serializing at
+  each telemetry boundary), `BytesWritten`, `IsFull`, and a completion hook (ready or abandoned).
+  Passed by whoever collects; never required by a serializing signature. Overridden by monitoring
+  formatters.
+- **Converter**: Reads a member's value from UTF-8 (`Read`) and writes it (`Write`, delegating to
+  the `TelemetryWriter`). Resolved once per property definition from the options. A format package
+  may register its own converters, e.g. for a different encoding.
+- **Telemetry writer**: The abstract `TelemetryWriter`, an `IBufferWriter<byte>` with overridable
+  methods to frame a telemetry (start, member names, nulls, end) and to write each value by its type
+  (`WriteValue` overloads for text, booleans, numbers, `Guid`, dates and any other UTF-8 formattable
+  value, and `WriteRaw`); the writer decides the representation (e.g. JSON quotes a `Guid`, Parquet
+  stores dates as integers). A format package (or a developer) subclasses it, e.g. JSON
+  Lines quoting and escaping strings.
 - **Reading information**: Where a value is read in the document: its depth, name and path
   (`ReadingInformation`), reported by the format with each value. Generic, not specific to one
   format. Never a value, and never kept unless a policy or option asks for it.
@@ -185,6 +256,35 @@ Workflow). Terms are defined under Definitions.
 - **G2** (Workflow): Until a working `1.0.0-beta` exists, the developer is the only contributor.
 
 ## Amendments
+
+- **4.0.0** (2026-11-26, agreed by the developer in #137, takes effect on merge to `main`). Reason:
+  writing telemetries is added. A major break: `Convert` becomes `Read` because `Write` is added to
+  drive the monitoring formatter, the writing side that serializes telemetries into collections.
+  - C0 redefined: "Format-agnostic serialization" (was "... deserialization"); the package owns
+    what both directions share (entry points, both options, converters with `Read` and `Write`);
+    a format package reads, writes or both; no token model in either direction.
+  - C2 redefined: "(no serialization back)" removed; writing is governed by C8.
+  - C3 redefined: "Tested through a real format package, real data later" (was "... format
+    reader ..."); writing is tested in this package through a string test format over a `Stream`.
+  - C8 added: streaming writes.
+  - C4 fixed: "assertion telemetry" back to "assertion row" (renamed by mistake in 3.1.1).
+  - C6 reworded: the working example for writing is the round trip StanForD -> telemetries ->
+    JSON Lines.
+  - S1 extended: a member that cannot be written fails when definitions are built.
+  - A1 and A5 reworded: "serialization package"; A5 covers output names; "format reader package"
+    -> "format package".
+  - Intro: "deserialization silo" -> "serialization silo".
+  - Definitions: Deserialize, Serialize, Serialization, Output, Collection, Collection writer,
+    Converter and Telemetry writer added; Format reworded; Format reader package renamed Format
+    package.
+  - Revised 2026-11-26, after the 4.0.0 agreement, before merge (developer, #137): writing goes
+    through an abstract `TelemetryWriter` that converters delegate to by kind and the serializer
+    frames telemetries through, so a format or developer customizes strings, booleans and custom
+    values in one class; it replaces "converters write plain bytes through `IBufferWriter<byte>`"
+    in C0 and the Object converter definition.
+  - Renamed 2026-11-26, before merge (developer, #137): the static entry class `TelemetrySerializer`
+    becomes `TelemetrySerialization`, named for the package and both directions, as its options
+    base `TelemetrySerializationOptions`.
 
 - **3.1.1** (2026-11-25, agreed by the developer in #142, takes effect on merge to `main`). Reason:
   the package is renamed Forestry.Serialization, and *Row* is renamed *Telemetry*: what forestry
@@ -244,4 +344,4 @@ Workflow). Terms are defined under Definitions.
     value of a row" to metadata about a member; values live on the row's typed members (research
     R4).
 
-**Version**: 3.1.1 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-11-25
+**Version**: 4.0.0 | **Ratified**: 2026-10-20 | **Last Amended**: 2026-11-26

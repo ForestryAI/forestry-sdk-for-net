@@ -1,3 +1,5 @@
+using Forestry.Serialization.Writing;
+
 namespace Forestry.Serialization.Converters.Primitive
 {
     /// <summary>
@@ -6,7 +8,7 @@ namespace Forestry.Serialization.Converters.Primitive
     /// </summary>
     internal sealed class BooleanConverter : Converter<bool>
     {
-        public override bool Convert(ReadOnlySpan<byte> utf8)
+        public override bool Read(ReadOnlySpan<byte> utf8)
         {
             if (utf8.SequenceEqual("true"u8))
             {
@@ -20,5 +22,7 @@ namespace Forestry.Serialization.Converters.Primitive
 
             throw new FormatException(Formatting.Format(Formatting.NotParsable, nameof(Boolean)));
         }
+
+        public override void Write(bool value, TelemetryWriter writer) => writer.WriteValue(value);
     }
 }

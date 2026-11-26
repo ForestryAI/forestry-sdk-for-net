@@ -44,7 +44,7 @@ namespace Forestry.StanForD.Tests
 
             foreach ((string name, string xml) in documents)
             {
-                List<Telemetry> telemetries = TelemetrySerializer.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting()).ToList();
+                List<Telemetry> telemetries = TelemetrySerialization.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting()).ToList();
                 List<Stem> stems = telemetries.OfType<Stem>().ToList();
                 List<Log> logs = telemetries.OfType<Log>().ToList();
 

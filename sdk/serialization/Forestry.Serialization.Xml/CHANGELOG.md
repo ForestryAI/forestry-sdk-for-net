@@ -3,8 +3,9 @@
 ## 1.0.0-beta.1 (Unreleased)
 
 ### Breaking Changes
-- Renamed from `Forestry.Deserialize` to `Forestry.Serialization` (and `Forestry.Deserialize.Xml` to `Forestry.Serialization.Xml`); the static `Deserialization` class is now `TelemetrySerializer`, and `DeserializationContext` is now `DeserializeContext` (#142). Entries below keep the names they were written with.
+- Renamed from `Forestry.Deserialize` to `Forestry.Serialization` (and `Forestry.Deserialize.Xml` to `Forestry.Serialization.Xml`); the static `Deserialization` class is now `TelemetrySerialization`, and `DeserializationContext` is now `DeserializeContext` (#142). Entries below keep the names they were written with.
 - `Row` is now `Telemetry`, and every name built on it follows (e.g. `ContextRow` -> `ContextTelemetry`, `RowTypes` -> `TelemetryTypes`, `TRow` -> `TTelemetry`), in code and in messages (#142).
+- `XmlBooleanConverter` overrides `Read` (was `Convert`), following the core's converters (spec 004, #144).
 
 ### Features Added
 - The XML format for `Forestry.Deserialize`: `DeserializeXmlOptions` associates elements with row types

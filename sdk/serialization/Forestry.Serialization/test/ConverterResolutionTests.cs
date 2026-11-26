@@ -51,7 +51,7 @@ namespace Forestry.Serialization.Tests
 
             // Assert
             Converter<int?> converter = Assert.IsAssignableFrom<Converter<int?>>(logKey.ResolvedConverter);
-            Assert.Equal(-1, converter.Convert("5"u8));
+            Assert.Equal(-1, converter.Read("5"u8));
         }
     }
 }

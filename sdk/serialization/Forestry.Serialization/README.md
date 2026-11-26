@@ -10,7 +10,7 @@ else to make sense of it.
 
 A client takes in the whole incoming document and hands it to deserialization, whose telemetries feed the
 client's pipeline on the way from device output to big data input: no telemetry reaches the pipeline
-without it. Telemetries come out one at a time, so the pipeline is free to gather them into chunks for the
+without it. Telemetries come out one at a time, so the pipeline is free to gather them into collections for the
 outgoing format rather than turning one document into one output.
 The SDK's [README](../../../README.md#big-data-clients) shows how the pieces fit together.
 
@@ -24,8 +24,9 @@ devices: neither this package nor `Forestry.Serialization.Xml` is limited to Sta
 The design is specified with spec-kit: the rules are in the
 [constitution](.specify/memory/constitution.md), the slices are
 [spec 001, walking skeleton](specs/001-walking-skeleton/spec.md),
-[spec 002, deserialization context](specs/002-reading-context/spec.md) and
-[spec 003, big data orientation](specs/003-big-data-orientation/spec.md), each with its decisions in
+[spec 002, deserialization context](specs/002-reading-context/spec.md),
+[spec 003, big data orientation](specs/003-big-data-orientation/spec.md) and
+[spec 004, writing telemetries](specs/004-writing-telemetries/spec.md), each with its decisions in
 its research.md. Some of the design is adapted from
 Microsoft's open-source .NET runtime; see [THIRD-PARTY-NOTICES.md](../../../THIRD-PARTY-NOTICES.md).
 
@@ -42,8 +43,9 @@ dotnet add package Forestry.Serialization --prerelease
 
 ## Packages
 
-- **Forestry.Serialization**: the format-agnostic core: telemetries, options, type definitions, converters and
-  the pipelines that build telemetries. It knows no format.
+- **Forestry.Serialization**: the format-agnostic core: telemetries, options, type definitions, converters,
+  the pipelines that build telemetries, and writing them through a telemetry writer and collection
+  writers. It knows no format.
 - **Forestry.Serialization.Xml**: the XML format. Its options (`DeserializeXmlOptions`) choose XML and
   its reader feeds the core.
 
@@ -74,7 +76,7 @@ telemetry, in document order; elements and members that match nothing are ignore
 DeserializeXmlOptions options = new();
 options.Telemetries.Add<Log>();
 
-foreach (Telemetry telemetry in TelemetrySerializer.Deserialize(xml, options))
+foreach (Telemetry telemetry in TelemetrySerialization.Deserialize(xml, options))
 {
     Log log = (Log)telemetry;
     // use log.LogKey and log.LogVolume, then let it go
@@ -91,7 +93,7 @@ gives the typed telemetry.
 several telemetry types come from one pass:
 
 ```csharp
-foreach (Telemetry telemetry in TelemetrySerializer.Deserialize(xml, options))
+foreach (Telemetry telemetry in TelemetrySerialization.Deserialize(xml, options))
 {
     if (telemetry.Is<Log>())
     {
@@ -116,7 +118,7 @@ A large document does not need to be in memory: `DeserializeAsync` reads a `Stre
 ```csharp
 await using FileStream file = File.OpenRead("harvest.hpr");
 
-await foreach (Telemetry telemetry in TelemetrySerializer.DeserializeAsync(file, options, cancellationToken))
+await foreach (Telemetry telemetry in TelemetrySerialization.DeserializeAsync(file, options, cancellationToken))
 {
     Log log = (Log)telemetry;
 }
@@ -287,6 +289,137 @@ options.Policies.Add<Site>(new SiteKeptOut()).Add<Order>(new OrderWithSiteKey())
   path in the document (e.g. `Root/Log/LogKey`) and the class. A document cut off inside a telemetry
   throws, and that telemetry is never handed out.
 
+## Serializing telemetries
+
+Writing is the other direction: telemetries out to a big data format. `DeserializeOptions` read and
+`SerializeOptions` write; both share what reading and writing have in common
+(`TelemetrySerializationOptions`: telemetry types, converters and the definitions built from them), and
+each options instance builds its own. A format package supplies the serialize options (JSON Lines is
+next, #138); until then, a format is a few lines.
+
+### A format: serialize options and a telemetry writer
+
+A format's `SerializeOptions` creates its `TelemetryWriter`, the one class that decides how a telemetry
+is framed and how each value is represented. This one writes a telemetry's values joined by `;`, one
+telemetry per line:
+
+```csharp
+public sealed class LineOptions : SerializeOptions
+{
+    protected override TelemetryWriter CreateWriter() => new LineWriter();
+
+    private sealed class LineWriter : TelemetryWriter
+    {
+        private bool _wroteMember;
+
+        public override void WriteStartTelemetry(TypeDefinition definition) => _wroteMember = false;
+
+        public override void WriteName(PropertyDefinition property)
+        {
+            if (_wroteMember)
+            {
+                WriteRaw(";"u8);
+            }
+
+            _wroteMember = true;
+        }
+
+        public override void WriteEndTelemetry() => WriteRaw("\n"u8);
+    }
+}
+```
+
+The writer's values are written by type: `WriteValue` overloads for text, `bool`, `int`, `long`,
+`double`, `decimal`, `Guid`, `DateTime` and `DateTimeOffset`, and a generic `WriteValue<T>` for any other
+value that formats to UTF-8. Each defaults to plain invariant UTF-8; override the ones your format
+represents differently (JSON quotes and escapes text, Parquet would store dates as integers). The names
+say what a value is, not how one format writes it. `WriteNull` decides what a missing value looks like,
+or leaves the member out. `PropertyDefinition.Utf8Name` and `Index` give a writer each member's name and
+position without work per telemetry.
+
+### Writing to a stream
+
+`TelemetrySerialization.Serialize` writes one telemetry, or a sequence taken one at a time, to a stream.
+The stream stays yours: it is written and flushed, never closed. To get a string, write to a
+`MemoryStream` and read it back:
+
+```csharp
+LineOptions options = new();
+options.Telemetries.Add<Log>();
+
+using MemoryStream memory = new();
+
+foreach (Telemetry telemetry in TelemetrySerialization.Deserialize(xml, readOptions))
+{
+    TelemetrySerialization.Serialize(telemetry, memory, options);   // one forward pass, no pipeline
+}
+
+memory.Position = 0;
+string lines = new StreamReader(memory, leaveOpen: true).ReadToEnd();
+```
+
+- `Serialize(Telemetry | IEnumerable<Telemetry>, Stream, options)` writes synchronously;
+  `SerializeAsync(Telemetry | IAsyncEnumerable<Telemetry>, Stream, options)` only uses the stream's
+  asynchronous methods, so `SerializeAsync(TelemetrySerialization.DeserializeAsync(…), output, options)`
+  reads and writes in one pass.
+- `SerializeAsync` to a `PipeWriter` writes straight into the pipe's buffers (no copy) and never
+  completes it. There is no string target.
+- The per-telemetry `SerializeAsync` returns a `ValueTask`: await it once, never concurrently.
+- Serializing fails before anything is written for a telemetry type that was not added, and when the
+  options lock for a member that cannot be written (its converter only reads, or it has no getter).
+
+### Converters: one list, two directions
+
+A converter reads a value (`Read`) and writes it (`Write`, delegating to the writer). The options it is
+added to decide which is called: in deserialize options it reads, in serialize options it writes. Add
+your own converter to both when you read and write its type:
+
+```csharp
+readOptions.Converters.Add(new MeasureConverter());
+writeOptions.Converters.Add(new MeasureConverter());
+```
+
+A converter that only reads (no `Write` override) is refused when serialize options lock.
+
+### Object converters
+
+Each telemetry type's definition (`TypeDefinition<T>`) writes its telemetries through an
+`ObjectConverter<T>`: by default the writer's start, each member (a missing value through `WriteNull`,
+otherwise its name and its converter), and the writer's end. An `ObjectConverter<T>` added to the options'
+`Converters` replaces that walk for its type, e.g. for a format that routes members to columns. Reading
+an object converter is not supported yet.
+
+### Collections
+
+Monitoring collects telemetries into collections for big data. Pass a `MonitoringCollectionStream` (over
+a stream) or a `MonitoringCollectionPipeWriter` (over a pipe, or `Create` over a stream) in place of a
+plain target: it counts telemetries (`Sequence`) and bytes (`BytesWritten`), says when it is full
+(`IsFull`, after a whole telemetry), and completing it reports the collection ready, or abandoned with an
+exception, through `OnCompleted`:
+
+```csharp
+using MonitoringCollectionStream collection = new(file, new MonitoringCollectionOptions
+{
+    TargetSize = 100 * 1024 * 1024,
+    LeaveOpen = false,
+});
+
+foreach (Telemetry telemetry in telemetries)
+{
+    TelemetrySerialization.Serialize(telemetry, collection, options);
+
+    if (collection.IsFull)
+    {
+        break;   // complete it and start the next collection
+    }
+}
+
+collection.Complete();
+```
+
+Monitoring formatters derive from either writer to add their own behavior. `SerializeOptions.DefaultCollectionOptions`
+holds the settings for collection writers created without their own.
+
 ## Status
 
 Spec 001's four user stories are done ([tasks.md](specs/001-walking-skeleton/tasks.md)): the
@@ -297,6 +430,9 @@ context, telemetries of several types nested in one pass with their containment 
 attributes and element text as members. Spec 003's three are done too
 ([tasks.md](specs/003-big-data-orientation/tasks.md)): flat telemetries checked when the options lock, names
 in the document declared with the XML package's attributes, and one vocabulary, format and flatten.
+Spec 004's three are done too ([tasks.md](specs/004-writing-telemetries/tasks.md)): converters that read
+and write, serializing to a stream or pipe through a format's telemetry writer and each type's object
+converter, and collection writers.
 The policy model is good enough for the POC; its polish
 before a release is tracked separately.
 
@@ -309,7 +445,8 @@ constructor parameters (e.g. a `Log` built with its `Stem`).
 dotnet test test/Forestry.Serialization.Tests.csproj
 ```
 
-The core's tests need no document: definitions, constructor choice and converter resolution.
+The core's tests need no document: definitions, constructor choice, converter resolution, and
+writing, proven through a small string test format over a `MemoryStream`.
 Flattening is tested through the real XML reader in `Forestry.Serialization.Xml`. Slow performance
 tests (trait `Category=Performance`) are left out of a plain `dotnet test` and run as the gate at
 the end of every user story: `dotnet test -s Performance.runsettings`.

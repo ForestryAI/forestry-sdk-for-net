@@ -8,6 +8,6 @@ namespace Forestry.Serialization.Xml.Tests.Fixtures
     /// </summary>
     public sealed class MarkingBooleanConverter : Converter<bool>
     {
-        public override bool Convert(ReadOnlySpan<byte> utf8) => false;
+        public override bool Read(ReadOnlySpan<byte> utf8) => false;
     }
 }

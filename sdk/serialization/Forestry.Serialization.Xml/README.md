@@ -17,7 +17,7 @@ members, and Forestry.Serialization builds the telemetries that feed a client's 
 DeserializeXmlOptions options = new();
 options.Telemetries.Add<Log>();
 
-foreach (Telemetry telemetry in TelemetrySerializer.Deserialize(xml, options))
+foreach (Telemetry telemetry in TelemetrySerialization.Deserialize(xml, options))
 {
     Log log = (Log)telemetry;
 }

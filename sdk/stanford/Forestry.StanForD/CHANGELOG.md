@@ -4,6 +4,7 @@
 
 ### Breaking Changes
 - Stem, Log and the definition types now extend `Forestry.Serialization.Telemetry` (was `Forestry.Deserialize.Row`): the package it builds on is renamed Forestry.Serialization and *row* is renamed *telemetry* (#142). Entries below keep the names they were written with.
+- The StanForD enum converter overrides `Read` (was `Convert`), following Forestry.Serialization's converters (spec 004, #144).
 
 ### Features Added
 - `HarvestingOptionsExtensions.AddHarvesting()` sets up `DeserializeXmlOptions` to shred StanForD

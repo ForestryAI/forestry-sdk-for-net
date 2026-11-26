@@ -19,6 +19,6 @@ namespace Forestry.Serialization.Converters
         /// <param name="type"></param>
         /// <param name="options">Options, to resolve the converters a created converter depends on</param>
         /// <returns></returns>
-        public abstract Converter CreateConverter(Type type, DeserializeOptions options);
+        public abstract Converter CreateConverter(Type type, TelemetrySerializationOptions options);
     }
 }

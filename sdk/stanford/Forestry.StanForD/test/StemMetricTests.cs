@@ -20,7 +20,7 @@ namespace Forestry.StanForD.Tests
     public sealed class StemMetricTests
     {
         private static List<Stem> Read(string xml, Action<HarvestingOptions>? configure = null) =>
-            TelemetrySerializer.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting(configure)).OfType<Stem>().ToList();
+            TelemetrySerialization.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting(configure)).OfType<Stem>().ToList();
 
         private static Stem FirstStem(List<Stem> stems) => stems.Single(stem => stem.StemKey == 619254);
 
@@ -192,7 +192,7 @@ namespace Forestry.StanForD.Tests
             string xml = Fragment.Read(Fragment.MinimalHarvesting);
 
             // Act
-            List<Telemetry> telemetries = TelemetrySerializer.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting()).ToList();
+            List<Telemetry> telemetries = TelemetrySerialization.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting()).ToList();
 
             // Assert
             Assert.Equal(5, telemetries.Count);

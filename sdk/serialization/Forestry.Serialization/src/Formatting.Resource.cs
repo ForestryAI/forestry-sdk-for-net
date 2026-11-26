@@ -11,7 +11,7 @@ namespace Forestry.Serialization
 
         private static System.Resources.ResourceManager s_resourceManager = null!;
 
-        internal static string DeserializeOptionsIsReadOnly => GetResourceString(nameof(DeserializeOptionsIsReadOnly), @"Deserialize options instance is read-only i.e. locked for changes.");
+        internal static string OptionsAreReadOnly => GetResourceString(nameof(OptionsAreReadOnly), @"The options are read-only, i.e. locked for changes once first used.");
 
         internal static string WhenNotSingularAttribute => GetResourceString(nameof(WhenNotSingularAttribute), @"Attribute [name: '{0}',target: '{1}'] is not singular");
 
@@ -47,7 +47,27 @@ namespace Forestry.Serialization
 
         internal static string MemberWithoutConverter => GetResourceString(nameof(MemberWithoutConverter), @"member '{0}' of type '{1}' has no converter; add one to the options.");
 
+        internal static string TelemetryTypeCannotBeWritten => GetResourceString(nameof(TelemetryTypeCannotBeWritten), @"Type '{0}' cannot be written by serialize options:{1}");
+
+        internal static string MemberConverterCannotWrite => GetResourceString(nameof(MemberConverterCannotWrite), @"member '{0}' of type '{1}': its converter '{2}' only reads; serialize options write, so the converter must override Write.");
+
+        internal static string MemberNotReadable => GetResourceString(nameof(MemberNotReadable), @"member '{0}' has no getter; serialize options read each member to write it.");
+
+        internal static string NoTelemetryWriter => GetResourceString(nameof(NoTelemetryWriter), @"Serialize options '{0}' returned no telemetry writer from CreateWriter.");
+
+        internal static string StreamCannotWrite => GetResourceString(nameof(StreamCannotWrite), @"The stream cannot be written to.");
+
+        internal static string CollectionCompleted => GetResourceString(nameof(CollectionCompleted), @"The collection is completed: it takes no more bytes.");
+
+        internal static string TelemetryTypeConverterNotObjectConverter => GetResourceString(nameof(TelemetryTypeConverterNotObjectConverter), @"its converter '{0}' is not an ObjectConverter; a telemetry type is written by an ObjectConverter<T>.");
+
+        internal static string ObjectConverterCannotRead => GetResourceString(nameof(ObjectConverterCannotRead), @"Object converter '{0}' cannot read: telemetries are read through the format's enumerators.");
+
         internal static string NoConverter => GetResourceString(nameof(NoConverter), @"No converter handles type '{0}'.");
+
+        internal static string ConverterCannotWrite => GetResourceString(nameof(ConverterCannotWrite), @"Converter '{0}' only reads values of type '{1}': override Write to write them.");
+
+        internal static string WriterHasNoOutput => GetResourceString(nameof(WriterHasNoOutput), @"The telemetry writer has no output: it writes only while a serializer call is writing through it.");
 
         internal static string TelemetryTypeNotAdded => GetResourceString(nameof(TelemetryTypeNotAdded), @"Type '{0}' was not added to the options as a telemetry type.");
 

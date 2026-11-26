@@ -2,20 +2,23 @@ using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
+using Forestry.Serialization.Writing;
 
 namespace Forestry.Serialization.Definitions
 {
     /// <summary>
     /// Definition of a telemetry type, built once per options: it constructs telemetries of its concrete type and
-    /// owns the property definitions that set their members; it sets no members itself (research R5)
+    /// owns the property definitions that set their members; it sets no members itself (research R5). Each
+    /// telemetry type'"'"'s definition is a <see cref="TypeDefinition{T}"/>, whose object converter writes its
+    /// telemetries (spec 004 research R49)
     /// </summary>
-    public sealed class TypeDefinition
+    public abstract class TypeDefinition
     {
         private const BindingFlags ConstructorBindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
-        private TypeDefinition(
+        private protected TypeDefinition(
             Type type,
-            DeserializeOptions options,
+            TelemetrySerializationOptions options,
             Func<Telemetry> constructor,
             PropertyDefinition[] properties
         ) {
@@ -35,7 +38,7 @@ namespace Forestry.Serialization.Definitions
         /// <summary>
         /// Options that built this definition
         /// </summary>
-        public DeserializeOptions Options { get; }
+        public TelemetrySerializationOptions Options { get; }
 
         /// <summary>
         /// One property definition per included property or field: each a single value with a resolved
@@ -75,6 +78,21 @@ namespace Forestry.Serialization.Definitions
             _indexesByName.TryGetValue(memberName, out index);
 
         /// <summary>
+        /// Write <paramref name="telemetry"/> through this type'"'"'s resolved object converter (spec 004 research R49)
+        /// </summary>
+        /// <param name="telemetry">A telemetry of <see cref="Type"/></param>
+        /// <param name="writer"></param>
+        internal abstract void WriteTelemetry(Telemetry telemetry, TelemetryWriter writer);
+
+        /// <summary>
+        /// Resolve the object converter of this telemetry type from the options, once when the definition is
+        /// built: the options'"'"' converter for the type when it is an object converter, else the default
+        /// </summary>
+        /// <param name="options"></param>
+        /// <returns>Null when resolved; otherwise why the type cannot be written</returns>
+        private protected abstract string? ResolveObjectConverter(TelemetrySerializationOptions options);
+
+        /// <summary>
         /// Build the definition of a telemetry type, rejecting it before any byte is read (FR-008), with one
         /// exception naming every member that cannot be mapped (spec 003, research R33)
         /// </summary>
@@ -83,7 +101,7 @@ namespace Forestry.Serialization.Definitions
         /// <param name="includeMember">Whether a candidate property or field is a member: the definition
         /// policies' chain (research R19)</param>
         /// <returns></returns>
-        internal static TypeDefinition Create(Type type, DeserializeOptions options, Func<MemberInfo, bool> includeMember)
+        internal static TypeDefinition Create(Type type, TelemetrySerializationOptions options, Func<MemberInfo, bool> includeMember)
         {
             ConstructorInfo constructor = ChooseConstructor(type);
 
@@ -123,7 +141,22 @@ namespace Forestry.Serialization.Definitions
 
             Func<Telemetry> construct = Expression.Lambda<Func<Telemetry>>(Expression.Convert(Expression.New(constructor), typeof(Telemetry))).Compile();
 
-            return new TypeDefinition(type, options, construct, [.. properties]);
+            TypeDefinition created = (TypeDefinition)Activator.CreateInstance(
+                typeof(TypeDefinition<>).MakeGenericType(type),
+                BindingFlags.Instance | BindingFlags.NonPublic,
+                binder: null,
+                args: [type, options, construct, properties.ToArray()],
+                culture: null
+            )!;
+
+            string? converterFailure = created.ResolveObjectConverter(options);
+
+            if (converterFailure is not null)
+            {
+                Throwing.WhenTelemetryTypeMembersInvalid(type, [converterFailure]);
+            }
+
+            return created;
         }
 
         /// <summary>

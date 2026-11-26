@@ -1,58 +1,33 @@
+using System.Collections;
 using System.IO.Pipelines;
 using Forestry.Serialization.Reading;
 
 namespace Forestry.Serialization
 {
-    public static partial class TelemetrySerializer
+    /// <summary>
+    /// Reading: the enumerables every <c>Deserialize</c> and <c>DeserializeAsync</c> entry point hands out
+    /// </summary>
+    public static partial class TelemetrySerialization
     {
         /// <summary>
-        /// Telemetries from a document read from a pipe, lazily and asynchronously. Each telemetry is handed out as soon
-        /// as its end is read, without waiting for more input; a UTF-8 byte order mark is skipped unless the
-        /// format's reader reads it (research R18). The
-        /// options are locked and their definitions built before this returns, so a telemetry type that cannot
-        /// be defined throws here (FR-008)
+        /// Telemetries from a document in memory, enumerated once: the format's telemetry enumerator is created when
+        /// enumeration starts, a second enumeration throws (research R2)
         /// </summary>
-        /// <remarks>
-        /// The pipe stays the caller's: disposing the enumerator gives back the buffer it holds but never
-        /// completes the pipe, so the caller can read on after the document or complete it themselves.
-        /// </remarks>
-        /// <param name="utf8">UTF-8 bytes of the document; the caller completes it</param>
-        /// <param name="options">A format's options with the telemetry types added</param>
-        /// <param name="cancellationToken">Cancels a move waiting for bytes</param>
-        /// <returns>The telemetries in document order, enumerable once</returns>
-        public static IAsyncEnumerable<Telemetry> DeserializeAsync(PipeReader utf8, DeserializeOptions options, CancellationToken cancellationToken = default)
+        private sealed class TelemetryEnumerable(ReadOnlyMemory<byte> utf8, DeserializeOptions options) : IEnumerable<Telemetry>
         {
-            ArgumentNullException.ThrowIfNull(utf8);
-            ArgumentNullException.ThrowIfNull(options);
+            private int _isEnumerated;
 
-            options.MakeReadOnly();
+            public IEnumerator<Telemetry> GetEnumerator()
+            {
+                if (Interlocked.Exchange(ref _isEnumerated, 1) == 1)
+                {
+                    Throwing.WhenEnumeratedTwice();
+                }
 
-            return new TelemetryAsyncEnumerable(utf8, options, cancellationToken, isPipeOwned: false);
-        }
+                return options.CreateTelemetryEnumerator(utf8);
+            }
 
-        /// <summary>
-        /// Telemetries from a document read from a stream, lazily and asynchronously, through a
-        /// <see cref="PipeReader"/>. As <see cref="DeserializeAsync(PipeReader, DeserializeOptions, CancellationToken)"/>
-        /// </summary>
-        /// <remarks>
-        /// The stream stays the caller's and is left open. The <see cref="PipeReader"/> over it is created
-        /// here, never seen by the caller, so it is this deserialization's: disposing the enumerator
-        /// completes it, which returns its pooled buffers (<c>leaveOpen</c> keeps that from disposing the
-        /// stream).
-        /// </remarks>
-        /// <param name="utf8">UTF-8 bytes of the document; left open</param>
-        /// <param name="options">A format's options with the telemetry types added</param>
-        /// <param name="cancellationToken">Cancels a move waiting for bytes</param>
-        /// <returns>The telemetries in document order, enumerable once</returns>
-        public static IAsyncEnumerable<Telemetry> DeserializeAsync(Stream utf8, DeserializeOptions options, CancellationToken cancellationToken = default)
-        {
-            ArgumentNullException.ThrowIfNull(utf8);
-            ArgumentNullException.ThrowIfNull(options);
-
-            options.MakeReadOnly();
-            PipeReader pipe = PipeReader.Create(utf8, new StreamPipeReaderOptions(leaveOpen: true));
-
-            return new TelemetryAsyncEnumerable(pipe, options, cancellationToken, isPipeOwned: true);
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
         }
 
         /// <summary>

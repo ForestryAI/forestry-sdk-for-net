@@ -31,7 +31,7 @@ DeserializeXmlOptions options = new DeserializeXmlOptions().AddHarvesting();
 
 await using FileStream file = File.OpenRead("harvest.hpr");
 
-await foreach (Telemetry telemetry in TelemetrySerializer.DeserializeAsync(file, options, cancellationToken))
+await foreach (Telemetry telemetry in TelemetrySerialization.DeserializeAsync(file, options, cancellationToken))
 {
     if (telemetry.Is<Stem>())
     {
@@ -44,7 +44,7 @@ await foreach (Telemetry telemetry in TelemetrySerializer.DeserializeAsync(file,
 }
 ```
 
-`TelemetrySerializer.Deserialize(xml, options)` reads a `string` or UTF-8 bytes synchronously. Use one
+`TelemetrySerialization.Deserialize(xml, options)` reads a `string` or UTF-8 bytes synchronously. Use one
 options instance per concurrent deserialization (Forestry.Serialization's policies serve one enumeration
 at a time).
 

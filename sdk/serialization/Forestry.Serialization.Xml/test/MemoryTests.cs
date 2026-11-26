@@ -177,8 +177,8 @@ namespace Forestry.Serialization.Xml.Tests
         private static IEnumerable<Telemetry> Telemetries(EntryPoint entryPoint, byte[] document, DeserializeOptions options) =>
             entryPoint switch
             {
-                EntryPoint.Sync => TelemetrySerializer.Deserialize(document, options),
-                EntryPoint.Async => TelemetrySerializer.DeserializeAsync(new MemoryStream(document), options).ToBlockingEnumerable(),
+                EntryPoint.Sync => TelemetrySerialization.Deserialize(document, options),
+                EntryPoint.Async => TelemetrySerialization.DeserializeAsync(new MemoryStream(document), options).ToBlockingEnumerable(),
                 _ => throw new ArgumentOutOfRangeException(nameof(entryPoint))
             };
 

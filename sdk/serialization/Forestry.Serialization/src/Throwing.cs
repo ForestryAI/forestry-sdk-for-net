@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -16,9 +17,9 @@ namespace Forestry.Serialization
         }
 
         [DoesNotReturn]
-        public static void WhenDeserializeOptionsIsReadOnly()
+        public static void WhenOptionsAreReadOnly()
         {
-            throw new InvalidOperationException(Formatting.DeserializeOptionsIsReadOnly);
+            throw new InvalidOperationException(Formatting.OptionsAreReadOnly);
         }
 
         [DoesNotReturn]
@@ -66,6 +67,18 @@ namespace Forestry.Serialization
         }
 
         /// <summary>
+        /// One exception for a telemetry type naming every member serialize options cannot write (spec 004 FR-008)
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="failures"></param>
+        [DoesNotReturn]
+        public static void WhenTelemetryTypeCannotBeWritten(Type type, IReadOnlyList<string> failures)
+        {
+            string list = string.Concat(failures.Select(failure => Environment.NewLine + "- " + failure));
+            throw new InvalidOperationException(Formatting.Format(Formatting.TelemetryTypeCannotBeWritten, type.FullName, list));
+        }
+
+        /// <summary>
         /// One exception for a telemetry type naming every member that failed when its definition was built:
         /// a nested structure, a struct formatting only to chars, or no converter (spec 003, research R33)
         /// </summary>
@@ -106,6 +119,18 @@ namespace Forestry.Serialization
         public static void WhenNoConverter(Type type)
         {
             throw new InvalidOperationException(Formatting.Format(Formatting.NoConverter, type.FullName));
+        }
+
+        [DoesNotReturn]
+        public static IBufferWriter<byte> WhenWriterHasNoOutput()
+        {
+            throw new InvalidOperationException(Formatting.WriterHasNoOutput);
+        }
+
+        [DoesNotReturn]
+        public static void WhenConverterCannotWrite(Type converterType, Type valueType)
+        {
+            throw new NotSupportedException(Formatting.Format(Formatting.ConverterCannotWrite, DisplayName(converterType), DisplayName(valueType)));
         }
         #endregion
 

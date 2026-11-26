@@ -163,7 +163,7 @@ options-equality comparer that currently treats every instance as equal (see §5
   status rather than duplicating it here — a custom `Utf8JsonReader`-shaped ref-struct XML reader
   is in active development, developed against real StanForD documents but not scoped to only
   StanForD's dialect (see that document's §2).
-- **`TelemetrySerializer.Deserialize<T>(string, DeserializeOptions)` is an explicit
+- **`TelemetrySerialization.Deserialize<T>(string, DeserializeOptions)` is an explicit
   `NotImplementedException` stub.** Its replacement is the `AsAsyncEnumerable<T>`-shaped entry
   point described in `CLAUDE.md`, not yet built.
 - **The `DeserializeOptions` cache's options-equality comparer treats every instance as equal** —

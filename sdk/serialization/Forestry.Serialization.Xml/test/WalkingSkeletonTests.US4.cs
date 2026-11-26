@@ -331,20 +331,20 @@ namespace Forestry.Serialization.Xml.Tests
             // Act + Assert
             if (entryPoint == EntryPoint.Sync)
             {
-                using (IEnumerator<Telemetry> running = TelemetrySerializer.Deserialize(document, options).GetEnumerator())
+                using (IEnumerator<Telemetry> running = TelemetrySerialization.Deserialize(document, options).GetEnumerator())
                 {
                     Assert.True(running.MoveNext());
-                    Assert.Throws<InvalidOperationException>(() => TelemetrySerializer.Deserialize(document, options).GetEnumerator());
+                    Assert.Throws<InvalidOperationException>(() => TelemetrySerialization.Deserialize(document, options).GetEnumerator());
                 }
             }
             else
             {
-                await using (IAsyncEnumerator<Telemetry> running = TelemetrySerializer
+                await using (IAsyncEnumerator<Telemetry> running = TelemetrySerialization
                     .DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(document)), options)
                     .GetAsyncEnumerator())
                 {
                     Assert.True(await running.MoveNextAsync());
-                    Assert.Throws<InvalidOperationException>(() => TelemetrySerializer
+                    Assert.Throws<InvalidOperationException>(() => TelemetrySerialization
                         .DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(document)), options)
                         .GetAsyncEnumerator());
                 }
@@ -361,12 +361,12 @@ namespace Forestry.Serialization.Xml.Tests
         {
             if (entryPoint == EntryPoint.Sync)
             {
-                using IEnumerator<Telemetry> telemetries = TelemetrySerializer.Deserialize(xml, options).GetEnumerator();
+                using IEnumerator<Telemetry> telemetries = TelemetrySerialization.Deserialize(xml, options).GetEnumerator();
                 Assert.True(telemetries.MoveNext());
                 return;
             }
 
-            await using IAsyncEnumerator<Telemetry> asyncTelemetries = TelemetrySerializer
+            await using IAsyncEnumerator<Telemetry> asyncTelemetries = TelemetrySerialization
                 .DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(xml)), options)
                 .GetAsyncEnumerator();
             Assert.True(await asyncTelemetries.MoveNextAsync());

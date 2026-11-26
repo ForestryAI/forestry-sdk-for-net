@@ -2,7 +2,7 @@ using System.Text;
 
 namespace Forestry.Serialization
 {
-    public static partial class TelemetrySerializer
+    public static partial class TelemetrySerialization
     {
         /// <summary>
         /// Telemetries from a document as text, lazily and synchronously. The text is encoded to UTF-8; the

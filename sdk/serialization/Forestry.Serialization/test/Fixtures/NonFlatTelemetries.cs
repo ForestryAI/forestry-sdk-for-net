@@ -83,7 +83,7 @@ namespace Forestry.Serialization.Tests.Fixtures
     /// </summary>
     public sealed class MeasurementConverter : Converter<Measurement>
     {
-        public override Measurement Convert(ReadOnlySpan<byte> utf8) =>
+        public override Measurement Read(ReadOnlySpan<byte> utf8) =>
             new() { Diameter = decimal.Parse(System.Text.Encoding.UTF8.GetString(utf8), CultureInfo.InvariantCulture) };
     }
 

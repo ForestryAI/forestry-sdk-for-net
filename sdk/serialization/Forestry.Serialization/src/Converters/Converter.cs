@@ -17,5 +17,11 @@ namespace Forestry.Serialization.Converters
         /// <param name="type"></param>
         /// <returns></returns>
         public abstract bool CanConvert(Type type);
+
+        /// <summary>
+        /// Whether the converter writes, i.e. overrides <c>Write</c> (spec 004 research R45): serialize options
+        /// refuse one that does not when they lock
+        /// </summary>
+        internal virtual bool CanWrite => false;
     }
 }

@@ -90,7 +90,9 @@ namespace Forestry.Serialization.Tests.Fixtures
     /// </summary>
     public sealed class MeasureConverter : Converter<Measure>
     {
-        public override Measure Convert(ReadOnlySpan<byte> utf8) =>
+        public override Measure Read(ReadOnlySpan<byte> utf8) =>
             new(decimal.Parse(System.Text.Encoding.UTF8.GetString(utf8), CultureInfo.InvariantCulture));
+
+        public override void Write(Measure value, Writing.TelemetryWriter writer) => writer.WriteValue(value);
     }
 }

@@ -8,12 +8,12 @@ namespace Forestry.Serialization
     /// </summary>
     public sealed class TelemetryTypes : IReadOnlyCollection<Type>
     {
-        internal TelemetryTypes(DeserializeOptions options)
+        internal TelemetryTypes(TelemetrySerializationOptions options)
         {
             _options = options;
         }
 
-        private readonly DeserializeOptions _options;
+        private readonly TelemetrySerializationOptions _options;
 
         private readonly List<Type> _types = [];
 

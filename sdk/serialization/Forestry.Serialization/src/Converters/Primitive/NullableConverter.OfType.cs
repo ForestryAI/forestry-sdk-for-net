@@ -1,3 +1,5 @@
+using Forestry.Serialization.Writing;
+
 namespace Forestry.Serialization.Converters.Primitive
 {
     /// <summary>
@@ -7,7 +9,11 @@ namespace Forestry.Serialization.Converters.Primitive
     /// <typeparam name="T"></typeparam>
     internal sealed class NullableConverter<T>(Converter<T> converter) : Converter<T?> where T : struct
     {
-        public override T? Convert(ReadOnlySpan<byte> utf8) => converter.Convert(utf8);
+        public override T? Read(ReadOnlySpan<byte> utf8) => converter.Read(utf8);
+
+        public override void Write(T? value, TelemetryWriter writer) => converter.Write(value!.Value, writer);
+
+        internal override bool CanWrite => converter.CanWrite;
     }
 
     /// <summary>
@@ -17,7 +23,7 @@ namespace Forestry.Serialization.Converters.Primitive
     {
         public override bool CanConvert(Type type) => Nullable.GetUnderlyingType(type) is not null;
 
-        public override Converter CreateConverter(Type type, DeserializeOptions options)
+        public override Converter CreateConverter(Type type, TelemetrySerializationOptions options)
         {
             Type underlying = Nullable.GetUnderlyingType(type)!;
             Converter? converter = options.ResolveConverter(underlying);
