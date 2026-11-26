@@ -8,7 +8,7 @@
 |---|---|---|---|
 | `TelemetrySerializerOptions` | abstract base (R44) | `Telemetries`, `Converters`, `FormatConverters`, type and property definitions | Mutable until `MakeReadOnly` (first use); then definitions are built and frozen |
 | `DeserializeOptions` | abstract, derives from the base | `Policies`, `MaxContextTelemetries`, enumerator factories, BOM handling | Unchanged |
-| `SerializeOptions` | abstract, derives from the base | `CreateObjectConverter(TypeDefinition)` (abstract, the format's), `DefaultCollectionOptions` | Locks on first serialize; a member whose converter cannot write fails here (S1) |
+| `SerializeOptions` | abstract, derives from the base | `CreateWriter()` (protected abstract, the format's `TelemetryWriter`), `DefaultCollectionOptions` | Locks on first serialize; a member whose converter cannot write fails here (S1) |
 | `MonitoringCollectionOptions` | sealed, `init` only (R53) | `LeaveOpen`, `TargetSize`, `MaxTelemetries`, `SizeIsCompressed`, `MinimumBufferSize`, `Pool`, `Default` | Immutable from creation |
 
 Relationships: one options instance → its own frozen definitions (never shared between
@@ -26,14 +26,13 @@ instances). `SerializeOptions.DefaultCollectionOptions` → one `MonitoringColle
 | Member | Signature | Rule |
 |---|---|---|
 | `Read` | `T Read(ReadOnlySpan<byte> utf8)` | Renamed from `Convert`; behavior unchanged |
-| `Write` | `virtual void Write(T value, IBufferWriter<byte> writer)` | Never given null; asks for more room instead of failing (FR-002) |
+| `Write` | `virtual void Write(T value, TelemetryWriter writer)` | Never given null; delegates to the writer's method for its kind (R45, R49) |
 
 ## Writing
 
 | Type | Kind | Fields / members | Notes |
 |---|---|---|---|
-| `ObjectConverter` | abstract (R49) | virtual `WriteTelemetry`, overridable `WriteStart` and `WriteEnd`, abstract `CreateMemberSections` | One per type definition, created by the format; member sections computed once at lock |
-| `MemberSections` | sealed (R49) | `Name`, `Separator`, `NullValue`, `OmitsNull` | Bytes the format prepares once per property definition |
+| `TelemetryWriter` | abstract, `IBufferWriter<byte>` (R49) | `Output`, `OnReset`; framing `WriteStartTelemetry`, `WriteName`, `WriteNull`, `WriteEndTelemetry`; values `WriteString`, `WriteBoolean`, `WriteFormattable<T>`, `WriteRaw` | One per serialize call, from `SerializeOptions.CreateWriter`; a format or developer overrides it |
 | `PooledBufferWriter` | internal | rented segments, `WrittenSpan`, `Reset` | Lives for one call (R48) |
 | `ICollectionWriter` | interface (R51) | `Options`, `Sequence`, `BytesWritten`, `IsFull` | Recognized by `TelemetrySerializer` |
 | `MonitoringCollectionStream` | `Stream`, public, not sealed | inner `Stream`, options, counters, completion state | Counts in `Write`/`WriteAsync` |

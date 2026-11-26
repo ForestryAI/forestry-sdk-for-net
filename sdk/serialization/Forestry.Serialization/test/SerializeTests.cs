@@ -16,16 +16,16 @@ namespace Forestry.Serialization.Tests
     /// declares the surface they assume. For the review gate (T021), the assumed surface:
     /// <list type="bullet">
     /// <item><c>SerializeOptions</c>, deriving from <c>TelemetrySerializerOptions</c> (R44), with
-    /// <c>Telemetries</c> and <c>Converters</c>, and a <c>protected abstract</c>
-    /// <c>CreateObjectConverter(TypeDefinition)</c>: protected, not protected internal, so a format package
-    /// without access to the core's internals can override it (the XML package's tests link this format).</item>
-    /// <item><c>ObjectConverter(TypeDefinition)</c> with <c>protected virtual WriteStart</c>/<c>WriteEnd</c>
-    /// and <c>protected abstract CreateMemberSections(PropertyDefinition)</c>; <c>MemberSections</c> with its
-    /// constructor and <c>OmitNull</c> (R49).</item>
+    /// <c>Telemetries</c> and <c>Converters</c>, and a <c>protected abstract CreateWriter()</c> returning the
+    /// format's <c>TelemetryWriter</c>: protected, not protected internal, so a format package without
+    /// access to the core's internals can override it (the XML package's tests link this format).</item>
+    /// <item><c>TelemetryWriter</c> (R49, revised 2026-11-26): the serializer calls its
+    /// <c>WriteStartTelemetry</c>, then per member <c>WriteName</c> and the converter's <c>Write</c>, or
+    /// <c>WriteNull</c> for a missing value, then <c>WriteEndTelemetry</c>.</item>
     /// <item><c>TelemetrySerializer.Serialize(Telemetry | IEnumerable&lt;Telemetry&gt;, Stream, SerializeOptions)</c>,
     /// and <c>SerializeAsync</c> over a <see cref="Stream"/> or a <see cref="PipeWriter"/> (R47, R48).</item>
     /// </list>
-    /// Sample a <see cref="MemoryStream"/> back: rewind, then a <see cref="StreamReader"/> that leaves it
+    /// Reading a <see cref="MemoryStream"/> back: rewind, then a <see cref="StreamReader"/> that leaves it
     /// open, so the test can also check the stream was not disposed.
     /// </remarks>
     public sealed class SerializeTests
@@ -171,7 +171,7 @@ namespace Forestry.Serialization.Tests
             Assert.Equal(FirstLine + SecondLine, ReadBack(memory));
         }
 
-        // T016 - US2-5 / R50: a null member writes the empty null section; the converter never sees null
+        // T016 - US2-5 / R50: a null member is written through the writer's WriteNull; the converter never sees null
         [Fact]
         public void Serialize_ForANullMember_ItShould_WriteTheNullSectionWithoutCallingTheConverter()
         {
@@ -187,7 +187,7 @@ namespace Forestry.Serialization.Tests
             Assert.Equal($"1;;31.4;{FirstKey}\n", ReadBack(memory));
         }
 
-        // T016 - R49: a format that omits nulls leaves the member out, with no stray separator
+        // T016 - R49: a writer that omits nulls leaves the member out, with no stray separator
         [Fact]
         public void Serialize_ForANullMemberAndAFormatOmittingNulls_ItShould_LeaveTheMemberOut()
         {

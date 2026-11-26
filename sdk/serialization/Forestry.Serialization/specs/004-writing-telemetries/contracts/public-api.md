@@ -12,7 +12,7 @@ namespace Forestry.Serialization.Converters
     public abstract class Converter<T> : Converter
     {
         public abstract T Read(ReadOnlySpan<byte> utf8);                   // was Convert (R56)
-        public virtual void Write(T value, IBufferWriter<byte> writer);     // new (R45); default throws NotSupportedException
+        public virtual void Write(T value, TelemetryWriter writer);         // new (R45); delegates to the writer; default throws NotSupportedException
     }
 }
 
@@ -43,7 +43,7 @@ namespace Forestry.Serialization
     public abstract class SerializeOptions : TelemetrySerializerOptions
     {
         public MonitoringCollectionOptions DefaultCollectionOptions { get; set; }   // settable until locked
-        protected abstract ObjectConverter CreateObjectConverter(TypeDefinition definition);   // protected: formats need no access to internals; the core calls it through an internal wrapper
+        protected abstract TelemetryWriter CreateWriter();   // the format's writer, one per call; protected: formats need no access to internals
     }
 
     public static partial class TelemetrySerializer
@@ -61,31 +61,28 @@ namespace Forestry.Serialization
 
 namespace Forestry.Serialization.Writing
 {
-    public abstract class ObjectConverter                       // R49: System.Text.Json's ObjectDefaultConverter
+    public abstract class TelemetryWriter : IBufferWriter<byte>    // R49: one class a format or developer overrides
     {
-        protected ObjectConverter(TypeDefinition definition);
-        public TypeDefinition Definition { get; }
+        protected TelemetryWriter();
+        protected IBufferWriter<byte> Output { get; }               // the current call's output, set by the serializer
+        protected virtual void OnReset();                           // clear state kept between telemetries of a call
 
-        // The walk: WriteStart; per property, PropertyDefinition<T>.WriteMember (separator if a member was
-        // already written, name section, then null section or the converter's Write; omitted nulls skipped);
-        // WriteEnd. Virtual for columnar formats (Parquet) that do not write one byte sequence per telemetry.
-        public virtual void WriteTelemetry(Telemetry telemetry, IBufferWriter<byte> writer);
+        // IBufferWriter<byte>, forwarding to Output, for converters writing raw bytes
+        public Span<byte> GetSpan(int sizeHint = 0);
+        public Memory<byte> GetMemory(int sizeHint = 0);
+        public void Advance(int count);
 
-        protected virtual void WriteStart(IBufferWriter<byte> writer);   // default writes nothing
-        protected virtual void WriteEnd(IBufferWriter<byte> writer);     // default writes nothing
+        // Framing, called by the serializer: start; per member WriteName then the converter's Write, or WriteNull; end
+        public virtual void WriteStartTelemetry(TypeDefinition definition);   // default: nothing
+        public virtual void WriteEndTelemetry();                             // default: nothing
+        public virtual void WriteName(PropertyDefinition property);          // default: nothing; separators are the writer's state
+        public virtual void WriteNull(PropertyDefinition property);          // default: WriteName, no value
 
-        // Once per property definition when the options lock (as EscapedNameSection is computed once)
-        protected abstract MemberSections CreateMemberSections(PropertyDefinition property);
-    }
-
-    public sealed class MemberSections
-    {
-        public MemberSections(ReadOnlyMemory<byte> name, ReadOnlyMemory<byte> separator, ReadOnlyMemory<byte> nullValue);
-        public static MemberSections OmitNull(ReadOnlyMemory<byte> name, ReadOnlyMemory<byte> separator);
-        public ReadOnlyMemory<byte> Name { get; }        // bytes before the value, e.g. "LogKey":
-        public ReadOnlyMemory<byte> Separator { get; }   // bytes between two written members, e.g. ,
-        public ReadOnlyMemory<byte> NullValue { get; }   // bytes for a null, e.g. null
-        public bool OmitsNull { get; }                   // leave the member out when its value is null
+        // Values by kind, called by converters (typed number overloads may come later)
+        public virtual void WriteString(ReadOnlySpan<char> value);           // default: UTF-8, unescaped
+        public virtual void WriteBoolean(bool value);                        // default: true / false
+        public virtual void WriteFormattable<T>(T value, ReadOnlySpan<char> format = default) where T : IUtf8SpanFormattable;  // default: invariant culture
+        public virtual void WriteRaw(ReadOnlySpan<byte> utf8);               // default: bytes as they are
     }
 
     public interface ICollectionWriter

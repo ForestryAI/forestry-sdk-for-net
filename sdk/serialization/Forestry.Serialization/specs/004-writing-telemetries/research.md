@@ -35,7 +35,7 @@ confirms it (C5).
   (default: every mapped member; `DeserializeOptions` applies its definition policies) and
   `OnDefinitionsBuilt(definitions)` (`DeserializeOptions` resolves its enumeration policies:
   enumerated types, type chains, members applying; `SerializeOptions` checks every converter
-  overrides `Write` and creates the object converters and their member sections). The base's
+  overrides `Write`; its writer comes from `CreateWriter`, R49). The base's
   constructor is `private protected`: only `DeserializeOptions` and `SerializeOptions` derive from
   it; format packages derive from those two.
 - **Stays on `DeserializeOptions`**: `Policies`, `MaxContextTelemetries`, enumeration
@@ -66,11 +66,12 @@ confirms it (C5).
 ## R45 - The converter write signature
 
 - **Decision**: `Converter<T>` gets `public abstract T Read(ReadOnlySpan<byte> utf8)` (renamed from
-  `Convert`) and `public virtual void Write(T value, IBufferWriter<byte> writer)`. The default
-  `Write` throws `NotSupportedException` naming the converter; every built-in converter overrides
-  it. `Write` is never called with a null value (FR-012: the format writes null).
-- **Rationale**: Mirrors `Read` and `JsonConverter<T>.Write`. `IBufferWriter<byte>` is a BCL type,
-  so no format type enters the core (C0). A converter asks for room with `GetSpan(sizeHint)` and
+  `Convert`) and `public virtual void Write(T value, TelemetryWriter writer)` (revised 2026-11-26,
+  R49: it was `IBufferWriter<byte> writer`). The default `Write` throws `NotSupportedException`
+  naming the converter; every built-in converter overrides it by delegating to the writer's method
+  for its kind. `Write` is never called with a null value (FR-012: the writer's `WriteNull`).
+- **Rationale**: Mirrors `Read` and `JsonConverter<T>.Write(Utf8JsonWriter, ...)`. The writer is
+  abstract and owned by the core, so no format type enters the core (C0, revised). A converter asks for room with `GetSpan(sizeHint)` and
   calls `Advance`; when the hint was too small it asks again with a larger hint, so there is no
   "did not fit" result (FR-002). A virtual default keeps third-party reading-only converters
   compiling; definitions built by `SerializeOptions` check at lock that every resolved converter
@@ -88,10 +89,10 @@ confirms it (C5).
 
 - **Decision**: `PropertyDefinition<T>` compiles a getter, `Func<Telemetry, T>`, next to the
   existing compiled setter (`CreateSetter` uses expression trees today), and exposes an internal
-  `WriteMember(Telemetry, IBufferWriter<byte>, MemberSections, ref bool wroteMember)`, our
-  counterpart of System.Text.Json's `GetMemberAndWriteJson` (R49): it gets the value and writes
-  the separator, name section, and either the null section or the resolved converter's `Write`, so
-  the call stays generic from telemetry to `T` to `Write` (FR-006). A null value (a nullable or a
+  `WriteMember(Telemetry, TelemetryWriter)`, our counterpart of System.Text.Json's
+  `GetMemberAndWriteJson` (R49): it gets the value and calls the writer's `WriteNull`, or its
+  `WriteName` and then the resolved converter's `Write`, so the call stays generic from telemetry
+  to `T` to `Write` (FR-006). A null value (a nullable or a
   `string`) never reaches the converter (R50).
 - **Rationale**: Same mechanism as the setter, compiled once per definition, no boxing.
 - **Alternatives considered**: `PropertyInfo.GetValue` (boxes, slow); source generators (not yet
@@ -116,11 +117,11 @@ confirms it (C5).
 
 - **Decision**:
   - `Stream` targets: each call rents an internal pooled buffer writer (`ArrayPool<byte>.Shared`
-    segments behind an `IBufferWriter<byte>`), gives it to the object converter, and writes the
+    segments behind an `IBufferWriter<byte>`), resets the format's writer to it, and writes the
     written span to the `Stream` after each telemetry (`Write`, or `WriteAsync` on the async
     path), then returns the buffer to the pool. Many-telemetries overloads reuse one buffer for
     the whole call and write when it passes a threshold (default 16 KiB) and at the end.
-  - `PipeWriter` targets: the `PipeWriter` itself is the `IBufferWriter<byte>`; after each
+  - `PipeWriter` targets: the writer is reset to the `PipeWriter` itself (no copy); after each
     telemetry the call `FlushAsync`es (many-telemetries: when unflushed bytes pass the threshold,
     and at the end), honoring backpressure.
   - Neither path disposes a `Stream` or completes a `PipeWriter` (FR-014); both flush what they
@@ -131,56 +132,58 @@ confirms it (C5).
 - **Alternatives considered**: `ArrayBufferWriter<byte>` (not pooled; allocates per call);
   wrapping a `Stream` in `PipeWriter.Create` (adds a pipe's machinery for a one-call buffer).
 
-## R49 - Object converters and how a format plugs in
+## R49 - The telemetry writer: how a format, or a developer, plugs in
 
-- **Decision** (revised 2026-11-26, after the developer pointed at System.Text.Json's
-  `ObjectDefaultConverter`): an abstract `ObjectConverter` in the core, created per type
-  definition by the format through `SerializeOptions.CreateObjectConverter(TypeDefinition)`
-  (`protected abstract` on `SerializeOptions`, called by the core through an internal wrapper.
-  Unlike `CreateTelemetryEnumerator`, it is not `protected internal`: a format package without
-  access to the core's internals, such as JSON Lines or a test format linked into the XML tests,
-  could not override a `protected internal` member; found writing the US2 shells, 2026-11-26). A
-  format overrides only:
-  - `WriteStart(IBufferWriter<byte> writer)` and `WriteEnd(IBufferWriter<byte> writer)`: what
-    frames a whole telemetry (JSON Lines: `{` and `}\n`; the string test format: nothing and `\n`).
-  - `CreateMemberSections(PropertyDefinition property)`: called once per property definition when
-    the options lock, returning `MemberSections`: the **name section** (bytes before the value,
-    e.g. `"LogKey":`), the **separator** (bytes between two written members, e.g. `,`), and the
-    **null section** (bytes for a null value, e.g. `null`) or `OmitNull` (leave the member out).
-  The core's `WriteTelemetry` walks the property definitions in order: `WriteStart`; for each
-  property, `PropertyDefinition<T>.WriteMember` gets the value through its compiled getter (R46);
-  a null that the format omits is skipped; otherwise the separator is written if a member was
-  already written, then the name section, then either the null section or the resolved
-  converter's `Write`; then `WriteEnd`. `WriteTelemetry` stays virtual for formats that do not
-  write a telemetry as one byte sequence (Parquet appends each member to its own column).
-- **Rationale**: System.Text.Json's `ObjectDefaultConverter.OnTryWrite` writes the start and end
-  of an object and calls `JsonPropertyInfo<T>.GetMemberAndWriteJson` per property, which gets the
-  value, writes the pre-escaped name (`EscapedNameSection`, computed once) or the name and `null`
-  in one step, and calls the property's converter for the value only. Our
-  `PropertyDefinition<T>.WriteMember` is that method. System.Text.Json's property info calls JSON
-  writer methods because it has one format; our core cannot call format methods (C0), so it
-  writes bytes the format prepared once at lock instead, which is also what `EscapedNameSection`
-  is. Writing the separator only after a member was written (not "before every property but the
-  first") lets a format omit nulls without a stray separator.
-- **Alternatives considered**: overridable `WriteMember`/`WriteNull` per member (the earlier R49:
-  a virtual call per member and per-kind branching on `MemberType` in every format); the format
-  writes everything including member lookup (duplicates the definition walk).
+- **Decision** (revised again 2026-11-26, developer: "converters delegate to an abstract writer
+  that the developer can totally customize, i.e. strings, bools, customs"): an abstract
+  `TelemetryWriter` in `Forestry.Serialization.Writing`, implementing `IBufferWriter<byte>`, is the
+  one class a format or developer overrides. It replaces the earlier `ObjectConverter` and
+  `MemberSections`.
+  - **Framing a telemetry** (called by the serializer): `WriteStartTelemetry(TypeDefinition)`,
+    `WriteName(PropertyDefinition)`, `WriteNull(PropertyDefinition)` (in place of the name and value,
+    so a writer can also leave the member out; default: the name and no value),
+    `WriteEndTelemetry()`. Separators between members are the writer's own state, as in
+    `Utf8JsonWriter`; `OnReset()` clears that state for each call.
+  - **Values by kind** (called by converters): `WriteString(ReadOnlySpan<char>)`,
+    `WriteBoolean(bool)`, `WriteFormattable<T>(T, ReadOnlySpan<char> format = default) where T :
+    IUtf8SpanFormattable` (numbers, `Guid`, dates, a developer's struct), `WriteRaw(ReadOnlySpan<byte>)`.
+    Each has a default that writes plain UTF-8 (unescaped strings, `true`/`false`, invariant
+    culture, bytes as they are).
+  - **Raw bytes**: the `IBufferWriter<byte>` members forward to `Output`, the current call's output
+    (set by the serializer through an internal `Reset`), for custom converters writing bytes
+    themselves.
+  - **Where it comes from**: `SerializeOptions.CreateWriter()`, `protected abstract` (a format
+    package needs no access to the core's internals to override it). The serializer creates one
+    writer per call and resets it to the call's output.
+  - **The serializer's walk**: `WriteStartTelemetry`; for each property definition,
+    `PropertyDefinition<T>.WriteMember` gets the value through its compiled getter (R46) and calls
+    `WriteNull`, or `WriteName` then the resolved converter's `Write`; then `WriteEndTelemetry`.
+- **Rationale**: System.Text.Json hands converters a rich writer (`Utf8JsonWriter`) rather than
+  bytes; making ours abstract lets every format, and every developer, customize strings, booleans
+  and custom values in one class instead of three mechanisms (object converter, member sections,
+  format converters). Constitution 4.0.0's C0 was revised before merge to allow it: the core owns
+  the abstract writer, formats subclass it, the core never interprets written bytes.
+- **Later** (developer): whether `WriteFormattable` gets typed overloads per kind of number
+  (`Utf8JsonWriter.WriteNumberValue` has `int`, `long`, `decimal`, ...) or other `Write*Value`
+  methods for specific types.
+- **Columnar formats** (Parquet) subclass the writer too: `WriteName` selects the column the next
+  value goes to, and values are appended to column buffers rather than written as text.
+- **Alternatives considered**: converters write plain bytes into `IBufferWriter<byte>`, with an
+  `ObjectConverter` (start, end) and per-property `MemberSections` (name, separator, null) and
+  per-kind framing in format converters (the previous R49/R50, after System.Text.Json's
+  `ObjectDefaultConverter`): three plug points, and a developer could not change how strings are
+  written without replacing converters.
 
 ## R50 - Nulls and per-kind framing
 
-- **Decision**: for a member whose value is null (`string` null, nullable without a value), the
-  core writes the format's null section, or leaves the member out when the format says
-  `OmitNull`; converters never see a missing value (FR-012). The string test format's null
-  section is empty; JSON Lines (#138) chooses `null` or omitting.
-- **Per-kind framing goes through format converters** (revised 2026-11-26): `Utf8JsonWriter`
-  frames each kind of value differently (`WriteStringValue` quotes and escapes, numbers and
-  booleans are bare, `WriteNullValue`, `WriteRawValue`). With no `WriteMember` hook, a format that
-  frames a kind differently registers its own converter for it (FR-004, as the XML package
-  registers `XmlBooleanConverter`): JSON Lines registers converters for `string`, `Guid`, dates and
-  enums that write quoted, escaped JSON strings, and keeps the built-ins for numbers and booleans.
-  The converter that knows the type does the framing; no format branches on `MemberType`. A
-  per-kind writer in the core would be a format-neutral token model (C0).
-- **The string test format** needs no converters of its own: it does not escape.
+- **Decision**: a missing value (null `string`, nullable without a value) never reaches a converter
+  (FR-012); the serializer calls the writer's `WriteNull`, which writes the name and the format's
+  null (e.g. `null` in JSON), nothing at all (the member left out), or the name and no value (the
+  default). Framing by kind (quoting and escaping strings, how booleans or numbers look) is the
+  writer's value methods. Format converters remain only for types a format reads or writes
+  differently as a whole (e.g. XML's booleans when reading).
+- **The string test format** overrides only `WriteName` (`;` before every member but the first
+  written), `WriteNull` (omit, or the name with no value) and `WriteEndTelemetry` (a new line).
 
 ## R51 - Collection writer contract
 
@@ -211,7 +214,7 @@ confirms it (C5).
 
 ## R52 - Sequence at telemetry boundaries
 
-- **Decision**: After the object converter has written a whole telemetry and its bytes have been
+- **Decision**: After the writer's `WriteEndTelemetry` for a whole telemetry, once its bytes have been
   handed to the target (written to the `Stream`, or advanced in the `PipeWriter`),
   `TelemetrySerializer` calls `OnTelemetryWritten()` when the target is an `ICollectionWriter`.
   `IsFull` is evaluated against `Sequence` and `BytesWritten` only then (FR-019, FR-021).
@@ -242,9 +245,10 @@ confirms it (C5).
 ## R54 - The string test format
 
 - **Decision**: In `Forestry.Serialization.Tests`: `TestingSerializeOptions : SerializeOptions`
-  whose object converter writes nothing at the start and `\n` at the end (`WriteStart`,
-  `WriteEnd`), with member sections of an empty name section, `;` as separator and an empty null
-  section (R49): members' converter output joined by `;`, one telemetry per line, no escaping. Tests serialize into a
+  whose writer (`CreateWriter`, R49) writes `;` before every member but the first written
+  (`WriteName`), a new line at the end (`WriteEndTelemetry`), and a null as the name with no value
+  or not at all (`WriteNull`, with an `OmitNulls` option): members' values joined by `;`, one
+  telemetry per line, no escaping (the writer's defaults). Tests serialize into a
   `MemoryStream` (rewound, read with `new StreamReader(memory, leaveOpen: true).ReadToEnd()`) and
   over a `System.IO.Pipelines.Pipe` (reading its `Reader`), and through both collection writers.
 - **Rationale**: C3 (4.0.0): writing is proven in this package through a string format over a

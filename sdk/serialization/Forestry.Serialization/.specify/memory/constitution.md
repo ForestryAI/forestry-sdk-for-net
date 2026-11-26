@@ -12,19 +12,22 @@ Workflow). Terms are defined under Definitions.
 - **Rule**: The serialization package MUST NOT reference any format package. It owns what is
   shared by every format, in both directions: the entry points (`TelemetrySerializer`), the
   abstract options (`DeserializeOptions`, `SerializeOptions`), the enumerators and buffering, type,
-  property and parameter definitions, converters (`Read` and `Write`), policies, and `Telemetry`. A
-  format package references it, extends the options, and supplies its own reader and a synchronous,
-  resumable step that turns buffered bytes into telemetries (reading), its own writer and object
-  converter (writing), or both, much as System.Text.Json's serializer owns buffering and runs its
-  converters over `Utf8JsonReader` and `Utf8JsonWriter`. There is no format-neutral token or Value
-  model in either direction: each format's tokens stay inside its own package, converters write
-  plain bytes through `IBufferWriter<byte>`, and escaping, nulls and the writer belong to the
-  format.
+  property and parameter definitions, converters (`Read` and `Write`), the abstract
+  `TelemetryWriter`, policies, and `Telemetry`. A format package references it, extends the
+  options, and supplies its own reader and a synchronous, resumable step that turns buffered bytes
+  into telemetries (reading), its own `TelemetryWriter` (writing), or both, much as
+  System.Text.Json's serializer owns buffering and runs its converters over `Utf8JsonReader` and
+  `Utf8JsonWriter`. Reading has no format-neutral token or Value model: each format's tokens stay
+  inside its own package. Writing goes through the `TelemetryWriter`: converters delegate each value
+  to its overridable methods by kind (string, boolean, formattable, raw) and the serializer frames
+  each telemetry through it (start, names, nulls, end); a format package, or a developer, subclasses
+  it to decide escaping, nulls, names and framing. The core never interprets written bytes.
 - **Rationale**: One storage model whatever the format: storage designed for analytics and high
   write throughput. Format grammars differ too much to share tokens (e.g. XML's end element, JSON's
   separate property names); what is shared is the flattening. For writing, the same split as
-  System.Text.Json (`JsonConverter<T>.Write` against a writer the format owns), without a shared
-  token model.
+  System.Text.Json (`JsonConverter<T>.Write` against a `Utf8JsonWriter`), with the writer abstract,
+  so one class lets a format or developer customize strings, booleans and custom values (developer,
+  2026-11-26).
 - **Checked by**: Project references of src and test (the reference goes format -> serialization,
   never back); no type from a format package in the serialization package's public API.
 
@@ -213,11 +216,13 @@ Workflow). Terms are defined under Definitions.
   each telemetry boundary), `BytesWritten`, `IsFull`, and a completion hook (ready or abandoned).
   Passed by whoever collects; never required by a serializing signature. Overridden by monitoring
   formatters.
-- **Converter**: Reads a member's value from UTF-8 (`Read`) and writes it (`Write` through
-  `IBufferWriter<byte>`). Resolved once per property definition from the options. A format package
+- **Converter**: Reads a member's value from UTF-8 (`Read`) and writes it (`Write`, delegating to
+  the `TelemetryWriter`). Resolved once per property definition from the options. A format package
   may register its own converters, e.g. for a different encoding.
-- **Object converter**: Writes a whole telemetry in a format (e.g. one JSON Lines line, or each
-  member appended to its Parquet column), owned by the format package.
+- **Telemetry writer**: The abstract `TelemetryWriter`, an `IBufferWriter<byte>` with overridable
+  methods to frame a telemetry (start, member names, nulls, end) and to write each kind of value
+  (string, boolean, formattable, raw). A format package (or a developer) subclasses it, e.g. JSON
+  Lines quoting and escaping strings.
 - **Reading information**: Where a value is read in the document: its depth, name and path
   (`ReadingInformation`), reported by the format with each value. Generic, not specific to one
   format. Never a value, and never kept unless a policy or option asks for it.
@@ -267,8 +272,13 @@ Workflow). Terms are defined under Definitions.
     -> "format package".
   - Intro: "deserialization silo" -> "serialization silo".
   - Definitions: Deserialize, Serialize, Serialization, Output, Collection, Collection writer,
-    Converter and Object converter added; Format reworded; Format reader package renamed Format
+    Converter and Telemetry writer added; Format reworded; Format reader package renamed Format
     package.
+  - Revised 2026-11-26, after the 4.0.0 agreement, before merge (developer, #137): writing goes
+    through an abstract `TelemetryWriter` that converters delegate to by kind and the serializer
+    frames telemetries through, so a format or developer customizes strings, booleans and custom
+    values in one class; it replaces "converters write plain bytes through `IBufferWriter<byte>`"
+    in C0 and the Object converter definition.
 
 - **3.1.1** (2026-11-25, agreed by the developer in #142, takes effect on merge to `main`). Reason:
   the package is renamed Forestry.Serialization, and *Row* is renamed *Telemetry*: what forestry

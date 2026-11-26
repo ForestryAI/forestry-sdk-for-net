@@ -12,7 +12,7 @@ from `Convert`). A common options base, `TelemetrySerializerOptions`, holds the 
 converters and definitions that `DeserializeOptions` and a new `SerializeOptions` share.
 `TelemetrySerializer.Serialize`/`SerializeAsync` write one telemetry or a sequence to a caller's
 `Stream` (sync and async, through a per-call pooled buffer) or `PipeWriter` (async, no copy),
-never disposing or completing it. A format supplies an object converter per telemetry type; the
+never disposing or completing it. A format supplies a `TelemetryWriter` that converters delegate to by kind; the
 core walks the definitions with compiled getters. Opt-in collection writers,
 `MonitoringCollectionStream` and `MonitoringCollectionPipeWriter`, share `ICollectionWriter`
 (options, sequence, bytes, full, completion hook) and `MonitoringCollectionOptions`. Writing is
@@ -63,7 +63,7 @@ a string test format, and the package README.
 
 | # | Principle | Check | Result |
 |---|---|---|---|
-| C0 | Format-agnostic serialization | Core owns options base, definitions, converters, getters, `TelemetrySerializer`, collection writers; formats supply the object converter (R49). Converters write through `IBufferWriter<byte>` (BCL). No format reference. | Pass |
+| C0 | Format-agnostic serialization | Core owns options base, definitions, converters, getters, `TelemetrySerializer`, collection writers; formats subclass the abstract `TelemetryWriter` (R49), which converters delegate to; C0 revised before merge to allow it. No format reference. | Pass |
 | C1 | Partial deserialization | Reading unchanged. | Pass |
 | C2 | Single pass flattening | Reading unchanged; writing never re-reads (R55's `foreach`). | Pass |
 | C3 | Tested through a real format package | Writing tested in this package through the string test format over a `Stream` (R54); reading still through XML. | Pass |
@@ -76,7 +76,7 @@ a string test format, and the package README.
 | S0 | Developer-chosen types only | Serializing only writes telemetries of types added to the options (FR-017). | Pass |
 | S1 | Fail fast | A member that cannot be written fails at lock (R45). | Pass |
 | A1 | No third-party dependencies | BCL only. | Pass |
-| A5 | No document or output names in core | Output framing is the format's object converter. | Pass |
+| A5 | No document or output names in core | Output framing and names are the format's `TelemetryWriter`. | Pass |
 
 Re-check after design: unchanged, all pass. No violations to justify.
 
@@ -112,8 +112,7 @@ Forestry.Serialization/src/
 │   ├── TypeDefinition.cs                  # built from the base
 │   └── PropertyDefinition.OfType.cs       # compiled getter, WriteMember (R46, R49)
 ├── Writing/
-│   ├── ObjectConverter.cs                 # new: format hook per type definition (R49)
-│   ├── MemberSections.cs                  # new: per-property bytes from the format (R49)
+│   ├── TelemetryWriter.cs                 # done in US1: the format's writer (R49)
 │   ├── PooledBufferWriter.cs              # new, internal: per-call buffer (R48)
 │   ├── ICollectionWriter.cs               # new (R51)
 │   ├── MonitoringCollectionStream.cs      # new (R51)

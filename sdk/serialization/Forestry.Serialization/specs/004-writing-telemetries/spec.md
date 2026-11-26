@@ -18,6 +18,12 @@ monitoring (#141) uses to collect telemetries into collections.
 
 ### Session 2026-11-26
 
+- Q: How does a format, or a developer, decide how values are written? → A: Through an abstract
+  `TelemetryWriter` (an `IBufferWriter<byte>`) that converters delegate to by kind (string,
+  boolean, formattable, raw) and that frames each telemetry (start, names, nulls, end); a format or
+  developer subclasses it, e.g. to customize strings, booleans or custom values (developer, after
+  reviewing US1, replacing the object converter and member sections; constitution C0 revised before
+  merge). Typed overloads per kind of number may come later.
 - Q: What do serialize options and deserialize options share? → A: One common abstract base that
   both derive from. Deserializing goes from one format to telemetries, and serializing from
   telemetries to another format; what they share is the type and property definitions, and the
@@ -85,8 +91,8 @@ and see it used for writing.
 
 A developer hands telemetries and serialize options to `TelemetrySerializer` with a target: a
 plain `Stream` (sync or async) or a plain `PipeWriter` (async only). Each telemetry is written
-whole by the format's object converter; each member's value comes from the telemetry without
-boxing and is written by its resolved converter. One telemetry or many can be serialized in one
+whole through the format's telemetry writer; each member's value comes from the telemetry without
+boxing and is written by its resolved converter, which delegates to the writer. One telemetry or many can be serialized in one
 call; many telemetries can come straight from deserializing, so a document is read and written in
 one forward pass without holding all telemetries. The target belongs to the caller: serializing
 writes and flushes, but never disposes a `Stream` or completes a `PipeWriter`, so a test can
@@ -192,9 +198,10 @@ the "ready" hook; repeat with an exception for "abandoned", and with a collectio
 
 - **FR-001**: A converter's reading method MUST be named `Read` (was `Convert`), with unchanged
   behavior.
-- **FR-002**: Every converter MUST have an overridable write method that formats a non-null value
-  as UTF-8 into a buffer writer it is handed, asking for more room as needed, with no
-  "did not fit" result.
+- **FR-002**: Every converter MUST have an overridable write method that writes a non-null value
+  through the telemetry writer it is handed, delegating to the writer's method for its kind
+  (string, boolean, formattable, raw) or writing raw UTF-8 through it, asking for more room as
+  needed, with no "did not fit" result.
 - **FR-003**: The built-in converters MUST write the text they read, so that writing then reading
   any value of a built-in kind gives the same value.
 - **FR-004**: A format package MUST be able to register converters that are used for writing in
@@ -224,9 +231,10 @@ the "ready" hook; repeat with an exception for "abandoned", and with a collectio
 - **FR-011**: The many-telemetries overloads MUST take telemetries one at a time from the sequence
   (a sequence for sync, an asynchronous sequence for async), so that serializing pairs with
   deserializing without gathering telemetries first.
-- **FR-012**: Each telemetry MUST be written whole by the format's object converter, each member's
-  value through its resolved converter; the format decides how strings are escaped and how null is
-  written.
+- **FR-012**: Each telemetry MUST be written whole through the format's telemetry writer (start,
+  member names, nulls, end), each member's value through its resolved converter; the writer decides
+  how strings are escaped, how each kind of value looks and how null is written, and a developer can
+  customize any of it by subclassing the writer.
 - **FR-013**: The asynchronous path MUST only use the target's asynchronous write and flush, never
   the synchronous ones.
 - **FR-014**: Serializing MUST NOT dispose a caller's `Stream` or complete a caller's `PipeWriter`.
