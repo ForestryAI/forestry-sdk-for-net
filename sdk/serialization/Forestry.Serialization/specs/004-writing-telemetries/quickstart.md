@@ -30,8 +30,10 @@ Expected: all pass, including every test that existed before this spec (SC-002).
 | 7 | `Complete()` and `Complete(exception)`; `LeaveOpen` true and false | `CollectionWriterTests` | Hook told ready / abandoned; inner disposed only without `LeaveOpen` |
 | 8 | Same as 5 through `MonitoringCollectionPipeWriter` | `CollectionWriterTests` | Same counts as the stream |
 | 9 | `foreach` over `Deserialize` of a generated document, `Serialize` each into one collection stream over `Stream.Null`, N and 10×N telemetries | `Forestry.Serialization.Xml.Tests` `SerializeMemoryTests` | Heap growth flat; `Sequence` = telemetries read (SC-005) |
+| 10 | An `ObjectConverter<Sample>` added to the options; a converter for `Sample` that is not an object converter | `ObjectConverterTests` | It replaces the walk (`sample:1`); the other fails at lock naming the type (R49) |
 
 ## Documentation check
 
-The package README's new "Serializing" section serializes into a `MemoryStream` and reads the
-string back; following it alone works (SC-008).
+The package README's "Serializing telemetries" section defines a small format (serialize options and a
+telemetry writer), serializes into a `MemoryStream` and reads the string back; following it alone works
+(SC-008).

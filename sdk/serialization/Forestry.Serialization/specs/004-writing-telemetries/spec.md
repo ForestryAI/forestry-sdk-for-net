@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-26
 
-**Status**: Draft
+**Status**: Implemented (2026-11-26; US1 #144, US2 #145, US3 #146)
 
 **Input**: User description: "Spec 004 for Forestry.Serialization: writing telemetries (GitHub
 issue #137; constitution 4.0.0 on branch serialization-004-writing)." Source: GitHub issue

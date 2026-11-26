@@ -9,7 +9,7 @@ namespace Forestry.Serialization.Converters
     /// </summary>
     /// <remarks>
     /// One converter serves both directions; the options it is added to decide which method is called:
-    /// in <see cref="DeserializeOptions"/>, which read, its <see cref="Read"/>; in serialize options, which
+    /// in <see cref="DeserializeOptions"/>, which read, its <see cref="Read"/>; in <see cref="SerializeOptions"/>, which
     /// write, its <see cref="Write"/> (spec 004 research R44).
     /// </remarks>
     /// <typeparam name="T"></typeparam>
@@ -47,12 +47,12 @@ namespace Forestry.Serialization.Converters
         /// or <see cref="TelemetryWriter.WriteValue{T}(T)"/>) so the format, or a developer's writer, decides how
         /// it is represented; or as raw UTF-8 through the writer's <see cref="System.Buffers.IBufferWriter{T}"/>
         /// members, asking for more room instead of failing (spec 004 research R45). Called when serializing,
-        /// through serialize options
+        /// through <see cref="SerializeOptions"/>
         /// </summary>
         /// <remarks>
         /// Never called with null: the format writes a missing value itself (research R50). The default
         /// throws <see cref="NotSupportedException"/>, so a converter that only reads keeps compiling;
-        /// serialize options refuse such a converter when they lock, so the default is never reached while
+        /// <see cref="SerializeOptions"/> refuse such a converter when they lock, so the default is never reached while
         /// writing telemetries.
         /// </remarks>
         /// <param name="value">A value that is there, never null</param>
