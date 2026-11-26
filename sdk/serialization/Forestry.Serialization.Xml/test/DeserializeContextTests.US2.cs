@@ -247,7 +247,7 @@ namespace Forestry.Serialization.Xml.Tests
 
             // Act
             List<Telemetry> telemetries = [];
-            await foreach (Telemetry telemetry in TelemetrySerializer.DeserializeAsync(stream, OptionsWith(typeof(Site), typeof(Order), typeof(Line))))
+            await foreach (Telemetry telemetry in TelemetrySerialization.DeserializeAsync(stream, OptionsWith(typeof(Site), typeof(Order), typeof(Line))))
             {
                 telemetries.Add(telemetry);
             }

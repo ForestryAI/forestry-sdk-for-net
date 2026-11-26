@@ -22,7 +22,7 @@ namespace Forestry.Serialization.Tests
     /// <item><c>TelemetryWriter</c> (R49, revised 2026-11-26): the serializer calls its
     /// <c>WriteStartTelemetry</c>, then per member <c>WriteName</c> and the converter's <c>Write</c>, or
     /// <c>WriteNull</c> for a missing value, then <c>WriteEndTelemetry</c>.</item>
-    /// <item><c>TelemetrySerializer.Serialize(Telemetry | IEnumerable&lt;Telemetry&gt;, Stream, SerializeOptions)</c>,
+    /// <item><c>TelemetrySerialization.Serialize(Telemetry | IEnumerable&lt;Telemetry&gt;, Stream, SerializeOptions)</c>,
     /// and <c>SerializeAsync</c> over a <see cref="Stream"/> or a <see cref="PipeWriter"/> (R47, R48).</item>
     /// </list>
     /// Reading a <see cref="MemoryStream"/> back: rewind, then a <see cref="StreamReader"/> that leaves it
@@ -72,8 +72,8 @@ namespace Forestry.Serialization.Tests
             TestingSerializeOptions options = OptionsWithSample();
 
             // Act
-            TelemetrySerializer.Serialize(First, memory, options);
-            TelemetrySerializer.Serialize(Second, memory, options);
+            TelemetrySerialization.Serialize(First, memory, options);
+            TelemetrySerialization.Serialize(Second, memory, options);
 
             // Assert
             Assert.True(memory.CanRead);
@@ -97,8 +97,8 @@ namespace Forestry.Serialization.Tests
                 case Target.SyncStream:
                 {
                     using MemoryStream memory = new();
-                    TelemetrySerializer.Serialize(First, memory, options);
-                    TelemetrySerializer.Serialize(Second, memory, options);
+                    TelemetrySerialization.Serialize(First, memory, options);
+                    TelemetrySerialization.Serialize(Second, memory, options);
 
                     Assert.True(memory.CanRead);
                     Assert.Equal(expected, memory.ToArray());
@@ -107,8 +107,8 @@ namespace Forestry.Serialization.Tests
                 case Target.AsyncStream:
                 {
                     using MemoryStream memory = new();
-                    await TelemetrySerializer.SerializeAsync(First, memory, options);
-                    await TelemetrySerializer.SerializeAsync(Second, memory, options);
+                    await TelemetrySerialization.SerializeAsync(First, memory, options);
+                    await TelemetrySerialization.SerializeAsync(Second, memory, options);
 
                     Assert.True(memory.CanRead);
                     Assert.Equal(expected, memory.ToArray());
@@ -117,8 +117,8 @@ namespace Forestry.Serialization.Tests
                 case Target.PipeWriter:
                 {
                     Pipe pipe = new();
-                    await TelemetrySerializer.SerializeAsync(First, pipe.Writer, options);
-                    await TelemetrySerializer.SerializeAsync(Second, pipe.Writer, options);
+                    await TelemetrySerialization.SerializeAsync(First, pipe.Writer, options);
+                    await TelemetrySerialization.SerializeAsync(Second, pipe.Writer, options);
 
                     Assert.True(pipe.Reader.TryRead(out ReadResult result));
                     Assert.Equal(expected, result.Buffer.ToArray());
@@ -147,7 +147,7 @@ namespace Forestry.Serialization.Tests
             using MemoryStream memory = new();
 
             // Act
-            TelemetrySerializer.Serialize(Pulled(events, First, Second), memory, options);
+            TelemetrySerialization.Serialize(Pulled(events, First, Second), memory, options);
 
             // Assert
             Assert.Equal(["pulled 1", "written", "pulled 2", "written"], events);
@@ -164,7 +164,7 @@ namespace Forestry.Serialization.Tests
             using MemoryStream memory = new();
 
             // Act
-            await TelemetrySerializer.SerializeAsync(PulledAsync(events, First, Second), memory, options);
+            await TelemetrySerialization.SerializeAsync(PulledAsync(events, First, Second), memory, options);
 
             // Assert
             Assert.Equal(["pulled 1", "written", "pulled 2", "written"], events);
@@ -181,7 +181,7 @@ namespace Forestry.Serialization.Tests
             using MemoryStream memory = new();
 
             // Act
-            TelemetrySerializer.Serialize(new Sample { Id = 1, Name = null, Value = 31.4m, Key = FirstKey }, memory, options);
+            TelemetrySerialization.Serialize(new Sample { Id = 1, Name = null, Value = 31.4m, Key = FirstKey }, memory, options);
 
             // Assert
             Assert.Equal($"1;;31.4;{FirstKey}\n", ReadBack(memory));
@@ -196,7 +196,7 @@ namespace Forestry.Serialization.Tests
             using MemoryStream memory = new();
 
             // Act
-            TelemetrySerializer.Serialize(new Sample { Id = 1, Name = null, Value = 31.4m, Key = FirstKey }, memory, options);
+            TelemetrySerialization.Serialize(new Sample { Id = 1, Name = null, Value = 31.4m, Key = FirstKey }, memory, options);
 
             // Assert
             Assert.Equal($"1;31.4;{FirstKey}\n", ReadBack(memory));
@@ -214,7 +214,7 @@ namespace Forestry.Serialization.Tests
             using MemoryStream memory = new();
 
             // Act
-            TelemetrySerializer.Serialize(new OptionalSample { Note = null, Id = 7 }, memory, options);
+            TelemetrySerialization.Serialize(new OptionalSample { Note = null, Id = 7 }, memory, options);
 
             // Assert
             Assert.Equal(expected, ReadBack(memory));
@@ -232,7 +232,7 @@ namespace Forestry.Serialization.Tests
 
             // Act
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
-                () => TelemetrySerializer.Serialize(new TreeWithSpecies { Id = 1, Species = new Species(3) }, memory, options));
+                () => TelemetrySerialization.Serialize(new TreeWithSpecies { Id = 1, Species = new Species(3) }, memory, options));
 
             // Assert
             Assert.Contains(nameof(TreeWithSpecies), exception.Message);
@@ -250,7 +250,7 @@ namespace Forestry.Serialization.Tests
 
             // Act
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
-                () => TelemetrySerializer.Serialize(new OptionalSample { Id = 7 }, memory, options));
+                () => TelemetrySerialization.Serialize(new OptionalSample { Id = 7 }, memory, options));
 
             // Assert
             Assert.Contains(nameof(OptionalSample), exception.Message);
@@ -266,7 +266,7 @@ namespace Forestry.Serialization.Tests
             using MemoryStream memory = new();
 
             // Act
-            TelemetrySerializer.Serialize(Array.Empty<Telemetry>(), memory, options);
+            TelemetrySerialization.Serialize(Array.Empty<Telemetry>(), memory, options);
 
             // Assert
             Assert.Equal(0, memory.Length);
@@ -283,7 +283,7 @@ namespace Forestry.Serialization.Tests
 
             // Act
             await Assert.ThrowsAnyAsync<OperationCanceledException>(
-                () => TelemetrySerializer.SerializeAsync(PulledAsync([], First, Second), memory, options, cancellation.Token));
+                () => TelemetrySerialization.SerializeAsync(PulledAsync([], First, Second), memory, options, cancellation.Token));
 
             // Assert
             Assert.True(memory.CanRead);
@@ -299,7 +299,7 @@ namespace Forestry.Serialization.Tests
             using MemoryStream readOnly = new([], writable: false);
 
             // Act + Assert
-            Assert.Throws<ArgumentException>(() => TelemetrySerializer.Serialize(First, readOnly, options));
+            Assert.Throws<ArgumentException>(() => TelemetrySerialization.Serialize(First, readOnly, options));
         }
 
         // T019 - edge case: the options lock on first use, as deserialize options do
@@ -309,7 +309,7 @@ namespace Forestry.Serialization.Tests
             // Arrange
             TestingSerializeOptions options = OptionsWithSample();
             using MemoryStream memory = new();
-            TelemetrySerializer.Serialize(First, memory, options);
+            TelemetrySerialization.Serialize(First, memory, options);
 
             // Act + Assert
             Assert.Throws<InvalidOperationException>(() => options.Telemetries.Add<OptionalSample>());

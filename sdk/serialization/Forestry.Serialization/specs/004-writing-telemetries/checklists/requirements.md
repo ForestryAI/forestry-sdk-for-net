@@ -32,7 +32,7 @@
 ## Notes
 
 - This is a library: its users are developers, and its public surface (`Stream`, `PipeWriter`,
-  `TelemetrySerializer`, converters) *is* the product, as in specs 001-003. Naming those types is
+  `TelemetrySerialization`, converters) *is* the product, as in specs 001-003. Naming those types is
   the requirement, not an implementation detail; how they are built (pooling, buffering, class
   layout) is left to the plan. Success criteria name targets only where they are the user-facing
   outcome (e.g. the caller's `Stream` stays open).

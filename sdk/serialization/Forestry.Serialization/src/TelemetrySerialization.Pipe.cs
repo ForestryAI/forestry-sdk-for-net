@@ -3,7 +3,7 @@ using Forestry.Serialization.Reading;
 
 namespace Forestry.Serialization
 {
-    public static partial class TelemetrySerializer
+    public static partial class TelemetrySerialization
     {
         /// <summary>
         /// Telemetries from a document read from a pipe, lazily and asynchronously. Each telemetry is handed out as soon

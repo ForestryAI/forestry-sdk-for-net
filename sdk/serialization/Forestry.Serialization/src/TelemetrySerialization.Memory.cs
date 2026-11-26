@@ -1,6 +1,6 @@
 namespace Forestry.Serialization
 {
-    public static partial class TelemetrySerializer
+    public static partial class TelemetrySerialization
     {
         /// <summary>
         /// Telemetries from a document as UTF-8 bytes in memory, lazily and synchronously. A UTF-8 byte order

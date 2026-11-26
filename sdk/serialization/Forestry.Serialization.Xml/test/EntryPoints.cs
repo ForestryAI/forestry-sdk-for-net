@@ -16,7 +16,7 @@ namespace Forestry.Serialization.Xml.Tests
     /// Runs a document through an entry point and collects the telemetries (tasks.md T008)
     /// </summary>
     /// <remarks>
-    /// The async branch reads the document as a stream through <c>TelemetrySerializer.DeserializeAsync</c>
+    /// The async branch reads the document as a stream through <c>TelemetrySerialization.DeserializeAsync</c>
     /// (US3, T066), blocking until every telemetry is read so a theory stays synchronous.
     /// </remarks>
     public static class EntryPoints
@@ -24,8 +24,8 @@ namespace Forestry.Serialization.Xml.Tests
         public static List<Telemetry> Read(EntryPoint entryPoint, string xml, DeserializeOptions options) =>
             entryPoint switch
             {
-                EntryPoint.Sync => TelemetrySerializer.Deserialize(xml, options).ToList(),
-                EntryPoint.Async => TelemetrySerializer.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(xml)), options).ToBlockingEnumerable().ToList(),
+                EntryPoint.Sync => TelemetrySerialization.Deserialize(xml, options).ToList(),
+                EntryPoint.Async => TelemetrySerialization.DeserializeAsync(new MemoryStream(Encoding.UTF8.GetBytes(xml)), options).ToBlockingEnumerable().ToList(),
                 _ => throw new ArgumentOutOfRangeException(nameof(entryPoint))
             };
     }

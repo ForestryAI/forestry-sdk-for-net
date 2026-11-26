@@ -66,9 +66,9 @@ namespace Forestry.Serialization.Xml.Tests
             long first = 0;
             int read = 0;
 
-            foreach (Telemetry telemetry in TelemetrySerializer.Deserialize(document, readOptions))
+            foreach (Telemetry telemetry in TelemetrySerialization.Deserialize(document, readOptions))
             {
-                TelemetrySerializer.Serialize(telemetry, output, writeOptions);
+                TelemetrySerialization.Serialize(telemetry, output, writeOptions);
                 read++;
 
                 if (read == 1)

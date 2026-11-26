@@ -14,7 +14,7 @@ namespace Forestry.Serialization.Xml.Tests
     /// <list type="bullet">
     /// <item><c>Telemetry</c> in <c>Forestry.Serialization</c>; names in the document declared with <c>XmlElementNameAttribute</c> in <c>Forestry.Serialization.Xml</c> (spec 003 US2, research R37; spec 001 had <c>TelemetryAttribute</c> and <c>FieldAttribute</c> in the core).</item>
     /// <item><c>DeserializeXmlOptions.Telemetries.Add&lt;T&gt;()</c> (R12).</item>
-    /// <item><c>TelemetrySerializer.Deserialize(string, DeserializeOptions)</c>, reached through <see cref="EntryPoints"/>.</item>
+    /// <item><c>TelemetrySerialization.Deserialize(string, DeserializeOptions)</c>, reached through <see cref="EntryPoints"/>.</item>
     /// <item>An unconvertible value throws <see cref="FormatException"/> naming the member, its place (path) and the class (FR-007).</item>
     /// <item>A document cut off inside a telemetry throws the reader's <c>XmlException</c> (spec edge case, R7).</item>
     /// </list>
@@ -379,7 +379,7 @@ namespace Forestry.Serialization.Xml.Tests
 
             // Act
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
-                () => TelemetrySerializer.Deserialize("<Root />", options));
+                () => TelemetrySerialization.Deserialize("<Root />", options));
 
             // Assert
             Assert.Contains(nameof(Log), exception.Message);
@@ -395,7 +395,7 @@ namespace Forestry.Serialization.Xml.Tests
         {
             // Arrange + Act
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
-                () => TelemetrySerializer.Deserialize("<Root />", OptionsWith<LogWithDuplicateMember>()));
+                () => TelemetrySerialization.Deserialize("<Root />", OptionsWith<LogWithDuplicateMember>()));
 
             // Assert
             Assert.Contains(nameof(LogWithDuplicateMember), exception.Message);

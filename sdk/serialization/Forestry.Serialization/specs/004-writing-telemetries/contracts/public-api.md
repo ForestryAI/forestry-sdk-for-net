@@ -46,7 +46,7 @@ namespace Forestry.Serialization
         protected abstract TelemetryWriter CreateWriter();   // the format's writer, one per call; protected: formats need no access to internals
     }
 
-    public static partial class TelemetrySerializer
+    public static partial class TelemetrySerialization
     {
         public static void Serialize(Telemetry telemetry, Stream utf8, SerializeOptions options);
         public static void Serialize(IEnumerable<Telemetry> telemetries, Stream utf8, SerializeOptions options);

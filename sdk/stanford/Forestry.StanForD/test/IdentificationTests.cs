@@ -31,7 +31,7 @@ namespace Forestry.StanForD.Tests
         private static readonly string MachineKeyN = Fragment.MachineKey.ToString("N");
 
         private static List<Telemetry> Read(string xml) =>
-            TelemetrySerializer.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting()).ToList();
+            TelemetrySerialization.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting()).ToList();
 
         /// <summary>
         /// T017, quickstart 1, US2-1, FR-001: a stem carries the machine key, its stem key and both as its Id

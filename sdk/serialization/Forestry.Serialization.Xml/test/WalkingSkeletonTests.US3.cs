@@ -14,12 +14,12 @@ namespace Forestry.Serialization.Xml.Tests
     /// Test shells written before any code (C4), so they do not compile until T066 declares the surface
     /// they assume. For the review gate (T064), the assumed surface:
     /// <list type="bullet">
-    /// <item><c>TelemetrySerializer.DeserializeAsync(PipeReader, DeserializeOptions, CancellationToken = default)</c>
+    /// <item><c>TelemetrySerialization.DeserializeAsync(PipeReader, DeserializeOptions, CancellationToken = default)</c>
     /// returning <see cref="IAsyncEnumerable{T}"/> of <see cref="Telemetry"/> (FR-001, R3).</item>
     /// <item>A telemetry is handed out when its end tag is read, without waiting for more input (FR-009).</item>
     /// <item>Input split anywhere, including inside a name or a value, gives the same telemetries (FR-010),
     /// whether the two parts come in one buffer of two segments or in two reads (T064 review).</item>
-    /// <item><c>TelemetrySerializer.DeserializeAsync(Stream, DeserializeOptions, CancellationToken = default)</c>,
+    /// <item><c>TelemetrySerialization.DeserializeAsync(Stream, DeserializeOptions, CancellationToken = default)</c>,
     /// the stream read through a <see cref="PipeReader"/> (R3).</item>
     /// <item>R18 (T083): the format decides whether the core skips a byte order mark; the XML format leaves it
     /// to <c>Utf8XmlReader</c>, which checks it against the declaration. (a), (b) and (d) already pass
@@ -62,13 +62,13 @@ namespace Forestry.Serialization.Xml.Tests
                   </Log>
                 </Root>
                 """;
-            List<Telemetry> expected = TelemetrySerializer.Deserialize(document, OptionsWith<Log>()).ToList();
+            List<Telemetry> expected = TelemetrySerialization.Deserialize(document, OptionsWith<Log>()).ToList();
             Pipe pipe = new();
             await pipe.Writer.WriteAsync(Encoding.UTF8.GetBytes(document));
             await pipe.Writer.CompleteAsync();
 
             // Act
-            List<Telemetry> telemetries = await ReadAllAsync(TelemetrySerializer.DeserializeAsync(pipe.Reader, OptionsWith<Log>()));
+            List<Telemetry> telemetries = await ReadAllAsync(TelemetrySerialization.DeserializeAsync(pipe.Reader, OptionsWith<Log>()));
 
             // Assert
             Assert.True(SameLogs(expected, telemetries));
@@ -98,7 +98,7 @@ namespace Forestry.Serialization.Xml.Tests
                 """;
             Pipe pipe = new();
             await pipe.Writer.WriteAsync(Encoding.UTF8.GetBytes(firstLog));
-            await using IAsyncEnumerator<Telemetry> telemetries = TelemetrySerializer.DeserializeAsync(pipe.Reader, OptionsWith<Log>()).GetAsyncEnumerator();
+            await using IAsyncEnumerator<Telemetry> telemetries = TelemetrySerialization.DeserializeAsync(pipe.Reader, OptionsWith<Log>()).GetAsyncEnumerator();
 
             // Act
             bool hasFirst = await telemetries.MoveNextAsync().AsTask().WaitAsync(s_timeout);
@@ -153,7 +153,7 @@ namespace Forestry.Serialization.Xml.Tests
                 </Root>
                 """;
             byte[] utf8 = Encoding.UTF8.GetBytes(document);
-            List<Telemetry> expected = TelemetrySerializer.Deserialize(document, OptionsWith<Log>()).ToList();
+            List<Telemetry> expected = TelemetrySerialization.Deserialize(document, OptionsWith<Log>()).ToList();
             List<string> failedSplits = [];
 
             // Act
@@ -161,8 +161,8 @@ namespace Forestry.Serialization.Xml.Tests
             {
                 IAsyncEnumerable<Telemetry> telemetries = splitting switch
                 {
-                    Splitting.TwoSegments => TelemetrySerializer.DeserializeAsync(PipeReader.Create(TwoSegments(utf8, split)), OptionsWith<Log>()),
-                    Splitting.TwoReads => TelemetrySerializer.DeserializeAsync(new TwoReadsStream(utf8, split), OptionsWith<Log>()),
+                    Splitting.TwoSegments => TelemetrySerialization.DeserializeAsync(PipeReader.Create(TwoSegments(utf8, split)), OptionsWith<Log>()),
+                    Splitting.TwoReads => TelemetrySerialization.DeserializeAsync(new TwoReadsStream(utf8, split), OptionsWith<Log>()),
                     _ => throw new ArgumentOutOfRangeException(nameof(splitting))
                 };
 
@@ -292,7 +292,7 @@ namespace Forestry.Serialization.Xml.Tests
             byte[] utf8 = Encoding.UTF8.GetBytes(ByteOrderMark + document);
 
             // Act
-            List<Telemetry> telemetries = await ReadAllAsync(TelemetrySerializer.DeserializeAsync(new TwoReadsStream(utf8, split), OptionsWith<Log>()));
+            List<Telemetry> telemetries = await ReadAllAsync(TelemetrySerialization.DeserializeAsync(new TwoReadsStream(utf8, split), OptionsWith<Log>()));
 
             // Assert
             Assert.Equal([1, 2], telemetries.Select(telemetry => telemetry.AsType<Log>().LogKey));

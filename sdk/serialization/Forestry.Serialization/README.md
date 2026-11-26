@@ -74,7 +74,7 @@ telemetry, in document order; elements and members that match nothing are ignore
 DeserializeXmlOptions options = new();
 options.Telemetries.Add<Log>();
 
-foreach (Telemetry telemetry in TelemetrySerializer.Deserialize(xml, options))
+foreach (Telemetry telemetry in TelemetrySerialization.Deserialize(xml, options))
 {
     Log log = (Log)telemetry;
     // use log.LogKey and log.LogVolume, then let it go
@@ -91,7 +91,7 @@ gives the typed telemetry.
 several telemetry types come from one pass:
 
 ```csharp
-foreach (Telemetry telemetry in TelemetrySerializer.Deserialize(xml, options))
+foreach (Telemetry telemetry in TelemetrySerialization.Deserialize(xml, options))
 {
     if (telemetry.Is<Log>())
     {
@@ -116,7 +116,7 @@ A large document does not need to be in memory: `DeserializeAsync` reads a `Stre
 ```csharp
 await using FileStream file = File.OpenRead("harvest.hpr");
 
-await foreach (Telemetry telemetry in TelemetrySerializer.DeserializeAsync(file, options, cancellationToken))
+await foreach (Telemetry telemetry in TelemetrySerialization.DeserializeAsync(file, options, cancellationToken))
 {
     Log log = (Log)telemetry;
 }

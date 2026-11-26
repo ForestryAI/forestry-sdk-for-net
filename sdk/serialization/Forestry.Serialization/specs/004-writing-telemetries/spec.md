@@ -92,7 +92,7 @@ and see it used for writing.
 
 ### User Story 2 - Serialize telemetries to a Stream or a PipeWriter (Priority: P1)
 
-A developer hands telemetries and serialize options to `TelemetrySerializer` with a target: a
+A developer hands telemetries and serialize options to `TelemetrySerialization` with a target: a
 plain `Stream` (sync or async) or a plain `PipeWriter` (async only). Each telemetry is written
 whole through the format's telemetry writer; each member's value comes from the telemetry without
 boxing and is written by its resolved converter, which delegates to the writer. One telemetry or many can be serialized in one
@@ -229,7 +229,7 @@ the "ready" hook; repeat with an exception for "abandoned", and with a collectio
 
 **Serializing (US2)**
 
-- **FR-010**: `TelemetrySerializer` MUST serialize one telemetry, or a sequence of telemetries, to
+- **FR-010**: `TelemetrySerialization` MUST serialize one telemetry, or a sequence of telemetries, to
   a plain `Stream` synchronously and asynchronously, and to a plain `PipeWriter` asynchronously.
 - **FR-011**: The many-telemetries overloads MUST take telemetries one at a time from the sequence
   (a sequence for sync, an asynchronous sequence for async), so that serializing pairs with

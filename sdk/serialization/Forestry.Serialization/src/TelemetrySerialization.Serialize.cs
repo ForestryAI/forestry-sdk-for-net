@@ -5,7 +5,7 @@ using Forestry.Serialization.Writing;
 
 namespace Forestry.Serialization
 {
-    public static partial class TelemetrySerializer
+    public static partial class TelemetrySerialization
     {
         /// <summary>
         /// Bytes gathered before they are handed to the target when many telemetries are serialized in one

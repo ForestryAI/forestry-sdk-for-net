@@ -7,7 +7,7 @@ namespace Forestry.Serialization
     /// Entry points: deserialize a document into telemetries of the telemetry types added to a format's options
     /// (research R3). The format is chosen by the options' type
     /// </summary>
-    public static partial class TelemetrySerializer
+    public static partial class TelemetrySerialization
     {
         /// <summary>
         /// Telemetries from a document in memory, enumerated once: the format's telemetry enumerator is created when

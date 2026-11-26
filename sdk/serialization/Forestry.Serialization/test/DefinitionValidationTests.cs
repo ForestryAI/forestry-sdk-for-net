@@ -10,7 +10,7 @@ namespace Forestry.Serialization.Tests
     /// Test shells written before any code (C4); they compile once US1's implementation (T030-T039)
     /// declares the surface they assume. For the review gate (T029), the assumed surface:
     /// <list type="bullet">
-    /// <item><c>TelemetrySerializer.Deserialize(string, DeserializeOptions)</c> validates the added telemetry types and
+    /// <item><c>TelemetrySerialization.Deserialize(string, DeserializeOptions)</c> validates the added telemetry types and
     /// throws <see cref="InvalidOperationException"/>, naming the class, before it returns, so before any
     /// byte is read: <see cref="TestingDeserializeOptions"/> cannot read a document, so reaching its
     /// enumerator would throw <see cref="NotSupportedException"/> instead.</item>
@@ -195,7 +195,7 @@ namespace Forestry.Serialization.Tests
         {
             // Arrange + Act
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
-                () => TelemetrySerializer.Deserialize("<Root />", new TestingDeserializeOptions()));
+                () => TelemetrySerialization.Deserialize("<Root />", new TestingDeserializeOptions()));
 
             // Assert
             Assert.Contains("telemetry type", exception.Message, StringComparison.OrdinalIgnoreCase);
@@ -212,7 +212,7 @@ namespace Forestry.Serialization.Tests
         {
             // Arrange + Act
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
-                () => TelemetrySerializer.Deserialize("<Root />", OptionsWith<LogWithNestedProperty>()));
+                () => TelemetrySerialization.Deserialize("<Root />", OptionsWith<LogWithNestedProperty>()));
 
             // Assert
             Assert.Contains(nameof(LogWithNestedProperty), exception.Message);
@@ -233,7 +233,7 @@ namespace Forestry.Serialization.Tests
         {
             // Arrange + Act
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
-                () => TelemetrySerializer.Deserialize("<Root />", OptionsWith<LogWithParameters>()));
+                () => TelemetrySerialization.Deserialize("<Root />", OptionsWith<LogWithParameters>()));
 
             // Assert
             Assert.Contains(nameof(LogWithParameters), exception.Message);
@@ -247,7 +247,7 @@ namespace Forestry.Serialization.Tests
         {
             // Arrange + Act
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
-                () => TelemetrySerializer.Deserialize("<Root />", OptionsWith<LogWithTwoPublicConstructors>()));
+                () => TelemetrySerialization.Deserialize("<Root />", OptionsWith<LogWithTwoPublicConstructors>()));
 
             // Assert
             Assert.Contains(nameof(LogWithTwoPublicConstructors), exception.Message);
@@ -259,7 +259,7 @@ namespace Forestry.Serialization.Tests
         {
             // Arrange + Act
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
-                () => TelemetrySerializer.Deserialize("<Root />", OptionsWith<LogWithPrivateConstructor>()));
+                () => TelemetrySerialization.Deserialize("<Root />", OptionsWith<LogWithPrivateConstructor>()));
 
             // Assert
             Assert.Contains(nameof(LogWithPrivateConstructor), exception.Message);
@@ -277,7 +277,7 @@ namespace Forestry.Serialization.Tests
         {
             // Arrange + Act
             InvalidOperationException exception = Assert.Throws<InvalidOperationException>(
-                () => TelemetrySerializer.Deserialize("<Root />", OptionsWith<LogWithTwoMarkedConstructors>()));
+                () => TelemetrySerialization.Deserialize("<Root />", OptionsWith<LogWithTwoMarkedConstructors>()));
 
             // Assert
             Assert.Contains(nameof(LogWithTwoMarkedConstructors), exception.Message);

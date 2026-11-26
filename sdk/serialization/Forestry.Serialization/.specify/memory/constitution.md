@@ -10,7 +10,7 @@ Workflow). Terms are defined under Definitions.
 
 - **Covers**: Architecture
 - **Rule**: The serialization package MUST NOT reference any format package. It owns what is
-  shared by every format, in both directions: the entry points (`TelemetrySerializer`), the
+  shared by every format, in both directions: the entry points (`TelemetrySerialization`), the
   abstract options (`DeserializeOptions`, `SerializeOptions`), the enumerators and buffering, type,
   property and parameter definitions, converters (`Read` and `Write`), the abstract
   `TelemetryWriter`, policies, and `Telemetry`. A format package references it, extends the
@@ -196,7 +196,7 @@ Workflow). Terms are defined under Definitions.
 - **Deserialize**: Read a document in a format into telemetries (flattening).
 - **Serialize**: Write telemetries out in a format.
 - **Serialization**: Both directions together: the package, this constitution and
-  `TelemetrySerializer`.
+  `TelemetrySerialization`.
 - **Document**: The input: one file or stream in one format (e.g. an HPR file in XML).
 - **Format**: The encoding a document is read from or telemetries are written to (XML and JSON
   Lines now, Parquet later), handled by a format package.
@@ -282,6 +282,9 @@ Workflow). Terms are defined under Definitions.
     frames telemetries through, so a format or developer customizes strings, booleans and custom
     values in one class; it replaces "converters write plain bytes through `IBufferWriter<byte>`"
     in C0 and the Object converter definition.
+  - Renamed 2026-11-26, before merge (developer, #137): the static entry class `TelemetrySerializer`
+    becomes `TelemetrySerialization`, named for the package and both directions, as its options
+    base `TelemetrySerializationOptions`.
 
 - **3.1.1** (2026-11-25, agreed by the developer in #142, takes effect on merge to `main`). Reason:
   the package is renamed Forestry.Serialization, and *Row* is renamed *Telemetry*: what forestry

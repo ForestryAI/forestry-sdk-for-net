@@ -18,7 +18,9 @@ confirms it (C5).
   serializing from telemetries to a format; definitions and converters are what they share.
   `TypeDefinition.Create` and `PropertyDefinition.Create` today take `DeserializeOptions`; they
   move to the base, so the flat rule (R32) and converter resolution (R33) are enforced by the same
-  code both ways. The name mirrors `JsonSerializerOptions` next to `TelemetrySerializer`.
+  code both ways. The names follow the package and both directions (developer, 2026-11-26): the static class is
+  `TelemetrySerialization` (it was `TelemetrySerializer`, named in #142 after System.Text.Json's
+  `JsonSerializer`) and its options base `TelemetrySerializationOptions`.
 - **Policies**: stay on `DeserializeOptions`. Definition policies choose members while reading;
   writing writes every member the type definition maps. Member choice for writing is not needed
   for the milestone and is left out (a later spec can add it to the base).
@@ -232,7 +234,7 @@ confirms it (C5).
     `Dispose`/`DisposeAsync` on the stream completes without an exception if not yet completed.
 - **Names**: `MonitoringCollectionStream` and `MonitoringCollectionPipeWriter` follow
   `MonitoringCollectionOptions` (clarification). To be confirmed with the developer.
-- **Rationale**: An interface lets `TelemetrySerializer` recognize both by type
+- **Rationale**: An interface lets `TelemetrySerialization` recognize both by type
   (`utf8 is ICollectionWriter`) while each derives from its own BCL base (C# has no multiple
   inheritance). Public and non-sealed so monitoring formatters override them (FR-018).
 - **Alternatives considered**: one abstract base (impossible across `Stream` and `PipeWriter`);
@@ -242,7 +244,7 @@ confirms it (C5).
 
 - **Decision**: After the writer's `WriteEndTelemetry` for a whole telemetry, once its bytes have been
   handed to the target (written to the `Stream`, or advanced in the `PipeWriter`),
-  `TelemetrySerializer` calls `OnTelemetryWritten()` when the target is an `ICollectionWriter`.
+  `TelemetrySerialization` calls `OnTelemetryWritten()` when the target is an `ICollectionWriter`.
   `IsFull` is evaluated against `Sequence` and `BytesWritten` only then (FR-019, FR-021).
 - **Rationale**: Converters write several buffers per telemetry, so only the serializer knows the
   boundary. For a `Stream` target with a many-telemetries buffer, the serializer writes the buffer
@@ -284,7 +286,7 @@ confirms it (C5).
 
 - **Decision**: In `Forestry.Serialization.Xml.Tests`, next to the existing memory tests
   (`MemoryTests`, which measure heap growth for reading): a `foreach` over
-  `TelemetrySerializer.Deserialize` of a generated document serializes each telemetry into one
+  `TelemetrySerialization.Deserialize` of a generated document serializes each telemetry into one
   stream that discards bytes but counts them (a collection stream over `Stream.Null`), comparing
   heap growth for N and 10×N telemetries and asserting the sequence (FR-028, SC-005). It needs the
   string test format, so that fixture is shared as a linked test source file (or a small

@@ -10,7 +10,7 @@ constitution 4.0.0.
 Add the writing side to Forestry.Serialization. Converters gain `Write` next to `Read` (renamed
 from `Convert`). A common options base, `TelemetrySerializationOptions`, holds the telemetry types,
 converters and definitions that `DeserializeOptions` and a new `SerializeOptions` share.
-`TelemetrySerializer.Serialize`/`SerializeAsync` write one telemetry or a sequence to a caller's
+`TelemetrySerialization.Serialize`/`SerializeAsync` write one telemetry or a sequence to a caller's
 `Stream` (sync and async, through a per-call pooled buffer) or `PipeWriter` (async, no copy),
 never disposing or completing it. A format supplies a `TelemetryWriter` that converters delegate to by kind; the
 core walks the definitions with compiled getters. Opt-in collection writers,
@@ -63,7 +63,7 @@ a string test format, and the package README.
 
 | # | Principle | Check | Result |
 |---|---|---|---|
-| C0 | Format-agnostic serialization | Core owns options base, definitions, converters, getters, `TelemetrySerializer`, collection writers; formats subclass the abstract `TelemetryWriter` (R49), which converters delegate to; C0 revised before merge to allow it. No format reference. | Pass |
+| C0 | Format-agnostic serialization | Core owns options base, definitions, converters, getters, `TelemetrySerialization`, collection writers; formats subclass the abstract `TelemetryWriter` (R49), which converters delegate to; C0 revised before merge to allow it. No format reference. | Pass |
 | C1 | Partial deserialization | Reading unchanged. | Pass |
 | C2 | Single pass flattening | Reading unchanged; writing never re-reads (R55's `foreach`). | Pass |
 | C3 | Tested through a real format package | Writing tested in this package through the string test format over a `Stream` (R54); reading still through XML. | Pass |
@@ -105,7 +105,7 @@ Forestry.Serialization/src/
 ├── TelemetrySerializationOptions.Caching.cs # new: frozen definitions, converter resolution (R44)
 ├── DeserializeOptions.cs                  # derives from the base; reading-only members stay
 ├── SerializeOptions.cs                    # new: writing options, DefaultCollectionOptions
-├── TelemetrySerializer.Serialize.cs       # new: Serialize/SerializeAsync overloads (R47, R48)
+├── TelemetrySerialization.Serialize.cs       # new: Serialize/SerializeAsync overloads (R47, R48)
 ├── Converters/
 │   ├── Converter.OfType.cs                # Convert -> Read; virtual Write (R45)
 │   └── Primitive/*.cs                     # Write overrides

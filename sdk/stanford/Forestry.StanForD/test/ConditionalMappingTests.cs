@@ -32,7 +32,7 @@ namespace Forestry.StanForD.Tests
     public sealed class ConditionalMappingTests
     {
         private static List<Telemetry> Read(string xml, Action<HarvestingOptions>? configure = null) =>
-            TelemetrySerializer.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting(configure)).ToList();
+            TelemetrySerialization.Deserialize(xml, new DeserializeXmlOptions().AddHarvesting(configure)).ToList();
 
         /// <summary>
         /// The first log of stem 619254, which carries every measurement
