@@ -101,11 +101,16 @@ specs/004-writing-telemetries/
 
 ```text
 Forestry.Serialization/src/
-├── TelemetrySerializationOptions.cs       # new: common base, members and hooks (R44)
-├── TelemetrySerializationOptions.Caching.cs # new: frozen definitions, converter resolution (R44)
-├── DeserializeOptions.cs                  # derives from the base; reading-only members stay
-├── SerializeOptions.cs                    # new: writing options, DefaultCollectionOptions
-├── TelemetrySerialization.Serialize.cs       # new: Serialize/SerializeAsync overloads (R47, R48)
+├── Serialization/                         # entry points and options; namespace Forestry.Serialization
+│   ├── TelemetrySerialization.cs          # the class and its docs
+│   ├── TelemetrySerialization.Read.cs     # shared reading: the enumerables
+│   ├── TelemetrySerialization.Read.Memory.cs / .Read.String.cs / .Read.Stream.cs / .Read.Pipe.cs
+│   ├── TelemetrySerialization.Write.cs    # new: shared writing: walk, writer, flushing (R48, R49)
+│   ├── TelemetrySerialization.Write.Stream.cs / .Write.Pipe.cs   # new: Serialize/SerializeAsync (R47, R48)
+│   ├── TelemetrySerializationOptions.cs   # new: common base, members and hooks (R44)
+│   ├── TelemetrySerializationOptions.Caching.cs # new: frozen definitions, converter resolution (R44)
+│   ├── DeserializeOptions.cs / DeserializeOptions.Caching.cs   # derive from the base; reading-only
+│   └── SerializeOptions.cs                # new: writing options, DefaultCollectionOptions
 ├── Converters/
 │   ├── Converter.OfType.cs                # Convert -> Read; virtual Write (R45)
 │   └── Primitive/*.cs                     # Write overrides
@@ -132,7 +137,11 @@ Forestry.Serialization.Xml/test/SerializeMemoryTests.cs           # C8 foreach (
 ../stanford/Forestry.StanForD/src/Converters/StanForDEnumConverter.cs # Convert -> Read
 ```
 
-**Structure Decision**: Writing types live in a new `Writing` folder and namespace
+**Structure Decision**: Entry points and options live in a `Serialization` folder that keeps the root namespace
+`Forestry.Serialization` (developer, 2026-11-26), the one folder that does not add a sub-namespace:
+reading and writing are split per source and target (`TelemetrySerialization.Read.*.cs`,
+`TelemetrySerialization.Write.*.cs`), with shared plumbing in `.Read.cs` and `.Write.cs`. There is no
+`Write.String`: writing has no string target. Writing types live in a new `Writing` folder and namespace
 `Forestry.Serialization.Writing`, mirroring `Reading`; `SerializeOptions` and the base sit next to
 `DeserializeOptions` in the root namespace.
 

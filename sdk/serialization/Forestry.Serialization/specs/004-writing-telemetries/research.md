@@ -49,6 +49,10 @@ confirms it (C5).
   hooks in `TelemetrySerializationOptions.cs`, the frozen definitions and converter resolution in
   `TelemetrySerializationOptions.Caching.cs`. `FormatConverters` stays on the base: reading uses it
   (XML booleans), and a writing format can still convert a type as a whole.
+- **Folder** (developer, 2026-11-26): the entry points and all options files live in `src/Serialization/`
+  with the root namespace kept; reading and writing are split per source and target
+  (`TelemetrySerialization.Read.Memory|String|Stream|Pipe.cs`, `TelemetrySerialization.Write.Stream|Pipe.cs`),
+  with shared plumbing in `.Read.cs` and `.Write.cs`.
 - **Public ripples (breaking, in the changelog)**: `ConverterFactory.CreateConverter(Type,
   TelemetrySerializationOptions)` (was `DeserializeOptions`), `TypeDefinition.Options` typed as the
   base.
