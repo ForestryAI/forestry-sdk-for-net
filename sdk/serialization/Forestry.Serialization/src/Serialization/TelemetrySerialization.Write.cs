@@ -37,6 +37,18 @@ namespace Forestry.Serialization
         }
 
         /// <summary>
+        /// A whole telemetry reached <paramref name="target"/>: a collection writer raises its sequence (R52)
+        /// </summary>
+        /// <param name="target"></param>
+        private static void TelemetryWritten(object target)
+        {
+            if (target is ICollectionWriterSequence collection)
+            {
+                collection.OnTelemetryWritten();
+            }
+        }
+
+        /// <summary>
         /// The format's writer for one call, writing to <paramref name="output"/>
         /// </summary>
         /// <param name="options"></param>

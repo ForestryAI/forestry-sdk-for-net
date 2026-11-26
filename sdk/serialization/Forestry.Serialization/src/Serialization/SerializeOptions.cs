@@ -22,6 +22,25 @@ namespace Forestry.Serialization
         }
 
         /// <summary>
+        /// The collection settings used when a collection writer is created without its own; a format can set
+        /// its own default here. <see cref="MonitoringCollectionOptions.Default"/> until set; locked with the
+        /// options (spec 004 FR-026)
+        /// </summary>
+        /// <exception cref="InvalidOperationException">The options are read-only</exception>
+        public MonitoringCollectionOptions DefaultCollectionOptions
+        {
+            get => _defaultCollectionOptions;
+            set
+            {
+                ArgumentNullException.ThrowIfNull(value);
+                ThrowingAssertNotReadOnly();
+                _defaultCollectionOptions = value;
+            }
+        }
+
+        private MonitoringCollectionOptions _defaultCollectionOptions = MonitoringCollectionOptions.Default;
+
+        /// <summary>
         /// The format's writer: how a telemetry is framed and how each value is represented. Called once per
         /// serialize call, since a writer keeps state between the telemetries of a call (e.g. whether a member
         /// was written). Protected, so a format package needs no access to the core's internals (research R49)

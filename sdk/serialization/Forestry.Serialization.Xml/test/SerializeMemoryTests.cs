@@ -1,5 +1,6 @@
 using System.Text;
 using Forestry.Serialization.Tests.Fixtures;
+using Forestry.Serialization.Writing;
 using Xunit;
 using Log = Forestry.Serialization.Xml.Tests.Fixtures.Log;
 
@@ -12,9 +13,8 @@ namespace Forestry.Serialization.Xml.Tests
     /// <remarks>
     /// Test shell written before any code (C4). It lives here, not in the core's tests, because it reads a
     /// document, which needs a real format reader (C3). It writes with the core tests' string test format,
-    /// linked into this project (<see cref="TestingSerializeOptions"/>), into a stream that keeps nothing
-    /// and counts the lines it is given, one per telemetry. When US3 adds <c>MonitoringCollectionStream</c>,
-    /// this test can count through its <c>Sequence</c> instead (T046).
+    /// linked into this project (<see cref="TestingSerializeOptions"/>), into a <c>MonitoringCollectionStream</c>
+    /// over <see cref="Stream.Null"/>, which keeps nothing and counts the telemetries (<c>Sequence</c>, US3).
     /// <para>
     /// Measured as in <see cref="MemoryTests"/>: live heap from the first telemetry to the last, after the
     /// document is generated, in the same collection so it never runs beside other tests, and as a
@@ -61,7 +61,7 @@ namespace Forestry.Serialization.Xml.Tests
             readOptions.Telemetries.Add<Log>();
             TestingSerializeOptions writeOptions = new();
             writeOptions.Telemetries.Add<Log>();
-            LineCountingStream output = new();
+            using MonitoringCollectionStream output = new(Stream.Null);
 
             long first = 0;
             int read = 0;
@@ -80,7 +80,7 @@ namespace Forestry.Serialization.Xml.Tests
             long last = LiveBytes();
 
             Assert.Equal(count, read);
-            Assert.Equal(count, output.Lines);
+            Assert.Equal(count, output.Sequence);
 
             return last - first;
         }
@@ -116,41 +116,5 @@ namespace Forestry.Serialization.Xml.Tests
             return stream.ToArray();
         }
 
-        /// <summary>
-        /// A write-only stream that keeps nothing and counts new lines, one per telemetry in the string
-        /// test format
-        /// </summary>
-        private sealed class LineCountingStream : Stream
-        {
-            public long Lines { get; private set; }
-
-            public override bool CanRead => false;
-
-            public override bool CanSeek => false;
-
-            public override bool CanWrite => true;
-
-            public override long Length => throw new NotSupportedException();
-
-            public override long Position
-            {
-                get => throw new NotSupportedException();
-                set => throw new NotSupportedException();
-            }
-
-            public override void Write(ReadOnlySpan<byte> buffer) => Lines += buffer.Count((byte)'\n');
-
-            public override void Write(byte[] buffer, int offset, int count) => Write(buffer.AsSpan(offset, count));
-
-            public override void Flush()
-            {
-            }
-
-            public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
-
-            public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
-
-            public override void SetLength(long value) => throw new NotSupportedException();
-        }
     }
 }

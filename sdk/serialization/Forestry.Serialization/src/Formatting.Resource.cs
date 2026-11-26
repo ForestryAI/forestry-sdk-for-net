@@ -57,6 +57,8 @@ namespace Forestry.Serialization
 
         internal static string StreamCannotWrite => GetResourceString(nameof(StreamCannotWrite), @"The stream cannot be written to.");
 
+        internal static string CollectionCompleted => GetResourceString(nameof(CollectionCompleted), @"The collection is completed: it takes no more bytes.");
+
         internal static string NoConverter => GetResourceString(nameof(NoConverter), @"No converter handles type '{0}'.");
 
         internal static string ConverterCannotWrite => GetResourceString(nameof(ConverterCannotWrite), @"Converter '{0}' only reads values of type '{1}': override Write to write them.");

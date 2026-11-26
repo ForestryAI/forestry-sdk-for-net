@@ -9,6 +9,11 @@ namespace Forestry.Serialization.Tests.Fixtures
     public sealed class RecordingCollectionStream(Stream inner, MonitoringCollectionOptions? options = null) : MonitoringCollectionStream(inner, options)
     {
         /// <summary>
+        /// The inner stream, to read its length when completed
+        /// </summary>
+        private readonly Stream _inner = inner;
+
+        /// <summary>
         /// Whether <see cref="OnCompleted"/> ran
         /// </summary>
         public bool Completed { get; private set; }
@@ -27,7 +32,7 @@ namespace Forestry.Serialization.Tests.Fixtures
         {
             Completed = true;
             CompletedWith = exception;
-            InnerLengthWhenCompleted = inner.CanSeek ? inner.Length : -1;
+            InnerLengthWhenCompleted = _inner.CanSeek ? _inner.Length : -1;
         }
     }
 

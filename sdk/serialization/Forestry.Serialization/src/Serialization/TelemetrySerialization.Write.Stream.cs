@@ -30,6 +30,7 @@ namespace Forestry.Serialization
 
             WriteTelemetry(telemetry, definition, writer);
             utf8.Write(buffer.WrittenSpan);
+            TelemetryWritten(utf8);
             utf8.Flush();
         }
 
@@ -54,16 +55,19 @@ namespace Forestry.Serialization
 
             using PooledBufferWriter buffer = new();
             TelemetryWriter writer = WriterFor(options, buffer);
+            ICollectionWriterSequence? collection = utf8 as ICollectionWriterSequence;
 
             foreach (Telemetry telemetry in telemetries)
             {
                 ArgumentNullException.ThrowIfNull(telemetry, nameof(telemetries));
                 WriteTelemetry(telemetry, options.ThrowingGetTypeDefinition(telemetry.GetType()), writer);
 
-                if (buffer.WrittenCount >= FlushThreshold)
+                // A collection stream gets each telemetry as it ends, so its counts are exact at every boundary (R52)
+                if (collection is not null || buffer.WrittenCount >= FlushThreshold)
                 {
                     utf8.Write(buffer.WrittenSpan);
                     buffer.Clear();
+                    collection?.OnTelemetryWritten();
                 }
             }
 
@@ -104,6 +108,7 @@ namespace Forestry.Serialization
 
             WriteTelemetry(telemetry, definition, writer);
             await utf8.WriteAsync(buffer.WrittenMemory, cancellationToken).ConfigureAwait(false);
+            TelemetryWritten(utf8);
             await utf8.FlushAsync(cancellationToken).ConfigureAwait(false);
         }
 
@@ -128,6 +133,7 @@ namespace Forestry.Serialization
 
             using PooledBufferWriter buffer = new();
             TelemetryWriter writer = WriterFor(options, buffer);
+            ICollectionWriterSequence? collection = utf8 as ICollectionWriterSequence;
 
             await foreach (Telemetry telemetry in telemetries.WithCancellation(cancellationToken).ConfigureAwait(false))
             {
@@ -135,10 +141,12 @@ namespace Forestry.Serialization
                 ArgumentNullException.ThrowIfNull(telemetry, nameof(telemetries));
                 WriteTelemetry(telemetry, options.ThrowingGetTypeDefinition(telemetry.GetType()), writer);
 
-                if (buffer.WrittenCount >= FlushThreshold)
+                // A collection stream gets each telemetry as it ends, so its counts are exact at every boundary (R52)
+                if (collection is not null || buffer.WrittenCount >= FlushThreshold)
                 {
                     await utf8.WriteAsync(buffer.WrittenMemory, cancellationToken).ConfigureAwait(false);
                     buffer.Clear();
+                    collection?.OnTelemetryWritten();
                 }
             }
 

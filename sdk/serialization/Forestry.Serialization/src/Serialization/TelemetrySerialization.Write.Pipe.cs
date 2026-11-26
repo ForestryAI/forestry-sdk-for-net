@@ -30,6 +30,7 @@ namespace Forestry.Serialization
             TelemetryWriter writer = WriterFor(options, utf8);
 
             WriteTelemetry(telemetry, definition, writer);
+            TelemetryWritten(utf8);
             await FlushAsync(utf8, cancellationToken).ConfigureAwait(false);
         }
 
@@ -56,6 +57,7 @@ namespace Forestry.Serialization
                 cancellationToken.ThrowIfCancellationRequested();
                 ArgumentNullException.ThrowIfNull(telemetry, nameof(telemetries));
                 WriteTelemetry(telemetry, options.ThrowingGetTypeDefinition(telemetry.GetType()), writer);
+                TelemetryWritten(utf8);
 
                 if (!utf8.CanGetUnflushedBytes || utf8.UnflushedBytes >= FlushThreshold)
                 {
