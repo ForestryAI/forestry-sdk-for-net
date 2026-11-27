@@ -219,15 +219,15 @@ durations (quickstart 6).
 
 ### Review gate
 
-- [ ] T063 [US4] **Test review gate**: the developer reviews T058-T062 on the board (#152) before T064 (C4)
+- [x] T063 [US4] **Test review gate**: the developer reviews T058-T062 on the board (#152) before T064 (C4) (2026-11-27: passed, no changes)
 
 ### Implementation for User Story 4
 
-- [ ] T064 [P] [US4] `XmlEnumFormAttribute` in `Forestry.Serialization.Xml/src/Attributes/XmlEnumFormAttribute.cs`: `[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = false)]`, `Form`
-- [ ] T065 [P] [US4] `XmlEnumConverterFactory` (`UsesMember => true`, default `Name`, one converter per enum type and form) and internal sealed `XmlEnumConverter<TEnum> : EnumConverter<TEnum>` in `Forestry.Serialization.Xml/src/Converters/XmlEnumConverter.cs`
-- [ ] T066 [P] [US4] `XmlTimeSpanConverter` in `Forestry.Serialization.Xml/src/Converters/XmlTimeSpanConverter.cs`: a parser over the UTF-8 bytes (optional `-`, `P`, optional `nD`, optional `T` followed by at least one of `nH`, `nM`, `n[.n]S`; at least one part; `Y`, or `M` before `T`, fail), `checked` arithmetic in ticks, `FormatException` with the text; `Write` delegates to the writer
-- [ ] T067 [US4] Register both in `s_formatConverters` in `Forestry.Serialization.Xml/src/DeserializeXmlOptions.cs` beside `XmlBooleanConverter`
-- [ ] T068 [US4] Run `dotnet test` on `Forestry.Serialization.Xml/test` and `../stanford/Forestry.StanForD/test`: T059-T062 pass, every earlier test green (StanForD's own converter still wins); then the performance gate
+- [x] T064 [P] [US4] `XmlEnumFormAttribute` in `Forestry.Serialization.Xml/src/Attributes/XmlEnumFormAttribute.cs`: `[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = false)]`, `Form` (2026-11-27: done)
+- [x] T065 [P] [US4] `XmlEnumConverterFactory` (`UsesMember => true`, default `Name`, one converter per enum type and form) and internal sealed `XmlEnumConverter<TEnum> : EnumConverter<TEnum>` in `Forestry.Serialization.Xml/src/Converters/XmlEnumConverter.cs` (2026-11-27: the same shape as JSON Lines' factory; names read ignoring case through the core's `EnumConverter<TEnum>`)
+- [x] T066 [P] [US4] `XmlTimeSpanConverter` in `Forestry.Serialization.Xml/src/Converters/XmlTimeSpanConverter.cs`: a parser over the UTF-8 bytes (optional `-`, `P`, optional `nD`, optional `T` followed by at least one of `nH`, `nM`, `n[.n]S`; at least one part; `Y`, or `M` before `T`, fail), `checked` arithmetic in ticks, `FormatException` with the text; `Write` delegates to the writer (2026-11-27: designators only in the order D, T, H, M, S, each once; a fraction only on seconds; a fraction finer than a tick or a duration beyond `TimeSpan` also fails, never rounded; the refusal shows at most 64 bytes of the text)
+- [x] T067 [US4] Register both in `s_formatConverters` in `Forestry.Serialization.Xml/src/DeserializeXmlOptions.cs` beside `XmlBooleanConverter` (2026-11-27: `XmlBooleanConverter`, `XmlTimeSpanConverter`, `XmlEnumConverterFactory`)
+- [x] T068 [US4] Run `dotnet test` on `Forestry.Serialization.Xml/test` and `../stanford/Forestry.StanForD/test`: T059-T062 pass, every earlier test green (StanForD's own converter still wins); then the performance gate (2026-11-27: XML 212 (188 + 24), StanForD 70 + 2 skipped, and 72 with `STANFORD_HPR_FOLDER` set; core 166, JSON Lines 15; XML performance 5 passed; the core has no performance tests)
 
 **Checkpoint**: XML documents with enums as numbers and durations as `xs:duration` read.
 

@@ -12,7 +12,7 @@ namespace Forestry.Serialization.Xml
     /// </summary>
     public sealed class DeserializeXmlOptions : DeserializeOptions
     {
-        private static readonly Converter[] s_formatConverters = [new XmlBooleanConverter()];
+        private static readonly Converter[] s_formatConverters = [new XmlBooleanConverter(), new XmlTimeSpanConverter(), new XmlEnumConverterFactory()];
 
         private XmlAssociation? _association;
 
@@ -44,7 +44,7 @@ namespace Forestry.Serialization.Xml
         internal IReadOnlyDictionary<Type, string> ElementTexts => _elementTexts ?? [];
 
         /// <summary>
-        /// XML defaults, e.g. XML Schema booleans
+        /// XML defaults: XML Schema booleans and durations, and enums as names or, with <see cref="XmlEnumFormAttribute"/>, numbers
         /// </summary>
         protected override IEnumerable<Converter> FormatConverters => s_formatConverters;
 
