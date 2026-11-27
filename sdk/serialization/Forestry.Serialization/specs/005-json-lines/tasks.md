@@ -191,12 +191,12 @@ compared; the same over real documents (quickstart 10-11).
 
 ### Review gate
 
-- [ ] T055 [US5] **Test review gate**: the developer reviews T051-T054 on the board (#153) before T056 (C4)
+- [x] T055 [US5] **Test review gate**: the developer reviews T051-T054 on the board (#153) before T056 (C4) (2026-11-27: passed, no changes)
 
 ### Implementation for User Story 5
 
-- [ ] T056 [US5] Make the round trip pass: fix whatever T053 and T054 reveal in the stories' code (no new feature code expected); record each finding in the story it belongs to
-- [ ] T057 [US5] Run `dotnet test` on all four solutions (core, XML, JSON Lines, StanForD), and locally with `STANFORD_HPR_FOLDER` set: everything green; SC-006 counts recorded
+- [x] T056 [US5] Make the round trip pass: fix whatever T053 and T054 reveal in the stories' code (no new feature code expected); record each finding in the story it belongs to (2026-11-27: nothing to fix; the fragment and 12 real documents make the round trip without a difference)
+- [x] T057 [US5] Run `dotnet test` on all four solutions (core, XML, JSON Lines, StanForD), and locally with `STANFORD_HPR_FOLDER` set: everything green; SC-006 counts recorded (2026-11-27: core 166, XML 188, JSON Lines 15, StanForD 70 + 2 skipped in CI; with `STANFORD_HPR_FOLDER` set, both real-document tests pass over 12 documents (975 `<Stem>`, 3694 `<Log>` elements))
 
 **Checkpoint**: the milestone works; writing performance work may start (C6).
 
