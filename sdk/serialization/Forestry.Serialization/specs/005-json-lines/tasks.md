@@ -121,14 +121,14 @@ compared (quickstart 5).
 
 ### Review gate
 
-- [ ] T029 [US2] **Test review gate**: the developer reviews T025-T028 on the board (#150) before T030 (C4)
+- [x] T029 [US2] **Test review gate**: the developer reviews T025-T028 on the board (#150) before T030 (C4) (developer, 2026-11-27: passed with no changes)
 
 ### Implementation for User Story 2
 
-- [ ] T030 [US2] `[EnumMemberName]` on `CuttingReason.GradeBreak` ("Grade break"), `PulpwoodGrade` ("Pulpwood grade"), `TopBreak` ("Top break"), `OtherManual` ("Other manual") in `../stanford/Forestry.StanForD/src/CuttingReason.cs`
-- [ ] T031 [US2] `StanForDEnumConverter<TEnum>` derives from `EnumConverter<TEnum>` with `EnumForm.Name` in `../stanford/Forestry.StanForD/src/Converters/StanForDEnumConverter.cs`: `Read` tries the base, then the text without spaces against `Members`' C# names ignoring case, else `FormatException` as today; no `Write` override; remove the "no enum converter yet" remark
-- [ ] T032 [US2] `AddHarvesting<TOptions>(this TOptions options) where TOptions : SerializeOptions` in `../stanford/Forestry.StanForD/src/HarvestingOptions.cs`: adds `Stem` and `Log` and the three StanForD enum converters; XML docs
-- [ ] T033 [US2] Run `dotnet test` on `../stanford/Forestry.StanForD/test` (and the core and XML suites): T025-T028 pass, every earlier test green
+- [x] T030 [US2] `[EnumMemberName]` on `CuttingReason.GradeBreak` ("Grade break"), `PulpwoodGrade` ("Pulpwood grade"), `TopBreak` ("Top break"), `OtherManual` ("Other manual") in `../stanford/Forestry.StanForD/src/CuttingReason.cs` (2026-11-27: done; the enum's doc comment now says texts with spaces are declared with the attribute)
+- [x] T031 [US2] `StanForDEnumConverter<TEnum>` derives from `EnumConverter<TEnum>` with `EnumForm.Name` in `../stanford/Forestry.StanForD/src/Converters/StanForDEnumConverter.cs`: `Read` tries the base, then the text without spaces against `Members`' C# names ignoring case, else `FormatException` as today; no `Write` override; remove the "no enum converter yet" remark (2026-11-27: the space-less fallback is a static C# name lookup ignoring case built from `Members`)
+- [x] T032 [US2] `AddHarvesting<TOptions>(this TOptions options) where TOptions : SerializeOptions` in `../stanford/Forestry.StanForD/src/HarvestingOptions.cs`: adds `Stem` and `Log` and the three StanForD enum converters; XML docs (2026-11-27: the enum converter registrations are shared with the deserialize `AddHarvesting` through a private `AddEnumConverters`)
+- [x] T033 [US2] Run `dotnet test` on `../stanford/Forestry.StanForD/test` (and the core and XML suites): T025-T028 pass, every earlier test green (2026-11-27: StanForD 68 + 1 skipped (46 + 22 new rows), core 166, XML 188, 0 warnings)
 
 **Checkpoint**: `Stem` and `Log` can be serialized in any format.
 
