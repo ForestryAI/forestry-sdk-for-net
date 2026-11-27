@@ -239,7 +239,7 @@ durations (quickstart 6).
 - [x] T070 [P] `Forestry.Serialization/README.md`: the new converters, `EnumConverter<TEnum>`, `[EnumMemberName]`, per-member factories, the new writer methods; `Forestry.Serialization.Xml/README.md`: `[XmlEnumForm]`, `xs:duration`; `../stanford/Forestry.StanForD/README.md`: serializing `Stem` and `Log` (2026-11-27: core: built-in converters, an Enums section (`EnumConverter<TEnum>`, `[EnumMemberName]`, `UsesMember` factories), the new writer methods, JSON Lines as the first format, status; XML: enums and `xs:duration` with an example; StanForD: a "Writing stems and logs" section with JSON Lines)
 - [x] T071 [P] `CHANGELOG.md` entries in the four packages (1.0.0-beta.1, unreleased) (2026-11-27: Features Added in all four, under 1.0.0-beta.1 (Unreleased))
 - [x] T072 Validate `quickstart.md` end to end; tick the checklists on #149-#153 and #138; reminder to the developer: add `build-test (Forestry.Serialization.JsonLines)` to the main ruleset's required checks before merging (2026-11-27: scenarios 1-11 each covered by a passing test class; the four solutions pass (core 166, XML 212, JSON Lines 15, StanForD 70 + 2 skipped, 72 with real documents); the JSON Lines README's example writes a file and its Tests and "Writing your own format" read lines back from a `MemoryStream`; no open checklist items on #138 or #149-#153; required-check reminder given)
-- [ ] T073 Pull request to `main` (the developer merges)
+- [x] T073 Pull request to `main` (the developer merges) (2026-11-27: #154)
 
 ---
 
