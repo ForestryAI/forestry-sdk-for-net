@@ -7,7 +7,7 @@ namespace Forestry.Serialization.JsonLines.Tests.Fixtures
     /// <summary>
     /// Serializing telemetries as JSON Lines into memory, and reading the lines back (spec 005 tasks.md T036)
     /// </summary>
-    internal static class JsonLines
+    internal static class JsonLinesOutput
     {
         /// <summary>
         /// JSON Lines options with <typeparamref name="TTelemetry"/> added

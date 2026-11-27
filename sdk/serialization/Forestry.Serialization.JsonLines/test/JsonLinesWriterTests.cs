@@ -51,10 +51,10 @@ namespace Forestry.Serialization.JsonLines.Tests
         public void Serialize_ForThreeTelemetries_ItShould_WriteThreeLinesOfOneObjectEach()
         {
             // Arrange
-            SerializeJsonLinesOptions options = JsonLines.OptionsWith<EveryKindTelemetry>();
+            SerializeJsonLinesOptions options = JsonLinesOutput.OptionsWith<EveryKindTelemetry>();
 
             // Act
-            string[] lines = JsonLines.Lines(options, EveryKindTelemetry.WithValues(1), EveryKindTelemetry.WithValues(2), EveryKindTelemetry.WithValues(3));
+            string[] lines = JsonLinesOutput.Lines(options, EveryKindTelemetry.WithValues(1), EveryKindTelemetry.WithValues(2), EveryKindTelemetry.WithValues(3));
 
             // Assert
             Assert.Equal(3, lines.Length);
@@ -73,11 +73,11 @@ namespace Forestry.Serialization.JsonLines.Tests
         public void Serialize_ForEveryMemberKind_ItShould_WriteEachAsItsJsonKindWithItsValue()
         {
             // Arrange
-            SerializeJsonLinesOptions options = JsonLines.OptionsWith<EveryKindTelemetry>();
+            SerializeJsonLinesOptions options = JsonLinesOutput.OptionsWith<EveryKindTelemetry>();
             EveryKindTelemetry telemetry = EveryKindTelemetry.WithValues();
 
             // Act
-            using JsonDocument line = JsonDocument.Parse(JsonLines.Lines(options, telemetry)[0]);
+            using JsonDocument line = JsonDocument.Parse(JsonLinesOutput.Lines(options, telemetry)[0]);
 
             // Assert
             JsonElement root = line.RootElement;
@@ -103,10 +103,10 @@ namespace Forestry.Serialization.JsonLines.Tests
         public void Serialize_ForMembersWithoutValues_ItShould_WriteNull()
         {
             // Arrange
-            SerializeJsonLinesOptions options = JsonLines.OptionsWith<EveryKindTelemetry>();
+            SerializeJsonLinesOptions options = JsonLinesOutput.OptionsWith<EveryKindTelemetry>();
 
             // Act
-            using JsonDocument line = JsonDocument.Parse(JsonLines.Lines(options, EveryKindTelemetry.WithNulls())[0]);
+            using JsonDocument line = JsonDocument.Parse(JsonLinesOutput.Lines(options, EveryKindTelemetry.WithNulls())[0]);
 
             // Assert
             JsonElement root = line.RootElement;
@@ -121,13 +121,13 @@ namespace Forestry.Serialization.JsonLines.Tests
         {
             // Arrange
             const string Text = "quote \" backslash \\ control \u0001 newline \n crlf \r\n åäö tree \U0001F332";
-            SerializeJsonLinesOptions options = JsonLines.OptionsWith<TextTelemetry>();
+            SerializeJsonLinesOptions options = JsonLinesOutput.OptionsWith<TextTelemetry>();
 
             // Act
-            byte[] bytes = JsonLines.Bytes(options, new TextTelemetry { Text = Text });
+            byte[] bytes = JsonLinesOutput.Bytes(options, new TextTelemetry { Text = Text });
 
             // Assert
-            string[] lines = JsonLines.Lines(bytes);
+            string[] lines = JsonLinesOutput.Lines(bytes);
             Assert.Single(lines);
             Assert.True(bytes.AsSpan().IndexOf("åäö"u8) >= 0, "åäö is written as plain UTF-8");
             using JsonDocument line = JsonDocument.Parse(lines[0]);
@@ -142,10 +142,10 @@ namespace Forestry.Serialization.JsonLines.Tests
         public async Task Serialize_ForEachTarget_ItShould_WriteTheSameBytesAndNeverCloseTheTarget(Target target)
         {
             // Arrange
-            SerializeJsonLinesOptions options = JsonLines.OptionsWith<EveryKindTelemetry>();
+            SerializeJsonLinesOptions options = JsonLinesOutput.OptionsWith<EveryKindTelemetry>();
             EveryKindTelemetry first = EveryKindTelemetry.WithValues(1);
             EveryKindTelemetry second = EveryKindTelemetry.WithNulls();
-            byte[] expected = JsonLines.Bytes(options, first, second);
+            byte[] expected = JsonLinesOutput.Bytes(options, first, second);
 
             // Act + Assert
             switch (target)
@@ -198,7 +198,7 @@ namespace Forestry.Serialization.JsonLines.Tests
         public void Serialize_IntoACollectionStream_ItShould_CountOneSequencePerLine()
         {
             // Arrange
-            SerializeJsonLinesOptions options = JsonLines.OptionsWith<EveryKindTelemetry>();
+            SerializeJsonLinesOptions options = JsonLinesOutput.OptionsWith<EveryKindTelemetry>();
             using MemoryStream memory = new();
             using MonitoringCollectionStream collection = new(memory, new MonitoringCollectionOptions { LeaveOpen = true });
 
@@ -211,7 +211,7 @@ namespace Forestry.Serialization.JsonLines.Tests
             // Assert
             Assert.Equal(3, collection.Sequence);
             Assert.Equal(memory.Length, collection.BytesWritten);
-            Assert.Equal(3, JsonLines.Lines(memory.ToArray()).Length);
+            Assert.Equal(3, JsonLinesOutput.Lines(memory.ToArray()).Length);
         }
 
         // T042 - US3-6 / FR-002d: names by default; a member marked for numbers is a number, per member
@@ -219,10 +219,10 @@ namespace Forestry.Serialization.JsonLines.Tests
         public void Serialize_ForTwoMembersOfOneEnumTypeOneMarkedForNumbers_ItShould_WriteEachInItsOwnForm()
         {
             // Arrange
-            SerializeJsonLinesOptions options = JsonLines.OptionsWith<EveryKindTelemetry>();
+            SerializeJsonLinesOptions options = JsonLinesOutput.OptionsWith<EveryKindTelemetry>();
 
             // Act
-            using JsonDocument line = JsonDocument.Parse(JsonLines.Lines(options, EveryKindTelemetry.WithValues())[0]);
+            using JsonDocument line = JsonDocument.Parse(JsonLinesOutput.Lines(options, EveryKindTelemetry.WithValues())[0]);
 
             // Assert
             JsonElement byName = line.RootElement.GetProperty("Shade");
@@ -241,7 +241,7 @@ namespace Forestry.Serialization.JsonLines.Tests
         public void Serialize_ForANonFiniteDouble_ItShould_ThrowNamingTheMemberAndTheValue(double ratio)
         {
             // Arrange
-            SerializeJsonLinesOptions options = JsonLines.OptionsWith<RatioTelemetry>();
+            SerializeJsonLinesOptions options = JsonLinesOutput.OptionsWith<RatioTelemetry>();
             using MemoryStream memory = new();
 
             // Act
@@ -258,7 +258,7 @@ namespace Forestry.Serialization.JsonLines.Tests
         public void Serialize_ForAConverterWritingThroughTheBufferMembers_ItShould_ThrowSayingToUseTheValueMethods()
         {
             // Arrange
-            SerializeJsonLinesOptions options = JsonLines.OptionsWith<CountTelemetry>(new DirectBufferInt32Converter());
+            SerializeJsonLinesOptions options = JsonLinesOutput.OptionsWith<CountTelemetry>(new DirectBufferInt32Converter());
             using MemoryStream memory = new();
 
             // Act
@@ -274,10 +274,10 @@ namespace Forestry.Serialization.JsonLines.Tests
         public void Serialize_ForAConverterWritingACompleteRawValue_ItShould_WriteIt()
         {
             // Arrange
-            SerializeJsonLinesOptions options = JsonLines.OptionsWith<CountTelemetry>(new RawInt32Converter("{\"a\":1}"));
+            SerializeJsonLinesOptions options = JsonLinesOutput.OptionsWith<CountTelemetry>(new RawInt32Converter("{\"a\":1}"));
 
             // Act
-            using JsonDocument line = JsonDocument.Parse(JsonLines.Lines(options, new CountTelemetry())[0]);
+            using JsonDocument line = JsonDocument.Parse(JsonLinesOutput.Lines(options, new CountTelemetry())[0]);
 
             // Assert
             Assert.Equal(1, line.RootElement.GetProperty("Count").GetProperty("a").GetInt32());
@@ -288,7 +288,7 @@ namespace Forestry.Serialization.JsonLines.Tests
         public void Serialize_ForAConverterWritingAnIncompleteRawValue_ItShould_Throw()
         {
             // Arrange
-            SerializeJsonLinesOptions options = JsonLines.OptionsWith<CountTelemetry>(new RawInt32Converter("{"));
+            SerializeJsonLinesOptions options = JsonLinesOutput.OptionsWith<CountTelemetry>(new RawInt32Converter("{"));
             using MemoryStream memory = new();
 
             // Act + Assert
