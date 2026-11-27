@@ -3,7 +3,7 @@
 **Spec**: [spec.md](spec.md) | **Plan**: [plan.md](plan.md) | **Date**: 2026-11-27
 
 Numbering continues from spec 004 (R44-R57). Each decision is a proposal until the developer
-confirms it (C5).
+confirms it (C5). **R58-R67 confirmed by the developer with no changes (2026-11-27, T001).**
 
 ## R58 - Choosing a converter per member
 
@@ -53,7 +53,7 @@ confirms it (C5).
 - **Rationale**: The developer asked for a base abstraction resolving the fields once, as
   System.Text.Json's `EnumConverter<T>` does with its name caches, but with the form given at
   creation instead of taken from a token kind, which XML has none of (clarification Q3).
-- **Spec change on confirmation**: the spec's edge case "an undefined value … written as its number"
+- **Spec change** (done on confirmation, T001): the spec's edge case "an undefined value … written as its number"
   contradicts US4's "a number fails" in `Name` form; refusing undefined values removes the
   contradiction. The edge case is rewritten once this is confirmed.
 - **Alternatives considered**: `Name` form also reading numbers (STJ's `AllowNumbers`): guesses the

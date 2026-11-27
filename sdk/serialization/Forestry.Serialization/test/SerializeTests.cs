@@ -202,6 +202,25 @@ namespace Forestry.Serialization.Tests
             Assert.Equal($"1;31.4;{FirstKey}\n", ReadBack(memory));
         }
 
+        // Spec 005 (developer, 2026-11-27): the string test format's delimiter is a setting, ";" by default
+        [Theory]
+        [InlineData(null, "1;Gran;31.4;")]
+        [InlineData("|", "1|Gran|31.4|")]
+        [InlineData(", ", "1, Gran, 31.4, ")]
+        public void Serialize_ForEachDelimiter_ItShould_WriteItBetweenMembers(string? delimiter, string expectedStart)
+        {
+            // Arrange
+            TestingSerializeOptions options = delimiter is null ? new() : new() { Delimiter = delimiter };
+            options.Telemetries.Add<Sample>();
+            using MemoryStream memory = new();
+
+            // Act
+            TelemetrySerialization.Serialize(First, memory, options);
+
+            // Assert
+            Assert.Equal($"{expectedStart}{FirstKey}\n", ReadBack(memory));
+        }
+
         // T016 - R49: the separator comes only after a written member, so an omitted first member leaves none
         [Theory]
         [InlineData(false, ";7\n")]

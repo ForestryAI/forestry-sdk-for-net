@@ -5,7 +5,8 @@ namespace Forestry.Serialization.Tests.Fixtures
 {
     /// <summary>
     /// The string test format (spec 004 tasks.md T012, research R49, R54): a telemetry is its members'
-    /// converter output joined by <c>;</c>, one telemetry per line, nothing escaped. A null member writes
+    /// converter output joined by <see cref="Delimiter"/> (<c>;</c> by default), one telemetry per line,
+    /// nothing escaped. A null member writes
     /// no value, or is left out when <see cref="OmitNulls"/> is set
     /// </summary>
     /// <remarks>
@@ -20,18 +21,34 @@ namespace Forestry.Serialization.Tests.Fixtures
         public bool OmitNulls { get; init; }
 
         /// <summary>
+        /// Written between members; <c>;</c> by default, as a format package defaults its own framing and a
+        /// test may set another (developer, 2026-11-27, spec 005 US1 shells)
+        /// </summary>
+        public string Delimiter
+        {
+            get => _delimiter;
+            init
+            {
+                ArgumentException.ThrowIfNullOrEmpty(value);
+                _delimiter = value;
+            }
+        }
+
+        private readonly string _delimiter = ";";
+
+        /// <summary>
         /// Called after each whole telemetry is written (from <c>WriteEndTelemetry</c>), to observe that
         /// telemetries are taken one at a time (T015) or to cancel part-way (T019)
         /// </summary>
         public Action? OnTelemetryWritten { get; init; }
 
-        protected override TelemetryWriter CreateWriter() => new LineTelemetryWriter(OmitNulls, OnTelemetryWritten);
+        protected override TelemetryWriter CreateWriter() => new LineTelemetryWriter(OmitNulls, OnTelemetryWritten, System.Text.Encoding.UTF8.GetBytes(Delimiter));
 
         /// <summary>
-        /// Nothing at the start, a new line at the end, <c>;</c> before every member but the first written;
+        /// Nothing at the start, a new line at the end, the delimiter before every member but the first written;
         /// values with the writer's defaults (plain UTF-8)
         /// </summary>
-        private sealed class LineTelemetryWriter(bool omitNulls, Action? onTelemetryWritten) : TelemetryWriter
+        private sealed class LineTelemetryWriter(bool omitNulls, Action? onTelemetryWritten, byte[] delimiter) : TelemetryWriter
         {
             /// <summary>
             /// Whether a member of the current telemetry was written, so the next one needs a separator
@@ -52,7 +69,7 @@ namespace Forestry.Serialization.Tests.Fixtures
             {
                 if (_wroteMember)
                 {
-                    WriteRaw(";"u8);
+                    WriteRaw(delimiter);
                 }
 
                 _wroteMember = true;

@@ -174,6 +174,44 @@ namespace Forestry.Serialization.Tests
             Assert.Equal(expected, Encoding.UTF8.GetString(output.WrittenSpan));
         }
 
+        // T012 - spec 005 R66: the base defaults write through the output, not through the writer's own
+        // IBufferWriter members, so a format refusing those (JSON Lines) does not break the defaults
+        [Fact]
+        public void BaseDefaults_ForAWriterRefusingDirectBufferUse_ItShould_StillWriteThroughTheOutput()
+        {
+            // Arrange
+            ArrayBufferWriter<byte> output = new();
+            RefusingTelemetryWriter writer = RefusingTelemetryWriter.Over(output);
+
+            // Act
+            ConverterRoundTrip.BuiltIn<int>().Write(7, writer);
+            ConverterRoundTrip.BuiltIn<string>().Write("Gran", writer);
+            ConverterRoundTrip.BuiltIn<Guid>().Write(new Guid("3cdb35d7-6108-4b19-8d30-d6dfd2c44e9b"), writer);
+            writer.WriteRaw("!"u8);
+
+            // Assert
+            Assert.Equal("7Gran3cdb35d7-6108-4b19-8d30-d6dfd2c44e9b!", Encoding.UTF8.GetString(output.WrittenSpan));
+        }
+
+        /// <summary>
+        /// A writer whose <see cref="IBufferWriter{T}"/> members throw, as JSON Lines' do (spec 005 R66)
+        /// </summary>
+        private sealed class RefusingTelemetryWriter : Writing.TelemetryWriter
+        {
+            public static RefusingTelemetryWriter Over(IBufferWriter<byte> output)
+            {
+                RefusingTelemetryWriter writer = new();
+                writer.Reset(output);
+                return writer;
+            }
+
+            public override Span<byte> GetSpan(int sizeHint = 0) => throw new NotSupportedException("refused");
+
+            public override Memory<byte> GetMemory(int sizeHint = 0) => throw new NotSupportedException("refused");
+
+            public override void Advance(int count) => throw new NotSupportedException("refused");
+        }
+
         private static void AssertRoundTrip<T>(Converter<T> converter, T value)
         {
             // Act

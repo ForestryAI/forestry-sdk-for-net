@@ -255,9 +255,9 @@ test over real documents runs when the real-documents folder is set.
 
 ### Edge Cases
 
-- An enum value that is not a defined member (e.g. a cast integer), with enums written as names:
-  the built-in enum converter still writes it, as its number, and reads a number back to the same
-  value.
+- An enum value that is not a defined member (e.g. a cast integer), written in name form: refused
+  when written, with an exception naming the value and the enum, as a value the form cannot
+  represent (R59, confirmed 2026-11-27). In number form it is written as its number.
 - An enum converter reads only the one form it was created with (name or number); it never
   guesses the form from the text.
 - A `[Flags]` enum value combining members: written and read as the combination's names (see

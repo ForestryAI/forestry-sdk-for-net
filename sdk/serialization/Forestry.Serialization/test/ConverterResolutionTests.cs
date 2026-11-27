@@ -53,5 +53,69 @@ namespace Forestry.Serialization.Tests
             Converter<int?> converter = Assert.IsAssignableFrom<Converter<int?>>(logKey.ResolvedConverter);
             Assert.Equal(-1, converter.Read("5"u8));
         }
+
+        /// <summary>
+        /// Spec 005 T011: the type definition of <see cref="EnumTelemetry"/> with
+        /// <see cref="MemberAwareEnumFactory"/> among the format converters, as a format package registers its
+        /// enum converter factory (R64, R65)
+        /// </summary>
+        private static TypeDefinition EnumTelemetryWithMemberAwareFactory(params Converter[] registered)
+        {
+            TestingDeserializeOptions options = new() { Format = [new MemberAwareEnumFactory()] };
+
+            foreach (Converter converter in registered)
+            {
+                options.Converters.Add(converter);
+            }
+
+            options.Telemetries.Add<EnumTelemetry>();
+            options.MakeReadOnly();
+            Assert.True(options.TryGetTypeDefinition(typeof(EnumTelemetry), out TypeDefinition? definition));
+            return definition!;
+        }
+
+        private static Converter ResolvedConverterOf(TypeDefinition definition, string member) =>
+            Assert.Single(definition.Properties, property => property.Name == member).ResolvedConverter;
+
+        // T011 - spec 005 R58 (quickstart 4): two members of one enum type get the converter their member asks for
+        [Fact]
+        public void ResolvedConverter_ForTwoMembersOfOneEnumTypeWithAMemberAwareFactory_ItShould_DifferPerMember()
+        {
+            // Arrange + Act
+            TypeDefinition definition = EnumTelemetryWithMemberAwareFactory();
+
+            // Assert
+            TestEnumConverter<Shade> byName = Assert.IsType<TestEnumConverter<Shade>>(ResolvedConverterOf(definition, nameof(EnumTelemetry.Shade)));
+            TestEnumConverter<Shade> byNumber = Assert.IsType<TestEnumConverter<Shade>>(ResolvedConverterOf(definition, nameof(EnumTelemetry.ShadeNumber)));
+            Assert.Equal(EnumForm.Name, byName.Form);
+            Assert.Equal(EnumForm.Number, byNumber.Form);
+        }
+
+        // T011 - spec 005 R58: the nullable factory passes the member on, so the inner converter is the member's
+        [Fact]
+        public void ResolvedConverter_ForANullableEnumMemberWithAMemberAwareFactory_ItShould_WrapTheMembersConverter()
+        {
+            // Arrange + Act
+            TypeDefinition definition = EnumTelemetryWithMemberAwareFactory();
+
+            // Assert
+            Converter<Shade?> converter = Assert.IsAssignableFrom<Converter<Shade?>>(ResolvedConverterOf(definition, nameof(EnumTelemetry.MaybeShadeNumber)));
+            Assert.Equal(Shade.Dark, converter.Read("1"u8));
+        }
+
+        // T011 - spec 005 R58 / FR-002e: a converter registered for the type still wins over a member-aware format factory
+        [Fact]
+        public void ResolvedConverter_ForAnEnumWithARegisteredConverterAndAMemberAwareFactory_ItShould_BeTheRegisteredConverter()
+        {
+            // Arrange
+            TestEnumConverter<Shade> registered = new(EnumForm.Name);
+
+            // Act
+            TypeDefinition definition = EnumTelemetryWithMemberAwareFactory(registered);
+
+            // Assert
+            Assert.Same(registered, ResolvedConverterOf(definition, nameof(EnumTelemetry.Shade)));
+            Assert.Same(registered, ResolvedConverterOf(definition, nameof(EnumTelemetry.ShadeNumber)));
+        }
     }
 }
