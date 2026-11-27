@@ -235,7 +235,7 @@ durations (quickstart 6).
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T069 [P] `Forestry.Serialization.JsonLines/README.md` with a "Writing JSON Lines" section: `SerializeJsonLinesOptions`, serializing into a `MemoryStream`, reading the lines back; enum forms, nulls, escaping, NaN; what it does not do (D0, FR-016); `ARCHITECTURE.md` per R65
+- [x] T069 [P] `Forestry.Serialization.JsonLines/README.md` with a "Writing JSON Lines" section: `SerializeJsonLinesOptions`, serializing into a `MemoryStream`, reading the lines back; enum forms, nulls, escaping, NaN; what it does not do (D0, FR-016); `ARCHITECTURE.md` per R65 (2026-11-27, ahead of the polish at the developer's request: README with "Why JSON Lines" (readable, little code, easy to test, readable by big data), a usage example, "Writing your own format" with this package as the reference, and what it writes; ARCHITECTURE.md summarizing R65-R66; the spec's driving needs record why JSON Lines comes first)
 - [ ] T070 [P] `Forestry.Serialization/README.md`: the new converters, `EnumConverter<TEnum>`, `[EnumMemberName]`, per-member factories, the new writer methods; `Forestry.Serialization.Xml/README.md`: `[XmlEnumForm]`, `xs:duration`; `../stanford/Forestry.StanForD/README.md`: serializing `Stem` and `Log`
 - [ ] T071 [P] `CHANGELOG.md` entries in the four packages (1.0.0-beta.1, unreleased)
 - [ ] T072 Validate `quickstart.md` end to end; tick the checklists on #149-#153 and #138; reminder to the developer: add `build-test (Forestry.Serialization.JsonLines)` to the main ruleset's required checks before merging

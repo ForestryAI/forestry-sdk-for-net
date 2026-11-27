@@ -418,6 +418,11 @@ test over real documents runs when the real-documents folder is set.
 ## Driving needs
 
 - #138: the first big data format, JSON Lines, for ADX external tables during the POC.
+- **Why JSON Lines first** (developer, 2026-11-27, after US3): it is readable by people (one line of
+  plain JSON per telemetry), takes very little code on top of the core (about 120 lines in the
+  package, the telemetry writer about 75), and is easy to test (parse each line back). That makes it
+  the reference for anyone writing their own format: the package README's "Writing your own format"
+  walks through it.
 - #137 (spec 004): writing building blocks the format plugs into; R57, value overloads come with
   their converters.
 - Missing built-in converters noted after the README series: enums, `DateOnly`, `TimeOnly`,
