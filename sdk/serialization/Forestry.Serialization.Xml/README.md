@@ -50,7 +50,27 @@ dotnet add package Forestry.Serialization.Xml --prerelease
   that member from its text. An empty element sets `null`, or the type's default.
 - Everything else is skipped. Paths, roots and nesting rules for matching come with later slices
   ([research R13](../Forestry.Serialization/specs/001-walking-skeleton/research.md)).
-- XML's default converters: `bool` accepts `true`, `false`, `1` and `0`, as XML Schema does.
+- XML's default converters, as XML Schema writes values:
+  - `bool` accepts `true`, `false`, `1` and `0`;
+  - `TimeSpan` reads an `xs:duration` such as `PT1H30M`, `P2DT3H` or `-PT0.5S`, exact to the tick.
+    Years and months have no exact length and fail, as do fractions finer than 100 nanoseconds;
+  - an enum reads its name (or its `[EnumMemberName]`), ignoring case. XML text has no string or
+    number kind, so a member whose document writes numbers says so with
+    `[XmlEnumForm(EnumForm.Number)]`; the other form fails with a format error.
+
+```csharp
+public sealed class Log : Telemetry
+{
+    public Shade Shade { get; set; }            // <Shade>Dark</Shade>
+
+    [XmlEnumForm(EnumForm.Number)]
+    public Shade ShadeNumber { get; set; }      // <ShadeNumber>1</ShadeNumber>
+
+    public TimeSpan Duration { get; set; }      // <Duration>PT1H30M</Duration>
+}
+```
+
+A converter you add to the options for the type wins over each of these.
 
 ### Where a member comes from
 
@@ -89,7 +109,7 @@ public sealed class Price : Telemetry
 Synchronous and asynchronous reading work (spec 001, user stories 1 and 3): the same telemetries from a
 string, bytes, a `Stream` or a `PipeReader`, however the bytes are split. Attributes and element text
 as members came with spec 002, and their attribute names, `[XmlElementName]` replacing the core's
-`[Telemetry]` and `[Field]`, with spec 003. Character and entity references are not resolved yet: a member's
+`[Telemetry]` and `[Field]`, with spec 003. Enums as names or numbers and `xs:duration` came with spec 005. Character and entity references are not resolved yet: a member's
 text keeps them as written (e.g. `&amp;`). The reader itself is specified in its own package,
 [Forestry.Xml](../../xml/Forestry.Xml/README.md).
 

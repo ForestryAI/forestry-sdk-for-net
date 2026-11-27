@@ -10,6 +10,10 @@
 - `TypeDefinition` is abstract: each telemetry type's definition is a `TypeDefinition<T>` (spec 004, #145).
 
 ### Features Added
+- Built-in converters, both ways, for enums (by name; `[EnumMemberName]` for a document's own text; flags joined with `, `; a value with no name refused), `DateOnly` and `TimeOnly` (round-trip form) and `TimeSpan` (constant form) (spec 005 US1, #149).
+- `EnumConverter<TEnum>` with `EnumForm.Name` or `EnumForm.Number`: resolves an enum's fields once, for formats and developers to derive from (spec 005 US1, #149).
+- Per-member converter factories: a `ConverterFactory` with `UsesMember => true` is given the member in `CreateConverter(type, member, options)`, so a format's attribute on a member can choose a form (spec 005 US1, #149).
+- `TelemetryWriter.WriteValue` for `DateOnly`, `TimeOnly` and `TimeSpan`, and `WriteEnumName`; `GetSpan`, `GetMemory` and `Advance` are virtual, so a buffering writer can refuse direct use (spec 005 US1 and US3, #149, #151).
 - Writing telemetries (spec 004, #137): `SerializeOptions` with a format's `TelemetryWriter` (framing a telemetry, and `WriteValue` per type of value, each overridable); `TelemetrySerialization.Serialize`/`SerializeAsync` to a `Stream` (sync and async, through a pooled buffer) or a `PipeWriter` (async, no copy), never closing the target; property definitions with a compiled getter, `Utf8Name` and a public `Index`; members that cannot be written refused when the options lock (#144, #145).
 - Object converters: `TypeDefinition<T>.Converter`, an `ObjectConverter<T>` resolved like any converter, writes a telemetry; register one to replace the walk for a telemetry type. Reading through one is not supported yet (#145).
 - Collection writers for monitoring: `MonitoringCollectionStream` and `MonitoringCollectionPipeWriter` count telemetries and bytes, report full between telemetries, and complete as ready or abandoned; `MonitoringCollectionOptions`, and `SerializeOptions.DefaultCollectionOptions` (spec 004 US3, #146).

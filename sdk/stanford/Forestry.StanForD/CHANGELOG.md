@@ -7,6 +7,8 @@
 - The StanForD enum converter overrides `Read` (was `Convert`), following Forestry.Serialization's converters (spec 004, #144).
 
 ### Features Added
+- `AddHarvesting()` for any `SerializeOptions`: `Stem` and `Log` written with their enums as StanForD texts (`[EnumMemberName]`, e.g. `Top break`), whatever the format's enum form; reading also accepts a text without its spaces or in another case (serialization spec 005 US2, #150).
+- A StanForD Harvesting document makes the round trip to JSON Lines, tested on a fragment and real documents (serialization spec 005 US5, #153).
 - `HarvestingOptionsExtensions.AddHarvesting()` sets up `DeserializeXmlOptions` to shred StanForD
   Harvesting (`hpr`) documents into `Stem` and `Log` rows, the only rows that come out (spec 001, #90).
   The header, the machine, the common definitions and the elements that carry measurements are read
