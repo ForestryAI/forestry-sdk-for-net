@@ -31,6 +31,8 @@
   <!-- Source package references -->
   <ItemGroup>
     <ProjectReference Include="..\src\Forestry.StanForD.csproj" />
+    <!-- The round trip HPR XML -> telemetries -> JSON Lines (serialization spec 005 US5, C6); the package itself does not reference it -->
+    <ProjectReference Include="..\..\..\serialization\Forestry.Serialization.JsonLines\src\Forestry.Serialization.JsonLines.csproj" />
   </ItemGroup>
 
   <!-- Handwritten Harvesting fragments the tests read (A4) -->
