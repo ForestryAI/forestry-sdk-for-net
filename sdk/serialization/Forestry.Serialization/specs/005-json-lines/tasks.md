@@ -211,11 +211,11 @@ durations (quickstart 6).
 
 ### Test shells for User Story 4 ⚠️
 
-- [ ] T058 [P] [US4] Fixture `Forestry.Serialization.Xml/test/Fixtures/EnumAndDurationTelemetry.cs`: a telemetry with a `Shade` member, a `[XmlEnumForm(EnumForm.Number)] Shade` member and a `TimeSpan` member
-- [ ] T059 [P] [US4] Test shell, US4-1: a local document with `<Shade>dark</Shade>` reads `Dark`; `<Shade>1</Shade>` fails with `FormatException`, in `Forestry.Serialization.Xml/test/XmlEnumAndDurationTests.cs`
-- [ ] T060 [P] [US4] Test shell, US4-2: the number member `<ShadeNumber>1</ShadeNumber>` reads `Dark`; `Dark` fails, in `XmlEnumAndDurationTests.cs`
-- [ ] T061 [P] [US4] Test shell, US4-3 / FR-002e: a converter registered for `Shade` wins over the XML enum converter, in `XmlEnumAndDurationTests.cs`
-- [ ] T062 [P] [US4] Test shell, US4-4 / FR-003a: `PT1H30M`, `P2DT3H`, `-PT0.5S`, `PT0S` read to the exact `TimeSpan`; `P1M`, `P1Y`, `P`, `PT`, `1H` fail with `FormatException`, in `XmlEnumAndDurationTests.cs`
+- [x] T058 [P] [US4] Fixture `Forestry.Serialization.Xml/test/Fixtures/EnumAndDurationTelemetry.cs`: a telemetry with a `Shade` member, a `[XmlEnumForm(EnumForm.Number)] Shade` member and a `TimeSpan` member (2026-11-27: `EnumAndDurationTelemetry` with `Shade`, `ShadeNumber` and `Duration`, plus `MarkingShadeConverter` for T061; does not compile until T064 adds `XmlEnumFormAttribute`)
+- [x] T059 [P] [US4] Test shell, US4-1: a local document with `<Shade>dark</Shade>` reads `Dark`; `<Shade>1</Shade>` fails with `FormatException`, in `Forestry.Serialization.Xml/test/XmlEnumAndDurationTests.cs` (2026-11-27: `Dark`, `dark`, `DARK`; the refusal names the member)
+- [x] T060 [P] [US4] Test shell, US4-2: the number member `<ShadeNumber>1</ShadeNumber>` reads `Dark`; `Dark` fails, in `XmlEnumAndDurationTests.cs` (2026-11-27: the refusal names the member)
+- [x] T061 [P] [US4] Test shell, US4-3 / FR-002e: a converter registered for `Shade` wins over the XML enum converter, in `XmlEnumAndDurationTests.cs` (2026-11-27: `MarkingShadeConverter` reads every text as `Light`, for both the name and the number member)
+- [x] T062 [P] [US4] Test shell, US4-4 / FR-003a: `PT1H30M`, `P2DT3H`, `-PT0.5S`, `PT0S` read to the exact `TimeSpan`; `P1M`, `P1Y`, `P`, `PT`, `1H` fail with `FormatException`, in `XmlEnumAndDurationTests.cs` (2026-11-27: also `P1D` and `PT1.0000001S` (one tick); also refused: `P1Y2M3DT4H`, `PT1H30` (a number without its designator); sync and async agree)
 
 ### Review gate
 
