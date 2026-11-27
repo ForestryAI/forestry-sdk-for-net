@@ -4,7 +4,7 @@
 
 **Created**: 2026-11-26
 
-**Status**: Draft
+**Status**: Implemented (2026-11-27; US1 #149, US2 #150, US3 #151, US4 #152, US5 #153)
 
 **Input**: User description: "Spec 005 for Forestry.Serialization: the JSON Lines format package
 (GitHub issue #138; constitution 4.0.1 on branch serialization-005-json-lines)." Source: GitHub
