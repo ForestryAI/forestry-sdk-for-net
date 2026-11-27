@@ -1,3 +1,4 @@
+using Forestry.Serialization;
 using Forestry.Serialization.Xml;
 using Forestry.StanForD.Converters;
 using Forestry.StanForD.Policies;
@@ -76,9 +77,7 @@ namespace Forestry.StanForD {
                 .Add<LogMeasurement>()
                 .Add<LogDiameter>();
 
-            options.Converters.Add(new StanForDEnumConverter<ProcessingCategory>());
-            options.Converters.Add(new StanForDEnumConverter<CoordinateReferenceSystem>());
-            options.Converters.Add(new StanForDEnumConverter<CuttingReason>());
+            AddEnumConverters(options);
 
             options.Policies
                 .Add<HarvestedProductionHeader>(new HeaderPolicy())
@@ -108,6 +107,37 @@ namespace Forestry.StanForD {
                 .Add<Log>(new LogDimensionPolicy());
 
             return options;
+        }
+
+        /// <summary>
+        /// Adds what writing Harvesting telemetries needs, in any format: <see cref="Stem"/> and <see cref="Log"/>,
+        /// and the converters writing StanForD's enums as their StanForD texts, the writing counterpart of
+        /// <see cref="AddHarvesting(DeserializeXmlOptions, Action{HarvestingOptions}?)"/> (serialization spec 005,
+        /// research R63)
+        /// </summary>
+        /// <typeparam name="TOptions">A format's serialize options, e.g. JSON Lines</typeparam>
+        /// <param name="options">Options not used yet</param>
+        /// <returns>The same options</returns>
+        public static TOptions AddHarvesting<TOptions>(this TOptions options) where TOptions : SerializeOptions
+        {
+            ArgumentNullException.ThrowIfNull(options);
+
+            options.Telemetries
+                .Add<Stem>()
+                .Add<Log>();
+
+            AddEnumConverters(options);
+            return options;
+        }
+
+        /// <summary>
+        /// StanForD's enum converters, registered so they win over any format's enum converter
+        /// </summary>
+        private static void AddEnumConverters(TelemetrySerializationOptions options)
+        {
+            options.Converters.Add(new StanForDEnumConverter<ProcessingCategory>());
+            options.Converters.Add(new StanForDEnumConverter<CoordinateReferenceSystem>());
+            options.Converters.Add(new StanForDEnumConverter<CuttingReason>());
         }
     }
 }

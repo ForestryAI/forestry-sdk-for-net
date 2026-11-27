@@ -8,6 +8,8 @@
 - `XmlBooleanConverter` overrides `Read` (was `Convert`), following the core's converters (spec 004, #144).
 
 ### Features Added
+- Enums read as names (ignoring case) by default, or as numbers with `[XmlEnumForm(EnumForm.Number)]` on the member; the other form fails with a format error (spec 005 US4, #152).
+- `TimeSpan` members read an XML Schema duration (`xs:duration`, e.g. `PT1H30M`) exactly; years, months, fractions finer than a tick and durations beyond `TimeSpan` fail (spec 005 US4, #152).
 - The XML format for `Forestry.Deserialize`: `DeserializeXmlOptions` associates elements with row types
   and members by name or by `XmlElementNameAttribute`, reading UTF-8 forward with
   `Forestry.Xml`'s `Utf8XmlReader` (spec 001 US1, #57).

@@ -48,6 +48,30 @@ await foreach (Telemetry telemetry in TelemetrySerialization.DeserializeAsync(fi
 options instance per concurrent deserialization (Forestry.Serialization's policies serve one enumeration
 at a time).
 
+## Writing stems and logs
+
+`AddHarvesting()` also sets up any format's serialize options: it adds `Stem` and `Log` and the
+StanForD enum converters, so enums are written as their StanForD texts (e.g. `"Top break"`) whatever
+the format's own enum form. With
+[Forestry.Serialization.JsonLines](../../serialization/Forestry.Serialization.JsonLines/README.md),
+one line per telemetry, a file per telemetry type:
+
+```csharp
+SerializeJsonLinesOptions writing = new SerializeJsonLinesOptions().AddHarvesting();
+
+using FileStream stems = File.Create("stems.jsonl");
+using FileStream logs = File.Create("logs.jsonl");
+
+foreach (Telemetry telemetry in TelemetrySerialization.Deserialize(xml, options))
+{
+    TelemetrySerialization.Serialize(telemetry, telemetry.Is<Stem>() ? stems : logs, writing);
+}
+```
+
+Reading StanForD texts is tolerant: a text with or without its spaces, in any case, reads to the
+member (`"TopBreak"`, `"top break"`). The tests make the round trip, HPR XML → stems and logs → JSON
+Lines → parsed and compared member by member, on a fragment and on real documents.
+
 ## What a telemetry gives you
 
 Stem and Log show what a machine's metrics expose. So that each telemetry is self-contained, every Stem and
@@ -131,7 +155,8 @@ different creation times, so they land in two time partitions; remove duplicates
 
 Spec 001 ([#90](https://github.com/ForestryAI/forestry-sdk-for-net/issues/90)) is implemented: Stem
 and Log telemetries with identification, partitioning, conditional mapping of measurements, dimensions and
-stem metrics, tested against handwritten fragments and real Harvesting documents. It is a working
+stem metrics, tested against handwritten fragments and real Harvesting documents. Serialization
+spec 005 added writing them (StanForD enum texts) and the round trip to JSON Lines. It is a working
 example, fragile in places: see #110 (element names shared by a telemetry type and a member, and telemetries matched
 anywhere in the document) and #109 (operator measurements). Performance is a later specification.
 

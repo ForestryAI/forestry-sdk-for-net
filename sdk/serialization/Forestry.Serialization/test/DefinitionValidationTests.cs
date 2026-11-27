@@ -70,8 +70,9 @@ namespace Forestry.Serialization.Tests
             Assert.All(definition.Properties, property => Assert.True(property.ResolvedConverter.CanConvert(property.MemberType), property.Name));
         }
 
-        // T002 (R32, R33) - single values without a built-in converter (enum, DateOnly, TimeSpan) pass
-        // the flat check and fail only for lack of a converter, all three in one message
+        // T002 (R32, R33) - single values without a built-in converter pass the flat check and fail only for
+        // lack of a converter, both in one message (spec 005: enums, DateOnly and TimeSpan now have built-ins,
+        // so the fixture holds developer structs instead)
         [Fact]
         public void MakeReadOnly_ForSingleValuesWithoutConverters_ItShould_ThrowForTheConverterOnly()
         {
@@ -83,9 +84,8 @@ namespace Forestry.Serialization.Tests
 
             // Assert
             Assert.Contains(nameof(SingleValuesWithoutConverters), exception.Message);
-            Assert.Contains(nameof(SingleValuesWithoutConverters.Grade), exception.Message);
-            Assert.Contains(nameof(SingleValuesWithoutConverters.Felled), exception.Message);
-            Assert.Contains(nameof(SingleValuesWithoutConverters.Duration), exception.Message);
+            Assert.Contains(nameof(SingleValuesWithoutConverters.Girth), exception.Message);
+            Assert.Contains(nameof(SingleValuesWithoutConverters.Species), exception.Message);
             Assert.Contains("converter", exception.Message, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain(NestedStructure, exception.Message, StringComparison.OrdinalIgnoreCase);
         }

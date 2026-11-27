@@ -15,6 +15,7 @@ on:
           - Forestry.Xml
           - Forestry.Serialization
           - Forestry.Serialization.Xml
+          - Forestry.Serialization.JsonLines
       dry-run:
         description: Check and pack only, publish nothing
         required: true
@@ -57,6 +58,7 @@ jobs:
             Forestry.Xml) folder=sdk/xml/Forestry.Xml ;;
             Forestry.Serialization) folder=sdk/serialization/Forestry.Serialization ;;
             Forestry.Serialization.Xml) folder=sdk/serialization/Forestry.Serialization.Xml ;;
+            Forestry.Serialization.JsonLines) folder=sdk/serialization/Forestry.Serialization.JsonLines ;;
             *) echo "::error::Unknown package $PACKAGE"; exit 1 ;;
           esac
           {

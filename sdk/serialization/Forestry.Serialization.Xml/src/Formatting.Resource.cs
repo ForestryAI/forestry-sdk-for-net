@@ -17,5 +17,9 @@ namespace Forestry.Serialization.Xml
 
         internal static string ElementTextMemberNotFound => Serialization.Formatting.GetResourceString(nameof(ElementTextMemberNotFound), @"An element text is set through the options (ElementText) for member '{1}' of '{0}', which is not one of its members.");
         #endregion
+
+        #region format exception
+        internal static string DurationNotParsable => Serialization.Formatting.GetResourceString(nameof(DurationNotParsable), @"'{0}' is not an XML Schema duration without years or months (e.g. PT1H30M, P2DT3H, -PT0.5S), exact to 100 nanoseconds and within a TimeSpan.");
+        #endregion
     }
 }

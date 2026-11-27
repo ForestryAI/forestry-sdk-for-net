@@ -1,8 +1,10 @@
+using Forestry.Serialization;
+
 namespace Forestry.StanForD {
     /// <summary>
     /// Why a log was cut, from StanForD <c>CuttingCategory/CuttingReason</c>.  Each member names the
-    /// StanForD text it is read from; StanForD's texts contain spaces, so reading them needs a
-    /// converter that maps the text to the member.
+    /// StanForD text it is read from and written as; texts with spaces are declared with
+    /// <see cref="EnumMemberNameAttribute"/> (serialization spec 005, research R63).
     /// </summary>
     public enum CuttingReason
     {
@@ -29,14 +31,17 @@ namespace Forestry.StanForD {
         /// <summary>
         /// "Grade break"
         /// </summary>
+        [EnumMemberName("Grade break")]
         GradeBreak,
         /// <summary>
         /// "Pulpwood grade"
         /// </summary>
+        [EnumMemberName("Pulpwood grade")]
         PulpwoodGrade,
         /// <summary>
         /// "Top break"
         /// </summary>
+        [EnumMemberName("Top break")]
         TopBreak,
         /// <summary>
         /// "Spinning"
@@ -45,6 +50,7 @@ namespace Forestry.StanForD {
         /// <summary>
         /// "Other manual"
         /// </summary>
+        [EnumMemberName("Other manual")]
         OtherManual
     }
 }

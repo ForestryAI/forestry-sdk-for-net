@@ -1,0 +1,5 @@
+<!-- https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-sln#migrate -->
+<Solution>
+  <Project Path="src/Forestry.Serialization.JsonLines.csproj" />
+  <Project Path="test/Forestry.Serialization.JsonLines.Tests.csproj" />
+</Solution>

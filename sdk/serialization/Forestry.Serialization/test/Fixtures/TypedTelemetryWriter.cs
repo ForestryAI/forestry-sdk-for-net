@@ -40,6 +40,14 @@ namespace Forestry.Serialization.Tests.Fixtures
 
         public override void WriteValue(DateTimeOffset value) => Mark("DateTimeOffset", value.Year.ToString(CultureInfo.InvariantCulture));
 
+        public override void WriteValue(DateOnly value) => Mark("DateOnly", value.Year.ToString(CultureInfo.InvariantCulture));
+
+        public override void WriteValue(TimeOnly value) => Mark("TimeOnly", value.Hour.ToString(CultureInfo.InvariantCulture));
+
+        public override void WriteValue(TimeSpan value) => Mark("TimeSpan", value.Ticks.ToString(CultureInfo.InvariantCulture));
+
+        public override void WriteEnumName(ReadOnlySpan<byte> utf8Name) => Mark("enum", System.Text.Encoding.UTF8.GetString(utf8Name));
+
         public override void WriteValue<T>(T value) => Mark("generic", typeof(T).Name + ":" + value);
 
         private void Mark(string overload, string value) => WriteRaw(System.Text.Encoding.UTF8.GetBytes(overload + ":" + value));

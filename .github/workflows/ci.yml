@@ -33,6 +33,8 @@ jobs:
             slnx: sdk/serialization/Forestry.Serialization/Forestry.Serialization.slnx
           - package: Forestry.Serialization.Xml
             slnx: sdk/serialization/Forestry.Serialization.Xml/Forestry.Serialization.Xml.slnx
+          - package: Forestry.Serialization.JsonLines
+            slnx: sdk/serialization/Forestry.Serialization.JsonLines/Forestry.Serialization.JsonLines.slnx
           - package: Forestry.StanForD
             slnx: sdk/stanford/Forestry.StanForD/Forestry.StanForD.slnx
           # Checked but not released in spec 001: they share the central package versions (FR-015)
@@ -58,6 +60,8 @@ jobs:
             slnx: sdk/serialization/Forestry.Serialization/Forestry.Serialization.slnx
           - package: Forestry.Serialization.Xml
             slnx: sdk/serialization/Forestry.Serialization.Xml/Forestry.Serialization.Xml.slnx
+          - package: Forestry.Serialization.JsonLines
+            slnx: sdk/serialization/Forestry.Serialization.JsonLines/Forestry.Serialization.JsonLines.slnx
     uses: ./.github/workflows/pack.yml
     with:
       package: ${{ matrix.package }}

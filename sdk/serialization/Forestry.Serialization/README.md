@@ -142,8 +142,9 @@ await foreach (Telemetry telemetry in TelemetrySerialization.DeserializeAsync(fi
   choose. In this slice the constructor takes no parameters: members are set from the document or
   by policies.
 - **Converters**: each member's text is converted to its type once, invariant culture: text,
-  booleans, integers, decimals, `DateTime`, `DateTimeOffset`, `Guid` and the other types parsable
-  from UTF-8, plus their `Nullable<T>`. A format adds its own defaults (XML reads `1` and `0` as
+  booleans, integers, decimals, `DateTime`, `DateTimeOffset`, `DateOnly`, `TimeOnly`, `TimeSpan`,
+  `Guid`, enums (by name, ignoring case) and the other types parsable from UTF-8, plus their
+  `Nullable<T>`. A format adds its own defaults (XML reads `1` and `0` as
   booleans). Your own `Converter<T>` added to `options.Converters` wins over both.
 - **Empty elements**: `<LogVolume />` sets `null` where the member allows it, otherwise the type's
   default.
@@ -294,8 +295,9 @@ options.Policies.Add<Site>(new SiteKeptOut()).Add<Order>(new OrderWithSiteKey())
 Writing is the other direction: telemetries out to a big data format. `DeserializeOptions` read and
 `SerializeOptions` write; both share what reading and writing have in common
 (`TelemetrySerializationOptions`: telemetry types, converters and the definitions built from them), and
-each options instance builds its own. A format package supplies the serialize options (JSON Lines is
-next, #138); until then, a format is a few lines.
+each options instance builds its own. A format package supplies the serialize options:
+[Forestry.Serialization.JsonLines](../Forestry.Serialization.JsonLines/README.md) is the first, and the
+reference for writing your own. A format can also be a few lines.
 
 ### A format: serialize options and a telemetry writer
 
@@ -330,12 +332,15 @@ public sealed class LineOptions : SerializeOptions
 ```
 
 The writer's values are written by type: `WriteValue` overloads for text, `bool`, `int`, `long`,
-`double`, `decimal`, `Guid`, `DateTime` and `DateTimeOffset`, and a generic `WriteValue<T>` for any other
-value that formats to UTF-8. Each defaults to plain invariant UTF-8; override the ones your format
+`double`, `decimal`, `Guid`, `DateTime`, `DateTimeOffset`, `DateOnly`, `TimeOnly` and `TimeSpan`,
+`WriteEnumName` for an enum's name, and a generic `WriteValue<T>` for any other value that formats to
+UTF-8. Each defaults to plain invariant UTF-8; override the ones your format
 represents differently (JSON quotes and escapes text, Parquet would store dates as integers). The names
 say what a value is, not how one format writes it. `WriteNull` decides what a missing value looks like,
 or leaves the member out. `PropertyDefinition.Utf8Name` and `Index` give a writer each member's name and
-position without work per telemetry.
+position without work per telemetry. A writer that buffers on its own (e.g. over `Utf8JsonWriter`)
+overrides `GetSpan`, `GetMemory` and `Advance` to refuse direct use, so converters go through the value
+methods.
 
 ### Writing to a stream
 
@@ -380,6 +385,30 @@ writeOptions.Converters.Add(new MeasureConverter());
 ```
 
 A converter that only reads (no `Write` override) is refused when serialize options lock.
+
+Dates, times and durations have built-in converters both ways: `DateOnly` and `TimeOnly` in the
+round-trip form (`2026-11-27`, `13:20:00.0000000`), `TimeSpan` in the constant form
+(`1.02:03:04.5000000`). A format registers its own where it differs (XML reads `xs:duration`).
+
+### Enums
+
+Enums are read and written by name by default, through a built-in converter. `[EnumMemberName("Top
+break")]` on an enum field gives the text a document uses instead of the C# name. Derive from
+`EnumConverter<TEnum>` for your own: it resolves the enum's fields once (names, `[EnumMemberName]`,
+flags), and in `EnumForm.Name` or `EnumForm.Number` reads and writes them; a value with no name is
+refused rather than written as a number.
+
+```csharp
+public sealed class ReasonConverter() : EnumConverter<CuttingReason>(EnumForm.Name)
+{
+    public override CuttingReason Read(ReadOnlySpan<byte> utf8) => /* tolerant reading */ base.Read(utf8);
+}
+```
+
+Whether a member's enum is a name or a number is the format's to say, per member, with its own attribute
+(`[XmlEnumForm]` reading XML, `[JsonLinesEnumForm]` writing JSON Lines). A `ConverterFactory` that
+returns `UsesMember => true` is given the member in `CreateConverter(type, member, options)` and can read
+such an attribute. A converter added to the options for the enum type wins over every format's.
 
 ### Object converters
 
@@ -433,6 +462,9 @@ in the document declared with the XML package's attributes, and one vocabulary, 
 Spec 004's three are done too ([tasks.md](specs/004-writing-telemetries/tasks.md)): converters that read
 and write, serializing to a stream or pipe through a format's telemetry writer and each type's object
 converter, and collection writers.
+Spec 005's five are done too ([tasks.md](specs/005-json-lines/tasks.md)): converters for enums, dates,
+times and durations, StanForD's enums written as StanForD texts, the JSON Lines format, XML enums as
+names or numbers and `xs:duration`, and a StanForD document's round trip to JSON Lines.
 The policy model is good enough for the POC; its polish
 before a release is tracked separately.
 

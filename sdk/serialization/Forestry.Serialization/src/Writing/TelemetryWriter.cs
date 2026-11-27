@@ -15,11 +15,13 @@ namespace Forestry.Serialization.Writing
     /// <see cref="Guid"/> goes to <see cref="WriteValue(Guid)"/> whether JSON quotes it, a test format writes
     /// it bare, or Parquet stores it as sixteen bytes. The typed overloads cover <see cref="string"/> (as
     /// characters), <see cref="bool"/>, <see cref="int"/>, <see cref="long"/>, <see cref="double"/>,
-    /// <see cref="decimal"/>, <see cref="Guid"/>, <see cref="DateTime"/> and <see cref="DateTimeOffset"/>;
-    /// every other value that formats to UTF-8 (e.g. a developer's struct) goes to
-    /// <see cref="WriteValue{T}(T)"/>. A custom converter can also call <see cref="WriteRaw"/> or the
-    /// <see cref="IBufferWriter{T}"/> members. Every method has a default that writes plain UTF-8 text with
-    /// the invariant culture; a format overrides what it represents differently.
+    /// <see cref="decimal"/>, <see cref="Guid"/>, <see cref="DateTime"/>, <see cref="DateTimeOffset"/>,
+    /// <see cref="DateOnly"/>, <see cref="TimeOnly"/> and <see cref="TimeSpan"/>; an enum's name goes to
+    /// <see cref="WriteEnumName"/> and its number to the integer overloads; every other value that formats to
+    /// UTF-8 (e.g. a developer's struct) goes to <see cref="WriteValue{T}(T)"/>. A custom converter can also
+    /// call <see cref="WriteRaw"/> or the <see cref="IBufferWriter{T}"/> members. Every method has a default
+    /// that writes plain UTF-8 text with the invariant culture; a format overrides what it represents
+    /// differently (spec 005 research R60).
     /// </para>
     /// <para>
     /// Overriding <see cref="WriteValue{T}(T)"/> does not change the typed overloads, nor the other way
@@ -75,13 +77,20 @@ namespace Forestry.Serialization.Writing
         }
 
         /// <inheritdoc/>
-        public Span<byte> GetSpan(int sizeHint = 0) => Output.GetSpan(sizeHint);
+        /// <remarks>
+        /// Overridable, so a format can refuse direct writes (e.g. JSON Lines, whose own writer buffers);
+        /// the defaults of this class write through <see cref="Output"/>, never through these members
+        /// (spec 005 research R66)
+        /// </remarks>
+        public virtual Span<byte> GetSpan(int sizeHint = 0) => Output.GetSpan(sizeHint);
 
         /// <inheritdoc/>
-        public Memory<byte> GetMemory(int sizeHint = 0) => Output.GetMemory(sizeHint);
+        /// <remarks>Overridable, as <see cref="GetSpan"/></remarks>
+        public virtual Memory<byte> GetMemory(int sizeHint = 0) => Output.GetMemory(sizeHint);
 
         /// <inheritdoc/>
-        public void Advance(int count) => Output.Advance(count);
+        /// <remarks>Overridable, as <see cref="GetSpan"/></remarks>
+        public virtual void Advance(int count) => Output.Advance(count);
 
         #region Framing (called by the serializer)
 
@@ -128,8 +137,9 @@ namespace Forestry.Serialization.Writing
         /// <param name="value"></param>
         public virtual void WriteValue(ReadOnlySpan<char> value)
         {
-            int written = Encoding.UTF8.GetBytes(value, GetSpan(Encoding.UTF8.GetMaxByteCount(value.Length)));
-            Advance(written);
+            IBufferWriter<byte> output = Output;
+            int written = Encoding.UTF8.GetBytes(value, output.GetSpan(Encoding.UTF8.GetMaxByteCount(value.Length)));
+            output.Advance(written);
         }
 
         /// <summary>
@@ -181,6 +191,33 @@ namespace Forestry.Serialization.Writing
         public virtual void WriteValue(DateTimeOffset value) => WriteFormatted(value, "O");
 
         /// <summary>
+        /// A <see cref="DateOnly"/>. The default writes the round-trip format (<c>O</c>, <c>yyyy-MM-dd</c>)
+        /// </summary>
+        /// <param name="value"></param>
+        public virtual void WriteValue(DateOnly value) => WriteFormatted(value, "O");
+
+        /// <summary>
+        /// A <see cref="TimeOnly"/>. The default writes the round-trip format (<c>O</c>, <c>HH:mm:ss.fffffff</c>)
+        /// </summary>
+        /// <param name="value"></param>
+        public virtual void WriteValue(TimeOnly value) => WriteFormatted(value, "O");
+
+        /// <summary>
+        /// A <see cref="TimeSpan"/>. The default writes the constant format (<c>c</c>,
+        /// <c>[-][d.]hh:mm:ss[.fffffff]</c>)
+        /// </summary>
+        /// <param name="value"></param>
+        public virtual void WriteValue(TimeSpan value) => WriteFormatted(value, "c");
+
+        /// <summary>
+        /// An enum member's name, as the enum converter resolved it (its C# name, or the name declared with
+        /// <see cref="EnumMemberNameAttribute"/>). The default writes the bytes as they are; numbers go to the
+        /// integer overloads (spec 005 research R60)
+        /// </summary>
+        /// <param name="utf8Name"></param>
+        public virtual void WriteEnumName(ReadOnlySpan<byte> utf8Name) => WriteRaw(utf8Name);
+
+        /// <summary>
         /// Any other value that formats itself to UTF-8 (e.g. a developer's struct). The default writes its
         /// invariant text
         /// </summary>
@@ -194,8 +231,9 @@ namespace Forestry.Serialization.Writing
         /// <param name="utf8"></param>
         public virtual void WriteRaw(ReadOnlySpan<byte> utf8)
         {
-            utf8.CopyTo(GetSpan(utf8.Length));
-            Advance(utf8.Length);
+            IBufferWriter<byte> output = Output;
+            utf8.CopyTo(output.GetSpan(utf8.Length));
+            output.Advance(utf8.Length);
         }
 
         /// <summary>
@@ -208,15 +246,16 @@ namespace Forestry.Serialization.Writing
         /// <param name="format">A standard or custom format, e.g. <c>O</c> for round-trip dates</param>
         protected void WriteFormatted<T>(T value, ReadOnlySpan<char> format) where T : IUtf8SpanFormattable
         {
+            IBufferWriter<byte> output = Output;
             int hint = FirstHint;
 
             while (true)
             {
-                Span<byte> span = GetSpan(hint);
+                Span<byte> span = output.GetSpan(hint);
 
                 if (value.TryFormat(span, out int written, format, CultureInfo.InvariantCulture))
                 {
-                    Advance(written);
+                    output.Advance(written);
                     return;
                 }
 
