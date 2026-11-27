@@ -1,5 +1,6 @@
 using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using Forestry.Serialization.Converters;
 using Forestry.Serialization.Converters.Primitive;
 using Forestry.Serialization.Definitions;
@@ -27,17 +28,24 @@ namespace Forestry.Serialization
             new BooleanConverter(),
             new DateTimeConverter(),
             new DateTimeOffsetConverter(),
+            new DateOnlyConverter(),
+            new TimeOnlyConverter(),
+            new TimeSpanConverter(),
+            new EnumConverterFactory(),
             new NullableConverterFactory(),
             new Utf8SpanParsableConverterFactory()
         ];
 
         /// <summary>
-        /// Resolved converter of a type: the developer's converters, then the format's defaults, then
-        /// the primitives; null when none handles it (research R14)
+        /// Resolved converter of a type, on a member when one is given: the developer's converters, then the
+        /// format's defaults, then the primitives; null when none handles it (research R14). Shared by type,
+        /// except a converter from a factory that <see cref="ConverterFactory.UsesMember"/>, created per member
+        /// (spec 005 research R58)
         /// </summary>
         /// <param name="type"></param>
+        /// <param name="member">The telemetry member the converter is for; none for a telemetry type's own converter</param>
         /// <returns></returns>
-        internal Converter? ResolveConverter(Type type)
+        internal Converter? ResolveConverter(Type type, MemberInfo? member = null)
         {
             _resolvedConverters ??= [];
 
@@ -46,13 +54,20 @@ namespace Forestry.Serialization
                 return resolved;
             }
 
-            resolved = FindConverter(_converters, type) ?? FindConverter(FormatConverters, type) ?? FindConverter(s_primitiveConverters, type);
-            _resolvedConverters[type] = resolved;
+            bool shared = true;
+            resolved = FindConverter(_converters, type, member, ref shared)
+                ?? FindConverter(FormatConverters, type, member, ref shared)
+                ?? FindConverter(s_primitiveConverters, type, member, ref shared);
+
+            if (shared)
+            {
+                _resolvedConverters[type] = resolved;
+            }
 
             return resolved;
         }
 
-        private Converter? FindConverter(IEnumerable<Converter>? converters, Type type)
+        private Converter? FindConverter(IEnumerable<Converter>? converters, Type type, MemberInfo? member, ref bool shared)
         {
             if (converters is null)
             {
@@ -61,10 +76,23 @@ namespace Forestry.Serialization
 
             foreach (Converter converter in converters)
             {
-                if (converter.CanConvert(type))
+                if (!converter.CanConvert(type))
                 {
-                    return converter is ConverterFactory factory ? factory.CreateConverter(type, this) : converter;
+                    continue;
                 }
+
+                if (converter is not ConverterFactory factory)
+                {
+                    return converter;
+                }
+
+                if (factory.UsesMember)
+                {
+                    shared = false;
+                    return member is null ? factory.CreateConverter(type, this) : factory.CreateConverter(type, member, this);
+                }
+
+                return factory.CreateConverter(type, this);
             }
 
             return null;

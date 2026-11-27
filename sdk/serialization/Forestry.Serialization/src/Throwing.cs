@@ -116,6 +116,12 @@ namespace Forestry.Serialization
         }
 
         [DoesNotReturn]
+        public static void WhenEnumMemberNamesClash(Type enumType, string name)
+        {
+            throw new InvalidOperationException(Formatting.Format(Formatting.EnumMemberNamesClash, enumType.FullName, name));
+        }
+
+        [DoesNotReturn]
         public static void WhenNoConverter(Type type)
         {
             throw new InvalidOperationException(Formatting.Format(Formatting.NoConverter, type.FullName));

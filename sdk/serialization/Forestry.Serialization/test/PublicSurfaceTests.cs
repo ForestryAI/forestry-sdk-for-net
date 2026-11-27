@@ -64,5 +64,27 @@ namespace Forestry.Serialization.Tests
             Assert.Empty(removed);
             Assert.Empty(media);
         }
+
+        // Spec 005 T023 (contracts/public-api.md): the public surface US1 adds
+        [Theory]
+        [InlineData("Forestry.Serialization.EnumMemberNameAttribute")]
+        [InlineData("Forestry.Serialization.EnumMemberNameAttribute.Name")]
+        [InlineData("Forestry.Serialization.Converters.EnumForm")]
+        [InlineData("Forestry.Serialization.Converters.EnumMember`1")]
+        [InlineData("Forestry.Serialization.Converters.EnumConverter`1")]
+        [InlineData("Forestry.Serialization.Converters.EnumConverter`1.Form")]
+        [InlineData("Forestry.Serialization.Converters.EnumConverter`1.Members")]
+        [InlineData("Forestry.Serialization.Converters.EnumConverter`1.TryGetValue")]
+        [InlineData("Forestry.Serialization.Converters.EnumConverter`1.TryGetUtf8Name")]
+        [InlineData("Forestry.Serialization.Converters.ConverterFactory.UsesMember")]
+        [InlineData("Forestry.Serialization.Writing.TelemetryWriter.WriteEnumName")]
+        public void PublicSurface_ForSpec005US1_ItShould_IncludeTheContractsNames(string name)
+        {
+            // Arrange + Act
+            List<string> names = [.. VisibleNames()];
+
+            // Assert
+            Assert.Contains(name, names);
+        }
     }
 }

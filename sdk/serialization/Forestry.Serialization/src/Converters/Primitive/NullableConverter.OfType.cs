@@ -1,3 +1,4 @@
+using System.Reflection;
 using Forestry.Serialization.Writing;
 
 namespace Forestry.Serialization.Converters.Primitive
@@ -23,10 +24,20 @@ namespace Forestry.Serialization.Converters.Primitive
     {
         public override bool CanConvert(Type type) => Nullable.GetUnderlyingType(type) is not null;
 
-        public override Converter CreateConverter(Type type, TelemetrySerializationOptions options)
+        /// <summary>
+        /// The inner type's converter may depend on the member (a format's enum attribute), so the member is
+        /// passed on (spec 005 research R58)
+        /// </summary>
+        public override bool UsesMember => true;
+
+        public override Converter CreateConverter(Type type, TelemetrySerializationOptions options) => Create(type, member: null, options);
+
+        public override Converter CreateConverter(Type type, MemberInfo member, TelemetrySerializationOptions options) => Create(type, member, options);
+
+        private static Converter Create(Type type, MemberInfo? member, TelemetrySerializationOptions options)
         {
             Type underlying = Nullable.GetUnderlyingType(type)!;
-            Converter? converter = options.ResolveConverter(underlying);
+            Converter? converter = options.ResolveConverter(underlying, member);
 
             if (converter is null)
             {

@@ -79,6 +79,14 @@ namespace Forestry.Serialization
 
         internal static string NotParsable => GetResourceString(nameof(NotParsable), @"The value is not a {0}.");
 
+        internal static string EnumNameNotParsable => GetResourceString(nameof(EnumNameNotParsable), @"'{0}' is not a name of enum '{1}'.");
+
+        internal static string EnumNumberNotParsable => GetResourceString(nameof(EnumNumberNotParsable), @"'{0}' is not a number of enum '{1}'.");
+
+        internal static string EnumValueHasNoName => GetResourceString(nameof(EnumValueHasNoName), @"Value {0} of enum '{1}' is not a member: it has no name to write. Write the enum as a number, or define the member.");
+
+        internal static string EnumMemberNamesClash => GetResourceString(nameof(EnumMemberNamesClash), @"Enum '{0}': more than one member is named '{1}' ignoring case; member names (C# names or [EnumMemberName]) must be unique ignoring case.");
+
         internal static string EnumeratedTwice => GetResourceString(nameof(EnumeratedTwice), @"The telemetries of a deserialization can be enumerated once: deserialize again to read the document again.");
 
         internal static string PartialAtFinalBlock => GetResourceString(nameof(PartialAtFinalBlock), @"The format asked for more bytes after the final block.");

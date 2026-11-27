@@ -37,25 +37,16 @@ namespace Forestry.Serialization.Tests.Fixtures
     }
 
     /// <summary>
-    /// Single values with no built-in converter today (research R32, R33): an enum, <see cref="DateOnly"/>
-    /// and <see cref="TimeSpan"/>. They pass the single-value check and fail only for lack of a converter
+    /// Single values with no built-in converter (research R32, R33): developer structs that format to UTF-8
+    /// and parse from chars only. They pass the single-value check and fail only for lack of a converter.
+    /// Until spec 005 this held an enum, <see cref="DateOnly"/> and <see cref="TimeSpan"/>, which now have
+    /// built-in converters (spec 005 US1)
     /// </summary>
     public sealed class SingleValuesWithoutConverters : Telemetry
     {
-        public Grade Grade { get; set; }
+        public UnconvertedMeasure Girth { get; set; }
 
-        public DateOnly Felled { get; set; }
-
-        public TimeSpan Duration { get; set; }
-    }
-
-    /// <summary>
-    /// An enum member (research R32: enums are single values)
-    /// </summary>
-    public enum Grade
-    {
-        First,
-        Second
+        public Species Species { get; set; }
     }
 
     /// <summary>

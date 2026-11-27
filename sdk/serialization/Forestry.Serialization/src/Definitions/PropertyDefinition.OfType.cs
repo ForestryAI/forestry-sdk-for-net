@@ -29,7 +29,7 @@ namespace Forestry.Serialization.Definitions
         /// <returns></returns>
         private protected override Converter? ResolveConverter(TelemetrySerializationOptions options)
         {
-            Converter<T>? converter = options.ResolveConverter(typeof(T)) as Converter<T>;
+            Converter<T>? converter = options.ResolveConverter(typeof(T), Member) as Converter<T>;
 
             if (converter is not null)
             {
