@@ -114,10 +114,10 @@ compared (quickstart 5).
 
 ### Test shells for User Story 2 ⚠️
 
-- [ ] T025 [P] [US2] Test shell, US2-1 / SC-003: a theory over every member of `CuttingReason`, `ProcessingCategory` and `CoordinateReferenceSystem`: written text equals the StanForD text (`OtherManual` → `Other manual`, `GradeBreak` → `Grade break`, `SingleTreeProcessing` → `SingleTreeProcessing`, `WGS84` → `WGS84`) and reads back, in `../stanford/Forestry.StanForD/test/StanForDEnumTests.cs`
-- [ ] T026 [P] [US2] Test shell, US2-2 / FR-007: `TestingSerializeOptions`-like options in the StanForD tests (a minimal `SerializeOptions` with a recording writer, `Fixtures/RecordingSerializeOptions.cs`) with `AddHarvesting()` lock without failure and contain `Stem` and `Log`, in `StanForDEnumTests.cs`
-- [ ] T027 [P] [US2] Test shell, US2-3: `OtherManual`, `other manual` and `Other manual` read to `CuttingReason.OtherManual`; `Unknown` fails with `FormatException`, in `StanForDEnumTests.cs`
-- [ ] T028 [P] [US2] Test shell, US2-4 / FR-002e: a test telemetry with a `CuttingReason` member and a test factory forcing number form, added to options with `AddHarvesting()`: the member is still written `Other manual`, in `StanForDEnumTests.cs`
+- [x] T025 [P] [US2] Test shell, US2-1 / SC-003: a theory over every member of `CuttingReason`, `ProcessingCategory` and `CoordinateReferenceSystem`: written text equals the StanForD text (`OtherManual` → `Other manual`, `GradeBreak` → `Grade break`, `SingleTreeProcessing` → `SingleTreeProcessing`, `WGS84` → `WGS84`) and reads back, in `../stanford/Forestry.StanForD/test/StanForDEnumTests.cs` (2026-11-27: three tests through `StanForDEnums`, a test telemetry with the three enum members, each value also read back by `StanForDEnumConverter`)
+- [x] T026 [P] [US2] Test shell, US2-2 / FR-007: `TestingSerializeOptions`-like options in the StanForD tests (a minimal `SerializeOptions` with a recording writer, `Fixtures/RecordingSerializeOptions.cs`) with `AddHarvesting()` lock without failure and contain `Stem` and `Log`, in `StanForDEnumTests.cs` (2026-11-27: `Fixtures/RecordingSerializeOptions.cs` (a `;` line format with a `Line(telemetry)` helper and a `Format` list), since a core writer cannot be set up outside a serializer call from StanForD's tests)
+- [x] T027 [P] [US2] Test shell, US2-3: `OtherManual`, `other manual` and `Other manual` read to `CuttingReason.OtherManual`; `Unknown` fails with `FormatException`, in `StanForDEnumTests.cs` (2026-11-27: also `othermanual`)
+- [x] T028 [P] [US2] Test shell, US2-4 / FR-002e: a test telemetry with a `CuttingReason` member and a test factory forcing number form, added to options with `AddHarvesting()`: the member is still written `Other manual`, in `StanForDEnumTests.cs` (2026-11-27: `NumberEnumFactory` (format converter, `UsesMember`) creating `NumberEnumConverter<TEnum>`; the whole line is `Other manual;SingleTreeProcessing;WGS84`)
 
 ### Review gate
 
