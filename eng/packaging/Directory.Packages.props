@@ -11,7 +11,7 @@
 
     <!-- Build -->
     <ItemGroup>
-        <PackageVersion Include="coverlet.collector" Version="10.1.0" />
+        <PackageVersion Include="coverlet.collector" Version="10.1.1" />
     </ItemGroup>
 
     <!-- Test packaging -->
